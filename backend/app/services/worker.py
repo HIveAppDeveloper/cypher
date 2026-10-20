@@ -19,7 +19,7 @@ async def run_worker():
     if engine.dialect.name == "postgresql":
         async with engine.connect() as lock_connection:
             while True:
-                acquired = await lock_connection.scalar(text("SELECT pg_try_advisory_lock(1763000271)"))
+                acquired = await lock_connection.scalar(text("SELECT pg_try_advisory_lock(1763000274)"))
                 await lock_connection.commit()
                 if acquired: break
                 await asyncio.sleep(POLL_SECONDS)
@@ -29,7 +29,7 @@ async def run_worker():
                 await _run_worker_loop(lock_connection, owner_pid)
             finally:
                 with suppress(Exception):
-                    await lock_connection.execute(text("SELECT pg_advisory_unlock(1763000271)"))
+                    await lock_connection.execute(text("SELECT pg_advisory_unlock(1763000274)"))
                     await lock_connection.commit()
     else:
         await _run_worker_loop()

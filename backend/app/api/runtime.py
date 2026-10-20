@@ -16,7 +16,7 @@ async def runtime(db=Depends(get_db)):
         item = await db.get(RuntimeHeartbeat, name)
         checks[name] = item.updated_at.isoformat() + 'Z' if item else None
     details = {}
-    for name in ('gateway','mcp'):
+    for name in ('gateway','fallback','mcp'):
         result = await db.get(RuntimeCheck,name)
         if result: details[name] = {'status':result.status,'detail':result.detail,'checked_at':result.updated_at.isoformat()+'Z'}
     configured = await db.get(RuntimeHeartbeat, 'gateway_configured')

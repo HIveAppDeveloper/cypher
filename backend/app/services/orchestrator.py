@@ -337,9 +337,15 @@ class AgentOrchestrator:
         except Exception as e:
             logger.exception(f"Agent loop error for bot '{bot.name}': {e}")
             bot.status = "error"
+            reason = str(e).lower()
+            explanation = "Model execution failed. Check the configured provider and private server logs."
+            if 'restrictedmodelserror' in reason or 'free tier users' in reason:
+                explanation = "Vercel AI Gateway requires paid credits for this model. Add gateway credits in your Vercel team, then retry. Your ChatGPT subscription does not include API usage."
+            elif 'insufficient' in reason or 'credit' in reason or 'quota' in reason:
+                explanation = "The model provider reports a credit or quota limit. Check your gateway/provider billing and retry."
             error_msg = await self._save_message(
                 db, conversation_id, "system", None,
-                "Model execution failed. Check the configured provider and private server logs.", message_type="status_update",
+                explanation, message_type="status_update",
             )
             responses.append(error_msg)
         else:
