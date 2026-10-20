@@ -148,3 +148,31 @@ async def test_goal_manager_cannot_spawn_nested_or_multiple_goals(workspace):
     assert 'error' in await registry.execute_tool('set_goal',args,'manager')
     nested=ToolRegistry();await automation.register_goal_tools(nested,room,first['goal']['id'],sessions)
     assert 'set_goal' not in nested._tools and 'complete_goal' in nested._tools
+
+@pytest.mark.asyncio
+async def test_live_direction_replaces_outdated_answer_and_rejects_finished_work(workspace,monkeypatch):
+    from app.services import orchestrator
+    from app.services.llm_gateway import LLMGateway
+    client,sessions,room=workspace
+    monkeypatch.setattr(orchestrator,'AsyncSessionLocal',sessions)
+    queued=await client.post(f'/api/conversations/{room}/messages',json={'sender_type':'user','content':'Make a plan','options':{'steering':'Keep it practical.'}})
+    task_id=queued.json()['task_id']
+    calls=[]
+    async def complete(**kwargs):
+        calls.append(kwargs['messages'][:])
+        assert 'Keep it practical.' in kwargs['messages'][0]['content']
+        if len(calls)==1:
+            response=await client.post(f'/api/conversations/{room}/tasks/{task_id}/steer',json={'instruction':'Focus only on a one-day plan.'})
+            assert response.status_code==202,response.text
+            content='Outdated month-long plan.'
+        else:
+            assert kwargs['messages'][-1]['content']=='Updated direction: Focus only on a one-day plan.'
+            content='One-day plan, checked.'
+        return SimpleNamespace(choices=[SimpleNamespace(message=SimpleNamespace(content=content,tool_calls=None))])
+    monkeypatch.setattr(LLMGateway,'complete',complete)
+    result=await orchestrator.AgentOrchestrator().process_message(room,'Make a plan',options={'steering':'Keep it practical.'},task_id=task_id)
+    assert len(calls)==2
+    assert [r['content'] for r in result]==['One-day plan, checked.']
+    async with sessions() as db:
+        task=await db.get(Task,task_id);task.status='completed';await db.commit()
+    assert (await client.post(f'/api/conversations/{room}/tasks/{task_id}/steer',json={'instruction':'Too late'})).status_code==409

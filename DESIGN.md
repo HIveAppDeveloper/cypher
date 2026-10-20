@@ -218,3 +218,7 @@ Connections preserves MCP/variable tabs, encrypted-token entry, divided server r
 ## Team text thread
 
 The main workspace opens the existing Agent lounge as Your team. Preserve the light palette and glass controls. The conversation header uses a direct title and quiet subtitle; participant chips collapse under a teammates disclosure. Message options retain all model and media controls behind one disclosure, with the current mode and Sol/Luna visible in its summary. Consecutive same-sender messages within five minutes group visually. Message actions use a small Options disclosure. Queued/running indicators derive only from real task status. No fabricated typing, staff exchanges, completed work, or online presence. Computer controls show progress, successful connection, and a stop action after a successful request.
+
+### Steering
+
+A collapsed Steer your team disclosure precedes Message options. Its brief, constraints, working pace, and reply style use existing glass controls and readable input fields. Saving updates the next-message options and browser-local thread preference. A separate active-task action posts a visible direction change, applied at model/tool boundaries. In-flight actions and media cannot be undone; text limits do not implement provider billing caps. Status notices distinguish saved-next-message settings from accepted active-task instructions.

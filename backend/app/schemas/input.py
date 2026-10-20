@@ -19,6 +19,7 @@ class Attachment(BaseModel):
         return value
 
 class RunOptions(BaseModel):
+    steering: str = Field(default='', max_length=6000)
     output: Literal['text', 'image', 'video'] = 'text'
     aspect_ratio: Literal['1:1', '16:9', '9:16'] = '16:9'
     duration: Literal[4, 6, 8] = 4

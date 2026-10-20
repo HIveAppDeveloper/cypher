@@ -61,6 +61,7 @@ class AgentOrchestrator:
         attachments: list | None = None,
         options: dict | None = None,
         goal_id: str | None = None,
+        task_id: str | None = None,
     ) -> list[dict]:
         """Main entry point — process an incoming message in a conversation.
 
@@ -75,6 +76,7 @@ class AgentOrchestrator:
         """
         from app.services.automation import register_goal_tools
         await register_goal_tools(self.registry, conversation_id, goal_id, AsyncSessionLocal)
+        self.task_id = task_id
         self.options = RunOptions(**(options or {}))
         async with AsyncSessionLocal() as db:
             # Persist the incoming message
@@ -217,7 +219,10 @@ class AgentOrchestrator:
 
             history = (await db.execute(select(Message).where(Message.conversation_id == conversation_id, Message.message_type.in_(["text", "handoff"])).order_by(Message.created_at.desc()).limit(40))).scalars().all()
             names = dict((await db.execute(select(Bot.id, Bot.name))).all())
+            if self.options.steering:
+                system_prompt += "\nUser working brief (within this task): " + self.options.steering
             messages = [{"role": "system", "content": system_prompt}]
+            seen_directions = {item.id for item in history}
             # Re-send the three newest attachment sets, keeping older references readable.
             attachment_ids = [item.id for item in history if (item.metadata_json or {}).get("attachments")][:3]
             for item in reversed(history):
@@ -242,6 +247,8 @@ class AgentOrchestrator:
                     f"Agent loop iteration {iteration + 1} for bot '{bot.name}'"
                 )
 
+                for direction in await self._new_directions(db, conversation_id, seen_directions):
+                    messages.append({"role":"user","content":direction.content})
                 run = getattr(self, "options", RunOptions())
                 provider = bot.llm_provider if getattr(self, "team_roster", None) and bot.role.casefold() != "coordinator" else run.provider or bot.llm_provider
                 model = bot.llm_model if getattr(self, "team_roster", None) and bot.role.casefold() != "coordinator" else run.model or bot.llm_model
@@ -260,6 +267,8 @@ class AgentOrchestrator:
                     # Append assistant message with tool calls
                     messages.append(reply.model_dump())
 
+                    direction_changed = False
+                    pending_directions = []
                     for tool_call in reply.tool_calls:
                         func_name = tool_call.function.name
                         try:
@@ -284,7 +293,13 @@ class AgentOrchestrator:
 
                         # Execute the tool
                         allowed_names = {t["function"]["name"] for t in tools}
-                        if func_name not in allowed_names:
+                        updates = await self._new_directions(db, conversation_id, seen_directions)
+                        if updates:
+                            direction_changed = True
+                            pending_directions.extend(updates)
+                        if direction_changed:
+                            tool_result = {"skipped": "User changed direction; reconsider this action before executing."}
+                        elif func_name not in allowed_names:
                             tool_result = {"error": "This tool is not enabled for this agent."}
                         else:
                             tool_result = await self.registry.execute_tool(func_name, args, bot_id)
@@ -311,7 +326,16 @@ class AgentOrchestrator:
                             "content": json.dumps(tool_result, default=str),
                         })
 
+                    for direction in pending_directions:
+                        messages.append({"role":"user","content":direction.content})
+                    pending_directions = []
                     # Continue loop — LLM may want to call more tools
+                    continue
+
+                updates = await self._new_directions(db, conversation_id, seen_directions)
+                if updates:
+                    for direction in updates:
+                        messages.append({"role":"user","content":direction.content})
                     continue
 
                 # Handle text response (no tool calls = done)
@@ -363,6 +387,19 @@ class AgentOrchestrator:
             await self._broadcast_status(bot_id, bot.status)
 
         return responses
+
+    async def _new_directions(self, db, conversation_id, seen):
+        task_id = getattr(self, 'task_id', None)
+        if not task_id:
+            return []
+        # Read fresh rows so the running loop sees direction accepted by another request.
+        directions = (await db.execute(select(Message).where(
+            Message.conversation_id == conversation_id,
+            Message.metadata_json['steering_task_id'].as_string() == task_id,
+        ).order_by(Message.created_at, Message.id))).scalars().all()
+        fresh = [item for item in directions if item.id not in seen]
+        seen.update(item.id for item in fresh)
+        return fresh
 
     def _build_system_prompt(self, bot: Bot) -> str:
         """Build a complete system prompt for a bot."""

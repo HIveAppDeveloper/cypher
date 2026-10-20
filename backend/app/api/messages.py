@@ -71,3 +71,28 @@ async def cancel_task(id: UUID, task_id: UUID, db: AsyncSession = Depends(get_db
     task.status = "cancelled" if task.status == "pending" else "cancel_requested"
     await db.commit()
     return {"status": task.status}
+
+
+from pydantic import BaseModel, Field
+class SteeringInput(BaseModel):
+    instruction: str = Field(min_length=1, max_length=6000)
+
+@router.post("/{id}/tasks/{task_id}/steer", status_code=202)
+async def steer_task(id: UUID, task_id: UUID, body: SteeringInput, db: AsyncSession = Depends(get_db)):
+    task = (await db.execute(select(Task).where(Task.id == str(task_id)).with_for_update())).scalar_one_or_none()
+    if not task or task.conversation_id != str(id):
+        raise HTTPException(status_code=404, detail="Task not found")
+    if task.status not in ("pending", "running"):
+        raise HTTPException(status_code=409, detail="This task is no longer accepting direction. Send a follow-up message instead.")
+    if (task.result or {}).get('request', {}).get('options', {}).get('output', 'text') != 'text':
+        raise HTTPException(status_code=409, detail="Media generation cannot be redirected after it starts. Cancel and send a new request.")
+    instruction = body.instruction.strip()
+    if not instruction:
+        raise HTTPException(status_code=422, detail="Add a direction first.")
+    count = len((await db.execute(select(Message.id).where(Message.conversation_id == str(id), Message.metadata_json['steering_task_id'].as_string() == str(task_id)))).all())
+    if count >= 10:
+        raise HTTPException(status_code=429, detail="This task has reached its ten direction changes. Send a follow-up after it finishes.")
+    message = Message(conversation_id=str(id),sender_type='user',message_type='text',content='Updated direction: '+instruction,metadata_json={'steering_task_id':str(task_id)})
+    db.add(message)
+    await db.commit()
+    return {'status':'accepted','detail':'Applied at the next model or tool boundary. In-flight actions cannot be undone.'}

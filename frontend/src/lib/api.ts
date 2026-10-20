@@ -31,6 +31,7 @@ export const api = {
   updateBot: async (id: string, b: Partial<Bot>): Promise<Bot> => botFromWire(await request(`/bots/${id}`, { method: 'PUT', body: JSON.stringify(botToWire(b)) })),
   deleteBot: (id: string) => request(`/bots/${id}`, { method: 'DELETE' }),
   startBot: (id: string) => request(`/bots/${id}/start`, { method: 'POST' }),
+  steerJob: (id: string, taskId: string, instruction: string) => request(`/conversations/${id}/tasks/${taskId}/steer`, { method:'POST', body:JSON.stringify({instruction}) }),
   stopBot: (id: string) => request(`/bots/${id}/stop`, { method: 'POST' }),
   conversationForBot: async (bot: Bot): Promise<string> => {
     const conversations: { id: string; title: string }[] = await request('/conversations');

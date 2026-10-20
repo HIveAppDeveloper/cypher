@@ -7,6 +7,6 @@ export interface Task { id: string; conversationId: string; botId: string; title
 export interface WebSocketMessage { type: string; payload: { channel?: string; botId?: string; status?: BotStatus }; }
 
 export interface Attachment { name: string; mime: string; data: string; url?: string; }
-export interface RunOptions { output?: 'text' | 'image' | 'video'; aspect_ratio?: string; duration?: number; temperature: number; max_tokens: number; max_iterations: number; team_rounds: number; model?: string; provider?: string; reasoning_effort?: string; service_tier?: string; }
+export interface RunOptions { steering?: string; output?: 'text' | 'image' | 'video'; aspect_ratio?: string; duration?: number; temperature: number; max_tokens: number; max_iterations: number; team_rounds: number; model?: string; provider?: string; reasoning_effort?: string; service_tier?: string; }
 export interface Conversation { id: string; title: string; is_group: boolean; bot_ids: string[]; }
 export interface Job { id: string; title: string; status: string; created_at: string; }
