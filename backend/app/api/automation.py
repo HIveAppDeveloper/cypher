@@ -1,4 +1,4 @@
-import hashlib,secrets,uuid
+import asyncio,hashlib,secrets,uuid
 from datetime import datetime,timedelta
 from typing import Literal
 from fastapi import APIRouter,Depends,HTTPException,Header
@@ -78,7 +78,7 @@ async def channels(db:AsyncSession=Depends(get_db)):
 async def add_channel(data:ChannelInput,db:AsyncSession=Depends(get_db)):
     await participant(db,data.conversation_id)
     if data.webhook_url:
-        try:await validate_endpoint(data.webhook_url)
+        try:await asyncio.wait_for(validate_endpoint(data.webhook_url),timeout=5)
         except Exception:raise HTTPException(422,'Use a public HTTPS webhook without query parameters or redirects.')
     token=secrets.token_urlsafe(32)
     try:encrypted=seal(token)

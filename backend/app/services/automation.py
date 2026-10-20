@@ -1,5 +1,5 @@
 """Database-backed bounded goals and a signed webhook outbox."""
-import hashlib,hmac,json,uuid
+import asyncio,hashlib,hmac,json,uuid
 from datetime import datetime,timedelta
 from sqlalchemy import select
 from app.db.session import AsyncSessionLocal
@@ -75,10 +75,11 @@ async def tick_deliveries(session_factory=None):
         payload=json.dumps({'event':'task.finished','task_id':t.id,'status':t.status,'text':'\n\n'.join(r.get('content','') for r in public)[:24000]},separators=(',',':')).encode()
         d.attempts+=1
         try:
-            await validate_endpoint(c.webhook_url)
-            signature=hmac.new(reveal(c.signing_secret).encode(),payload,hashlib.sha256).hexdigest()
-            async with http_client() as client:
-                response=await client.post(c.webhook_url,content=payload,headers={'Content-Type':'application/json','X-Grokbot-Signature':'sha256='+signature,'Idempotency-Key':d.id},timeout=8)
+            async with asyncio.timeout(12):
+                await validate_endpoint(c.webhook_url)
+                signature=hmac.new(reveal(c.signing_secret).encode(),payload,hashlib.sha256).hexdigest()
+                async with http_client() as client:
+                    response=await client.post(c.webhook_url,content=payload,headers={'Content-Type':'application/json','X-Grokbot-Signature':'sha256='+signature,'Idempotency-Key':d.id},timeout=8)
             if not 200<=response.status_code<300:raise RuntimeError(f'Webhook returned HTTP {response.status_code}')
             d.status='delivered';d.detail='Accepted by destination.'
         except Exception as error:
