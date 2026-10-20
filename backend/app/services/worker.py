@@ -129,7 +129,7 @@ async def _run_worker_loop(lock_connection=None, owner_pid=None):
                         task.result = {"note": "Stopped future steps. An in-flight external action may already have completed."}
                     else:
                         responses = await execution
-                        task.status = "failed" if any(r.get("message_type") == "status_update" for r in responses) else "completed"
+                        task.status = response_status(responses)
                         task.result = {"responses": responses}
                 finally:
                     if not execution.done():
@@ -143,3 +143,10 @@ async def _run_worker_loop(lock_connection=None, owner_pid=None):
                 task.result = {"error": "Execution failed; inspect private backend logs."}
             task.completed_at = datetime.utcnow()
             await db.commit()
+
+
+def response_status(responses):
+    public = [r for r in responses if not (r.get('metadata') or {}).get('internal')]
+    if not public or any(r.get('message_type') == 'status_update' for r in public):
+        return 'failed'
+    return 'completed'

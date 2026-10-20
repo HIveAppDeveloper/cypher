@@ -22,3 +22,7 @@ html,body{font-family:"Inter Variable",-apple-system,BlinkMacSystemFont,"Segoe U
 
 .fleet-activity { color: var(--text-secondary); font-size: 13px; margin: 12px 0; }
 .fleet-activity > summary { cursor: pointer; padding: 8px 0; }
+
+.message-actions { display:flex; gap:12px; margin-top:8px; font-size:12px; color:var(--text-secondary); }
+.message-actions button:hover { text-decoration:underline; }
+.task-composer-footer { flex-wrap:wrap; gap:8px; }

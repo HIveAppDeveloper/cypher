@@ -7,7 +7,7 @@ export function ModelControls({ value, onChange }: { value: ModelValue; onChange
   const models = MODEL_CHOICES.filter(m => m.provider === provider);
   const selected = models.find(m => m.model === value.model) || models[0];
   const openaiModels = ['gpt-6-luna', 'gpt-6.1-sol'].map(model => MODEL_CHOICES.find(m => m.model === model)!);
-  const power = Math.max(0, openaiModels.findIndex(m => m.model === value.model));
+  const power = Math.max(0, openaiModels.findIndex(m => m.model === (value.model || selected?.model)));
   const newest = value.model?.startsWith('gpt-6');
   const efforts = newest ? ['low', 'medium', 'high', 'xhigh', 'max'] : ['none', 'low', 'medium', 'high', 'xhigh'];
   const reasoning = provider === 'openai' && (value.model?.startsWith('gpt-5') || newest);

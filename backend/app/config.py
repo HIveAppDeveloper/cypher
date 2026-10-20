@@ -17,7 +17,8 @@ class Settings(BaseSettings):
     LLM_MODEL: str = "gpt-6.1-sol"
     RUN_EMBEDDED_WORKER: bool = True
     LLM_USE_GATEWAY: bool = False
-    IMAGE_MODEL: str = "bfl/flux-2-pro"
+    IMAGE_MODEL: str = "openai/gpt-image-2"
+    GOOGLE_IMAGE_MODEL: str = "google/gemini-3.1-flash-image-preview"
     VIDEO_MODEL: str = "google/veo-3.1-fast-generate-001"
     SANDBOX_BACKEND: Literal["docker", "vercel"] = "docker"
     SANDBOX_IMAGE: str = "open-grokbot-sandbox:latest"

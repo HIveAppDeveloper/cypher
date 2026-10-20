@@ -261,7 +261,7 @@ async def test_media_generation_returns_real_file_parts(monkeypatch):
     image = (await generate_media('image', 'Scene', '1:1'))[0]
     video = (await generate_media('video', 'Scene', '16:9', 6))[0]
     assert image['mime'] == 'image/png' and video['mime'] == 'video/mp4'
-    assert seen == [('Scene','1:1'),('Scene',6)]
+    assert seen == [('Scene',None),('Scene',6)]
 
 
 def test_disallowed_models_rejected_before_network():
@@ -484,3 +484,62 @@ async def test_fleet_bounds_cache_and_no_recursive_tools(monkeypatch):
         assert 'findings' in await manager.consult({'specialty':role,'task':'Test'},'bot')
     assert 'error' in await manager.consult({'specialty':'research','task':'Another'},'bot')
     assert len(calls)==3 and all('tools' not in c and c['max_tokens']==1024 and c['num_retries']==0 for c in calls)
+
+
+def test_recovered_internal_failure_does_not_fail_final_answer():
+    from app.services.worker import response_status
+    error={'message_type':'status_update','metadata':{'internal':True}}
+    answer={'message_type':'text','content':'Finished'}
+    assert response_status([error,answer]) == 'completed'
+    assert response_status([error]) == 'failed'
+    assert response_status([answer,{'message_type':'status_update'}]) == 'failed'
+
+@pytest.mark.asyncio
+async def test_google_image_chat_output_is_attached(monkeypatch):
+    from app.services.media import generate_media
+    from app.services import llm_gateway
+    from types import SimpleNamespace
+    import openai
+    seen=[]
+    class Client:
+        def __init__(self, **kwargs): self.chat=SimpleNamespace(completions=self)
+        async def __aenter__(self): return self
+        async def __aexit__(self,*args): pass
+        async def create(self, **kwargs):
+            seen.append(kwargs)
+            return SimpleNamespace(choices=[SimpleNamespace(message=SimpleNamespace(model_dump=lambda:{'images':[{'image_url':{'url':'data:image/png;base64,aW1hZ2U='}}]}))])
+    monkeypatch.setattr(openai,'AsyncOpenAI',Client)
+    monkeypatch.setattr(llm_gateway,'completion_options',lambda *args:{'api_key':'test','api_base':'https://test.invalid'})
+    monkeypatch.setattr(llm_gateway.settings,'LLM_USE_GATEWAY',True)
+    files=await generate_media('image','A scene',image_provider='google')
+    assert files[0]['mime']=='image/png' and files[0]['data']=='aW1hZ2U='
+    assert seen[0]['model']=='google/gemini-3.1-flash-image-preview'
+    assert seen[0]['extra_body']['modalities']==['text','image']
+
+@pytest.mark.asyncio
+async def test_starter_plugins_install_once_and_preserve_disabled(tmp_path,monkeypatch):
+    from sqlalchemy.ext.asyncio import async_sessionmaker
+    from sqlalchemy import select
+    from app.db.session import Base
+    from app.models.plugin import Plugin
+    from app.services import verification
+    engine=create_async_engine(f'sqlite+aiosqlite:///{tmp_path}/starters.db')
+    sessions=async_sessionmaker(engine,expire_on_commit=False)
+    async with engine.begin() as conn: await conn.run_sync(Base.metadata.create_all)
+    async with sessions() as db:
+        db.add(Plugin(name='DeepWiki',url='https://mcp.deepwiki.com/mcp',enabled=False,tools=[])); await db.commit()
+    calls=[]
+    async def discover(url):
+        calls.append(url)
+        return [{'name':'docs','description':'Read docs','schema':{'type':'object'}}]
+    from app.services import plugins
+    monkeypatch.setattr(verification,'AsyncSessionLocal',sessions)
+    monkeypatch.setattr(plugins,'discover',discover)
+    try:
+        await verification.ensure_starter_plugins()
+        await verification.ensure_starter_plugins()
+        async with sessions() as db:
+            rows=(await db.execute(select(Plugin))).scalars().all()
+            assert len(rows)==3 and not next(p for p in rows if p.name=='DeepWiki').enabled
+        assert len(calls)==2
+    finally: await engine.dispose()

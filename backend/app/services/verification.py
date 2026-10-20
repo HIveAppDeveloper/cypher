@@ -16,8 +16,12 @@ async def record(name):
         await db.commit()
 
 async def verify_cloud(force=False):
+    await ensure_starter_plugins()
     async with AsyncSessionLocal() as db:
-        if not force and await db.get(RuntimeHeartbeat, 'cloud_check_finished_v7'): return
+        finished = not force and await db.get(RuntimeHeartbeat, 'cloud_check_finished_v7')
+    if finished:
+        await verify_media_cloud()
+        return
     from app.services.llm_gateway import LLMGateway
     from app.services.plugins import discover, session
     async def gateway():
@@ -75,6 +79,7 @@ async def verify_cloud(force=False):
             logger.warning('Cloud self-check failed: %s (%s)',name,type(error).__name__)
     await asyncio.gather(*(run_one(name, check) for name, check in [('gateway',gateway),('fallback',fallback),('fleet',fleet),('mcp',mcp),('browser',browser),('computer',computer)]))
     await record('cloud_check_finished_v7')
+    await verify_media_cloud()
 
 
 def safe_error(error):
@@ -98,3 +103,43 @@ async def save_check(name,status,detail):
             item.status=status; item.detail=detail; item.updated_at=datetime.utcnow()
         else: db.add(RuntimeCheck(name=name,status=status,detail=detail,updated_at=datetime.utcnow()))
         await db.commit()
+
+
+async def verify_media_cloud():
+    import os
+    if os.getenv('GROKBOT_VERIFY_MEDIA') != 'true': return
+    async with AsyncSessionLocal() as db:
+        if await db.get(RuntimeHeartbeat, 'media_check_finished_v1'): return
+    from app.services.media import generate_media
+    for name,kind,provider in [('media_openai','image','openai'),('media_google','image','google'),('media_video','video',None)]:
+        await save_check(name,'running',{})
+        try:
+            files = await generate_media(kind, 'A single red paper boat on still water, simple studio composition, no text.', '16:9', 4, image_provider=provider)
+            await save_check(name,'passed',{'format':files[0]['mime'],'bytes':len(files[0]['data'])*3//4})
+        except Exception as error:
+            await save_check(name,'failed',safe_error(error))
+    await record('media_check_finished_v1')
+
+
+async def ensure_starter_plugins():
+    async with AsyncSessionLocal() as db:
+        if await db.get(RuntimeHeartbeat, 'starter_plugins_finished_v1'): return
+    from app.models.plugin import Plugin
+    from app.services.plugins import discover
+    result = []
+    for name,url in [('DeepWiki','https://mcp.deepwiki.com/mcp'),('Microsoft Learn','https://learn.microsoft.com/api/mcp'),('Cloudflare Docs','https://docs.mcp.cloudflare.com/mcp')]:
+        try:
+            async with AsyncSessionLocal() as db:
+                if (await db.execute(select(Plugin).where(Plugin.url == url))).scalars().first():
+                    result.append({'name':name,'state':'existing'})
+                    continue
+            tools = await discover(url)
+            if not tools: raise RuntimeError('No tools advertised')
+            async with AsyncSessionLocal() as db:
+                db.add(Plugin(name=name,url=url,tools=tools,enabled=True))
+                await db.commit()
+            result.append({'name':name,'state':'connected','tools':len(tools)})
+        except Exception:
+            result.append({'name':name,'state':'unavailable'})
+    await save_check('starter_plugins','passed' if all(p['state']!='unavailable' for p in result) else 'failed',{'connections':result})
+    await record('starter_plugins_finished_v1')

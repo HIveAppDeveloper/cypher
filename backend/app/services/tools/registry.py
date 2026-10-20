@@ -77,7 +77,7 @@ class ToolRegistry:
             self.register(
                 name=f"generate_{kind}",
                 description=f"Generate an actual {kind} from a detailed text prompt. This uses paid model credits. The result is attached to the conversation. Do not call again for the same request unless the first call failed.",
-                parameters={"type": "object", "properties": {"prompt": {"type": "string"}, "aspect_ratio": {"type": "string", "enum": ["16:9", "9:16"]}, "duration": {"type": "integer", "enum": [4, 6, 8]}}, "required": ["prompt"]},
+                parameters={"type": "object", "properties": {"prompt": {"type": "string"}, "aspect_ratio": {"type": "string", "enum": ["16:9", "9:16"]}, "duration": {"type": "integer", "enum": [4, 6, 8]}, "image_provider": {"type": "string", "enum": ["openai", "google"], "description": "Choose automatically for the task: OpenAI GPT Image or Google Gemini image generation."}}, "required": ["prompt"]},
                 handler=self._handle_generate_image if kind == "image" else self._handle_generate_video,
             )
         # --- Browser Tools ---
@@ -424,7 +424,7 @@ class ToolRegistry:
 
     async def _handle_generate_image(self, args: dict, bot_id: str) -> dict:
         from app.services.media import generate_media
-        files = await generate_media("image", args["prompt"], args.get("aspect_ratio", "16:9"))
+        files = await generate_media("image", args["prompt"], args.get("aspect_ratio", "16:9"), image_provider=args.get("image_provider"))
         return {"success": True, "message": "Generated image attached to this conversation.", "_attachments": files}
 
     async def _handle_generate_video(self, args: dict, bot_id: str) -> dict:

@@ -240,8 +240,8 @@ class AgentOrchestrator:
                 )
 
                 run = getattr(self, "options", RunOptions())
-                provider = bot.llm_provider if getattr(self, "team_roster", None) else run.provider or bot.llm_provider
-                model = bot.llm_model if getattr(self, "team_roster", None) else run.model or bot.llm_model
+                provider = bot.llm_provider if getattr(self, "team_roster", None) and bot.role.casefold() != "coordinator" else run.provider or bot.llm_provider
+                model = bot.llm_model if getattr(self, "team_roster", None) and bot.role.casefold() != "coordinator" else run.model or bot.llm_model
                 response = await LLMGateway.complete(
                     messages=messages,
                     tools=tools if tools else None,
