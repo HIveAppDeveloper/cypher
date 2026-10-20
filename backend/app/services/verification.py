@@ -17,7 +17,7 @@ async def record(name):
 
 async def verify_cloud(force=False):
     async with AsyncSessionLocal() as db:
-        if not force and await db.get(RuntimeHeartbeat, 'cloud_check_finished_v6'): return
+        if not force and await db.get(RuntimeHeartbeat, 'cloud_check_finished_v7'): return
     from app.services.llm_gateway import LLMGateway
     from app.services.plugins import discover, session
     async def gateway():
@@ -26,6 +26,12 @@ async def verify_cloud(force=False):
     async def fallback():
         result = await LLMGateway.complete(messages=[{'role':'user','content':'Reply with exactly: Cloud model ready'}], provider='openai', model='gpt-6-luna', max_tokens=512, reasoning_effort='low')
         if not result.choices[0].message.content: raise RuntimeError('Empty model reply')
+    async def fleet():
+        from app.services.fleet import ModelFleet
+        result = await ModelFleet().consult({'specialty':'research','task':'Reply with exactly: Specialist ready'}, 'cloud-check')
+        if 'findings' not in result: raise RuntimeError(str(result.get('error')))
+        reply = await LLMGateway.complete(messages=[{'role':'user','content':'Summarize this specialist result in five words: '+result['findings']}], provider='openai', model='gpt-6.1-sol', max_tokens=1024, reasoning_effort='low')
+        if not reply.choices[0].message.content: raise RuntimeError('Manager returned no synthesis')
     async def mcp():
         tools = await discover('https://mcp.deepwiki.com/mcp')
         if not any(t['name']=='read_wiki_structure' for t in tools): raise RuntimeError('Expected documentation tool unavailable')
@@ -67,8 +73,8 @@ async def verify_cloud(force=False):
             await record(name+'_verification_failed')
             await save_check(name,'failed',safe_error(error))
             logger.warning('Cloud self-check failed: %s (%s)',name,type(error).__name__)
-    await asyncio.gather(*(run_one(name, check) for name, check in [('gateway',gateway),('fallback',fallback),('mcp',mcp),('browser',browser),('computer',computer)]))
-    await record('cloud_check_finished_v6')
+    await asyncio.gather(*(run_one(name, check) for name, check in [('gateway',gateway),('fallback',fallback),('fleet',fleet),('mcp',mcp),('browser',browser),('computer',computer)]))
+    await record('cloud_check_finished_v7')
 
 
 def safe_error(error):

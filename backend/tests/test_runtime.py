@@ -258,10 +258,10 @@ async def test_media_generation_returns_real_file_parts(monkeypatch):
         return SimpleNamespace(value=[FilePart(data=b'video-bytes', media_type='video/mp4')])
     monkeypatch.setattr(ai.ops, 'generate_image', fake_image)
     monkeypatch.setattr(ai.ops, 'generate_video', fake_video)
-    for kind in ('image', 'video'):
-        with pytest.raises(ValueError, match='Sol/Luna-only'):
-            await generate_media(kind, 'Scene')
-    assert seen == []
+    image = (await generate_media('image', 'Scene', '1:1'))[0]
+    video = (await generate_media('video', 'Scene', '16:9', 6))[0]
+    assert image['mime'] == 'image/png' and video['mime'] == 'video/mp4'
+    assert seen == [('Scene','1:1'),('Scene',6)]
 
 
 def test_disallowed_models_rejected_before_network():
@@ -465,3 +465,22 @@ async def test_authenticated_requests_scope_vercel_headers(monkeypatch):
         assert get_headers() is None
     finally:
         app.router.routes[:]=[route for route in app.router.routes if getattr(route,'endpoint',None) is not probe]
+
+@pytest.mark.asyncio
+async def test_fleet_bounds_cache_and_no_recursive_tools(monkeypatch):
+    from app.services.fleet import ModelFleet
+    from app.services import fleet
+    from types import SimpleNamespace
+    monkeypatch.setattr(fleet, 'completion_options', lambda *a, **kw: {'model':'test'})
+    calls=[]
+    async def complete(**kw):
+        calls.append(kw)
+        return SimpleNamespace(choices=[SimpleNamespace(message=SimpleNamespace(content='Finding'))],usage=None)
+    monkeypatch.setattr(fleet.litellm, 'acompletion', complete)
+    manager=ModelFleet()
+    first=await manager.consult({'specialty':'research','task':'Test'},'bot')
+    assert first == await manager.consult({'specialty':'research','task':'Test'},'bot')
+    for role in ['writing','analysis']:
+        assert 'findings' in await manager.consult({'specialty':role,'task':'Test'},'bot')
+    assert 'error' in await manager.consult({'specialty':'research','task':'Another'},'bot')
+    assert len(calls)==3 and all('tools' not in c and c['max_tokens']==1024 and c['num_retries']==0 for c in calls)

@@ -6,7 +6,6 @@ from app.config import settings
 MAX_ASSET_BYTES = 32 * 1024 * 1024
 
 async def generate_media(kind: str, prompt: str, aspect_ratio='16:9', duration=4):
-    raise ValueError("Image and video generation require dedicated models and are disabled by your Sol/Luna-only model policy.")
     import ai
     if not prompt.strip():
         raise ValueError('Describe the media you want to generate.')

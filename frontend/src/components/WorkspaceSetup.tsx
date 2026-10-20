@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 type CloudCheck = { status: string; detail?: { message?: string }; checked_at?: string };
 type Runtime = { worker?: boolean; database?: boolean; gateway_configured?: boolean; connected?: boolean; checks?: Record<string, CloudCheck> };
-const CHECK_LABELS: Record<string, string> = { gateway: 'GPT-6.1 Sol', fallback: 'GPT-6 Luna', mcp: 'MCP tool call', browser: 'Hosted browser', computer: 'Cloud computer' };
+const CHECK_LABELS: Record<string, string> = { fleet: 'Managed specialist fleet', gateway: 'GPT-6.1 Sol', fallback: 'GPT-6 Luna', mcp: 'MCP tool call', browser: 'Hosted browser', computer: 'Cloud computer' };
 export function WorkspaceSetup({ onClose }: { onClose: () => void }) {
   const dialog = useRef<HTMLDialogElement>(null);
   const [detail, setDetail] = useState<Runtime>({});

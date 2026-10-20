@@ -48,6 +48,9 @@ class AgentOrchestrator:
         self.registry = ToolRegistry()
         self.redis = redis_client
         self.registry.register_default_tools()
+        from app.services.fleet import ModelFleet
+        self.fleet = ModelFleet()
+        self.fleet.register(self.registry)
 
     async def process_message(
         self,
@@ -158,18 +161,19 @@ class AgentOrchestrator:
     async def _coordinate_team(self, db, conversation, bots, coordinator, message):
         cid = str(conversation.id)
         self.phase_instructions = "Plan this task briefly. Delegate only work that helps. Choose up to 3 teammates using HANDOFF[exact teammate name: concrete task]. Do not claim the task is done."
+        self.internal_activity = True
         self.planning = True
         responses = await self._run_agent_loop(db, cid, coordinator.id, message)
         self.planning = False
         requested = [name.strip().casefold() for response in responses for name in re.findall(r"HANDOFF\[([^:\]]+):", response.get("content", ""))]
         specialists = [b for b in bots if b.id != coordinator.id and b.name.casefold() in requested][:3]
-        if not specialists:
-            specialists = [b for b in bots if b.id != coordinator.id][:2]
+        # No forced specialist turns: simple requests can be answered by the manager.
         self.phase_instructions = "Execute your assigned part using the shared conversation. Read earlier teammates’ findings. Deliver evidence and finished work, and identify anything still blocked."
         for _ in range(self.options.team_rounds):
             for bot in specialists:
                 responses.extend(await self._run_agent_loop(db, cid, bot.id, message))
         self.phase_instructions = "The specialist turns have finished. Review their results. Use tools to fix remaining gaps when possible. Give the user the final answer, deliverables, verification, and concrete blockers. Do not emit another HANDOFF. Never turn a failed tool call into a success claim."
+        self.internal_activity = False
         responses.extend(await self._run_agent_loop(db, cid, coordinator.id, message))
         self.phase_instructions = ""
         return responses
@@ -202,6 +206,7 @@ class AgentOrchestrator:
         try:
             # Build system prompt
             system_prompt = self._build_system_prompt(bot)
+            system_prompt += "\nYou are the OpenAI manager. Use consult_specialist automatically for focused research, writing, or independent analysis when useful; solve simple tasks yourself. Specialists only advise and cannot perform actions. You own all tool execution, verification, and the final user-facing response. Do not ask the user to choose models or manage handoffs. Never share credentials with specialists. Use generate_image or generate_video only when the user requested media. If a specialist fails, continue yourself and report only blockers that affect the requested result."
             if getattr(self, "phase_instructions", ""):
                 system_prompt += "\nCurrent team phase: " + self.phase_instructions
             if getattr(self, "team_roster", None):
@@ -399,6 +404,8 @@ class AgentOrchestrator:
         content, message_type="text", metadata=None,
     ) -> dict:
         """Save a message to the database and broadcast it."""
+        if getattr(self, "internal_activity", False) or message_type in {"tool_call", "tool_result"}:
+            metadata = {**(metadata or {}), "internal": True}
         msg = Message(
             id=str(uuid.uuid4()),
             conversation_id=conversation_id,

@@ -324,7 +324,7 @@ class ToolRegistry:
             "filesystem": ["read_file", "write_file", "list_directory", "search_files"],
         }
 
-        enabled_tool_names = set()
+        enabled_tool_names = {"consult_specialist"} if getattr(bot, "llm_provider", "") == "openai" and getattr(bot, "llm_model", "") in {"gpt-6.1-sol", "gpt-6-luna"} else set()
         for category in bot.tools_enabled:
             category_lower = category.lower()
             if category_lower in category_map:
