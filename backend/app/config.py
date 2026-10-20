@@ -11,10 +11,10 @@ class Settings(BaseSettings):
     MINIO_ENDPOINT: str = "localhost:9000"
     MINIO_ACCESS_KEY: str = Field(default="minioadmin", validation_alias=AliasChoices("MINIO_ACCESS_KEY", "MINIO_ROOT_USER"))
     MINIO_SECRET_KEY: str = Field(default="minioadmin", validation_alias=AliasChoices("MINIO_SECRET_KEY", "MINIO_ROOT_PASSWORD"))
-    LLM_PROVIDER: str = "gemini"
+    LLM_PROVIDER: str = "openai"
     LLM_API_KEY: str = ""
     LLM_API_BASE: str | None = None
-    LLM_MODEL: str = "gemini-2.5-flash"
+    LLM_MODEL: str = "gpt-6.1-sol"
     RUN_EMBEDDED_WORKER: bool = True
     LLM_USE_GATEWAY: bool = False
     IMAGE_MODEL: str = "bfl/flux-2-pro"

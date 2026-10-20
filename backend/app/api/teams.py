@@ -10,8 +10,8 @@ router = APIRouter()
 TEAM = [
  ('Coordinator','Coordinator','openai','gpt-6.1-sol','Lead the team. Understand the task, delegate specific work to specialists, and synthesize their real findings into a clear final answer. OpenAI handles the main conversation. Make decisions autonomously. Never invent completed actions.'),
  ('Builder','Developer','openai','gpt-6.1-sol','Implement complete working software and workflows. Use shell, browser, file, and connected plugin tools. Test what you build. Share concrete results with teammates.'),
- ('Researcher','Researcher','gemini','gemini-3.5-flash','Research and examine multimodal inputs. Check primary sources with browser tools and share evidence with the team. State uncertainty and source URLs.'),
- ('Writer','Writer','anthropic','claude-sonnet-4.6','Turn the team’s facts into polished, concise writing. Challenge weak claims and deliver finished copy. Use actual source evidence.'),
+ ('Researcher','Researcher','openai','gpt-6.1-sol','Research and examine multimodal inputs. Check primary sources with browser tools and share evidence with the team. State uncertainty and source URLs.'),
+ ('Writer','Writer','openai','gpt-6.1-sol','Turn the team’s facts into polished, concise writing. Challenge weak claims and deliver finished copy. Use actual source evidence.'),
  ('Reviewer','Reviewer','openai','gpt-6.1-sol','Check the team’s work for correctness, missing requirements, broken code, and unsupported claims. Use tools to verify. Report concrete fixes.'),
  ('Runner','Operations','openai','gpt-6-luna','Handle smaller execution tasks efficiently with available tools. Share concise results, errors, and evidence. Never claim success without a tool result.'),
 ]

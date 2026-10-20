@@ -2,7 +2,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 import secrets
 from sqlalchemy.schema import CreateSchema
-from sqlalchemy import text
+from sqlalchemy import text, update, or_
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
 from app.db.session import engine, Base
@@ -24,6 +24,8 @@ async def lifespan(app: FastAPI):
             await conn.execute(text("SELECT pg_advisory_xact_lock(1763000272)"))
             await conn.execute(CreateSchema(settings.DATABASE_SCHEMA, if_not_exists=True))
         await conn.run_sync(Base.metadata.create_all)
+        from app.models.bot import Bot
+        await conn.execute(update(Bot).where(or_(Bot.llm_provider != 'openai', Bot.llm_model.notin_(['gpt-6.1-sol', 'gpt-6-luna']))).values(llm_provider='openai', llm_model='gpt-6.1-sol'))
     logger.info("Database tables created")
 
     # Initialize Redis (optional for local dev)

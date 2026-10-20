@@ -216,10 +216,10 @@ def test_gateway_model_mapping_and_credentials(monkeypatch):
     monkeypatch.setattr(llm_gateway.settings, "LLM_USE_GATEWAY", True)
     monkeypatch.setenv("VERCEL_OIDC_TOKEN", "test-oidc")
     monkeypatch.delenv("AI_GATEWAY_API_KEY", raising=False)
-    options = llm_gateway.completion_options("gemini-2.5-flash", "gemini")
-    assert options == {"model": "openai/google/gemini-2.5-flash", "api_base": "https://ai-gateway.vercel.sh/v1", "api_key": "test-oidc"}
+    options = llm_gateway.completion_options("gpt-6-luna", "openai")
+    assert options == {"model": "openai/responses/openai/gpt-6-luna", "api_base": "https://ai-gateway.vercel.sh/v1", "api_key": "test-oidc"}
     monkeypatch.setenv("AI_GATEWAY_API_KEY", "test-explicit")
-    assert llm_gateway.completion_options("gpt-4o", "openai")["api_key"] == "test-explicit"
+    assert llm_gateway.completion_options("gpt-6.1-sol", "openai")["api_key"] == "test-explicit"
     monkeypatch.delenv("AI_GATEWAY_API_KEY")
     monkeypatch.delenv("VERCEL_OIDC_TOKEN")
     import pytest
@@ -258,14 +258,17 @@ async def test_media_generation_returns_real_file_parts(monkeypatch):
         return SimpleNamespace(value=[FilePart(data=b'video-bytes', media_type='video/mp4')])
     monkeypatch.setattr(ai.ops, 'generate_image', fake_image)
     monkeypatch.setattr(ai.ops, 'generate_video', fake_video)
-    image = (await generate_media('image', 'An actual scene', '1:1'))[0]
-    video = (await generate_media('video', 'A moving scene', '16:9', 6))[0]
-    import base64
-    assert base64.b64decode(image['data']) == b'image-bytes'
-    assert video['mime'] == 'video/mp4'
-    assert seen == [('An actual scene', '1:1'), ('A moving scene', 6)]
-    with pytest.raises(ValueError, match='landscape or portrait'):
-        await generate_media('video', 'Scene', '1:1')
+    for kind in ('image', 'video'):
+        with pytest.raises(ValueError, match='Sol/Luna-only'):
+            await generate_media(kind, 'Scene')
+    assert seen == []
+
+
+def test_disallowed_models_rejected_before_network():
+    from app.services.llm_gateway import completion_options
+    for provider, model in [('gemini', 'gemini-3.5-flash'), ('openai', 'gpt-6-astra'), ('openai', 'openai/gpt-6.1-sol')]:
+        with pytest.raises(ValueError, match='Model policy'):
+            completion_options(model, provider)
 
 
 def test_managed_computer_uses_isolated_named_vm(monkeypatch):

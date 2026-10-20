@@ -5,6 +5,8 @@ from app.config import settings
 def completion_options(model=None, provider=None):
     provider = provider or settings.LLM_PROVIDER
     model = model or settings.LLM_MODEL
+    if provider != "openai" or model not in {"gpt-6.1-sol", "gpt-6-luna"}:
+        raise ValueError("Model policy allows only OpenAI GPT-6.1 Sol and GPT-6 Luna.")
     if settings.LLM_USE_GATEWAY:
         gateway_provider = {"gemini": "google"}.get(provider, provider)
         model = {"claude-sonnet-4-5": "claude-sonnet-4.5"}.get(model, model)

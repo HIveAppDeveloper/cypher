@@ -17,14 +17,14 @@ async def record(name):
 
 async def verify_cloud(force=False):
     async with AsyncSessionLocal() as db:
-        if not force and await db.get(RuntimeHeartbeat, 'cloud_check_finished_v5'): return
+        if not force and await db.get(RuntimeHeartbeat, 'cloud_check_finished_v6'): return
     from app.services.llm_gateway import LLMGateway
     from app.services.plugins import discover, session
     async def gateway():
         result = await LLMGateway.complete(messages=[{'role':'user','content':'Reply with exactly: Cloud model ready'}], provider='openai', model='gpt-6.1-sol', max_tokens=2048, reasoning_effort='low')
         if not result.choices[0].message.content: raise RuntimeError('Empty model reply')
     async def fallback():
-        result = await LLMGateway.complete(messages=[{'role':'user','content':'Reply with exactly: Cloud model ready'}], provider='deepseek', model='deepseek-v3.2', max_tokens=512, temperature=0)
+        result = await LLMGateway.complete(messages=[{'role':'user','content':'Reply with exactly: Cloud model ready'}], provider='openai', model='gpt-6-luna', max_tokens=512, reasoning_effort='low')
         if not result.choices[0].message.content: raise RuntimeError('Empty model reply')
     async def mcp():
         tools = await discover('https://mcp.deepwiki.com/mcp')
@@ -68,7 +68,7 @@ async def verify_cloud(force=False):
             await save_check(name,'failed',safe_error(error))
             logger.warning('Cloud self-check failed: %s (%s)',name,type(error).__name__)
     await asyncio.gather(*(run_one(name, check) for name, check in [('gateway',gateway),('fallback',fallback),('mcp',mcp),('browser',browser),('computer',computer)]))
-    await record('cloud_check_finished_v5')
+    await record('cloud_check_finished_v6')
 
 
 def safe_error(error):
