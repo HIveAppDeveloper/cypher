@@ -1,6 +1,6 @@
 # Hive + Atlas Open GrokBot
 
-The web interface matches the supplied light Grok Bot reference. Bot CRUD and chat use the real API; simulated replies and fake success fallbacks were removed. Jobs persist in the database. One persistent backend worker runs queued jobs; restart-interrupted jobs are marked `interrupted` rather than replaying external side effects.
+The web interface uses the supplied light Grok Bot screenshot as its styling reference. Bot CRUD and chat use the real API; simulated replies and fake success fallbacks were removed. Jobs persist in the database. One persistent backend worker runs queued jobs; restart-interrupted jobs are marked `interrupted` rather than replaying external side effects.
 
 ## Deployment boundary
 
@@ -69,4 +69,12 @@ Live Hive database access, a live provider response, Docker sandbox execution an
 
 ## Limits
 
-This is a repaired MVP, not feature parity with xAI Grok Bot. A screenshot does not supply its private runtime. There is no scheduler/routines UI, account-isolated authentication, secure interactive sign-in handoff, app catalog, voice input, or service-specific Hive/Atlas tools. The browser tool in the upstream project runs headless browser sessions on the backend; it is not a remote desktop protocol. Jobs are single-worker and interrupted jobs require review. Do not start multiple Uvicorn workers with this runner.
+This is a repaired MVP, not feature parity with xAI Grok Bot. A screenshot does not supply its private runtime. There is no scheduler/routines UI, account-isolated authentication, secure interactive sign-in handoff, app catalog, voice recording, video input, or service-specific Hive/Atlas tools. Uploaded MP3/WAV files are supported as inputs for compatible models. The browser tool in the upstream project runs headless browser sessions on the backend; it is not a remote desktop protocol. Jobs are single-worker and interrupted jobs require review. Do not start multiple Uvicorn workers with this runner.
+
+## Team rooms and multimodal input
+
+Create at least two agents, then choose New beside Team rooms. Select 2–6 agents. Each sees shared history, can hand work to another participant using `HANDOFF[Name: task]`, and can participate in 1–4 discussion rounds. Each agent has at most two turns per round, limiting handoff loops. Controls adjust temperature, output tokens, tool steps, team rounds and typeface; they apply to the next submitted job.
+
+Use the plus in the composer to attach PNG/JPEG/WebP, PDF, plain text, MP3 or WAV files. Maximum four files and 3 MB combined. Attachments persist with the message in the state database and are served through authenticated attachment routes. Raw payloads are excluded from message-list responses. The three newest attachment sets are resent to the model with recent history; older filenames remain references. Files are transmitted to the selected model provider. Input support varies by model. Video, recording, transcription fallback and generated media are not implemented.
+
+Seven tests cover native connection normalization, input validation, API authentication, queued jobs, persisted messages, team handoff/shared history, and authenticated attachment retrieval. Provider calls in these tests are mocked.

@@ -24,7 +24,8 @@ async def run_worker():
             task.started_at = datetime.utcnow()
             await db.commit()
             try:
-                responses = await AgentOrchestrator().process_message(task.conversation_id, task.description)
+                request = (task.result or {}).get("request", {})
+                responses = await AgentOrchestrator().process_message(task.conversation_id, task.description, attachments=request.get("attachments", []), options=request.get("options", {}))
                 task.status = "failed" if any(r.get("message_type") == "status_update" for r in responses) else "completed"
                 task.result = {"responses": responses}
             except asyncio.CancelledError:

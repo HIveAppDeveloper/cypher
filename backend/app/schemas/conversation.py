@@ -11,6 +11,7 @@ class ConversationCreate(ConversationBase):
     bot_ids: List[UUID] = []
 
 class ConversationResponse(ConversationBase):
+    bot_ids: List[UUID] = []
     id: UUID
     created_at: datetime
     updated_at: datetime

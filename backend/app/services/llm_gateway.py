@@ -18,8 +18,8 @@ def completion_options(model=None, provider=None):
 
 class LLMGateway:
     @staticmethod
-    async def complete(messages, tools=None, model=None, provider=None):
-        return await litellm.acompletion(messages=messages, tools=tools, **completion_options(model, provider))
+    async def complete(messages, tools=None, model=None, provider=None, **run_options):
+        return await litellm.acompletion(messages=messages, tools=tools, **run_options, **completion_options(model, provider))
 
     @staticmethod
     async def stream(messages, tools=None, model=None, provider=None):

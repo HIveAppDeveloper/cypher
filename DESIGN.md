@@ -1,6 +1,6 @@
 ---
 name: Open GrokBot
-description: A light messaging workspace with a quiet roster and expressive bot identities.
+description: A light agent workspace with team conversations, multimodal input, and adjustable run controls.
 colors:
   panel: "#fff"
   conversation: "#fdfdfd"
@@ -20,22 +20,33 @@ colors:
   notice-surface: "#fff5f8"
   notice-border: "#e4b4c9"
   notice-text: "#8b204d"
+  room-surface: "#e9e5e8"
+  room-ink: "#77536a"
+  member-chip: "#f1f1f1"
+  attachment-surface: "#f2f2f2"
+  running: "#936621"
 typography:
+  display:
+    fontFamily: '"Inter Variable", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
+    fontSize: "clamp(28px,3vw,42px)"
+    fontWeight: 500
+    lineHeight: 1.2
+    letterSpacing: "-.035em"
   headline:
-    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
+    fontFamily: '"Inter Variable", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
     fontSize: "27px"
     fontWeight: 500
   title:
-    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
+    fontFamily: '"Inter Variable", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
     fontSize: "18px"
     fontWeight: 500
     lineHeight: 1.2
   body:
-    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
+    fontFamily: '"Inter Variable", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
     fontSize: "18px"
     lineHeight: 1.5
   label:
-    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
+    fontFamily: '"Inter Variable", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
     fontSize: "15px"
     fontWeight: 600
 rounded:
@@ -76,6 +87,10 @@ components:
     textColor: "{colors.panel}"
     rounded: "{rounded.message}"
     padding: "12px 16px"
+  team-member-chip:
+    backgroundColor: "{colors.member-chip}"
+    rounded: "20px"
+    padding: "3px 8px"
   search-input:
     rounded: "{rounded.md}"
     padding: "10px"
@@ -85,9 +100,9 @@ components:
 
 ## Overview
 
-The implemented interface follows the supplied light GrokBot reference: a quiet gray roster beside a near-white conversation, with pink outgoing messages and organic colored bot marks. Rounded forms and restrained chrome keep names, message content, and the active identity prominent.
+The implemented interface follows the supplied light GrokBot reference: a quiet gray roster beside a near-white conversation, with pink outgoing messages and organic colored bot marks. Rounded forms and restrained chrome keep names, message content, and the active identity prominent. The workspace now includes team rooms, attachment input, and compact run controls while preserving the same light visual system.
 
-This document records the current CSS and React components, rather than claiming a pixel-exact screenshot match. No backend is connected in the reviewed environment; model behavior has only been exercised through mocked tests. Visible empty and error states remain part of the interface.
+This document records the current CSS and React components, rather than claiming a pixel-exact screenshot match. No backend is connected in the reviewed environment; provider behavior has only been exercised through mocked tests (seven backend tests). Production frontend builds have passed locally; these checks do not establish live provider, database, or sandbox operation. Visible empty and error states remain part of the interface.
 
 **Key Characteristics:**
 - Light neutral surfaces with a pink messaging accent.
@@ -109,23 +124,23 @@ Status green and red exist as CSS primitives; their presence does not establish 
 
 ## Typography
 
-Use the system sans stack in the frontmatter. The workspace label is compact and semibold; bot names and identity labels use medium weight. Conversation text is larger and comfortably spaced. Timestamps are deliberately secondary at (11px).
+Use self-hosted Inter Variable with the system fallbacks in the frontmatter. The workspace label is compact and semibold; bot names and identity labels use medium weight. Conversation text is larger and comfortably spaced. Timestamps are deliberately secondary at (11px).
 
-The empty-state heading uses the headline role; dialog headings use (24px) at medium weight. At the mobile breakpoint, message and composer text shrink to (15px), identity labels to (15px), and empty-state headings to (22px). There is no external display font. A monospace primitive exists for tool-oriented content but does not replace conversation typography.
+The empty-state heading uses the headline role; dialog headings use (24px) at medium weight. At the mobile breakpoint, message and composer text shrink to (15px), identity labels to (15px), and empty-state headings to (22px). Inter Variable is bundled locally rather than loaded from an external font service. The main panel can switch to System (`system-ui, sans-serif`) or Georgia (`Georgia, serif`), while the sidebar retains Inter. The welcome heading uses `clamp(28px,3vw,42px)`, medium weight, (1.2) line height, and (-.035em) tracking; its mobile size is (26px). A monospace primitive exists for tool-oriented content but does not replace conversation typography.
 
 ## Layout
 
 The app fills the dynamic viewport height with a non-scrolling outer flex layout; roster and message stream scroll independently. Desktop sidebar width is (27%), bounded by (270px) minimum and (380px) maximum, with (8px) internal padding and a hairline right divider. The conversation takes remaining width with a shrinking minimum of zero.
 
-The conversation header is (75px) high with a centered identity pill. The message stream has (12px 24px 30px) padding and (18px) gaps. Messages fit their content, up to (84%) width; outgoing messages align right, incoming left. Tool messages can reach (94%). The composer sits below the stream with (12px 22px 18px) margins and (10px) internal gap.
+A persistent (54px) toolbar introduces workspace context and the Controls disclosure above the welcome or conversation area. The conversation header is (75px) high with a centered identity pill. The message stream has (12px 24px 30px) padding and (18px) gaps. Messages fit their content, up to (84%) width; outgoing messages align right, incoming left. Tool messages can reach (94%). The composer sits below the stream with (12px 22px 16px) margins and (10px) internal gap.
 
-At viewport widths of (700px) or less, the sidebar becomes a (90px) vertical rail with (6px) padding. Workspace name, bot preview text, and workspace label hide; avatar navigation and controls remain. Empty-roster prose is also hidden on mobile while the create-plus control remains available. Header height becomes (65px), stream padding (12px), message maximum width (95%), and composer margin (8px). The fixed runtime notice adjusts its left inset at this breakpoint and at the wide-sidebar cap (1408px).
+At viewport widths of (700px) or less, the sidebar becomes a (90px) vertical rail with (6px) padding. Workspace name, bot preview text, and workspace label hide; avatar navigation and controls remain. Empty-roster prose is also hidden on mobile while the create-plus control remains available. Header height becomes (65px), stream padding (12px), message maximum width (95%), and composer margin (8px). The fixed runtime notice adjusts its left inset at this breakpoint and at the wide-sidebar cap (1408px). Its final desktop bottom offset is (20px), mobile (12px), with maximum width (760px); it remains an overlay rather than a flex-column item.
 
 The declared spacing scale is reusable, but the incumbent implementation also uses component-specific measurements; do not imply every gap is a scale multiple.
 
 ## Elevation & Depth
 
-Most surfaces are flat and separated by tone or a fine border. Only the identity pill and composer receive faint shadows: identity (`0 2px 12px #00000009`) and composer (`0 2px 7px #0000000a`). Preserve this low-contrast hierarchy; the roster does not float above the conversation.
+Most surfaces are flat and separated by tone or a fine border. The identity pill and composer receive faint shadows: identity (`0 2px 12px #00000009`) and composer (`0 2px 7px #0000000a`). Preserve this low-contrast hierarchy; the roster does not float above the conversation.
 
 No animated transitions are declared in the global stylesheet. Reduced-motion preference forces automatic scroll behavior.
 
@@ -151,13 +166,35 @@ Incoming messages use the gray card surface; outgoing messages use pink and whit
 
 ### Inputs / Fields
 
-Roster search has a light border, rounded corners, (10px) padding, and a width inset from its parent. General form fields use (10px 12px) padding and (10px) corners. The composer groups a borderless, transparent textarea with a (40px) pink send circle inside a white bordered capsule. The textarea has a (24px) line height and maximum height (150px). Enter sends; Shift+Enter adds a line. Send remains disabled until content and a conversation are available or while sending.
+Roster search has a light border, rounded corners, (10px) padding, and a width inset from its parent. General form fields use (10px 12px) padding and (10px) corners. The composer groups a borderless, transparent textarea with a (40px) pink send circle inside a white bordered capsule. The textarea has a (24px) line height and maximum height (150px). Enter sends; Shift+Enter adds a line. The attachment plus opens the file picker. Send remains disabled until a conversation and either text or attachments are available, or while sending.
 
 The composer textarea restores a visible keyboard-focus outline in focus pink at (2px), offset by (2px), with (8px) corners. Preserve this explicit treatment alongside the global control focus rule.
 
 ### Bot Creation Dialog
 
 A native dialog uses a white surface, fine gray border, (20px) corners, and (28px) padding. Width is capped at (500px), with (32px) total viewport clearance; maximum height is the dynamic viewport minus (32px), with internal scrolling. The translucent black backdrop (`#0005`) creates the modal layer. Labels use (14px) text, and action buttons align right with (10px) gaps.
+
+### Welcome Workspace
+
+The centered welcome uses a (62px) organic bot mark, a two-line headline, restrained muted supporting copy at (15px/1.8), and primary/secondary agent and team actions. Small format labels sit below with (36px) top spacing. Mobile actions stack vertically and the welcome receives extra bottom clearance. This is an actionable empty state, not a sample transcript.
+
+### Team Room Navigation and Picker
+
+Uppercase section labels use (11px) type and (.05em) tracking. Team rooms use a muted mauve rounded-square identity tile (46px), shrinking to (40px) on mobile. The room dialog uses the same native modal as bot creation, with soft-gray selectable agent rows, small role descriptions, and pink-accent native (18px) checkboxes. Select 2–6 agents; selected members appear as compact gray chips with (20px) avatars above the stream. These member chips convey identity rather than a filter state.
+
+### Provider, Model, and Tool Menus
+
+Bot creation uses native labeled provider and model selects. Provider choices include Gemini, OpenAI-compatible, Anthropic, Ollama, and DeepSeek. The model menu offers the implemented Gemini preset where applicable and a Custom model ID option with a labeled text field. Tool categories use compact native (16px) pink-accent checkboxes for browser, shell, and filesystem. These are actual configuration controls; their presence is not proof of a connected provider or working tool runtime.
+
+### Run Controls
+
+A native details/summary disclosure opens a right-aligned white popover with fine border, (16px) corners, (20px) padding, and desktop width (300px). Mobile width is `min(280px,calc(100vw - 110px))`, with bounded scrolling. It combines a response-style select, pink-accent native range sliders, right-aligned numerical outputs, and a typeface select. Temperature spans (0–1.5), response length (256–8192) tokens, tool steps (1–25), and team-only rounds (1–4). Defaults are (0.5), (2048), (10), and (1). Run settings apply to the next submitted job; the typeface changes the main-panel presentation immediately.
+
+### Attachments and Job Tray
+
+The composer accepts up to four files and (3 MB) combined: PNG/JPEG/WebP images, PDFs, UTF-8 text, MP3, and WAV. Selected attachments appear in wrapping soft-gray chips with filenames, removal actions, and (36px) image thumbnails. Sent image previews are bounded to (320px) height with (16px) corners; other files use outlined links with (9px) corners. Provider compatibility remains visible in a small note below the composer. Audio input means uploaded files; this interface does not provide recording or video input.
+
+A compact disclosure above the composer shows active work or recent work, up to six job rows, with ellipsized titles and text statuses. Running is warm amber, completed green, and failed red. Tool output uses a disclosure with scroll-bounded monospace content at (12px/1.6); it does not dominate ordinary conversation text. Status labels remain readable independently of their colors.
 
 ### Runtime Notice
 

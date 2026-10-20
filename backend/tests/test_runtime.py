@@ -82,8 +82,82 @@ async def test_persisted_job_and_messages(tmp_path,monkeypatch):
             except asyncio.CancelledError: pass
             messages=(await client.get(f"/api/conversations/{conv['id']}/messages")).json()
             assert [m['content'] for m in messages]==['Pipeline checked.','Check the pipeline']
+            older=(await client.get(f"/api/conversations/{conv['id']}/messages?before_id={messages[0]['id']}")).json()
+            assert [m['content'] for m in older]==['Check the pipeline']
+            assert (await client.get(f"/api/conversations/{conv['id']}/messages?before_id={uuid4()}")).status_code==404
             assert (await client.post(f'/api/conversations/{uuid4()}/messages',json={'sender_type':'user','content':'x'})).status_code==404
             assert (await client.get(f"/api/conversations/{conv['id']}/messages?limit=-1")).status_code==422
     finally:
+        app.dependency_overrides.clear()
+        await engine.dispose()
+
+def test_multimodal_validation_and_wire_content():
+    import base64
+    from app.schemas.message import MessageCreate
+    from app.schemas.input import content_parts
+    raw=base64.b64encode(b'brief text').decode()
+    request=MessageCreate(sender_type='user',content='',attachments=[{'name':'brief.txt','mime':'text/plain','data':raw}])
+    assert 'brief text' in content_parts('',[a.model_dump() for a in request.attachments])[1]['text']
+    with pytest.raises(ValueError):
+        MessageCreate(sender_type='user',content='x',attachments=[{'name':'bad.png','mime':'image/png','data':'not base64'}])
+    with pytest.raises(ValueError):
+        MessageCreate(sender_type='user',content='x',options={'team_rounds':100})
+
+@pytest.mark.asyncio
+async def test_team_handoff_shares_context_and_preserves_attachment(tmp_path,monkeypatch):
+    import base64
+    from httpx import ASGITransport, AsyncClient
+    from sqlalchemy.ext.asyncio import async_sessionmaker
+    from app.db.session import Base, get_db
+    from app.main import app
+    from app.services import worker, orchestrator
+    from app.services.llm_gateway import LLMGateway
+    engine=create_async_engine(f'sqlite+aiosqlite:///{tmp_path}/team.db')
+    sessions=async_sessionmaker(engine,expire_on_commit=False)
+    async with engine.begin() as conn: await conn.run_sync(Base.metadata.create_all)
+    async def get_session():
+        async with sessions() as session: yield session
+    seen=[]
+    async def complete(**kwargs):
+        seen.append(kwargs)
+        is_a='RESEARCH_ROLE' in kwargs['messages'][0]['content']
+        content='HANDOFF[Editor: review the attached brief]' if is_a else 'The team review is complete.'
+        return SimpleNamespace(choices=[SimpleNamespace(message=SimpleNamespace(content=content,tool_calls=None))])
+    monkeypatch.setattr(worker,'AsyncSessionLocal',sessions)
+    monkeypatch.setattr(orchestrator,'AsyncSessionLocal',sessions)
+    monkeypatch.setattr(LLMGateway,'complete',complete)
+    app.dependency_overrides[get_db]=get_session
+    task=None
+    try:
+        async with AsyncClient(transport=ASGITransport(app=app),base_url='http://test') as client:
+            ids=[]
+            for name,prompt in [('Researcher','RESEARCH_ROLE'),('Editor','EDITOR_ROLE')]:
+                response=await client.post('/api/bots',json={'name':name,'role':name,'system_prompt':prompt,'llm_provider':'gemini','llm_model':'gemini-2.5-flash','tools_enabled':['none']})
+                ids.append(response.json()['id'])
+            room=(await client.post('/api/conversations',json={'title':'Review room','is_group':True,'bot_ids':ids})).json()
+            payload={'sender_type':'user','content':'Read the brief','attachments':[{'name':'brief.txt','mime':'text/plain','data':base64.b64encode(b'Revenue grew 12 percent.').decode()}],'options':{'team_rounds':1,'temperature':.3,'max_iterations':2,'max_tokens':512}}
+            assert (await client.post(f"/api/conversations/{room['id']}/messages",json=payload)).status_code==202
+            task=asyncio.create_task(worker.run_worker())
+            for _ in range(100):
+                await asyncio.sleep(.03)
+                jobs=(await client.get(f"/api/conversations/{room['id']}/tasks")).json()
+                if jobs[0]['status'] in ('completed','failed'): break
+            assert jobs[0]['status']=='completed'
+            assert len(seen)==2
+            editor_call=next(c for c in seen if 'EDITOR_ROLE' in c['messages'][0]['content'])
+            assert any(isinstance(m['content'],str) and 'Teammate Researcher' in m['content'] for m in editor_call['messages'])
+            assert editor_call['temperature']==.3 and editor_call['max_tokens']==512
+            rows=(await client.get(f"/api/conversations/{room['id']}/messages")).json()
+            incoming=next(m for m in rows if m['sender_type']=='user')
+            a=incoming['metadata_json']['attachments'][0]
+            assert 'data' not in a and a['url'].endswith('/0')
+            download=await client.get(a['url'])
+            assert download.content==b'Revenue grew 12 percent.'
+            assert (await client.get(a['url'].replace(room['id'],str(uuid4())))).status_code==404
+    finally:
+        if task:
+            task.cancel()
+            try: await task
+            except asyncio.CancelledError: pass
         app.dependency_overrides.clear()
         await engine.dispose()

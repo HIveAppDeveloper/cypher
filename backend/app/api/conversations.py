@@ -15,6 +15,8 @@ router = APIRouter()
 
 @router.post("", response_model=ConversationResponse)
 async def create_conversation(conv: ConversationCreate, db: AsyncSession = Depends(get_db)):
+    if len(conv.bot_ids) > 6 or not conv.bot_ids or (conv.is_group and len(conv.bot_ids) < 2) or len(set(conv.bot_ids)) != len(conv.bot_ids):
+        raise HTTPException(status_code=422, detail="Select 1–6 unique agents")
     for bot_id in conv.bot_ids:
         if await db.get(Bot, str(bot_id)) is None:
             raise HTTPException(status_code=404, detail="Bot not found")
@@ -26,12 +28,12 @@ async def create_conversation(conv: ConversationCreate, db: AsyncSession = Depen
         db.add(part)
     await db.commit()
     await db.refresh(db_conv)
-    return db_conv
+    return {"id": db_conv.id, "title": db_conv.title, "is_group": db_conv.is_group, "created_at": db_conv.created_at, "updated_at": db_conv.updated_at, "bot_ids": conv.bot_ids}
 
 @router.get("", response_model=List[ConversationResponse])
 async def list_conversations(db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(Conversation))
-    return result.scalars().all()
+    result = await db.execute(select(Conversation).options(selectinload(Conversation.participants)))
+    return [{"id": c.id, "title": c.title, "is_group": c.is_group, "created_at": c.created_at, "updated_at": c.updated_at, "bot_ids": [p.bot_id for p in c.participants]} for c in result.scalars().all()]
 
 @router.get("/{id}")
 async def get_conversation(id: UUID, db: AsyncSession = Depends(get_db)):
