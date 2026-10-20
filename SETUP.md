@@ -2,7 +2,7 @@
 
 The managed deployment now uses the repository-root `vercel.json`. It is active configuration, not a staged template. It defines a Next.js frontend service, private Python container backend, an internal frontend-to-backend binding (`BACKEND_INTERNAL_URL`), and an `agent-worker` daemon running `python -m app.worker_main` with one instance in `iad1`, 2 GiB requested memory, and a 60-second termination grace period. The root rewrite sends public traffic to the frontend.
 
-The authorized Atlas native PostgreSQL credential is configured as the primary state database, using the isolated `grokbot` schema. It is not automatic dual writing to Hive and Atlas. The deployed backend has successfully queried Atlas PostgreSQL and a live worker heartbeat has been observed. Revision `732d2a` is deploying safe diagnostic details for the opt-in model and MCP self-checks. Their results are recorded separately from configuration status.
+The authorized Atlas native PostgreSQL credential is configured as the primary state database, using the isolated `grokbot` schema. It is not automatic dual writing to Hive and Atlas. Use the unpooled native connection for the worker’s session-level advisory lock: a transaction-pooler URL cannot preserve the required session affinity. The replacement deployment is ready and its fresh worker heartbeat has been verified; longer-term stability remains under observation.
 
 ## Managed configuration
 
@@ -10,7 +10,7 @@ Configure secret values through the project's Vercel environment settings, keepi
 
 | Variable | Purpose |
 | --- | --- |
-| `GROKBOT_DATABASE_URL` | Native PostgreSQL URL for the authorized Atlas database. `prisma://` and `prisma+postgres://` Accelerate URLs are not asyncpg connections. |
+| `GROKBOT_DATABASE_URL` | Unpooled native PostgreSQL URL for the authorized Atlas database; the worker requires stable session affinity. `prisma://` and `prisma+postgres://` Accelerate URLs are not asyncpg connections. |
 | `DATABASE_SCHEMA=grokbot` | Isolated application schema; initialized on startup with advisory locking. |
 | `RUN_EMBEDDED_WORKER=false` | Keep the API container from starting a second runner when the daemon owns execution. |
 | `BACKEND_API_TOKEN` | Backend bearer authentication and encryption-key source for stored MCP credentials. Keep stable while those credentials exist. |
@@ -32,7 +32,7 @@ Forty-three available Hive/Atlas values were imported under separate prefixes; a
 4. Cancel a queued and a running task. Pending tasks can cancel immediately; running jobs request cancellation and stop future steps. An in-flight external action may already have completed.
 5. Confirm the hosted worker continues with the browser closed. The daemon configuration expresses this deployment intent; only live observation establishes operation.
 
-The single runner uses a PostgreSQL advisory lock, including across rolling deployments. Startup marks abandoned running jobs interrupted rather than automatically replaying external side effects. Review interrupted work before resubmitting.
+The single runner uses PostgreSQL advisory lock `1763000274`, including across rolling deployments, and checks the owning backend PID to detect lost session affinity. This replaces the prior key to avoid a legacy pooled-session lock. A stale heartbeat must not be shown as a healthy worker. Startup marks abandoned running jobs interrupted rather than automatically replaying external side effects. Review interrupted work before resubmitting.
 
 ## Models, teams, and files
 
@@ -50,8 +50,14 @@ Use `.env.example` as a starting point. Set a native state database URL and expl
 
 ## Opt-in cloud smoke checks
 
-Set `GROKBOT_VERIFY_CLOUD=true` to run the worker's cloud smoke checks once per check-version marker (`cloud_check_finished_v2` currently). Checks request a small GPT-6.1 Sol reply and discover a known DeepWiki MCP tool. Results are persisted in `RuntimeCheck` with status, timestamp, and safe diagnostic detail, and exposed through the protected runtime response. The diagnostic sanitizer redacts credentials and endpoint strings. Checks use provider access and may incur usage; they are not a substitute for a complete agent/tool workflow. Retaining the finished marker prevents repeated checks on ordinary worker restarts.
+Set `GROKBOT_VERIFY_CLOUD=true` to run the worker's cloud smoke checks once per check-version marker (`cloud_check_finished_v4` currently). Checks request a small GPT-6.1 Sol reply, probe a DeepSeek V3.2 fallback, discover DeepWiki tools, and invoke `read_wiki_structure` for `vercel/ai`. Results are persisted in `RuntimeCheck` with status, timestamp, and safe diagnostic detail, and exposed through the protected runtime response. The diagnostic sanitizer redacts credentials and endpoint strings. Checks use provider access and may incur usage; they are not a substitute for a complete agent/tool workflow. Retaining the finished marker prevents repeated checks on ordinary worker restarts.
 
 ## Evidence and limits
 
-The live protected runtime endpoint verified Atlas database access and the hosted Vercel worker (`database=true`, `worker=true`, heartbeat age 0 seconds). This verifies a cloud daemon independent of the user’s laptop, not successful agent execution. DeepWiki MCP tool discovery passed at `2026-10-20T19:00:14Z`; the GPT-6.1 Sol gateway check failed at `2026-10-20T19:00:13Z`, because LiteLLM 1.106.0 imported CacheableResult, absent in MCP 1.30.0. Revision `732d2a` is deploying safe diagnostic details. Seventeen backend tests and the Next.js production build passed. Live media generation, MCP tool invocation, managed Sandbox execution, and the complete agent task flow remain unverified. There is no scheduler/routines UI, account isolation, interactive browser sign-in handoff, or service-specific Hive/Atlas integration merely from importing configuration.
+At the live checkpoint `2026-10-20T19:19:37Z`, the replacement deployment is ready: Atlas database access and the worker are verified (`database=true`, `worker=true`, heartbeat age 0 seconds) after switching to the unpooled native connection. The session-PID guard had detected lost session affinity on the previous transaction-pooler URL; the worker lock key was changed to avoid the legacy pooled-session lock. Longer-term worker stability still needs observation.
+
+GPT-6.1 Sol failed its live check at `19:19:19Z` and the DeepSeek V3.2 fallback failed at `19:19:20Z`, both with HTTP 403 `RestrictedModelsError` requiring paid AI Gateway credits. No model response has succeeded. DeepWiki’s actual `read_wiki_structure` invocation for `vercel/ai` passed at `19:19:22Z` on the same date; that single call does not verify every connected server.
+
+LiteLLM 1.105.1 passed the real HTTP-adapter regression check; 17 tests and the Next.js production build passed. Forty-three imported variables and 177 inventoried names are recorded as configuration evidence. Image/video generation, managed Sandbox execution, and the complete agent task flow remain unverified.
+
+The failed GPT-6.1 Sol check requires paid gateway access/credits; Workspace setup provides a billing/access link. Do not present gateway configuration as entitlement. There is no scheduler/routines UI, account isolation, interactive browser sign-in handoff, or service-specific Hive/Atlas integration merely from importing configuration.

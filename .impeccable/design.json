@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-10-20T19:02:29.586853+00:00",
+  "generatedAt": "2026-10-20T19:20:06.940797+00:00",
   "title": "Design System: Open GrokBot",
   "extensions": {
     "shadows": [
@@ -387,7 +387,7 @@
     }
   ],
   "narrative": {
-    "overview": "The implemented interface follows the supplied light GrokBot reference: a quiet gray roster beside a near-white conversation, with pink outgoing messages and organic colored bot marks. Rounded forms and restrained chrome keep names, message content, and the active identity prominent. The workspace now opens on a task-first prompt, with role presets, named models, team rooms, attachment input, and compact run controls. Configuration is progressively disclosed while preserving the same light visual system.\n\nThis document records the current CSS and React components, rather than claiming a pixel-exact screenshot match. The root Vercel Services and Daemon configuration is active and the authorized Atlas native database credential is configured. The live protected runtime endpoint verified Atlas database access and the hosted Vercel worker (database=true, worker=true, heartbeat age 0 seconds). This verifies a cloud daemon independent of the user\u2019s laptop, not successful agent execution. DeepWiki MCP tool discovery passed at 2026-10-20T19:00:14Z; the GPT-6.1 Sol gateway check failed at 2026-10-20T19:00:13Z, because LiteLLM 1.106.0 imported CacheableResult, absent in MCP 1.30.0. Revision 732d2a is deploying safe diagnostic details. Seventeen backend tests and the Next.js production build passed. Live media generation, MCP tool invocation, managed Sandbox execution, and the complete agent task flow remain unverified. The interface must distinguish configuration from verified execution. Visible empty and error states remain part of the interface.",
+    "overview": "The implemented interface follows the supplied light GrokBot reference: a quiet gray roster beside a near-white conversation, with pink outgoing messages and organic colored bot marks. Rounded forms and restrained chrome keep names, message content, and the active identity prominent. The workspace now opens on a task-first prompt, with role presets, named models, team rooms, attachment input, and compact run controls. Configuration is progressively disclosed while preserving the same light visual system.\n\nThis document records the current CSS and React components, rather than claiming a pixel-exact screenshot match. The root Vercel Services and Daemon configuration is active and the authorized Atlas native database credential is configured. At the live checkpoint 2026-10-20T19:19:37Z, the replacement deployment is ready: Atlas database access and the worker are verified (database=true, worker=true, heartbeat age 0 seconds) after switching to the unpooled native connection. The session-PID guard had detected lost session affinity on the previous transaction-pooler URL; the worker lock key was changed to avoid the legacy pooled-session lock. Longer-term worker stability still needs observation. GPT-6.1 Sol failed its live check at 19:19:19Z and the DeepSeek V3.2 fallback failed at 19:19:20Z, both with HTTP 403 RestrictedModelsError requiring paid AI Gateway credits. No model response has succeeded. DeepWiki\u2019s actual read_wiki_structure invocation for vercel/ai passed at 19:19:22Z on the same date; that single call does not verify every connected server. LiteLLM 1.105.1 passed the real HTTP-adapter regression check; 17 tests and the Next.js production build passed. Forty-three imported variables and 177 inventoried names are recorded as configuration evidence. Image/video generation, managed Sandbox execution, and the complete agent task flow remain unverified. The interface must distinguish configuration from verified execution. Visible empty and error states remain part of the interface.",
     "keyCharacteristics": [
       "Light neutral surfaces with a pink messaging accent.",
       "A compact identity pill and organic two-stroke bot avatars.",
@@ -404,7 +404,7 @@
     ],
     "donts": [
       "Don't turn screenshot text into real conversation data.",
-      "Don't describe the implementation as pixel exact or infer model, media, or tool success from verified database and worker readiness.",
+      "Don't describe the implementation as pixel exact or infer model, media, or tool success from database reachability or historical worker readiness.",
       "Don't replace the mobile vertical rail with a top roster without an intentional layout change."
     ]
   }
