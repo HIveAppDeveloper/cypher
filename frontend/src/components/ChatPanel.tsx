@@ -17,6 +17,9 @@ export function ChatPanel({ bot, room, bots, onCreateBot, onCreateRoom, onQuickS
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [error, setError] = useState('');
   const [sending, setSending] = useState(false);
+  const [computerBotId, setComputerBotId] = useState<string | null>(null);
+  const [computerBusy, setComputerBusy] = useState(false);
+  const [computerError, setComputerError] = useState('');
   const [options, setOptions] = useState(() => { try { return { ...DEFAULT_OPTIONS, provider: 'openai', model: localStorage.getItem('grokbot-manager') === 'gpt-6-luna' ? 'gpt-6-luna' : 'gpt-6.1-sol', ...bot?.defaultOptions, ...modelPolicy(JSON.parse(localStorage.getItem('grokbot-options-' + bot?.id) || '{}')) }; } catch { return { ...DEFAULT_OPTIONS, ...bot?.defaultOptions }; } });
   useEffect(() => { if (bot) { try { localStorage.setItem('grokbot-options-' + bot.id, JSON.stringify(options)); } catch {} } }, [options, bot?.id]);
   const [font, setFont] = useState('inter');
@@ -73,6 +76,16 @@ export function ChatPanel({ bot, room, bots, onCreateBot, onCreateRoom, onQuickS
     } catch (e) { setError(String(e)); }
     if (fileInput.current) fileInput.current.value = '';
   }
+  async function toggleComputer() {
+    if (!bot || computerBusy) return;
+    const id = bot.id;
+    setComputerBusy(true); setComputerError('');
+    try {
+      if (computerBotId === id) { await api.stopBot(id); setComputerBotId(null); }
+      else { await api.startBot(id); setComputerBotId(id); }
+    } catch (e) { setComputerError(e instanceof Error ? e.message : String(e)); }
+    finally { setComputerBusy(false); }
+  }
   async function send() {
     if ((!input.trim() && !attachments.length) || !conversationId || sending) return;
     setSending(true); setError('');
@@ -84,8 +97,9 @@ export function ChatPanel({ bot, room, bots, onCreateBot, onCreateRoom, onQuickS
   return <main className="main-content" style={{ fontFamily }}>
     <header className="workspace-toolbar"><span className="workspace-context">{room ? 'Team conversation' : bot ? 'Agent conversation' : 'Your workspace'}</span><RunControls options={options} onChange={setOptions} font={font} onFont={setFont} group={!!room} model={bot ? { provider: bot.llmProvider, model: bot.llmModel } : undefined}/></header>
     {!bot && !room ? <QuickStart options={options} onOptions={setOptions} onStart={onQuickStart} onCreateBot={onCreateBot} onCreateRoom={onCreateRoom} onOpenLounge={onOpenLounge}/> : <>
-    <header className="chat-header"><span className="identity-pill"><BotAvatar name={title} small/>{title}</span>{bot ? <button className="sandbox-button" onClick={() => api.startBot(bot.id).catch(e => setError(String(e)))}>Start computer</button> : null}</header>
+    <header className="chat-header"><span className="identity-pill"><BotAvatar name={title} small/>{title}</span>{bot ? <div className="computer-controls">{computerBotId === bot.id ? <span role="status">Computer connected</span> : null}<button className="sandbox-button" disabled={computerBusy} onClick={() => void toggleComputer()}>{computerBusy ? 'Connecting…' : computerBotId === bot.id ? 'Stop computer' : 'Start computer'}</button></div> : null}</header>
     {room ? <div className="team-members">{bots.filter(b => room.bot_ids.includes(b.id)).map(b => <span key={b.id} title={`${b.llmProvider} · ${b.llmModel}`}><BotAvatar name={b.name} small/>{b.name}</span>)}</div> : null}
+    {computerError ? <p role="alert">{computerError}</p> : null}
     {error ? <p role="alert">{error.replace(/^Error: /, '')}</p> : null}
     <div ref={stream} onScroll={() => { const el = stream.current; if (el) followLatest.current = el.scrollHeight - el.scrollTop - el.clientHeight < 100; }} className="message-stream" style={{ flex:1,overflowY:'auto',display:'flex',flexDirection:'column' }}>{hasEarlier ? <button className="load-earlier" disabled={loadingEarlier} onClick={loadEarlier}>{loadingEarlier ? 'Loading…' : 'Load earlier messages'}</button> : null}{messages.some(m => m.internal) ? <details className="fleet-activity"><summary>Background activity</summary>{messages.filter(m => m.internal).map(m => <MessageBubble key={m.id} message={m} bot={bots.find(b => b.id === m.senderBotId)}/>)}</details> : null}{messages.filter(m => !m.internal).map(m => <MessageBubble key={m.id} message={m} bot={bots.find(b => b.id === m.senderBotId)}/>)}{!messages.length ? <p className="conversation-empty">Start with a question, a file, or a task.</p> : null}</div>
     {jobs.length ? <details className="job-tray"><summary>{activeJobs.length ? `${activeJobs.length} job${activeJobs.length === 1 ? '' : 's'} in progress` : 'Recent work'}</summary>{jobs.slice(0,6).map(job => <div key={job.id}><span>{job.title}</span><strong data-status={job.status}>{job.status === 'cancel_requested' ? 'Stopping…' : job.status}</strong>{['pending','running'].includes(job.status) ? <button aria-label={`Cancel ${job.title}`} onClick={() => api.cancelJob(conversationId, job.id).catch(e => setError(e.message))}>Cancel</button> : null}</div>)}</details> : null}

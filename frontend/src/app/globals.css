@@ -35,3 +35,6 @@ html,body{font-family:"Inter Variable",-apple-system,BlinkMacSystemFont,"Segoe U
 .goal-list{display:grid;gap:16px;margin:0 0 24px}.goal-row{padding:0 0 18px;border-bottom:1px solid #e2dce5}.goal-row>div{display:flex;align-items:center;justify-content:space-between;gap:12px}.goal-row strong{font-size:15px}.goal-row p,.goal-row summary{font-size:13px;line-height:1.6;color:#665e6b}.goal-row span[data-status]{font-size:11px;color:#625b66}.goal-row [data-status=completed]{color:#26765f}.goal-row .btn-secondary{font-size:12px;padding:8px 14px;margin-top:8px}.channel-key{padding:18px;border-radius:18px;background:#f4eff5;margin-bottom:24px}.channel-key p{font-size:13px;line-height:1.6}.channel-key input{width:100%;margin:6px 0 12px}.goals-dialog output{float:right;font-variant-numeric:tabular-nums}
 .bot-dialog{backdrop-filter:none;isolation:isolate}.bot-dialog::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;border-radius:inherit;backdrop-filter:blur(var(--glass-blur)) saturate(145%)}
 button:focus-visible,input:focus-visible,textarea:focus-visible{outline-color:var(--focus-color)}::selection{background:color-mix(in srgb,var(--focus-color) 20%,white)}
+
+.computer-controls { display:flex; align-items:center; gap:12px; }
+.computer-controls [role="status"] { font-size:13px; color:var(--text-secondary, #666); }
