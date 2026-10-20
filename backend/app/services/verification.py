@@ -2,6 +2,7 @@
 import asyncio
 import logging
 from datetime import datetime
+from contextlib import suppress
 from sqlalchemy import select
 from app.db.session import AsyncSessionLocal
 from app.models.runtime import RuntimeHeartbeat, RuntimeCheck
@@ -14,9 +15,9 @@ async def record(name):
         else: db.add(RuntimeHeartbeat(name=name, updated_at=datetime.utcnow()))
         await db.commit()
 
-async def verify_cloud():
+async def verify_cloud(force=False):
     async with AsyncSessionLocal() as db:
-        if await db.get(RuntimeHeartbeat, 'cloud_check_finished_v4'): return
+        if not force and await db.get(RuntimeHeartbeat, 'cloud_check_finished_v5'): return
     from app.services.llm_gateway import LLMGateway
     from app.services.plugins import discover, session
     async def gateway():
@@ -32,8 +33,32 @@ async def verify_cloud():
             result = await client.call_tool('read_wiki_structure', {'repoName':'vercel/ai'})
             if result.isError or not result.content: raise RuntimeError('MCP documentation tool failed')
         await record('mcp_tool_verified')
-    for name, check in [('gateway',gateway),('fallback',fallback),('mcp',mcp)]:
+    async def browser():
+        from app.services.tools.browser import BrowserTool
+        tool = BrowserTool()
         try:
+            result = await tool.navigate_to('https://example.com', session_id='cloud-verification')
+            if not result.get('success') or result.get('title') != 'Example Domain':
+                raise RuntimeError('Hosted browser could not read the test page')
+        finally:
+            await tool.close()
+    async def computer():
+        from uuid import uuid5, NAMESPACE_URL
+        from app.services import managed_sandbox
+        identity = str(uuid5(NAMESPACE_URL, 'open-grokbot/cloud-verification'))
+        def execute():
+            try:
+                result = managed_sandbox.execute(identity, ['printf', 'Cloud computer ready'])
+            except Exception:
+                with suppress(Exception): managed_sandbox.stop(identity)
+                raise
+            managed_sandbox.stop(identity)
+            if result['exit_code'] != 0 or result['output'] != 'Cloud computer ready':
+                raise RuntimeError('Cloud computer command failed')
+        await asyncio.to_thread(execute)
+    async def run_one(name, check):
+        try:
+            await save_check(name,'running',{})
             async with asyncio.timeout(90): await check()
             await record(name+'_verified')
             await save_check(name,'passed',{})
@@ -42,7 +67,8 @@ async def verify_cloud():
             await record(name+'_verification_failed')
             await save_check(name,'failed',safe_error(error))
             logger.warning('Cloud self-check failed: %s (%s)',name,type(error).__name__)
-    await record('cloud_check_finished_v4')
+    await asyncio.gather(*(run_one(name, check) for name, check in [('gateway',gateway),('fallback',fallback),('mcp',mcp),('browser',browser),('computer',computer)]))
+    await record('cloud_check_finished_v5')
 
 
 def safe_error(error):

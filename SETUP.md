@@ -61,3 +61,9 @@ GPT-6.1 Sol failed its live check at `19:19:19Z` and the DeepSeek V3.2 fallback 
 LiteLLM 1.105.1 passed the real HTTP-adapter regression check; 17 tests and the Next.js production build passed. Forty-three imported variables and 177 inventoried names are recorded as configuration evidence. Image/video generation, managed Sandbox execution, and the complete agent task flow remain unverified.
 
 The failed GPT-6.1 Sol check requires paid gateway access/credits; Workspace setup provides a billing/access link. Do not present gateway configuration as entitlement. There is no scheduler/routines UI, account isolation, interactive browser sign-in handoff, or service-specific Hive/Atlas integration merely from importing configuration.
+
+## Recheck cloud access without redeploying
+
+Workspace setup → Run checks saves a command in PostgreSQL. The worker performs small model requests, a public MCP documentation call, browser navigation, and a cloud-computer command followed by shutdown. The command continues if the browser closes. Results and timestamps appear under Live check results. Checks can consume gateway credits and cloud compute; repeats have a one-minute cooldown. Funding a gateway does not itself prove a successful response: run checks again after changing access.
+
+The worker remained healthy roughly 45 minutes after the initial unpooled-connection verification. The expanded browser and computer checks are implemented and awaiting deployment verification. Nineteen backend tests and the production frontend build pass, including persisted check commands and isolated Vercel request-header context. Request context lets authenticated API operations use the platform-provided OIDC header without exposing credentials to the browser.

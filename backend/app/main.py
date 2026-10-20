@@ -73,7 +73,9 @@ async def authenticate_backend(request: Request, call_next):
         expected = "Bearer " + settings.BACKEND_API_TOKEN
         if not secrets.compare_digest(request.headers.get("authorization", ""), expected):
             return JSONResponse({"detail": "Unauthorized"}, status_code=401)
-    return await call_next(request)
+    from vercel.headers import HeadersContext
+    with HeadersContext(dict(request.headers)).use():
+        return await call_next(request)
 
 app.add_middleware(
     CORSMiddleware,

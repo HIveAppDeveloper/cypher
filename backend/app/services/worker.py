@@ -8,6 +8,7 @@ from datetime import datetime
 from sqlalchemy import select, update, text
 from app.db.session import AsyncSessionLocal, engine
 from app.models.task import Task
+from app.models.runtime import RuntimeCheck
 from app.services.orchestrator import AgentOrchestrator
 logger = logging.getLogger(__name__)
 POLL_SECONDS = 2
@@ -63,15 +64,41 @@ async def _run_worker_loop(lock_connection=None, owner_pid=None):
         await db.execute(update(Task).where(Task.status == "running").values(status="interrupted", completed_at=datetime.utcnow(), result={"error": "Backend restarted during execution; review before resubmitting."}))
         await db.execute(update(Task).where(Task.status == "cancel_requested").values(status="cancelled", completed_at=datetime.utcnow(), result={"note":"Worker restarted after cancellation. Review any in-flight external actions."}))
         await db.commit()
-    if os.getenv("GROKBOT_VERIFY_CLOUD") == "true":
+    async def run_checks(force=False):
         from app.services.verification import verify_cloud
-        check = asyncio.create_task(verify_cloud())
-        while not check.done():
-            await pulse()
-            await asyncio.wait({check}, timeout=5)
-        await check
+        check = asyncio.create_task(verify_cloud(force=force))
+        try:
+            while not check.done():
+                await pulse()
+                await asyncio.wait({check}, timeout=5)
+            await check
+        finally:
+            if not check.done():
+                check.cancel()
+                with suppress(asyncio.CancelledError): await check
+    async with AsyncSessionLocal() as db:
+        previous = await db.get(RuntimeCheck, 'check_request')
+        if previous and previous.status == 'running':
+            previous.status = 'pending'
+            await db.commit()
+    if os.getenv("GROKBOT_VERIFY_CLOUD") == "true":
+        await run_checks()
     while True:
         await pulse()
+        async with AsyncSessionLocal() as commands:
+            request_check = await commands.get(RuntimeCheck, 'check_request')
+            requested = request_check is not None and request_check.status == 'pending'
+            if requested:
+                request_check.status = 'running'
+                await commands.commit()
+        if requested:
+            from app.services.verification import save_check, safe_error
+            try:
+                await run_checks(force=True)
+                await save_check('check_request','completed',{})
+            except Exception as error:
+                await save_check('check_request','failed',safe_error(error))
+            continue
         async with AsyncSessionLocal() as db:
             task = (await db.execute(select(Task).where(Task.status == "pending").order_by(Task.created_at).limit(1).with_for_update(skip_locked=True))).scalar_one_or_none()
             if task is None:

@@ -399,3 +399,66 @@ async def test_real_responses_bridge_with_mcp_dependency(monkeypatch):
         assert response.choices[0].message.content=='Adapter ready'
     finally:
         await handler.client.aclose()
+
+@pytest.mark.asyncio
+async def test_cloud_check_requests_persist_and_run_without_browser(tmp_path, monkeypatch):
+    from contextlib import suppress
+    from httpx import ASGITransport, AsyncClient
+    from sqlalchemy.ext.asyncio import async_sessionmaker
+    from app.db.session import Base, get_db
+    from app.main import app
+    from app.config import settings
+    from app.models.runtime import RuntimeCheck
+    from app.services import worker, verification
+    engine=create_async_engine(f'sqlite+aiosqlite:///{tmp_path}/checks.db')
+    sessions=async_sessionmaker(engine, expire_on_commit=False)
+    async with engine.begin() as connection: await connection.run_sync(Base.metadata.create_all)
+    async def session():
+        async with sessions() as db: yield db
+    calls=[]
+    async def verify(force=False): calls.append(force)
+    monkeypatch.setattr(worker,'AsyncSessionLocal',sessions)
+    monkeypatch.setattr(verification,'AsyncSessionLocal',sessions)
+    monkeypatch.setattr(verification,'verify_cloud',verify)
+    monkeypatch.setattr(settings,'BACKEND_API_TOKEN','cloud-test-token-with-at-least-32-characters')
+    monkeypatch.delenv('GROKBOT_VERIFY_CLOUD',raising=False)
+    app.dependency_overrides[get_db]=session
+    runner=None
+    try:
+        async with AsyncClient(transport=ASGITransport(app=app),base_url='http://test',headers={'Authorization':'Bearer '+settings.BACKEND_API_TOKEN}) as client:
+            assert (await client.post('/api/runtime/checks')).status_code==202
+            assert (await client.post('/api/runtime/checks')).json()['status']=='pending'
+        runner=asyncio.create_task(worker._run_worker_loop())
+        for _ in range(100):
+            async with sessions() as db:
+                item=await db.get(RuntimeCheck,'check_request')
+                if item.status=='completed': break
+            await asyncio.sleep(.02)
+        assert item.status=='completed' and calls==[True]
+        async with AsyncClient(transport=ASGITransport(app=app),base_url='http://test',headers={'Authorization':'Bearer '+settings.BACKEND_API_TOKEN}) as client:
+            assert (await client.post('/api/runtime/checks')).status_code==429
+    finally:
+        if runner:
+            runner.cancel()
+            with suppress(asyncio.CancelledError): await runner
+        app.dependency_overrides.clear()
+        await engine.dispose()
+
+
+@pytest.mark.asyncio
+async def test_authenticated_requests_scope_vercel_headers(monkeypatch):
+    from app.main import app
+    from app.config import settings
+    from httpx import ASGITransport, AsyncClient
+    from vercel.headers import get_headers
+    monkeypatch.setattr(settings,'BACKEND_API_TOKEN','test-auth-token')
+    async def probe(): return {'context': (get_headers() or {}).get('x-vercel-oidc-token')}
+    app.add_api_route('/api/context-probe',probe)
+    try:
+        async with AsyncClient(transport=ASGITransport(app=app),base_url='http://test') as client:
+            a,b=await asyncio.gather(*(client.get('/api/context-probe',headers={'Authorization':'Bearer test-auth-token','x-vercel-oidc-token':value}) for value in ('fake-a','fake-b')))
+            assert a.json()['context']=='fake-a' and b.json()['context']=='fake-b'
+            assert (await client.get('/api/context-probe')).status_code==401
+        assert get_headers() is None
+    finally:
+        app.router.routes[:]=[route for route in app.router.routes if getattr(route,'endpoint',None) is not probe]
