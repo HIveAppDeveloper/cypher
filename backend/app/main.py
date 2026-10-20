@@ -1,4 +1,6 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
+import secrets
 from sqlalchemy.schema import CreateSchema
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
@@ -61,6 +63,14 @@ app = FastAPI(
     version="0.1.0",
     lifespan=lifespan,
 )
+
+@app.middleware("http")
+async def authenticate_backend(request: Request, call_next):
+    if settings.BACKEND_API_TOKEN and request.url.path.startswith("/api/"):
+        expected = "Bearer " + settings.BACKEND_API_TOKEN
+        if not secrets.compare_digest(request.headers.get("authorization", ""), expected):
+            return JSONResponse({"detail": "Unauthorized"}, status_code=401)
+    return await call_next(request)
 
 app.add_middleware(
     CORSMiddleware,

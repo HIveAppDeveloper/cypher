@@ -16,6 +16,7 @@ class Settings(BaseSettings):
     LLM_API_BASE: str | None = None
     LLM_MODEL: str = "gemini-2.5-flash"
     SANDBOX_IMAGE: str = "open-grokbot-sandbox:latest"
+    BACKEND_API_TOKEN: str = ""
     SECRET_KEY: str = "local-only-change-before-exposure"
     CORS_ORIGINS: Annotated[list[str], NoDecode] = ["http://localhost:3000"]
 

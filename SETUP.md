@@ -59,7 +59,7 @@ Open `http://localhost:3000`. Create a bot with provider `gemini` and your chose
 
 ## Vercel frontend
 
-Import your fork into Vercel with Root Directory `frontend`. Set server-only `GROKBOT_BACKEND_URL` to your authenticated backend gateway. Leave `NEXT_PUBLIC_API_URL` unset so requests use the same-origin proxy. No Hive or Atlas secrets belong in `NEXT_PUBLIC_*` variables. The runtime must be reachable by Vercel, protected, and return the API routes above. Configure gateway authentication before public use; the included generic proxy is for an already protected network path, not a public unauthenticated backend.
+Import your fork into Vercel with Root Directory `frontend`. Set server-only `GROKBOT_BACKEND_URL` to your authenticated backend gateway. Leave `NEXT_PUBLIC_API_URL` unset so requests use the same-origin proxy. No Hive or Atlas secrets belong in `NEXT_PUBLIC_*` variables. The runtime must be reachable by Vercel, protected, and return the API routes above. Set `BACKEND_API_TOKEN` on the backend and the same secret as server-only `GROKBOT_BACKEND_API_TOKEN` on Vercel. The proxy forwards it as a Bearer token; backend API and WebSocket routes verify it. Keep frontend deployment protection enabled as well. Generate a dedicated random token on the private host, for example with `openssl rand -hex 32`.
 
 ## Checks performed
 

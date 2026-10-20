@@ -56,9 +56,12 @@ async def test_persisted_job_and_messages(tmp_path,monkeypatch):
     monkeypatch.setattr(worker,'AsyncSessionLocal',sessions)
     monkeypatch.setattr(orchestrator,'AsyncSessionLocal',sessions)
     monkeypatch.setattr(LLMGateway,'complete',complete)
+    from app.config import settings
+    monkeypatch.setattr(settings, 'BACKEND_API_TOKEN', 'test-only-token')
     app.dependency_overrides[get_db]=get_session
     try:
-        async with AsyncClient(transport=ASGITransport(app=app),base_url='http://test') as client:
+        async with AsyncClient(transport=ASGITransport(app=app),base_url='http://test',headers={'Authorization':'Bearer test-only-token'}) as client:
+            assert (await client.get('/api/bots', headers={'Authorization':''})).status_code == 401
             response=await client.post('/api/bots',json={'name':'Hive Reach','role':'Outreach','system_prompt':'Research first.','llm_provider':'gemini','llm_model':'gemini-2.5-flash'})
             assert response.status_code==200,response.text
             bot=response.json()

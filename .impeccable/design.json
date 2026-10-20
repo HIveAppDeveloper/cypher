@@ -1,0 +1,376 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-20T17:48:40.479342+00:00",
+  "title": "Design System: Open GrokBot",
+  "extensions": {
+    "shadows": [
+      {
+        "name": "identity",
+        "value": "0 2px 12px #00000009",
+        "purpose": "Compact centered identity pill."
+      },
+      {
+        "name": "composer",
+        "value": "0 2px 7px #0000000a",
+        "purpose": "Faint lift around the message composer."
+      }
+    ],
+    "motion": [],
+    "breakpoints": [
+      {
+        "name": "compact-rail",
+        "value": "700px"
+      },
+      {
+        "name": "capped-sidebar-notice",
+        "value": "1408px"
+      }
+    ],
+    "colorMeta": {
+      "panel": {
+        "role": "neutral",
+        "displayName": "Panel",
+        "tonalRamp": [
+          "oklch(15% 0 350)",
+          "oklch(26% 0 350)",
+          "oklch(38% 0 350)",
+          "oklch(49% 0 350)",
+          "oklch(61% 0 350)",
+          "oklch(72% 0 350)",
+          "oklch(84% 0 350)",
+          "oklch(95% 0 350)"
+        ]
+      },
+      "conversation": {
+        "role": "neutral",
+        "displayName": "Conversation",
+        "tonalRamp": [
+          "oklch(15% 0 350)",
+          "oklch(26% 0 350)",
+          "oklch(38% 0 350)",
+          "oklch(49% 0 350)",
+          "oklch(61% 0 350)",
+          "oklch(72% 0 350)",
+          "oklch(84% 0 350)",
+          "oklch(95% 0 350)"
+        ]
+      },
+      "sidebar": {
+        "role": "neutral",
+        "displayName": "Sidebar",
+        "tonalRamp": [
+          "oklch(15% 0 350)",
+          "oklch(26% 0 350)",
+          "oklch(38% 0 350)",
+          "oklch(49% 0 350)",
+          "oklch(61% 0 350)",
+          "oklch(72% 0 350)",
+          "oklch(84% 0 350)",
+          "oklch(95% 0 350)"
+        ]
+      },
+      "card": {
+        "role": "neutral",
+        "displayName": "Card",
+        "tonalRamp": [
+          "oklch(15% 0 350)",
+          "oklch(26% 0 350)",
+          "oklch(38% 0 350)",
+          "oklch(49% 0 350)",
+          "oklch(61% 0 350)",
+          "oklch(72% 0 350)",
+          "oklch(84% 0 350)",
+          "oklch(95% 0 350)"
+        ]
+      },
+      "card-hover": {
+        "role": "neutral",
+        "displayName": "Card Hover",
+        "tonalRamp": [
+          "oklch(15% 0 350)",
+          "oklch(26% 0 350)",
+          "oklch(38% 0 350)",
+          "oklch(49% 0 350)",
+          "oklch(61% 0 350)",
+          "oklch(72% 0 350)",
+          "oklch(84% 0 350)",
+          "oklch(95% 0 350)"
+        ]
+      },
+      "selected": {
+        "role": "neutral",
+        "displayName": "Selected",
+        "tonalRamp": [
+          "oklch(15% 0 350)",
+          "oklch(26% 0 350)",
+          "oklch(38% 0 350)",
+          "oklch(49% 0 350)",
+          "oklch(61% 0 350)",
+          "oklch(72% 0 350)",
+          "oklch(84% 0 350)",
+          "oklch(95% 0 350)"
+        ]
+      },
+      "border-light": {
+        "role": "neutral",
+        "displayName": "Border Light",
+        "tonalRamp": [
+          "oklch(15% 0 350)",
+          "oklch(26% 0 350)",
+          "oklch(38% 0 350)",
+          "oklch(49% 0 350)",
+          "oklch(61% 0 350)",
+          "oklch(72% 0 350)",
+          "oklch(84% 0 350)",
+          "oklch(95% 0 350)"
+        ]
+      },
+      "text": {
+        "role": "neutral",
+        "displayName": "Text",
+        "tonalRamp": [
+          "oklch(15% 0 350)",
+          "oklch(26% 0 350)",
+          "oklch(38% 0 350)",
+          "oklch(49% 0 350)",
+          "oklch(61% 0 350)",
+          "oklch(72% 0 350)",
+          "oklch(84% 0 350)",
+          "oklch(95% 0 350)"
+        ]
+      },
+      "text-muted": {
+        "role": "neutral",
+        "displayName": "Text Muted",
+        "tonalRamp": [
+          "oklch(15% 0 350)",
+          "oklch(26% 0 350)",
+          "oklch(38% 0 350)",
+          "oklch(49% 0 350)",
+          "oklch(61% 0 350)",
+          "oklch(72% 0 350)",
+          "oklch(84% 0 350)",
+          "oklch(95% 0 350)"
+        ]
+      },
+      "accent-blue": {
+        "role": "primary",
+        "displayName": "Accent Blue",
+        "tonalRamp": [
+          "oklch(15% 0.1 350)",
+          "oklch(26% 0.1 350)",
+          "oklch(38% 0.1 350)",
+          "oklch(49% 0.1 350)",
+          "oklch(61% 0.1 350)",
+          "oklch(72% 0.1 350)",
+          "oklch(84% 0.1 350)",
+          "oklch(95% 0.1 350)"
+        ]
+      },
+      "outgoing": {
+        "role": "primary",
+        "displayName": "Outgoing",
+        "tonalRamp": [
+          "oklch(15% 0.1 350)",
+          "oklch(26% 0.1 350)",
+          "oklch(38% 0.1 350)",
+          "oklch(49% 0.1 350)",
+          "oklch(61% 0.1 350)",
+          "oklch(72% 0.1 350)",
+          "oklch(84% 0.1 350)",
+          "oklch(95% 0.1 350)"
+        ]
+      },
+      "send": {
+        "role": "primary",
+        "displayName": "Send",
+        "tonalRamp": [
+          "oklch(15% 0.1 350)",
+          "oklch(26% 0.1 350)",
+          "oklch(38% 0.1 350)",
+          "oklch(49% 0.1 350)",
+          "oklch(61% 0.1 350)",
+          "oklch(72% 0.1 350)",
+          "oklch(84% 0.1 350)",
+          "oklch(95% 0.1 350)"
+        ]
+      },
+      "focus": {
+        "role": "primary",
+        "displayName": "Focus",
+        "tonalRamp": [
+          "oklch(15% 0.1 350)",
+          "oklch(26% 0.1 350)",
+          "oklch(38% 0.1 350)",
+          "oklch(49% 0.1 350)",
+          "oklch(61% 0.1 350)",
+          "oklch(72% 0.1 350)",
+          "oklch(84% 0.1 350)",
+          "oklch(95% 0.1 350)"
+        ]
+      },
+      "status-green": {
+        "role": "semantic",
+        "displayName": "Status Green",
+        "tonalRamp": [
+          "oklch(15% 0.1 150)",
+          "oklch(26% 0.1 150)",
+          "oklch(38% 0.1 150)",
+          "oklch(49% 0.1 150)",
+          "oklch(61% 0.1 150)",
+          "oklch(72% 0.1 150)",
+          "oklch(84% 0.1 150)",
+          "oklch(95% 0.1 150)"
+        ]
+      },
+      "status-red": {
+        "role": "semantic",
+        "displayName": "Status Red",
+        "tonalRamp": [
+          "oklch(15% 0.1 15)",
+          "oklch(26% 0.1 15)",
+          "oklch(38% 0.1 15)",
+          "oklch(49% 0.1 15)",
+          "oklch(61% 0.1 15)",
+          "oklch(72% 0.1 15)",
+          "oklch(84% 0.1 15)",
+          "oklch(95% 0.1 15)"
+        ]
+      },
+      "notice-surface": {
+        "role": "neutral",
+        "displayName": "Notice Surface",
+        "tonalRamp": [
+          "oklch(15% 0.1 350)",
+          "oklch(26% 0.1 350)",
+          "oklch(38% 0.1 350)",
+          "oklch(49% 0.1 350)",
+          "oklch(61% 0.1 350)",
+          "oklch(72% 0.1 350)",
+          "oklch(84% 0.1 350)",
+          "oklch(95% 0.1 350)"
+        ]
+      },
+      "notice-border": {
+        "role": "neutral",
+        "displayName": "Notice Border",
+        "tonalRamp": [
+          "oklch(15% 0.1 350)",
+          "oklch(26% 0.1 350)",
+          "oklch(38% 0.1 350)",
+          "oklch(49% 0.1 350)",
+          "oklch(61% 0.1 350)",
+          "oklch(72% 0.1 350)",
+          "oklch(84% 0.1 350)",
+          "oklch(95% 0.1 350)"
+        ]
+      },
+      "notice-text": {
+        "role": "neutral",
+        "displayName": "Notice Text",
+        "tonalRamp": [
+          "oklch(15% 0.1 350)",
+          "oklch(26% 0.1 350)",
+          "oklch(38% 0.1 350)",
+          "oklch(49% 0.1 350)",
+          "oklch(61% 0.1 350)",
+          "oklch(72% 0.1 350)",
+          "oklch(84% 0.1 350)",
+          "oklch(95% 0.1 350)"
+        ]
+      }
+    },
+    "focus": [
+      {
+        "name": "composer-textarea",
+        "value": "outline:2px solid #b51f70;outline-offset:2px;border-radius:8px",
+        "purpose": "Explicit visible keyboard focus for the composer textarea."
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary action",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Pink primary form action; no distinct hover fill is implemented.",
+      "html": "<button class=\"ds-primary\">Create bot</button>",
+      "css": ".ds-primary{font:16px -apple-system,BlinkMacSystemFont,\"Segoe UI\",sans-serif;padding:10px 18px;border:1px solid #c5237b;border-radius:18px;background:#c5237b;color:white;cursor:pointer}.ds-primary:focus-visible{outline:2px solid #b51f70;outline-offset:3px}"
+    },
+    {
+      "name": "Secondary action",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Quiet bordered secondary action.",
+      "html": "<button class=\"ds-secondary\">Cancel</button>",
+      "css": ".ds-secondary{font:16px -apple-system,BlinkMacSystemFont,\"Segoe UI\",sans-serif;padding:10px 18px;border:1px solid #ddd;border-radius:18px;background:white;color:#202020;cursor:pointer}.ds-secondary:focus-visible{outline:2px solid #b51f70;outline-offset:3px}"
+    },
+    {
+      "name": "Round toolbar action",
+      "kind": "button",
+      "refersTo": "button-round",
+      "description": "Circular create control used in the roster toolbar.",
+      "html": "<button class=\"ds-round\" aria-label=\"Create bot\"><svg viewBox=\"0 0 24 24\"><path d=\"M12 4v16M4 12h16\"/></svg></button>",
+      "css": ".ds-round{width:43px;height:43px;display:grid;place-items:center;border:1px solid #e7e7e7;border-radius:50%;background:white;color:#202020;cursor:pointer}.ds-round svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.6}.ds-round:hover{background:#ededed}.ds-round:focus-visible{outline:2px solid #b51f70;outline-offset:3px}"
+    },
+    {
+      "name": "Search field",
+      "kind": "input",
+      "refersTo": "search-input",
+      "description": "Roster search field.",
+      "html": "<input class=\"ds-search\" placeholder=\"Search bots\" aria-label=\"Search bots\">",
+      "css": ".ds-search{font:16px -apple-system,BlinkMacSystemFont,\"Segoe UI\",sans-serif;padding:10px;border:1px solid #ddd;border-radius:12px;color:#202020;background:white}.ds-search:focus-visible{outline:2px solid #b51f70;outline-offset:3px}"
+    },
+    {
+      "name": "Outgoing message",
+      "kind": "card",
+      "refersTo": "message-outgoing",
+      "description": "Right-aligned message bubble; snippet shows shape without implying real sent data.",
+      "html": "<article class=\"ds-outgoing\">A message preview</article>",
+      "css": ".ds-outgoing{font:18px/1.5 -apple-system,BlinkMacSystemFont,\"Segoe UI\",sans-serif;width:fit-content;max-width:84%;padding:12px 16px;border-radius:27px;background:#c5237b;color:white;white-space:pre-wrap;overflow-wrap:anywhere}"
+    },
+    {
+      "name": "Incoming message",
+      "kind": "card",
+      "refersTo": "message-incoming",
+      "description": "Neutral incoming bubble.",
+      "html": "<article class=\"ds-incoming\">A reply preview</article>",
+      "css": ".ds-incoming{font:18px/1.5 -apple-system,BlinkMacSystemFont,\"Segoe UI\",sans-serif;width:fit-content;max-width:84%;padding:12px 16px;border-radius:27px;background:var(--bg-card,#efefef);color:#202020;white-space:pre-wrap;overflow-wrap:anywhere}"
+    },
+    {
+      "name": "Roster navigation",
+      "kind": "nav",
+      "description": "Selected roster row with the actual organic avatar silhouette.",
+      "html": "<nav aria-label=\"Bots\"><button class=\"ds-row\"><svg viewBox=\"0 0 48 48\" aria-hidden=\"true\"><path fill=\"#13b6a9\" d=\"M8 11C11 5 22 3 29 5c8-1 15 10 15 20 2 7-7 16-14 16-7 5-13 0-18 1C3 40 1 28 4 23c-1-4 0-9 4-12Z\"/><path d=\"m23 15 3 7m7-11 3 7\" fill=\"none\" stroke=\"white\" stroke-width=\"4\" stroke-linecap=\"round\"/></svg><span><strong>Bot name</strong><small>Description preview</small></span></button></nav>",
+      "css": ".ds-row{font-family:-apple-system,BlinkMacSystemFont,\"Segoe UI\",sans-serif;display:flex;align-items:center;gap:10px;width:100%;padding:13px 10px;text-align:left;border:0;border-radius:15px;background:#e5e5e5;color:#202020;cursor:pointer}.ds-row svg{width:46px;height:46px;flex-shrink:0}.ds-row strong{display:block;font-size:18px;line-height:1.2;font-weight:500}.ds-row small{display:block;margin-top:4px;font-size:16px;color:var(--text-muted,#696969)}.ds-row:hover{background:#e5e5e5}.ds-row:focus-visible{outline:2px solid #b51f70;outline-offset:3px}"
+    },
+    {
+      "name": "Bot creation dialog",
+      "kind": "card",
+      "description": "Bounded native modal with scrolling content and a dimmed backdrop.",
+      "html": "<div class=\"ds-dialog\" role=\"dialog\" aria-label=\"Create bot\"><h2>Create bot</h2><label>Bot name<input aria-label=\"Bot name\"></label></div>",
+      "css": ".ds-dialog{font-family:-apple-system,BlinkMacSystemFont,\"Segoe UI\",sans-serif;width:min(500px,calc(100% - 32px));max-height:calc(100dvh - 32px);overflow:auto;padding:28px;border:1px solid #ddd;border-radius:20px;color:#202020;background:white}.ds-dialog h2{margin:0 0 24px;font-size:24px;font-weight:500}.ds-dialog label{display:block;margin:16px 0 6px;font-size:14px}.ds-dialog input{display:block;width:100%;padding:10px 12px;border:1px solid #ddd;border-radius:10px;background:white;color:#222}.ds-dialog input:focus-visible{outline:2px solid #b51f70;outline-offset:3px}"
+    }
+  ],
+  "narrative": {
+    "overview": "The implemented interface follows the supplied light GrokBot reference: a quiet gray roster beside a near-white conversation, with pink outgoing messages and organic colored bot marks. Rounded forms and restrained chrome keep names, message content, and the active identity prominent.\n\nThis document records the current CSS and React components, rather than claiming a pixel-exact screenshot match. No backend is connected in the reviewed environment; model behavior has only been exercised through mocked tests. Visible empty and error states remain part of the interface.",
+    "keyCharacteristics": [
+      "Light neutral surfaces with a pink messaging accent.",
+      "A compact identity pill and organic two-stroke bot avatars.",
+      "Rounded messages, restrained borders, and a persistent composer.",
+      "A desktop roster that becomes a narrow vertical rail on small screens."
+    ],
+    "rules": [],
+    "dos": [
+      "Do preserve the light surface hierarchy and pink outgoing-message treatment.",
+      "Do retain the organic SVG bot identity with two white strokes.",
+      "Do keep visible empty, disabled, and error states truthful to runtime behavior.",
+      "Do preserve keyboard labels and visible focus on supported controls."
+    ],
+    "donts": [
+      "Don't turn screenshot text into real conversation data.",
+      "Don't describe the implementation as pixel exact or backend verified.",
+      "Don't replace the mobile vertical rail with a top roster without an intentional layout change."
+    ]
+  }
+}
