@@ -214,3 +214,7 @@ Connections preserves MCP/variable tabs, encrypted-token entry, divided server r
 - Don't replace task content with invented successful examples.
 - Don't force every surface into a floating glass card.
 - Don't claim screenshot pixel fidelity or universal provider/tool readiness.
+
+## Team text thread
+
+The main workspace opens the existing Agent lounge as Your team. Preserve the light palette and glass controls. The conversation header uses a direct title and quiet subtitle; participant chips collapse under a teammates disclosure. Message options retain all model and media controls behind one disclosure, with the current mode and Sol/Luna visible in its summary. Consecutive same-sender messages within five minutes group visually. Message actions use a small Options disclosure. Queued/running indicators derive only from real task status. No fabricated typing, staff exchanges, completed work, or online presence. Computer controls show progress, successful connection, and a stop action after a successful request.

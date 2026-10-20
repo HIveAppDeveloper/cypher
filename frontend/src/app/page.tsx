@@ -20,7 +20,7 @@ export default function Page() {
   const [rooms, setRooms] = useState<Conversation[]>([]);
   const [selectedRoom, setSelectedRoom] = useState<Conversation | null>(null);
   const [roomError, setRoomError] = useState('');
-  useEffect(() => { let active = true; api.getConversations().then(data => { if (active) { setRooms(data.filter(c => c.is_group)); setRoomError(''); } }).catch(() => { if (active) setRoomError('Team rooms could not load.'); }); return () => { active = false; }; }, []);
+  useEffect(() => { let active = true; api.getConversations().then(data => { if (active) { setRooms(data.filter(c => c.is_group)); const lounge=data.find(c=>c.is_group && c.title==='Agent lounge'); if(lounge)setSelectedRoom(lounge); setRoomError(''); } }).catch(() => { if (active) setRoomError('Team rooms could not load.'); }); return () => { active = false; }; }, []);
   async function openLounge() {
     const room = await api.defaultTeam();
     await refreshBots();

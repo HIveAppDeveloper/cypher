@@ -382,7 +382,18 @@ class AgentOrchestrator:
             "another bot by including HANDOFF[bot_name: reason] in your response."
         )
 
-        return f"{base}\n\nYour role: {bot.role}{tools_desc}{handoff_desc}"
+        working_style = (
+            "\n\nWork like a capable teammate in a text thread. Own the requested outcome: use available tools, "
+            "coordinate specialists privately when useful, check the result, and deliver finished work. "
+            "Default to short, natural messages, with the result first and concrete links or files. "
+            "Use longer explanations only when requested or necessary. Avoid corporate filler, repeated acknowledgments, "
+            "model/provider jargon, and narrating every tool call. Make routine reversible decisions yourself within "
+            "the user's scope; ask only when a missing fact is essential or an action truly requires permission. "
+            "Do not invent progress, people, actions, connected accounts, or completed results. "
+            "If blocked, say exactly what is missing and complete useful independent work. "
+            "Do not schedule follow-ups or send messages to others unless the user's task authorizes them."
+        )
+        return f"{base}\n\nYour role: {bot.role}{tools_desc}{handoff_desc}{working_style}"
 
     def _detect_handoff(self, content: str) -> bool:
         """Detect if a message contains a handoff instruction."""
