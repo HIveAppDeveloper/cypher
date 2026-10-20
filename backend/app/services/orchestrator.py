@@ -62,6 +62,7 @@ class AgentOrchestrator:
         options: dict | None = None,
         goal_id: str | None = None,
         task_id: str | None = None,
+        incoming_message_id: str | None = None,
     ) -> list[dict]:
         """Main entry point — process an incoming message in a conversation.
 
@@ -76,22 +77,29 @@ class AgentOrchestrator:
         """
         from app.services.automation import register_goal_tools
         await register_goal_tools(self.registry, conversation_id, goal_id, AsyncSessionLocal)
+        from app.services.context import register_context_tools
+        await register_context_tools(self.registry,conversation_id,AsyncSessionLocal)
         self.task_id = task_id
         self.options = RunOptions(**(options or {}))
         async with AsyncSessionLocal() as db:
-            # Persist the incoming message
-            incoming_msg = Message(
-                id=str(uuid.uuid4()),
-                conversation_id=conversation_id,
-                sender_type=sender_type,
-                sender_bot_id=sender_bot_id,
-                content=user_message_content,
-                message_type="text",
-                metadata_json={"attachments": attachments or []},
-                created_at=datetime.now(timezone.utc).replace(tzinfo=None),
-            )
-            db.add(incoming_msg)
-            await db.commit()
+            if incoming_message_id:
+                existing = await db.get(Message, incoming_message_id)
+                if existing is None or existing.conversation_id != conversation_id:
+                    raise ValueError("Queued message is missing from its conversation")
+            else:
+                # Non-HTTP jobs still persist their incoming message here.
+                incoming_msg = Message(
+                    id=str(uuid.uuid4()),
+                    conversation_id=conversation_id,
+                    sender_type=sender_type,
+                    sender_bot_id=sender_bot_id,
+                    content=user_message_content,
+                    message_type="text",
+                    metadata_json={"attachments": attachments or []},
+                    created_at=datetime.now(timezone.utc).replace(tzinfo=None),
+                )
+                db.add(incoming_msg)
+                await db.commit()
 
             # Load conversation with participants
             result = await db.execute(
@@ -210,7 +218,8 @@ class AgentOrchestrator:
 
         try:
             # Build system prompt
-            system_prompt = self._build_system_prompt(bot)
+            from app.services.context import context_prompt
+            system_prompt = self._build_system_prompt(bot) + await context_prompt(db,conversation_id)
             system_prompt += "\nYou are the OpenAI manager. Use consult_specialist automatically for focused research, writing, or independent analysis when useful; solve simple tasks yourself. Specialists only advise and cannot perform actions. You own all tool execution, verification, and the final user-facing response. Do not ask the user to choose models or manage handoffs. Never share credentials with specialists. Use generate_image or generate_video only when the user requested media. If a specialist fails, continue yourself and report only blockers that affect the requested result."
             if getattr(self, "phase_instructions", ""):
                 system_prompt += "\nCurrent team phase: " + self.phase_instructions
@@ -427,6 +436,9 @@ class AgentOrchestrator:
             "model/provider jargon, and narrating every tool call. Make routine reversible decisions yourself within "
             "the user's scope; ask only when a missing fact is essential or an action truly requires permission. "
             "Do not invent progress, people, actions, connected accounts, or completed results. "
+            "Use remember_context for stable user preferences and verified facts, and search_chat_history for older context. "
+            "Save reusable procedures only with completed-task evidence; improve them from explicit corrections and verified outcomes. "
+            "Account signup may use browser tools when requested, using real authorized identity and a real email. Never fabricate identities, bypass CAPTCHA or verification, or claim an account exists without verifying it. "
             "If blocked, say exactly what is missing and complete useful independent work. "
             "Do not schedule follow-ups or send messages to others unless the user's task authorizes them."
         )

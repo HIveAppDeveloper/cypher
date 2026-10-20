@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, or_, and_
-from uuid import UUID
+from uuid import UUID, uuid4
 import base64
 from urllib.parse import quote
 from fastapi.responses import Response
@@ -20,11 +20,22 @@ async def send_message(id: UUID, msg: MessageCreate, db: AsyncSession = Depends(
     participant = (await db.execute(select(ConversationParticipant).where(ConversationParticipant.conversation_id == str(id)).limit(1))).scalar_one_or_none()
     if participant is None:
         raise HTTPException(status_code=404, detail="Conversation or bot not found")
-    task = Task(conversation_id=str(id), bot_id=participant.bot_id, title=msg.content[:100], description=msg.content or "Review the attached files.", status="pending", result={"request": {"attachments": [a.model_dump() for a in msg.attachments], "options": msg.options.model_dump()}})
+    incoming_id = str(msg.client_message_id or uuid4())
+    existing = await db.get(Message, incoming_id)
+    if existing:
+        if existing.conversation_id != str(id) or existing.sender_type != 'user' or existing.content != msg.content:
+            raise HTTPException(status_code=409, detail="Message identifier already used. Send a new message.")
+        previous_task = (existing.metadata_json or {}).get('task_id')
+        if previous_task:
+            return {'status':'queued','task_id':previous_task,'message_id':incoming_id}
+        raise HTTPException(status_code=409, detail="Message identifier already used.")
+    files = [a.model_dump() for a in msg.attachments]
+    task = Task(id=str(uuid4()),conversation_id=str(id), bot_id=participant.bot_id, title=msg.content[:100], description=msg.content or "Review the attached files.", status="pending", result={"request": {"incoming_message_id":incoming_id,"attachments": files, "options": msg.options.model_dump()}})
     db.add(task)
+    db.add(Message(id=incoming_id,conversation_id=str(id),sender_type='user',content=msg.content,message_type='text',metadata_json={'attachments':files,'task_id':task.id}))
     await db.commit()
     await db.refresh(task)
-    return {"status": "queued", "task_id": task.id}
+    return {"status": "queued", "task_id": task.id, "message_id": incoming_id}
 
 @router.get("/{id}/messages", response_model=list[MessageResponse])
 async def list_messages(id: UUID, limit: int = Query(50, ge=1, le=200), offset: int = Query(0, ge=0), before_id: UUID | None = None, db: AsyncSession = Depends(get_db)):

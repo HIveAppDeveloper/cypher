@@ -176,3 +176,70 @@ async def test_live_direction_replaces_outdated_answer_and_rejects_finished_work
     async with sessions() as db:
         task=await db.get(Task,task_id);task.status='completed';await db.commit()
     assert (await client.post(f'/api/conversations/{room}/tasks/{task_id}/steer',json={'instruction':'Too late'})).status_code==409
+
+@pytest.mark.asyncio
+async def test_durable_context_procedure_evidence_and_forgetting(workspace):
+    from app.services.context import save_note,context_prompt
+    client,sessions,room=workspace
+    path=f'/api/conversations/{room}/context'
+    note=(await client.post(path,json={'name':'Writing','kind':'preference','content':'Use short factual sentences.'})).json()
+    assert (await client.get(path)).json()[0]['id']==note['id']
+    assert (await client.post(path,json={'name':'Secret','content':'password=do-not-store-this'})).status_code==422
+    async with sessions() as db:
+        assert 'Use short factual sentences.' in await context_prompt(db,room)
+        with pytest.raises(ValueError,match='evidence'):
+            await save_note(db,room,'Routine','procedure','A checked procedure.','agent')
+        bot=(await db.execute(select(ConversationParticipant.bot_id).where(ConversationParticipant.conversation_id==room))).scalar_one()
+        task=Task(conversation_id=room,bot_id=bot,title='Verified',description='Checked',status='completed');db.add(task);await db.commit()
+        procedure=await save_note(db,room,'Routine','procedure','A checked procedure.','agent',task.id)
+        assert procedure.verified
+    assert (await client.delete(path+'/'+note['id'])).status_code==200
+    assert all(n['id']!=note['id'] for n in (await client.get(path)).json())
+
+@pytest.mark.asyncio
+async def test_browser_state_encrypted_and_restored(workspace,monkeypatch):
+    from app.db import session as session_module
+    from app.models.context import BrowserSession
+    from app.services.tools.browser import BrowserTool
+    client,sessions,room=workspace
+    monkeypatch.setattr(session_module,'AsyncSessionLocal',sessions)
+    async with sessions() as db:bid=(await db.execute(select(ConversationParticipant.bot_id).where(ConversationParticipant.conversation_id==room))).scalar_one()
+    state={'cookies':[{'name':'session','value':'private-test-cookie','domain':'example.com','path':'/'}],'origins':[]}
+    class Context:
+        async def storage_state(self):return state
+    browser=BrowserTool();browser._contexts[bid]=Context()
+    await browser._save_state(bid)
+    async with sessions() as db:assert 'private-test-cookie' not in (await db.get(BrowserSession,bid)).state
+    assert await BrowserTool()._load_state(bid)==state
+
+@pytest.mark.asyncio
+async def test_device_approval_signature_action_binding_and_replay(workspace,monkeypatch):
+    import hashlib,cbor2
+    from cryptography.hazmat.primitives.asymmetric import ec
+    from cryptography.hazmat.primitives import hashes
+    from app.api.device import encode,ORIGIN,RP_ID
+    from app.models.context import DeviceCredential
+    from app.api import plugins as plugin_api
+    client,sessions,room=workspace
+    private=ec.generate_private_key(ec.SECP256R1());numbers=private.public_key().public_numbers()
+    cred=encode(b'a-device-credential')
+    async with sessions() as db:
+        db.add(DeviceCredential(id=cred,public_key=encode(cbor2.dumps({1:2,3:-7,-1:1,-2:numbers.x.to_bytes(32,'big'),-3:numbers.y.to_bytes(32,'big')})),sign_count=0));await db.commit()
+    assert (await client.get('/api/device/status')).json()['enrolled']
+    assert (await client.post('/api/device/challenge',json={'purpose':'register'})).status_code==409
+    url='https://example.com/mcp'
+    assert (await client.post('/api/plugins',json={'name':'Test','url':url})).status_code==403
+    challenge=(await client.post('/api/device/challenge',json={'purpose':'connect_plugin:'+url})).json()
+    client_data=json.dumps({'type':'webauthn.get','challenge':challenge['options']['challenge'],'origin':ORIGIN}).encode()
+    auth_data=hashlib.sha256(RP_ID.encode()).digest()+bytes([5])+(1).to_bytes(4,'big')
+    signature=private.sign(auth_data+hashlib.sha256(client_data).digest(),ec.ECDSA(hashes.SHA256()))
+    payload={'challenge_id':challenge['challenge_id'],'credential':{'id':cred,'rawId':cred,'type':'public-key','response':{'clientDataJSON':encode(client_data),'authenticatorData':encode(auth_data),'signature':encode(signature),'userHandle':None}}}
+    response=await client.post('/api/device/verify',json=payload)
+    assert response.status_code==200,response.text
+    approval=response.json()['approval_id']
+    assert (await client.post('/api/device/verify',json=payload)).status_code==400
+    async def discover(*args):return [{'name':'lookup','description':'Test','schema':{'type':'object'}}]
+    monkeypatch.setattr(plugin_api,'discover',discover)
+    assert (await client.post('/api/plugins',json={'name':'Wrong','url':'https://other.example/mcp','approval_id':approval})).status_code==403
+    assert (await client.post('/api/plugins',json={'name':'Test','url':url,'approval_id':approval})).status_code==200
+    assert (await client.post('/api/plugins',json={'name':'Replay','url':url,'approval_id':approval})).status_code==403

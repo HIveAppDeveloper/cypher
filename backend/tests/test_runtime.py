@@ -95,8 +95,14 @@ async def test_persisted_job_and_messages(tmp_path,monkeypatch):
             assert (await client.delete('/api/plugins/' + plugin['id'])).status_code == 200
 
             conv=(await client.post('/api/conversations',json={'title':'Hive','bot_ids':[bot['id']]})).json()
-            response=await client.post(f"/api/conversations/{conv['id']}/messages",json={'sender_type':'user','content':'Check the pipeline'})
+            client_id=str(uuid4())
+            response=await client.post(f"/api/conversations/{conv['id']}/messages",json={'sender_type':'user','content':'Check the pipeline','client_message_id':client_id})
             assert response.status_code==202,response.text
+            immediate=(await client.get(f"/api/conversations/{conv['id']}/messages")).json()
+            assert len(immediate)==1 and immediate[0]['id']==client_id
+            repeated=await client.post(f"/api/conversations/{conv['id']}/messages",json={'sender_type':'user','content':'Check the pipeline','client_message_id':client_id})
+            assert repeated.json()['task_id']==response.json()['task_id']
+            assert len((await client.get(f"/api/conversations/{conv['id']}/tasks")).json())==1
             assert (await client.get(f"/api/conversations/{conv['id']}/tasks")).json()[0]['status']=='pending'
             # Job survives request completion and is picked up by a separately started worker.
             task=asyncio.create_task(worker.run_worker())

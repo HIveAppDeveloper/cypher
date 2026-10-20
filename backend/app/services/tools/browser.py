@@ -8,6 +8,8 @@ any web application without needing an API.
 
 import asyncio
 import base64
+import json
+from datetime import datetime
 import logging
 from typing import Optional
 
@@ -54,7 +56,9 @@ class BrowserTool:
         await self._ensure_browser()
 
         if session_id not in self._pages:
+            storage_state = await self._load_state(session_id)
             context = await self._browser.new_context(
+                storage_state=storage_state,
                 viewport={"width": 1280, "height": 720},
                 user_agent=(
                     "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
@@ -67,6 +71,36 @@ class BrowserTool:
             logger.info(f"Created new browser session: {session_id}")
 
         return self._pages[session_id]
+
+    async def _load_state(self, session_id):
+        from app.db.session import AsyncSessionLocal
+        from app.models.context import BrowserSession
+        from app.services.plugins import reveal
+        try:
+            async with AsyncSessionLocal() as db:
+                saved = await db.get(BrowserSession, session_id)
+                return json.loads(reveal(saved.state)) if saved else None
+        except Exception:
+            logger.warning("Saved browser session could not be restored")
+            return None
+
+    async def _save_state(self, session_id):
+        from app.db.session import AsyncSessionLocal
+        from app.models.context import BrowserSession
+        from app.services.plugins import seal
+        try:
+            state = json.dumps(await self._contexts[session_id].storage_state())
+            if len(state) > 1000000:
+                logger.warning("Browser state exceeded persistence limit")
+                return
+            async with AsyncSessionLocal() as db:
+                saved = await db.get(BrowserSession, session_id)
+                if saved is None:
+                    saved = BrowserSession(bot_id=session_id); db.add(saved)
+                saved.state=seal(state);saved.updated_at=datetime.utcnow()
+                await db.commit()
+        except Exception:
+            logger.warning("Browser session could not be saved")
 
     async def navigate_to(self, url: str, session_id: str = "default") -> dict:
         """Navigate to a URL and return page info.
@@ -82,6 +116,7 @@ class BrowserTool:
         try:
             response = await page.goto(url, wait_until="domcontentloaded", timeout=30000)
             await page.wait_for_load_state("networkidle", timeout=10000)
+            await self._save_state(session_id)
             title = await page.title()
             return {
                 "success": True,
@@ -115,6 +150,7 @@ class BrowserTool:
                 await page.get_by_text(selector).click(timeout=timeout)
 
             await page.wait_for_load_state("networkidle", timeout=5000)
+            await self._save_state(session_id)
             return {"success": True, "selector": selector}
         except Exception as e:
             logger.error(f"Click on '{selector}' failed: {e}")
@@ -144,6 +180,7 @@ class BrowserTool:
                 await page.fill(selector, text, timeout=5000)
             else:
                 await page.type(selector, text, timeout=5000)
+            await self._save_state(session_id)
             return {"success": True, "selector": selector, "text_length": len(text)}
         except Exception as e:
             logger.error(f"Type into '{selector}' failed: {e}")
@@ -167,6 +204,7 @@ class BrowserTool:
                 full_page=full_page, type="png"
             )
             screenshot_b64 = base64.b64encode(screenshot_bytes).decode("utf-8")
+            await self._save_state(session_id)
             title = await page.title()
             return {
                 "success": True,
@@ -237,10 +275,11 @@ class BrowserTool:
                     type: el.type || el.tagName.toLowerCase(),
                     name: el.name || el.id,
                     placeholder: el.placeholder || '',
-                    value: el.value || ''
+                    value: el.type === 'password' || /password|secret|token|key|credit|card|cvv/i.test((el.name || '')+' '+(el.id || '')) ? '[redacted]' : el.value || ''
                 }))
             """)
 
+            await self._save_state(session_id)
             title = await page.title()
             return {
                 "success": True,

@@ -9,6 +9,7 @@ from app.services.plugins import discover, seal
 
 router = APIRouter()
 class ConnectPlugin(BaseModel):
+    approval_id: str | None = Field(default=None,max_length=36)
     name: str = Field(min_length=1, max_length=80)
     url: str = Field(min_length=8, max_length=1000)
     token: str = Field(default='', max_length=4096)
@@ -24,6 +25,8 @@ async def list_plugins(db: AsyncSession = Depends(get_db)):
 
 @router.post('')
 async def connect(data: ConnectPlugin, db: AsyncSession = Depends(get_db)):
+    from app.api.device import require_device
+    await require_device(db,data.approval_id,'connect_plugin:'+data.url.strip())
     try:
         credential = seal(data.token.strip())
     except ValueError as error:
@@ -72,3 +75,28 @@ async def tool_state(id:UUID,tool_name:str,data:TogglePlugin,db:AsyncSession=Dep
     if not any(t['name']==tool_name for t in plugin.tools):raise HTTPException(404,'Tool not found')
     plugin.tools=[{**t,'enabled':data.enabled} if t['name']==tool_name else t for t in plugin.tools]
     await db.commit();return public(plugin)
+
+
+class AccountSetup(BaseModel):
+    name:str=Field(min_length=1,max_length=80)
+    signup_url:str=Field(min_length=8,max_length=1000)
+    email:str=Field(min_length=3,max_length=254,pattern=r'^[^\s@]+@[^\s@]+\.[^\s@]+$')
+    approval_id:str|None=Field(default=None,max_length=36)
+@router.post('/account-setup',status_code=202)
+async def account_setup(body:AccountSetup,db:AsyncSession=Depends(get_db)):
+    from app.api.device import require_device
+    from app.services.plugins import validate_endpoint
+    from app.api.teams import default_team
+    from app.api.messages import send_message
+    from app.schemas.message import MessageCreate
+    await require_device(db,body.approval_id,'setup_account:'+body.signup_url.strip())
+    try:await validate_endpoint(body.signup_url.strip())
+    except ValueError as e:raise HTTPException(422,str(e))
+    room=await default_team(db)
+    prompt=(f'Set up my account for {body.name} at {body.signup_url} using my authorized email {body.email}. '
+            'Use available browser tools and real authorized identity only. Check the actual signup flow. '
+            'Do not invent profile information, accept paid plans, bypass CAPTCHA, or claim OAuth consent or email verification without completing it. '
+            'Do not put passwords or tokens in chat, tool arguments, or memory. Prefer supported OAuth or passwordless login. '
+            'If inbox access, consent, or a human-only step is unavailable, report the exact blocker and the next link. '
+            'Do not send unrelated messages. Verify account state before reporting success. Creating an account does not automatically connect its MCP server.')
+    return await send_message(room['id'],MessageCreate(sender_type='user',content=prompt,options={'model':'gpt-6-luna','provider':'openai','reasoning_effort':'low','max_iterations':8,'max_tokens':2048}),db)

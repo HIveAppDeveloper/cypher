@@ -113,7 +113,7 @@ async def _run_worker_loop(lock_connection=None, owner_pid=None):
             await db.commit()
             try:
                 request = (task.result or {}).get("request", {})
-                execution = asyncio.create_task(AgentOrchestrator().process_message(task.conversation_id, task.description, attachments=request.get("attachments", []), options=request.get("options", {}), goal_id=request.get("goal_id"), task_id=task.id))
+                execution = asyncio.create_task(AgentOrchestrator().process_message(task.conversation_id, task.description, attachments=request.get("attachments", []), options=request.get("options", {}), goal_id=request.get("goal_id"), task_id=task.id, incoming_message_id=request.get("incoming_message_id")))
                 try:
                     cancelled = False
                     while not execution.done():

@@ -11,7 +11,16 @@ from .runtime import router as runtime_router
 
 from .automation import router as automation_router
 
+from .context import router as context_router
+
+from .device import router as device_router
+
+from .accounts import router as accounts_router
+
 router = APIRouter()
+router.include_router(accounts_router,prefix="/accounts",tags=["accounts"])
+router.include_router(device_router,prefix="/device",tags=["device"])
+router.include_router(context_router,prefix="/conversations",tags=["context"])
 router.include_router(automation_router,tags=["automation"])
 router.include_router(runtime_router, prefix="/runtime", tags=["runtime"])
 router.include_router(teams_router, prefix="/teams", tags=["teams"])

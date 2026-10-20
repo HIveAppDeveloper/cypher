@@ -13,6 +13,7 @@ class MessageBase(BaseModel):
     metadata_json: Optional[Dict[str, Any]] = None
 
 class MessageCreate(MessageBase):
+    client_message_id: UUID | None = None
     attachments: list[Attachment] = Field(default_factory=list, max_length=4)
     options: RunOptions = Field(default_factory=RunOptions)
 

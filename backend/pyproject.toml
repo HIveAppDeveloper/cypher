@@ -21,6 +21,7 @@ dependencies = [
     "ai[vercel]==0.8.0",
     "vercel-sandbox==0.8.0",
     "mcp==1.30.0",
+    "webauthn==2.8.0",
     "python-jose[cryptography]>=3.3.0",
     "passlib[bcrypt]>=1.7.4",
     "minio>=7.2.0"

@@ -10,6 +10,7 @@ export function MessageBubble({ message, bot, grouped = false }: { message: Mess
     <div className="message-content">{tool ? <details><summary>{message.messageType === 'tool_call' ? 'Tool activity' : 'Tool result'}</summary><pre>{message.content}</pre></details> : message.content}
     {message.attachments?.map((a,i) => a.mime.startsWith('video/') ? <video key={i} className="message-video" src={a.url} controls preload="metadata"/> : a.mime.startsWith('image/') ? <img className="message-image" key={i} src={a.url || `data:${a.mime};base64,${a.data}`} alt={a.name}/> : <a className="file-chip" key={i} href={a.url} target="_blank" rel="noreferrer">{a.name}</a>)}</div>
     {message.senderType === 'bot' && !tool && !message.internal ? <details className="message-actions"><summary aria-label="Message actions">Options</summary><div><button onClick={copy}>{copyState}</button><button onClick={download}>Download text</button></div></details> : null}
+    {message.delivery === 'sending' || message.delivery === 'failed' ? <span className="message-delivery" role="status">{message.delivery === 'sending' ? 'Sending…' : 'Not confirmed'}</span> : null}
     <time dateTime={message.createdAt}>{new Date(message.createdAt + (message.createdAt.endsWith('Z') ? '' : 'Z')).toLocaleTimeString([], {hour:'numeric',minute:'2-digit'})}</time>
   </article>;
 }
