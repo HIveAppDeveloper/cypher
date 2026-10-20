@@ -2,6 +2,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 import secrets
 from sqlalchemy.schema import CreateSchema
+from sqlalchemy import text
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
 from app.db.session import engine, Base
@@ -20,6 +21,7 @@ async def lifespan(app: FastAPI):
     # Initialize DB tables
     async with engine.begin() as conn:
         if engine.dialect.name == "postgresql":
+            await conn.execute(text("SELECT pg_advisory_xact_lock(1763000272)"))
             await conn.execute(CreateSchema(settings.DATABASE_SCHEMA, if_not_exists=True))
         await conn.run_sync(Base.metadata.create_all)
     logger.info("Database tables created")

@@ -6,6 +6,10 @@ sandbox, enabling persistent file management across sessions.
 """
 
 import logging
+import asyncio
+import shlex
+import base64
+import posixpath
 
 from app.services.sandbox import SandboxManager
 
@@ -27,7 +31,7 @@ class FileSystemTool:
         """
         logger.info(f"Reading file for bot {bot_id}: {path}")
         try:
-            result = SandboxManager.exec_in_sandbox(bot_id, f"cat '{path}'")
+            result = await asyncio.to_thread(SandboxManager.exec_in_sandbox, bot_id, ["cat", "--", path])
             if result["exit_code"] == 0:
                 content = result["output"]
                 # Truncate very large files
@@ -65,16 +69,10 @@ class FileSystemTool:
         """
         logger.info(f"Writing file for bot {bot_id}: {path}")
         try:
-            # Create parent directories
-            parent_dir = "/".join(path.split("/")[:-1])
-            if parent_dir:
-                SandboxManager.exec_in_sandbox(bot_id, f"mkdir -p '{parent_dir}'")
-
-            # Use heredoc to handle multi-line content safely
-            # Escape single quotes in content
-            safe_content = content.replace("'", "'\\''")
-            command = f"cat > '{path}' << 'GROKBOT_EOF'\n{safe_content}\nGROKBOT_EOF"
-            result = SandboxManager.exec_in_sandbox(bot_id, command)
+            encoded = base64.b64encode(content.encode()).decode()
+            parent_dir = posixpath.dirname(path) or "."
+            command = f"mkdir -p -- {shlex.quote(parent_dir)} && printf %s {shlex.quote(encoded)} | base64 -d > {shlex.quote(path)}"
+            result = await asyncio.to_thread(SandboxManager.exec_in_sandbox, bot_id, ["bash", "-lc", command])
 
             if result["exit_code"] == 0:
                 return {
@@ -107,9 +105,7 @@ class FileSystemTool:
         logger.info(f"Listing directory for bot {bot_id}: {path}")
         try:
             # Use ls with detailed output
-            result = SandboxManager.exec_in_sandbox(
-                bot_id, f"ls -la --time-style=long-iso '{path}' 2>&1"
-            )
+            result = await asyncio.to_thread(SandboxManager.exec_in_sandbox, bot_id, ["ls", "-la", "--time-style=long-iso", "--", path])
 
             if result["exit_code"] == 0:
                 lines = result["output"].strip().split("\n")
@@ -157,9 +153,8 @@ class FileSystemTool:
         """
         logger.info(f"Searching files for bot {bot_id}: {pattern} in {path}")
         try:
-            result = SandboxManager.exec_in_sandbox(
-                bot_id, f"find '{path}' -name '{pattern}' -type f 2>/dev/null | head -100"
-            )
+            command = f"find {shlex.quote(path)} -name {shlex.quote(pattern)} -type f 2>/dev/null | head -100"
+            result = await asyncio.to_thread(SandboxManager.exec_in_sandbox, bot_id, ["bash", "-lc", command])
 
             if result["exit_code"] == 0:
                 matches = [

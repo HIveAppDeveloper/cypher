@@ -1,3 +1,4 @@
+import asyncio
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError
@@ -70,9 +71,9 @@ async def start_bot(bot_id: UUID, db: AsyncSession = Depends(get_db)):
     bot = await db.get(Bot, str(bot_id))
     if not bot:
         raise HTTPException(status_code=404, detail="Bot not found")
-    container_id = SandboxManager.create_sandbox(str(bot.id))
+    container_id = await asyncio.to_thread(SandboxManager.create_sandbox, str(bot.id))
     if not container_id:
-        raise HTTPException(status_code=503, detail="Sandbox could not start; check Docker and SANDBOX_IMAGE")
+        raise HTTPException(status_code=503, detail="Computer could not start; check the sandbox configuration and private logs")
     bot.container_id = container_id
     bot.status = "idle"
     await db.commit()
@@ -83,7 +84,7 @@ async def stop_bot(bot_id: UUID, db: AsyncSession = Depends(get_db)):
     bot = await db.get(Bot, str(bot_id))
     if not bot:
         raise HTTPException(status_code=404, detail="Bot not found")
-    SandboxManager.stop_sandbox(str(bot.id))
+    await asyncio.to_thread(SandboxManager.stop_sandbox, str(bot.id))
     bot.container_id = None
     bot.status = "offline"
     await db.commit()

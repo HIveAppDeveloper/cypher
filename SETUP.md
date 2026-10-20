@@ -97,6 +97,7 @@ Required production variables:
 | BACKEND_API_TOKEN | Random private API token |
 | GROKBOT_BACKEND_API_TOKEN | Same token, used by the frontend server proxy |
 | RUN_EMBEDDED_WORKER | `false`; the daemon owns the worker loop |
+| SANDBOX_BACKEND | `vercel` for hosted agent computers |
 | LLM_USE_GATEWAY | `true` to use Vercel AI Gateway |
 | AI_GATEWAY_API_KEY | Optional when a valid VERCEL_OIDC_TOKEN is available to the calling runtime |
 
@@ -111,9 +112,9 @@ A session-preserving native database endpoint is required for this lock; do not
 use transaction-mode PgBouncer for the worker connection.
 
 **Still required before enabling:** authorized native PostgreSQL credentials,
-live gateway authentication verification, and a managed sandbox adapter for
-shell/file tools. The current tools require Docker; Vercel containers do not
-provide a nested Docker daemon. Browser tooling also requires the installed
+live gateway authentication verification, and live managed sandbox verification for
+shell/file tools. Set SANDBOX_BACKEND=vercel on the managed deployment; it does
+not require a nested Docker daemon. Browser tooling also requires the installed
 Playwright runtime. A successful frontend build does not verify these services.
 
 
@@ -144,3 +145,13 @@ in database JSON; a high-volume deployment should move them to private object
 storage. Explicit image/video mode uses the text prompt, not uploaded reference
 files. Video currently accepts landscape/portrait and 4, 6, or 8 seconds.
 Live paid image/video generation remains unverified without runtime credentials.
+
+For managed shell and file tools, set SANDBOX_BACKEND=vercel. The broker uses
+vercel-sandbox 0.8.0 with Vercel OIDC, creates a persistent named VM per agent,
+auto-resumes it for tool calls, and never injects the project's environment
+variables into that VM. Sessions have a 10-minute limit; commands have a
+5-minute limit. Stopping a computer preserves its snapshot according to the
+provider retention policy. Docker is the default for existing self-hosted
+installs. Browser tools continue to use Playwright in the hosted backend.
+Managed sandbox access is covered by adapter tests with a mocked SDK, not a
+live Sandbox provisioning test.

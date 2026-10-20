@@ -15,9 +15,12 @@ class SandboxManager:
 
     @classmethod
     def create_sandbox(cls, bot_id: str):
-        client = cls.get_client()
-        container_name = f"grokbot_sandbox_{bot_id}"
         try:
+            if settings.SANDBOX_BACKEND == "vercel":
+                from app.services.managed_sandbox import start
+                return start(bot_id)
+            client = cls.get_client()
+            container_name = f"grokbot_sandbox_{bot_id}"
             # Check if exists
             try:
                 existing = client.containers.get(container_name)
@@ -41,6 +44,9 @@ class SandboxManager:
 
     @classmethod
     def stop_sandbox(cls, bot_id: str):
+        if settings.SANDBOX_BACKEND == "vercel":
+            from app.services.managed_sandbox import stop
+            return stop(bot_id)
         client = cls.get_client()
         container_name = f"grokbot_sandbox_{bot_id}"
         try:
@@ -53,7 +59,11 @@ class SandboxManager:
             logger.error(f"Failed to stop sandbox: {e}")
 
     @classmethod
-    def exec_in_sandbox(cls, bot_id: str, command: str):
+    def exec_in_sandbox(cls, bot_id: str, command: str | list[str]):
+        if settings.SANDBOX_BACKEND == "vercel":
+            from app.services.managed_sandbox import execute
+            return execute(bot_id, command)
+        command = command if isinstance(command, list) else ["bash", "-lc", command]
         client = cls.get_client()
         container_name = f"grokbot_sandbox_{bot_id}"
         try:

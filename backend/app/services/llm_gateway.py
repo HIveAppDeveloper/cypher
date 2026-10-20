@@ -9,7 +9,13 @@ def completion_options(model=None, provider=None):
         gateway_provider = {"gemini": "google"}.get(provider, provider)
         model = {"claude-sonnet-4-5": "claude-sonnet-4.5"}.get(model, model)
         gateway_model = model if "/" in model else f"{gateway_provider}/{model}"
-        key = os.getenv("AI_GATEWAY_API_KEY") or os.getenv("VERCEL_OIDC_TOKEN")
+        key = os.getenv("AI_GATEWAY_API_KEY")
+        if not key:
+            from vercel.oidc import get_vercel_oidc_token_sync, VercelOidcTokenError
+            try:
+                key = get_vercel_oidc_token_sync()
+            except VercelOidcTokenError:
+                key = None
         if not key:
             raise RuntimeError("Vercel AI Gateway credentials unavailable")
         return {"model": "openai/" + gateway_model, "api_base": "https://ai-gateway.vercel.sh/v1", "api_key": key}

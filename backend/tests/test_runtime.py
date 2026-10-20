@@ -242,3 +242,53 @@ async def test_media_generation_returns_real_file_parts(monkeypatch):
     assert seen == [('An actual scene', '1:1'), ('A moving scene', 6)]
     with pytest.raises(ValueError, match='landscape or portrait'):
         await generate_media('video', 'Scene', '1:1')
+
+
+def test_managed_computer_uses_isolated_named_vm(monkeypatch):
+    from vercel.sandbox.sync import SyncSandboxClient
+    from app.services.sandbox import SandboxManager
+    from app.config import settings
+    calls = []
+    class Box:
+        id = 'sandbox-test'
+        def run_process(self, command, args, **kwargs):
+            calls.append((command, args, kwargs))
+            return SimpleNamespace(returncode=0, stdout='ran', stderr='')
+        def stop(self): calls.append('stop')
+    class Client:
+        def get_or_create_sandbox(self, **kwargs):
+            calls.append(kwargs)
+            return Box(), True
+        def get_sandbox(self, **kwargs):
+            calls.append(kwargs)
+            return Box()
+        def close(self): calls.append('close')
+    monkeypatch.setattr(SyncSandboxClient, 'create', lambda: Client())
+    monkeypatch.setattr(settings, 'SANDBOX_BACKEND', 'vercel')
+    bot_id = str(uuid4())
+    assert SandboxManager.create_sandbox(bot_id) == 'sandbox-test'
+    assert SandboxManager.exec_in_sandbox(bot_id, ['printf', 'hello'])['output'] == 'ran'
+    SandboxManager.stop_sandbox(bot_id)
+    creations = [c for c in calls if isinstance(c, dict) and 'env' in c]
+    assert all(c['env'] == {} and c['persistent'] and c['name'] == 'grokbot-' + bot_id for c in creations)
+    assert any(isinstance(c, tuple) and c[0] == 'printf' and c[2]['kill_after'] == 300 for c in calls)
+    assert 'stop' in calls
+
+
+@pytest.mark.asyncio
+async def test_file_write_preserves_quotes_and_heredoc_text(monkeypatch):
+    import base64, shlex
+    from app.services.sandbox import SandboxManager
+    from app.services.tools.filesystem import FileSystemTool
+    calls = []
+    def execute(bot_id, command):
+        calls.append(command)
+        return {'exit_code': 0, 'output': ''}
+    monkeypatch.setattr(SandboxManager, 'exec_in_sandbox', execute)
+    content = "it's literal\nGROKBOT_EOF\n$(must-not-run)\n"
+    result = await FileSystemTool().write_file(str(uuid4()), "/workspace/it's.txt", content)
+    assert result['success']
+    assert calls[0][:2] == ['bash', '-lc']
+    assert base64.b64encode(content.encode()).decode() in calls[0][2]
+    assert shlex.quote("/workspace/it's.txt") in calls[0][2]
+    assert '$(must-not-run)' not in calls[0][2]

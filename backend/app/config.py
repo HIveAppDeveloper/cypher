@@ -1,4 +1,4 @@
-from typing import Annotated
+from typing import Annotated, Literal
 import json
 import re
 from pydantic import AliasChoices, Field, field_validator
@@ -19,6 +19,7 @@ class Settings(BaseSettings):
     LLM_USE_GATEWAY: bool = False
     IMAGE_MODEL: str = "bfl/flux-2-pro"
     VIDEO_MODEL: str = "google/veo-3.1-fast-generate-001"
+    SANDBOX_BACKEND: Literal["docker", "vercel"] = "docker"
     SANDBOX_IMAGE: str = "open-grokbot-sandbox:latest"
     BACKEND_API_TOKEN: str = ""
     SECRET_KEY: str = "local-only-change-before-exposure"

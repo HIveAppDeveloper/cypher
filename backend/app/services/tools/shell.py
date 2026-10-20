@@ -6,6 +6,7 @@ capturing stdout, stderr, and exit codes with timeout protection.
 """
 
 import logging
+import asyncio
 import shlex
 from typing import Optional
 
@@ -41,7 +42,7 @@ class ShellTool:
         wrapped_command = ["timeout", str(max(1, min(timeout, 300))), "bash", "-lc", f"cd {shlex.quote(working_dir)} && {command}"]
 
         try:
-            result = SandboxManager.exec_in_sandbox(bot_id, wrapped_command)
+            result = await asyncio.to_thread(SandboxManager.exec_in_sandbox, bot_id, wrapped_command)
 
             # Parse output — Docker exec returns combined output
             output = result.get("output", "")
