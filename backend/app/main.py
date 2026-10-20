@@ -44,13 +44,14 @@ async def lifespan(app: FastAPI):
         app.state.docker_client = None
 
     from app.services.worker import run_worker
-    worker = asyncio.create_task(run_worker())
+    worker = asyncio.create_task(run_worker()) if settings.RUN_EMBEDDED_WORKER else None
     try:
         yield
     finally:
-        worker.cancel()
-        with suppress(asyncio.CancelledError):
-            await worker
+        if worker:
+            worker.cancel()
+            with suppress(asyncio.CancelledError):
+                await worker
 
     # Cleanup
     if hasattr(app.state, 'redis') and app.state.redis:

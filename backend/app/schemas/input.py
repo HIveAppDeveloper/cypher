@@ -19,10 +19,17 @@ class Attachment(BaseModel):
         return value
 
 class RunOptions(BaseModel):
+    output: Literal['text', 'image', 'video'] = 'text'
+    aspect_ratio: Literal['1:1', '16:9', '9:16'] = '16:9'
+    duration: Literal[4, 6, 8] = 4
     temperature: float = Field(default=0.5, ge=0, le=1.5)
     max_tokens: int = Field(default=2048, ge=256, le=8192)
     max_iterations: int = Field(default=10, ge=1, le=25)
     team_rounds: int = Field(default=1, ge=1, le=4)
+    model: str | None = Field(default=None, min_length=1, max_length=160)
+    provider: Literal['openai', 'gemini', 'anthropic', 'ollama', 'deepseek'] | None = None
+    reasoning_effort: Literal['none', 'low', 'medium', 'high', 'xhigh'] | None = None
+    service_tier: Literal['default', 'priority', 'flex'] | None = None
 
 def content_parts(text, attachments):
     if not attachments: return text

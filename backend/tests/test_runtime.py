@@ -161,3 +161,60 @@ async def test_team_handoff_shares_context_and_preserves_attachment(tmp_path,mon
             except asyncio.CancelledError: pass
         app.dependency_overrides.clear()
         await engine.dispose()
+
+
+def test_gateway_model_mapping_and_credentials(monkeypatch):
+    from app.services import llm_gateway
+    monkeypatch.setattr(llm_gateway.settings, "LLM_USE_GATEWAY", True)
+    monkeypatch.setenv("VERCEL_OIDC_TOKEN", "test-oidc")
+    monkeypatch.delenv("AI_GATEWAY_API_KEY", raising=False)
+    options = llm_gateway.completion_options("gemini-2.5-flash", "gemini")
+    assert options == {"model": "openai/google/gemini-2.5-flash", "api_base": "https://ai-gateway.vercel.sh/v1", "api_key": "test-oidc"}
+    monkeypatch.setenv("AI_GATEWAY_API_KEY", "test-explicit")
+    assert llm_gateway.completion_options("gpt-4o", "openai")["api_key"] == "test-explicit"
+    monkeypatch.delenv("AI_GATEWAY_API_KEY")
+    monkeypatch.delenv("VERCEL_OIDC_TOKEN")
+    import pytest
+    with pytest.raises(RuntimeError, match="credentials unavailable"):
+        llm_gateway.completion_options()
+
+
+def test_supported_generation_settings(monkeypatch):
+    from app.services import llm_gateway
+    from app.schemas.input import RunOptions
+    opts = RunOptions(reasoning_effort='high', service_tier='priority', max_tokens=1024)
+    monkeypatch.setattr(llm_gateway.settings, 'LLM_USE_GATEWAY', True)
+    gpt = llm_gateway.generation_options(opts, 'openai', 'gpt-5.4')
+    assert gpt['reasoning_effort'] == 'high'
+    assert 'temperature' not in gpt
+    assert gpt['extra_body']['providerOptions']['gateway']['serviceTier'] == 'priority'
+    gemini = llm_gateway.generation_options(opts, 'gemini', 'gemini-2.5-flash')
+    assert 'reasoning_effort' not in gemini and 'extra_body' not in gemini
+    assert gemini['temperature'] == .5
+    monkeypatch.setattr(llm_gateway.settings, 'LLM_USE_GATEWAY', False)
+    assert llm_gateway.generation_options(opts, 'openai', 'gpt-4.1-mini')['service_tier'] == 'priority'
+
+
+@pytest.mark.asyncio
+async def test_media_generation_returns_real_file_parts(monkeypatch):
+    import ai
+    from types import SimpleNamespace
+    from ai.types.messages import FilePart
+    from app.services.media import generate_media
+    seen = []
+    async def fake_image(model, prompt, params):
+        seen.append((prompt, params.aspect_ratio))
+        return SimpleNamespace(value=[FilePart(data=b'image-bytes', media_type='image/png')])
+    async def fake_video(model, prompt, params):
+        seen.append((prompt, params.duration))
+        return SimpleNamespace(value=[FilePart(data=b'video-bytes', media_type='video/mp4')])
+    monkeypatch.setattr(ai.ops, 'generate_image', fake_image)
+    monkeypatch.setattr(ai.ops, 'generate_video', fake_video)
+    image = (await generate_media('image', 'An actual scene', '1:1'))[0]
+    video = (await generate_media('video', 'A moving scene', '16:9', 6))[0]
+    import base64
+    assert base64.b64decode(image['data']) == b'image-bytes'
+    assert video['mime'] == 'video/mp4'
+    assert seen == [('An actual scene', '1:1'), ('A moving scene', 6)]
+    with pytest.raises(ValueError, match='landscape or portrait'):
+        await generate_media('video', 'Scene', '1:1')

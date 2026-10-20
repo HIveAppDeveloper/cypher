@@ -23,7 +23,7 @@ from app.models.bot import Bot
 from app.models.conversation import Conversation, ConversationParticipant
 from app.models.message import Message
 from app.models.task import Task
-from app.services.llm_gateway import LLMGateway
+from app.services.llm_gateway import LLMGateway, generation_options
 from app.services.memory import MemoryManager
 from app.services.sandbox import SandboxManager
 from app.services.tools.registry import ToolRegistry
@@ -95,6 +95,12 @@ class AgentOrchestrator:
             if not conversation:
                 logger.error(f"Conversation {conversation_id} not found")
                 return []
+
+            if self.options.output != "text":
+                from app.services.media import generate_media
+                files = await generate_media(self.options.output, user_message_content, self.options.aspect_ratio, self.options.duration)
+                message = await self._save_message(db, conversation_id, "bot", conversation.participants[0].bot_id, "Your image is ready." if self.options.output == "image" else "Your video is ready.", metadata={"attachments": files})
+                return [message]
 
             # Determine responding bots
             participant_bot_ids = [p.bot_id for p in conversation.participants]
@@ -202,13 +208,15 @@ class AgentOrchestrator:
                     f"Agent loop iteration {iteration + 1} for bot '{bot.name}'"
                 )
 
+                run = getattr(self, "options", RunOptions())
+                provider = run.provider or bot.llm_provider
+                model = run.model or bot.llm_model
                 response = await LLMGateway.complete(
                     messages=messages,
                     tools=tools if tools else None,
-                    model=bot.llm_model,
-                    provider=bot.llm_provider,
-                    temperature=getattr(self, "options", RunOptions()).temperature,
-                    max_tokens=getattr(self, "options", RunOptions()).max_tokens,
+                    model=model,
+                    provider=provider,
+                    **generation_options(run, provider, model),
                 )
 
                 reply = response.choices[0].message
@@ -225,9 +233,7 @@ class AgentOrchestrator:
                         except json.JSONDecodeError:
                             args = {}
 
-                        logger.info(
-                            f"Bot '{bot.name}' calling tool: {func_name}({args})"
-                        )
+                        logger.info("Bot %s calling tool %s", bot.id, func_name)
 
                         # Broadcast tool call status
                         tool_msg = await self._save_message(
@@ -243,9 +249,14 @@ class AgentOrchestrator:
                         responses.append(tool_msg)
 
                         # Execute the tool
-                        tool_result = await self.registry.execute_tool(
-                            func_name, args, bot_id
-                        )
+                        allowed_names = {t["function"]["name"] for t in tools}
+                        if func_name not in allowed_names:
+                            tool_result = {"error": "This tool is not enabled for this agent."}
+                        else:
+                            tool_result = await self.registry.execute_tool(func_name, args, bot_id)
+                        generated_files = tool_result.pop("_attachments", [])
+                        if generated_files:
+                            responses.append(await self._save_message(db, conversation_id, "bot", bot_id, "Generated media", metadata={"attachments": generated_files}))
 
                         # Save tool result
                         result_msg = await self._save_message(
@@ -374,7 +385,7 @@ class AgentOrchestrator:
             "sender_bot_id": sender_bot_id,
             "content": content,
             "message_type": message_type,
-            "metadata": metadata,
+            "metadata": {**(metadata or {}), "attachments": [{"name": a["name"], "mime": a["mime"]} for a in (metadata or {}).get("attachments", [])]} if metadata and "attachments" in metadata else metadata,
             "created_at": msg.created_at.isoformat(),
         }
 

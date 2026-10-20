@@ -2,14 +2,29 @@
 import asyncio
 import logging
 from datetime import datetime
-from sqlalchemy import select, update
-from app.db.session import AsyncSessionLocal
+from sqlalchemy import select, update, text
+from app.db.session import AsyncSessionLocal, engine
 from app.models.task import Task
 from app.services.orchestrator import AgentOrchestrator
 logger = logging.getLogger(__name__)
 POLL_SECONDS = 1
 
 async def run_worker():
+    # Hold a dedicated Postgres session lock across the loop. During rolling
+    # deployments the next worker waits until the old one exits; it cannot
+    # claim the same pending task or interrupt another live worker's work.
+    if engine.dialect.name == "postgresql":
+        async with engine.connect() as lock_connection:
+            while not await lock_connection.scalar(text("SELECT pg_try_advisory_lock(1763000271)")):
+                await asyncio.sleep(POLL_SECONDS)
+            try:
+                await _run_worker_loop()
+            finally:
+                await lock_connection.execute(text("SELECT pg_advisory_unlock(1763000271)"))
+    else:
+        await _run_worker_loop()
+
+async def _run_worker_loop():
     # Do not replay interrupted side effects automatically.
     async with AsyncSessionLocal() as db:
         await db.execute(update(Task).where(Task.status == "running").values(status="interrupted", completed_at=datetime.utcnow(), result={"error": "Backend restarted during execution; review before resubmitting."}))

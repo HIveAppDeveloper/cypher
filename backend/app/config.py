@@ -15,6 +15,10 @@ class Settings(BaseSettings):
     LLM_API_KEY: str = ""
     LLM_API_BASE: str | None = None
     LLM_MODEL: str = "gemini-2.5-flash"
+    RUN_EMBEDDED_WORKER: bool = True
+    LLM_USE_GATEWAY: bool = False
+    IMAGE_MODEL: str = "bfl/flux-2-pro"
+    VIDEO_MODEL: str = "google/veo-3.1-fast-generate-001"
     SANDBOX_IMAGE: str = "open-grokbot-sandbox:latest"
     BACKEND_API_TOKEN: str = ""
     SECRET_KEY: str = "local-only-change-before-exposure"

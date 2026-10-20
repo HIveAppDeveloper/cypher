@@ -5,6 +5,14 @@ from app.config import settings
 def completion_options(model=None, provider=None):
     provider = provider or settings.LLM_PROVIDER
     model = model or settings.LLM_MODEL
+    if settings.LLM_USE_GATEWAY:
+        gateway_provider = {"gemini": "google"}.get(provider, provider)
+        model = {"claude-sonnet-4-5": "claude-sonnet-4.5"}.get(model, model)
+        gateway_model = model if "/" in model else f"{gateway_provider}/{model}"
+        key = os.getenv("AI_GATEWAY_API_KEY") or os.getenv("VERCEL_OIDC_TOKEN")
+        if not key:
+            raise RuntimeError("Vercel AI Gateway credentials unavailable")
+        return {"model": "openai/" + gateway_model, "api_base": "https://ai-gateway.vercel.sh/v1", "api_key": key}
     if not model.startswith(provider + "/"):
         model = f"{provider}/{model}"
     key_name = {"gemini": "GEMINI_API_KEY", "anthropic": "ANTHROPIC_API_KEY", "openai": "OPENAI_API_KEY", "deepseek": "DEEPSEEK_API_KEY"}.get(provider, provider.upper() + "_API_KEY")
@@ -15,6 +23,22 @@ def completion_options(model=None, provider=None):
     if settings.LLM_API_BASE:
         options["api_base"] = settings.LLM_API_BASE
     return options
+
+def generation_options(options, provider, model):
+    """Only forward settings supported by the selected provider/model."""
+    kwargs = {"max_tokens": options.max_tokens}
+    reasoning = options.reasoning_effort
+    is_gpt5 = provider == "openai" and model.removeprefix("openai/").startswith("gpt-5")
+    if is_gpt5 and reasoning:
+        kwargs["reasoning_effort"] = reasoning
+    if not is_gpt5 or reasoning in (None, "none"):
+        kwargs["temperature"] = options.temperature
+    if provider == "openai" and options.service_tier:
+        if settings.LLM_USE_GATEWAY and options.service_tier != "default":
+            kwargs["extra_body"] = {"providerOptions": {"gateway": {"serviceTier": options.service_tier}}}
+        elif not settings.LLM_USE_GATEWAY:
+            kwargs["service_tier"] = options.service_tier
+    return kwargs
 
 class LLMGateway:
     @staticmethod

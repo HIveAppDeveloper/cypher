@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 export const dynamic = 'force-dynamic';
 async function proxy(request: NextRequest, { params }: { params: { path: string[] } }) {
-  const backend = process.env.GROKBOT_BACKEND_URL;
+  const backend = process.env.BACKEND_INTERNAL_URL || process.env.GROKBOT_BACKEND_URL;
   if (!backend) return NextResponse.json({ detail: 'Runtime is not connected. Configure GROKBOT_BACKEND_URL on the server.' }, { status: 503 });
   const url = new URL('/api/' + params.path.map(encodeURIComponent).join('/'), backend);
   url.search = request.nextUrl.search;

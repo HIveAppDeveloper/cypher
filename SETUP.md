@@ -78,3 +78,69 @@ Create at least two agents, then choose New beside Team rooms. Select 2–6 agen
 Use the plus in the composer to attach PNG/JPEG/WebP, PDF, plain text, MP3 or WAV files. Maximum four files and 3 MB combined. Attachments persist with the message in the state database and are served through authenticated attachment routes. Raw payloads are excluded from message-list responses. The three newest attachment sets are resent to the model with recent history; older filenames remain references. Files are transmitted to the selected model provider. Input support varies by model. Video, recording, transcription fallback and generated media are not implemented.
 
 Seven tests cover native connection normalization, input validation, API authentication, queued jobs, persisted messages, team handoff/shared history, and authenticated attachment retrieval. Provider calls in these tests are mocked.
+
+
+## Managed Vercel backend (staged, not enabled)
+
+`deployment/vercel.managed.json` defines the Next.js service, a private Python
+container service, and one persistent agent-worker daemon. Services and Daemons
+are Vercel Beta products. Copy this configuration to the repository root as
+`vercel.json` and clear the project's Root Directory only after the production
+runtime secrets are configured.
+
+Required production variables:
+
+| Variable | Purpose |
+| --- | --- |
+| GROKBOT_DATABASE_URL | Native PostgreSQL URL for the authorized database; Prisma Accelerate URLs are unsupported |
+| DATABASE_SCHEMA | `grokbot` keeps agent tables separate from the existing app |
+| BACKEND_API_TOKEN | Random private API token |
+| GROKBOT_BACKEND_API_TOKEN | Same token, used by the frontend server proxy |
+| RUN_EMBEDDED_WORKER | `false`; the daemon owns the worker loop |
+| LLM_USE_GATEWAY | `true` to use Vercel AI Gateway |
+| AI_GATEWAY_API_KEY | Optional when a valid VERCEL_OIDC_TOKEN is available to the calling runtime |
+
+The frontend receives BACKEND_INTERNAL_URL through a private service binding.
+Do not manually populate it. AI Gateway maps Gemini models to the `google/`
+provider namespace. No gateway credential is sent to the browser.
+
+The worker holds a PostgreSQL advisory session lock, so a rolling deployment
+waits for the previous worker to exit before claiming tasks. An interrupted task
+is marked interrupted rather than replaying potentially completed tool actions.
+A session-preserving native database endpoint is required for this lock; do not
+use transaction-mode PgBouncer for the worker connection.
+
+**Still required before enabling:** authorized native PostgreSQL credentials,
+live gateway authentication verification, and a managed sandbox adapter for
+shell/file tools. The current tools require Docker; Vercel containers do not
+provide a nested Docker daemon. Browser tooling also requires the installed
+Playwright runtime. A successful frontend build does not verify these services.
+
+
+## Simple use and provider controls
+
+Start a task directly from the home prompt; an Assistant and conversation are
+created automatically. Or choose a ready-made role when adding an agent.
+Custom model IDs are optional and live under Customize this agent.
+
+OpenAI controls include a named model menu and a three-position model power
+slider (GPT-4.1 mini, GPT-5.4 mini, GPT-5.4). GPT-5.4 choices show thinking effort.
+Processing speed selects flex, default, or priority service. Priority is a
+best-effort provider hint and may cost more. Unsupported reasoning settings are
+not forwarded to other model families. Personal run preferences are stored in
+this browser and copied into each persisted task; they are not account-wide.
+
+Image/video output is generated through AI SDK for Python 0.8.0 (Beta), not an
+illustrative UI. Defaults are IMAGE_MODEL=bfl/flux-2-pro and
+VIDEO_MODEL=google/veo-3.1-fast-generate-001, verified in the gateway catalog on
+2026-10-20. Change these server variables to compatible gateway model IDs.
+Use AI_GATEWAY_API_KEY or Vercel OIDC access available to the actual worker.
+Media uses gateway credentials even when chat uses a direct provider key.
+Media generation tools can also be enabled for an agent, so it can choose when
+to generate during a task. One returned asset per call is retained in PostgreSQL
+(up to 32 MB), served through the authenticated attachment endpoint, and shown
+as an image or playable MP4. This small-deployment implementation stores assets
+in database JSON; a high-volume deployment should move them to private object
+storage. Explicit image/video mode uses the text prompt, not uploaded reference
+files. Video currently accepts landscape/portrait and 4, 6, or 8 seconds.
+Live paid image/video generation remains unverified without runtime credentials.

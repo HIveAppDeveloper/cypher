@@ -61,6 +61,13 @@ class ToolRegistry:
 
     def register_default_tools(self):
         """Register all built-in tools."""
+        for kind in ("image", "video"):
+            self.register(
+                name=f"generate_{kind}",
+                description=f"Generate an actual {kind} from a detailed text prompt. This uses paid model credits. The result is attached to the conversation. Do not call again for the same request unless the first call failed.",
+                parameters={"type": "object", "properties": {"prompt": {"type": "string"}, "aspect_ratio": {"type": "string", "enum": ["16:9", "9:16"]}, "duration": {"type": "integer", "enum": [4, 6, 8]}}, "required": ["prompt"]},
+                handler=self._handle_generate_image if kind == "image" else self._handle_generate_video,
+            )
         # --- Browser Tools ---
         self.register(
             name="browse_url",
@@ -298,7 +305,8 @@ class ToolRegistry:
 
         # Map tool category names to tool prefixes
         category_map = {
-            "browser": "browse",
+            "media": ["generate_image", "generate_video"],
+            "browser": ["browse_url", "browser_click", "browser_type", "browser_screenshot", "browser_extract", "browser_fill_form"],
             "shell": "shell",
             "filesystem": ["read_file", "write_file", "list_directory", "search_files"],
         }
@@ -400,3 +408,13 @@ class ToolRegistry:
             pattern=args["pattern"],
             path=args.get("path", "/workspace"),
         )
+
+    async def _handle_generate_image(self, args: dict, bot_id: str) -> dict:
+        from app.services.media import generate_media
+        files = await generate_media("image", args["prompt"], args.get("aspect_ratio", "16:9"))
+        return {"success": True, "message": "Generated image attached to this conversation.", "_attachments": files}
+
+    async def _handle_generate_video(self, args: dict, bot_id: str) -> dict:
+        from app.services.media import generate_media
+        files = await generate_media("video", args["prompt"], args.get("aspect_ratio", "16:9"), args.get("duration", 4))
+        return {"success": True, "message": "Generated video attached to this conversation.", "_attachments": files}
