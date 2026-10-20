@@ -12,7 +12,7 @@ async def runtime(db=Depends(get_db)):
     heartbeat=await db.get(RuntimeHeartbeat,'worker')
     age=(datetime.utcnow()-heartbeat.updated_at).total_seconds() if heartbeat else None
     checks = {}
-    for name in ('gateway_verified', 'mcp_verified', 'gateway_verification_failed', 'mcp_verification_failed'):
+    for name in ('gateway_verified', 'mcp_verified', 'mcp_tool_verified', 'gateway_verification_failed', 'mcp_verification_failed'):
         item = await db.get(RuntimeHeartbeat, name)
         checks[name] = item.updated_at.isoformat() + 'Z' if item else None
     details = {}

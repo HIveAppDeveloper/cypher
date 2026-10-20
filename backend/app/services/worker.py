@@ -2,6 +2,7 @@
 import asyncio
 import logging
 import os
+import time
 from contextlib import suppress
 from datetime import datetime
 from sqlalchemy import select, update, text
@@ -9,7 +10,7 @@ from app.db.session import AsyncSessionLocal, engine
 from app.models.task import Task
 from app.services.orchestrator import AgentOrchestrator
 logger = logging.getLogger(__name__)
-POLL_SECONDS = 1
+POLL_SECONDS = 2
 
 async def run_worker():
     # Hold a dedicated Postgres session lock across the loop. During rolling
@@ -17,12 +18,19 @@ async def run_worker():
     # claim the same pending task or interrupt another live worker's work.
     if engine.dialect.name == "postgresql":
         async with engine.connect() as lock_connection:
-            while not await lock_connection.scalar(text("SELECT pg_try_advisory_lock(1763000271)")):
+            while True:
+                acquired = await lock_connection.scalar(text("SELECT pg_try_advisory_lock(1763000271)"))
+                await lock_connection.commit()
+                if acquired: break
                 await asyncio.sleep(POLL_SECONDS)
+            owner_pid = await lock_connection.scalar(text("SELECT pg_backend_pid()"))
+            await lock_connection.commit()
             try:
-                await _run_worker_loop()
+                await _run_worker_loop(lock_connection, owner_pid)
             finally:
-                await lock_connection.execute(text("SELECT pg_advisory_unlock(1763000271)"))
+                with suppress(Exception):
+                    await lock_connection.execute(text("SELECT pg_advisory_unlock(1763000271)"))
+                    await lock_connection.commit()
     else:
         await _run_worker_loop()
 
@@ -39,20 +47,31 @@ async def heartbeat():
         else: item.updated_at = datetime.utcnow()
         await db.commit()
 
-async def _run_worker_loop():
+async def _run_worker_loop(lock_connection=None, owner_pid=None):
+    last_heartbeat = 0
+    async def pulse():
+        nonlocal last_heartbeat
+        if time.monotonic() - last_heartbeat < 5: return
+        if lock_connection is not None:
+            pid = await lock_connection.scalar(text("SELECT pg_backend_pid()"))
+            await lock_connection.commit()
+            if pid != owner_pid: raise RuntimeError("Worker lost its PostgreSQL session lock")
+        await heartbeat()
+        last_heartbeat = time.monotonic()
     # Do not replay interrupted side effects automatically.
     async with AsyncSessionLocal() as db:
         await db.execute(update(Task).where(Task.status == "running").values(status="interrupted", completed_at=datetime.utcnow(), result={"error": "Backend restarted during execution; review before resubmitting."}))
+        await db.execute(update(Task).where(Task.status == "cancel_requested").values(status="cancelled", completed_at=datetime.utcnow(), result={"note":"Worker restarted after cancellation. Review any in-flight external actions."}))
         await db.commit()
     if os.getenv("GROKBOT_VERIFY_CLOUD") == "true":
         from app.services.verification import verify_cloud
         check = asyncio.create_task(verify_cloud())
         while not check.done():
-            await heartbeat()
+            await pulse()
             await asyncio.wait({check}, timeout=5)
         await check
     while True:
-        await heartbeat()
+        await pulse()
         async with AsyncSessionLocal() as db:
             task = (await db.execute(select(Task).where(Task.status == "pending").order_by(Task.created_at).limit(1).with_for_update(skip_locked=True))).scalar_one_or_none()
             if task is None:
@@ -70,7 +89,7 @@ async def _run_worker_loop():
                     while not execution.done():
                         await asyncio.wait({execution}, timeout=.5)
                         if execution.done(): break
-                        await heartbeat()
+                        await pulse()
                         async with AsyncSessionLocal() as monitor:
                             current = await monitor.get(Task, task.id)
                             if current and current.status == "cancel_requested":

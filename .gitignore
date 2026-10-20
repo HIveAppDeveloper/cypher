@@ -61,3 +61,5 @@ minio_data/
 .private/
 *.db
 .pytest_cache/
+
+*.tsbuildinfo

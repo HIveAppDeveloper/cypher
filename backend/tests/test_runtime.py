@@ -380,3 +380,22 @@ def test_plugin_credentials_require_private_key(monkeypatch):
     assert seal('') is None
     with pytest.raises(ValueError, match='32 characters'):
         seal('a-private-token')
+
+@pytest.mark.asyncio
+async def test_real_responses_bridge_with_mcp_dependency(monkeypatch):
+    """Exercise LiteLLM's real adapter imports and wire mapping; HTTP alone is stubbed."""
+    import json,httpx,litellm
+    from litellm.llms.custom_httpx.http_handler import AsyncHTTPHandler
+    from litellm.llms.custom_httpx import llm_http_handler
+    def respond(request):
+        body=json.loads(request.content)
+        assert request.url.path.endswith('/responses')
+        assert body['model']=='openai/gpt-6.1-sol'
+        return httpx.Response(200,json={'id':'resp_test','object':'response','created_at':1,'status':'completed','model':'openai/gpt-6.1-sol','output':[{'id':'msg_test','type':'message','status':'completed','role':'assistant','content':[{'type':'output_text','text':'Adapter ready','annotations':[]}]}], 'usage':{'input_tokens':4,'output_tokens':3,'total_tokens':7}})
+    handler=AsyncHTTPHandler(transport=httpx.MockTransport(respond))
+    monkeypatch.setattr(llm_http_handler,'get_async_httpx_client',lambda **kwargs:handler)
+    try:
+        response=await litellm.acompletion(model='openai/responses/openai/gpt-6.1-sol',messages=[{'role':'user','content':'Test'}],api_key='test-only',api_base='https://example.test/v1',max_tokens=2048,reasoning_effort='low')
+        assert response.choices[0].message.content=='Adapter ready'
+    finally:
+        await handler.client.aclose()

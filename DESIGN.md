@@ -102,7 +102,7 @@ components:
 
 The implemented interface follows the supplied light GrokBot reference: a quiet gray roster beside a near-white conversation, with pink outgoing messages and organic colored bot marks. Rounded forms and restrained chrome keep names, message content, and the active identity prominent. The workspace now opens on a task-first prompt, with role presets, named models, team rooms, attachment input, and compact run controls. Configuration is progressively disclosed while preserving the same light visual system.
 
-This document records the current CSS and React components, rather than claiming a pixel-exact screenshot match. The root Vercel Services and Daemon configuration is active and the authorized Atlas native database credential is configured. At this checkpoint deployment revision f2e345 is building; live runtime success is not established. Fifteen mocked-backend tests and a production frontend build passed, but do not establish live database, worker, provider, media, MCP, or sandbox operation. The interface must distinguish configuration from verified execution. Visible empty and error states remain part of the interface.
+This document records the current CSS and React components, rather than claiming a pixel-exact screenshot match. The root Vercel Services and Daemon configuration is active and the authorized Atlas native database credential is configured. The live protected runtime endpoint verified Atlas database access and the hosted Vercel worker (database=true, worker=true, heartbeat age 0 seconds). This verifies a cloud daemon independent of the user’s laptop, not successful agent execution. DeepWiki MCP tool discovery passed at 2026-10-20T19:00:14Z; the GPT-6.1 Sol gateway check failed at 2026-10-20T19:00:13Z, because LiteLLM 1.106.0 imported CacheableResult, absent in MCP 1.30.0. Revision 732d2a is deploying safe diagnostic details. Seventeen backend tests and the Next.js production build passed. Live media generation, MCP tool invocation, managed Sandbox execution, and the complete agent task flow remain unverified. The interface must distinguish configuration from verified execution. Visible empty and error states remain part of the interface.
 
 **Key Characteristics:**
 - Light neutral surfaces with a pink messaging accent.
@@ -202,7 +202,7 @@ A compact disclosure above the composer shows active work or recent work, up to 
 
 ### Workspace Setup and Media Output
 
-Workspace setup reuses the bounded native dialog. A gray connection card pairs a small amber dot with explicit checking or disconnected text; a green dot accompanies API/database reachability, while explicit text distinguishes a recent worker heartbeat from an API whose worker is not ready. Supporting copy distinguishes those signals from model and tool readiness. A short ordered setup list and an optional deployment-guide disclosure keep the first view readable. Check again and Done use the established secondary and primary actions. The active managed worker configuration is not by itself evidence of verified laptop-independent execution.
+Workspace setup reuses the bounded native dialog. A gray connection card pairs a small amber dot with explicit checking or disconnected text; a green dot accompanies API/database reachability, while explicit text distinguishes a recent worker heartbeat from an API whose worker is not ready. Supporting copy distinguishes those signals from model and tool readiness. A short ordered setup list and an optional deployment-guide disclosure keep the first view readable. Check again and Done use the established secondary and primary actions. The hosted worker has now been verified by a live heartbeat. Present its readiness separately from the failed model-gateway check, passed MCP discovery, and unverified tool execution.
 
 Conversation output controls use small gray native selects for text, image, or video and relevant media options, with concise credit-cost guidance. Rendered videos use browser controls in a rounded (14px) container, at most (480px) wide and (420px) high. The Python media-generation implementation exists, but live media generation is unverified in this environment; no sample media or progress display should imply a completed provider call.
 
@@ -210,7 +210,7 @@ Conversation output controls use small gray native selects for text, image, or v
 
 Connections reuses the bounded modal with scrolling fields and a persistent footer. Two compact tabs separate MCP servers and Vercel variables; the active tab uses a pale mauve fill (`#f0e7ed`) and dark pink text (`#8f275d`). MCP rows use fine dividers, compact names, tool counts, expandable descriptions, an Enabled/Disabled pill, and a small disconnect action. Enabled switches use muted green ink (`#286347`) on pale green (`#e5eee8`). The password field accepts an optional bearer token; explanatory text describes encrypted storage and the scope of enabled tools.
 
-The variable inventory shows names, project labels, and Configured/Needs link states in divided rows, never secret values. Keep these statuses textual. The current inventory of 177 names and eight imported values is deployment context, not an enduring visual token or evidence that a service works. The sidebar Connections action collapses to its icon on mobile.
+The variable inventory shows names, project labels, and Configured/Needs link states in divided rows, never secret values. Keep these statuses textual. The current inventory of 177 names and 43 imported values is deployment context, not an enduring visual token or evidence that a service works. The sidebar Connections action collapses to its icon on mobile.
 
 Agent lounge displays six distinct member identities and coordinator/specialist contributions using the existing room, sender-label, and message patterns. Job rows include a compact pink cancellation action. Keep cancellation-requested, cancelled, interrupted, failed, and completed labels truthful; a cancellation does not imply rollback of completed external actions.
 
@@ -231,5 +231,5 @@ Connection errors appear as readable alerts; the roster-level notice is fixed ov
 ### Don't:
 
 - Don't turn screenshot text into real conversation data.
-- Don't describe the implementation as pixel exact, backend verified, media verified, or an active always-on cloud service.
+- Don't describe the implementation as pixel exact or infer model, media, or tool success from verified database and worker readiness.
 - Don't replace the mobile vertical rail with a top roster without an intentional layout change.
