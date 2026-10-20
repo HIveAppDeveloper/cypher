@@ -17,7 +17,7 @@ def computer(bot_id):
 
 def start(bot_id):
     with computer(bot_id) as box:
-        return box.id
+        return box.name
 
 def stop(bot_id):
     from vercel.sandbox.sync import SyncSandboxClient

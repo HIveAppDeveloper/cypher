@@ -38,14 +38,14 @@ async def lifespan(app: FastAPI):
         logger.warning(f"Redis unavailable (non-critical for local dev): {e}")
         app.state.redis = None
 
-    # Initialize Docker (optional for local dev)
-    try:
-        import docker
-        app.state.docker_client = docker.from_env()
-        logger.info("Docker connected")
-    except Exception as e:
-        logger.warning(f"Docker unavailable (sandbox features disabled): {e}")
-        app.state.docker_client = None
+    app.state.docker_client = None
+    if settings.SANDBOX_BACKEND == "docker":
+        try:
+            import docker
+            app.state.docker_client = docker.from_env()
+            logger.info("Docker connected")
+        except Exception as e:
+            logger.warning(f"Docker sandbox unavailable: {e}")
 
     from app.services.worker import run_worker
     worker = asyncio.create_task(run_worker()) if settings.RUN_EMBEDDED_WORKER else None

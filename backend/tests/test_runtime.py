@@ -275,9 +275,12 @@ def test_managed_computer_uses_isolated_named_vm(monkeypatch):
     from vercel.sandbox.sync import SyncSandboxClient
     from app.services.sandbox import SandboxManager
     from app.config import settings
+    from vercel.sandbox._internal.sync_runtime import SyncSandbox
+    assert hasattr(SyncSandbox, 'name')
+    assert not hasattr(SyncSandbox, 'id')
     calls = []
     class Box:
-        id = 'sandbox-test'
+        name = 'sandbox-test'
         def run_process(self, command, args, **kwargs):
             calls.append((command, args, kwargs))
             return SimpleNamespace(returncode=0, stdout='ran', stderr='')
