@@ -9,7 +9,10 @@ from .teams import router as teams_router
 
 from .runtime import router as runtime_router
 
+from .automation import router as automation_router
+
 router = APIRouter()
+router.include_router(automation_router,tags=["automation"])
 router.include_router(runtime_router, prefix="/runtime", tags=["runtime"])
 router.include_router(teams_router, prefix="/teams", tags=["teams"])
 router.include_router(plugins_router, prefix="/plugins", tags=["plugins"])

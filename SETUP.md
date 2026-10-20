@@ -48,38 +48,28 @@ Open Connections → MCP servers, supply a public HTTPS Streamable HTTP endpoint
 
 Use `.env.example` as a starting point. Set a native state database URL and explicit provider credentials or gateway authentication. Docker sandbox mode uses `SANDBOX_BACKEND=docker` and the `open-grokbot-sandbox:latest` image. Build it with `docker build -t open-grokbot-sandbox:latest ./sandbox`, then run the applicable Compose configuration. A local embedded worker is available through `RUN_EMBEDDED_WORKER=true`; do not run it alongside another runner unless protected by the PostgreSQL lock. Keep this deployment private and use stable backend authentication/encryption configuration.
 
+## Appearance and glass controls
+
+Appearance preferences are stored in this browser’s local storage and applied immediately. Defaults are Rose accent, 16px message text, 88% desktop message width, 24px glass blur, comfortable roster density, and enabled interface animations. Text size spans 14–22px, width 60–100%, and blur 0–40px. Reset appearance restores those defaults. OS reduced-motion preference disables the select entrance animation; the in-app motion switch disables interface animation and transitions. Glass selects use Radix focus, typeahead, and keyboard selection rather than browser-native option rendering.
+
+## Bounded cloud goals
+
+Open Goals and specify the desired outcome, measurable completion criteria, workspace, manager, interval, and maximum runs. The first run is due immediately; later runs are persisted and scheduled by the hosted worker, without keeping the browser open. A healthy worker is required. UI intervals range 15 minutes–24 hours; the API allows up to seven days. Runs are finite (1–20, default three); at most ten goals can be active. The manager’s completion tool records evidence, and completion is finalized only after its task succeeds. Pause stops pending work or requests cancellation; in-flight external effects cannot be undone. Failed/interrupted executions block the goal until reviewed and explicitly resumed, within its remaining allowance. Restart does not replay interrupted effects. Agent-created follow-ups are limited to three runs, one goal per task, no nested goals. These new scheduler workflows require live verification.
+
+## Webhook channels
+
+Create a channel with an existing room, Sol or Luna manager, and optional public HTTPS result destination. Save the displayed key immediately; it is not shown again. Incoming requests use `POST /api/channels/{id}/events`, `X-Grokbot-Channel-Key`, and JSON containing a unique `event_id` plus `text`. Repeated IDs return the original task instead of queueing another. The app accepts at most ten new events per channel per minute and rejects channel work when the workspace already has 20 pending/running tasks.
+
+Frontend channel endpoints remain behind Vercel deployment protection; an external sender must also provide the deployment’s automation bypass header when protection requires it. A channel key does not bypass that layer. The channel does not grant private-app login/OAuth or permission to access another service.
+
+Finished results use the database outbox. Outgoing payloads contain `task.finished`, task ID, status, and result text; they are signed with HMAC-SHA256 using the channel key in `X-Grokbot-Signature: sha256=…`, plus an `Idempotency-Key`. Verify the signature against raw request bytes and deduplicate deliveries at the receiver. The outbox makes at most three attempts with increasing retry delays. Disabling a channel stops new intake and skips pending delivery. Use Run connection test and Delivery log to inspect actual task/delivery status; queueing a test does not establish delivery success. These new channel flows are not yet live verified.
+
+MCP connections now expose per-tool enable switches and Refresh tools. A failed refresh preserves the saved connection. Enabling a connection is not equivalent to enabling all tools, and private accounts still require supported service authentication.
+
 ## Opt-in cloud smoke checks
 
 Set `GROKBOT_VERIFY_CLOUD=true` to run the worker's cloud smoke checks once per check-version marker (`cloud_check_finished_v4` currently). Checks request a small GPT-6.1 Sol reply, probe a DeepSeek V3.2 fallback, discover DeepWiki tools, and invoke `read_wiki_structure` for `vercel/ai`. Results are persisted in `RuntimeCheck` with status, timestamp, and safe diagnostic detail, and exposed through the protected runtime response. The diagnostic sanitizer redacts credentials and endpoint strings. Checks use provider access and may incur usage; they are not a substitute for a complete agent/tool workflow. Retaining the finished marker prevents repeated checks on ordinary worker restarts.
 
 ## Evidence and limits
 
-At the live checkpoint `2026-10-20T19:19:37Z`, the replacement deployment is ready: Atlas database access and the worker are verified (`database=true`, `worker=true`, heartbeat age 0 seconds) after switching to the unpooled native connection. The session-PID guard had detected lost session affinity on the previous transaction-pooler URL; the worker lock key was changed to avoid the legacy pooled-session lock. Longer-term worker stability still needs observation.
-
-GPT-6.1 Sol failed its live check at `19:19:19Z` and the DeepSeek V3.2 fallback failed at `19:19:20Z`, both with HTTP 403 `RestrictedModelsError` requiring paid AI Gateway credits. No model response has succeeded. DeepWiki’s actual `read_wiki_structure` invocation for `vercel/ai` passed at `19:19:22Z` on the same date; that single call does not verify every connected server.
-
-LiteLLM 1.105.1 passed the real HTTP-adapter regression check; 17 tests and the Next.js production build passed. Forty-three imported variables and 177 inventoried names are recorded as configuration evidence. Image/video generation, managed Sandbox execution, and the complete agent task flow remain unverified.
-
-The failed GPT-6.1 Sol check requires paid gateway access/credits; Workspace setup provides a billing/access link. Do not present gateway configuration as entitlement. There is no scheduler/routines UI, account isolation, interactive browser sign-in handoff, or service-specific Hive/Atlas integration merely from importing configuration.
-
-## Recheck cloud access without redeploying
-
-Workspace setup → Run checks saves a command in PostgreSQL. The worker performs small model requests, a public MCP documentation call, browser navigation, and a cloud-computer command followed by shutdown. The command continues if the browser closes. Results and timestamps appear under Live check results. Checks can consume gateway credits and cloud compute; repeats have a one-minute cooldown. Funding a gateway does not itself prove a successful response: run checks again after changing access.
-
-The worker remained healthy roughly 45 minutes after the initial unpooled-connection verification. The deployed worker passed hosted browser navigation and managed computer command/shutdown checks at 2026-10-20T20:14:41Z. The temporary independent API-test computer was stopped and its short-lived review access revoked; that separate API test could not resolve DNS and did not create agents or connections. Nineteen backend tests and the production frontend build pass, including persisted check commands and isolated Vercel request-header context. Request context lets authenticated API operations use the platform-provided OIDC header without exposing credentials to the browser.
-
-
-## OpenAI-only policy
-
-Only GPT-6.1 Sol (default and five specialist roles) and GPT-6 Luna (lighter Runner work) are permitted. The completion boundary rejects every other model before a network request. Startup converts legacy agent model assignments to Sol. There is no cross-model automatic fallback. Team rounds and tool steps remain bounded; default team rounds are one. Image/video generation is disabled because it requires separate generation models. Model smoke checks now exercise only Sol and Luna once per v6 marker. Twenty backend tests and the production frontend build pass for this policy. Live paid-access results must be checked after deployment; earlier free-tier failures predate funding.
-
-
-## Managed fleet (supersedes the two-model-only policy)
-
-Sol 6.1 and Luna 6 remain the only user-facing managers. Managers have a consult_specialist tool: research→Google Gemini 3.5 Flash, writing→Anthropic Claude Sonnet 4.6, analysis→DeepSeek V3.2. Model IDs were verified against the live Gateway catalog on 2026-10-20. Each user job permits three specialist consultations, each with 12000 prompt characters and 1024 output tokens maximum, no automatic retries, and no nested tools/delegation. Identical results are reused within the job. Managers receive failures and can finish independently. Specialists receive only manager-selected context, not environment variables or automatic full-history access. Internal team messages and tool activity are collapsed under Background activity; the final response stays visible. Media generation is re-enabled because the user authorized other providers for specialists. These are bounded calls in the hosted worker, not permanently running processes for every model.
-
-
-Media defaults now use OpenAI GPT Image 2 for still images and Google Veo 3.1 Fast for video. The manager's generate_image tool can choose Google Gemini 3.1 Flash Image Preview through Chat Completions image output. Only one asset is requested per call. `GROKBOT_VERIFY_MEDIA=true` enables a one-time media smoke check (one OpenAI image, one Gemini image, one four-second Veo clip); only format/byte counts and sanitized errors are retained. Recovered internal errors no longer make a successful manager answer appear as a failed job.
-
-
-The Manager selector appears on first task and in conversations, with Sol/Luna as the only choices. The coordinator honors that choice for planning/final synthesis; fleet routing remains internal. Public starter MCP servers (DeepWiki, Microsoft Learn, Cloudflare Docs) are discovered and installed once by the hosted worker, with per-connection results in runtime diagnostics. Existing disabled connections are preserved, and the finished marker prevents disconnected starters from being silently reinstalled. The Connections panel supports search and one-click reconnect; responses support Copy and Download text.
+Production revision b473 previously verified database/worker operation, generated OpenAI PNG, Gemini JPEG, and Veo MP4 media, and a real GPT-6 Luna → Gemini group job. DeepWiki tool invocation was also verified. The former free-credit restriction is historical and no longer describes the current verified capability. The new glass controls, appearance preferences, goals, channels, and per-plugin tool controls have passed source checks (31 backend tests and the frontend production build), but have not yet been verified live. Prior live results do not prove the new workflows or every model, provider, sandbox, or connected service.

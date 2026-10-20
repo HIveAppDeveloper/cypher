@@ -54,7 +54,7 @@ async def invoke(plugin_id, tool_name, arguments):
     from app.models.plugin import Plugin
     async with AsyncSessionLocal() as db:
         plugin = await db.get(Plugin, plugin_id)
-        if not plugin or not plugin.enabled or tool_name not in {t['name'] for t in plugin.tools}:
+        if not plugin or not plugin.enabled or tool_name not in {t['name'] for t in plugin.tools if t.get('enabled',True)}:
             return {'error': 'Plugin or tool is disabled.'}
         async with asyncio.timeout(90):
             async with session(plugin.url, reveal(plugin.credential)) as client:

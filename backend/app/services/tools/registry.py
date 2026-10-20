@@ -67,6 +67,7 @@ class ToolRegistry:
         from app.services.plugins import invoke
         for plugin in (await db.execute(select(Plugin).where(Plugin.enabled == True))).scalars():
             for index, tool in enumerate(plugin.tools):
+                if not tool.get('enabled',True):continue
                 async def handler(arguments, bot_id, pid=plugin.id, tool_name=tool['name']):
                     return await invoke(pid, tool_name, arguments)
                 self.register(f"plugin_{plugin.id.replace('-', '')[:12]}_{index}", f"{plugin.name}: {tool['description']}", tool['schema'], handler)
@@ -324,7 +325,7 @@ class ToolRegistry:
             "filesystem": ["read_file", "write_file", "list_directory", "search_files"],
         }
 
-        enabled_tool_names = {"consult_specialist"} if getattr(bot, "llm_provider", "") == "openai" and getattr(bot, "llm_model", "") in {"gpt-6.1-sol", "gpt-6-luna"} else set()
+        enabled_tool_names = {"consult_specialist", "set_goal", "complete_goal"} if getattr(bot, "llm_provider", "") == "openai" and getattr(bot, "llm_model", "") in {"gpt-6.1-sol", "gpt-6-luna"} else set()
         for category in bot.tools_enabled:
             category_lower = category.lower()
             if category_lower in category_map:

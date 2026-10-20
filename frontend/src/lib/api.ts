@@ -10,9 +10,19 @@ function botFromWire(b: BotResponse): Bot { return { ...b, llmProvider: b.llm_pr
 function botToWire(b: Partial<Bot>) { return { name: b.name, role: b.role, description: b.description, system_prompt: b.systemPrompt, llm_provider: b.llmProvider || 'openai', llm_model: b.llmModel || 'gpt-6.1-sol', tools_enabled: b.toolsEnabled || [] }; }
 interface MessageResponse { id: string; conversation_id: string; sender_type: string; sender_bot_id?: string; content: string; message_type: MessageType; created_at: string; metadata_json?: { internal?: boolean; attachments?: Attachment[] }; }
 export const api = {
+  getGoals: (): Promise<import('../components/GoalsPanel').Goal[]> => request('/goals'),
+  createGoal: (data: unknown): Promise<import('../components/GoalsPanel').Goal> => request('/goals',{method:'POST',body:JSON.stringify(data)}),
+  setGoalState: (id:string,status:string): Promise<import('../components/GoalsPanel').Goal> => request('/goals/'+id,{method:'PATCH',body:JSON.stringify({status})}),
+  getChannels: (): Promise<import('../components/ChannelsPanel').Channel[]> => request('/channels'),
+  createChannel: (data: unknown): Promise<import('../components/ChannelsPanel').Channel & {token:string;inbound_path:string}> => request('/channels',{method:'POST',body:JSON.stringify(data)}),
+  setChannelState: (id:string,enabled:boolean): Promise<import('../components/ChannelsPanel').Channel> => request('/channels/'+id,{method:'PATCH',body:JSON.stringify({enabled})}),
+  testChannel: (id:string) => request('/channels/'+id+'/test',{method:'POST'}),
+  getDeliveries: (id:string): Promise<{id:string;status:string;attempts:number;detail:string}[]> => request('/channels/'+id+'/deliveries'),
   defaultTeam: (): Promise<Conversation> => request('/teams/default', { method: 'POST' }),
   getPlugins: (): Promise<import('../components/PluginPanel').PluginConnection[]> => request('/plugins'),
   connectPlugin: (data: { name: string; url: string; token: string }): Promise<import('../components/PluginPanel').PluginConnection> => request('/plugins', { method: 'POST', body: JSON.stringify(data) }),
+  refreshPlugin: (id:string): Promise<import('../components/PluginPanel').PluginConnection> => request('/plugins/'+id+'/refresh',{method:'POST'}),
+  setPluginTool: (id:string,name:string,enabled:boolean): Promise<import('../components/PluginPanel').PluginConnection> => request('/plugins/'+id+'/tools/'+encodeURIComponent(name),{method:'PATCH',body:JSON.stringify({enabled})}),
   togglePlugin: (id: string, enabled: boolean): Promise<import('../components/PluginPanel').PluginConnection> => request('/plugins/' + id, { method: 'PATCH', body: JSON.stringify({ enabled }) }),
   disconnectPlugin: (id: string) => request('/plugins/' + id, { method: 'DELETE' }),
   cancelJob: (conversation: string, id: string) => request(`/conversations/${conversation}/tasks/${id}/cancel`, { method: 'POST' }),

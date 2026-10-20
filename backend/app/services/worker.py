@@ -99,6 +99,9 @@ async def _run_worker_loop(lock_connection=None, owner_pid=None):
             except Exception as error:
                 await save_check('check_request','failed',safe_error(error))
             continue
+        from app.services.automation import tick_goals,tick_deliveries
+        await tick_goals(AsyncSessionLocal)
+        await tick_deliveries(AsyncSessionLocal)
         async with AsyncSessionLocal() as db:
             task = (await db.execute(select(Task).where(Task.status == "pending").order_by(Task.created_at).limit(1).with_for_update(skip_locked=True))).scalar_one_or_none()
             if task is None:
@@ -110,7 +113,7 @@ async def _run_worker_loop(lock_connection=None, owner_pid=None):
             await db.commit()
             try:
                 request = (task.result or {}).get("request", {})
-                execution = asyncio.create_task(AgentOrchestrator().process_message(task.conversation_id, task.description, attachments=request.get("attachments", []), options=request.get("options", {})))
+                execution = asyncio.create_task(AgentOrchestrator().process_message(task.conversation_id, task.description, attachments=request.get("attachments", []), options=request.get("options", {}), goal_id=request.get("goal_id")))
                 try:
                     cancelled = False
                     while not execution.done():
@@ -142,6 +145,14 @@ async def _run_worker_loop(lock_connection=None, owner_pid=None):
                 task.status = "failed"
                 task.result = {"error": "Execution failed; inspect private backend logs."}
             task.completed_at = datetime.utcnow()
+            if request.get('goal_id'):
+                from app.models.automation import Goal
+                goal=await db.get(Goal,request['goal_id'])
+                if goal and not goal.completion_requested:
+                    public=[r for r in (task.result or {}).get('responses',[]) if not (r.get('metadata') or {}).get('internal') and r.get('sender_type')=='bot']
+                    if public:goal.last_summary=public[-1].get('content','')[:2000]
+            from app.services.automation import enqueue_delivery
+            await enqueue_delivery(task.id, request.get("channel_id"),AsyncSessionLocal,db)
             await db.commit()
 
 

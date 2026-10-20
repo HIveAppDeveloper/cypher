@@ -1,31 +1,52 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-10-20T19:20:06.940797+00:00",
+  "generatedAt": "2026-10-20T21:38:55.687211+00:00",
   "title": "Design System: Open GrokBot",
   "extensions": {
     "shadows": [
       {
         "name": "identity",
         "value": "0 2px 12px #00000009",
-        "purpose": "Compact centered identity pill."
+        "purpose": "Centered bot identity."
       },
       {
         "name": "composer",
         "value": "0 2px 7px #0000000a",
-        "purpose": "Faint lift around the message composer."
+        "purpose": "Conversation composer."
       },
       {
-        "name": "controls-popover",
-        "value": "0 14px 40px #00000015",
-        "purpose": "Run controls floating panel."
+        "name": "glass-trigger",
+        "value": "inset 0 1px 0 #fff,0 3px 12px #30243407",
+        "purpose": "Default glass select."
       },
       {
-        "name": "task-composer",
-        "value": "0 5px 22px #00000005",
-        "purpose": "Nearly flat task-first home input."
+        "name": "glass-trigger-open",
+        "value": "0 5px 20px #30243412",
+        "purpose": "Open select trigger."
+      },
+      {
+        "name": "glass-menu",
+        "value": "0 18px 48px #24152425,inset 0 1px 0 #fff",
+        "purpose": "Floating liquid glass menu."
+      },
+      {
+        "name": "glass-dialog",
+        "value": "0 24px 80px #24152426",
+        "purpose": "Native glass dialog."
       }
     ],
-    "motion": [],
+    "motion": [
+      {
+        "name": "menu-settle",
+        "value": "160ms cubic-bezier(.16,1,.3,1)",
+        "purpose": "TranslateY(-4px) scale(.985) to rest; disabled by OS reduced motion."
+      },
+      {
+        "name": "trigger-state",
+        "value": "background 150ms ease,box-shadow 150ms ease",
+        "purpose": "Select state changes; disabled by in-app motion preference."
+      }
+    ],
     "breakpoints": [
       {
         "name": "compact-rail",
@@ -292,9 +313,14 @@
     },
     "focus": [
       {
-        "name": "composer-textarea",
-        "value": "outline:2px solid #b51f70;outline-offset:2px;border-radius:8px",
-        "purpose": "Explicit visible keyboard focus for the composer textarea."
+        "name": "global",
+        "value": "2px solid var(--focus-color);outline-offset:3px",
+        "purpose": "Keyboard focus follows appearance accent."
+      },
+      {
+        "name": "composer",
+        "value": "2px solid var(--focus-color);outline-offset:2px;border-radius:8px",
+        "purpose": "Explicit composer focus."
       }
     ],
     "typographyMeta": {
@@ -306,6 +332,15 @@
         "displayName": "Welcome heading",
         "purpose": "QuickStart heading: Inter Variable, clamp(25px,2.7vw,36px), 500, 1.2 line height, -.035em tracking; 25px on mobile."
       }
+    },
+    "glass": {
+      "blurDefault": "24px",
+      "blurRange": "0\u201340px",
+      "triggerSaturate": "140%",
+      "menuSaturate": "160%",
+      "dialogSaturate": "145%",
+      "backdropBlur": "5px",
+      "dialogImplementation": "Isolated noninteractive ::before backdrop filter; dialog ancestor has no filter."
     }
   },
   "components": [
@@ -315,7 +350,7 @@
       "refersTo": "button-primary",
       "description": "Pink primary form action; no distinct hover fill is implemented.",
       "html": "<button class=\"ds-primary\">Create bot</button>",
-      "css": ".ds-primary{font:16px \"Inter Variable\",-apple-system,BlinkMacSystemFont,\"Segoe UI\",sans-serif;padding:10px 18px;border:1px solid #c5237b;border-radius:18px;background:#c5237b;color:white;cursor:pointer}.ds-primary:focus-visible{outline:2px solid #b51f70;outline-offset:3px}"
+      "css": ".ds-primary{font:16px \"Inter Variable\",-apple-system,BlinkMacSystemFont,\"Segoe UI\",sans-serif;padding:10px 18px;border:1px solid #c5237b;border-radius:18px;background:var(--accent-blue,#b42678);color:white;cursor:pointer}.ds-primary:focus-visible{outline:2px solid #b51f70;outline-offset:3px}"
     },
     {
       "name": "Round toolbar action",
@@ -339,7 +374,7 @@
       "refersTo": "message-outgoing",
       "description": "Right-aligned message bubble; snippet shows shape without implying real sent data.",
       "html": "<article class=\"ds-outgoing\">A message preview</article>",
-      "css": ".ds-outgoing{font:18px/1.5 \"Inter Variable\",-apple-system,BlinkMacSystemFont,\"Segoe UI\",sans-serif;width:fit-content;max-width:84%;padding:12px 16px;border-radius:27px;background:#c5237b;color:white;white-space:pre-wrap;overflow-wrap:anywhere}"
+      "css": ".ds-outgoing{font:var(--chat-font-size,16px)/1.5 \"Inter Variable\",-apple-system,BlinkMacSystemFont,\"Segoe UI\",sans-serif;width:fit-content;max-width:var(--message-width,88%);padding:12px 16px;border-radius:27px;background:var(--accent-blue,#b42678);color:white;white-space:pre-wrap;overflow-wrap:anywhere}"
     },
     {
       "name": "Incoming message",
@@ -347,7 +382,7 @@
       "refersTo": "message-incoming",
       "description": "Neutral incoming bubble.",
       "html": "<article class=\"ds-incoming\">A reply preview</article>",
-      "css": ".ds-incoming{font:18px/1.5 \"Inter Variable\",-apple-system,BlinkMacSystemFont,\"Segoe UI\",sans-serif;width:fit-content;max-width:84%;padding:12px 16px;border-radius:27px;background:var(--bg-card,#efefef);color:#202020;white-space:pre-wrap;overflow-wrap:anywhere}"
+      "css": ".ds-incoming{font:var(--chat-font-size,16px)/1.5 \"Inter Variable\",-apple-system,BlinkMacSystemFont,\"Segoe UI\",sans-serif;width:fit-content;max-width:var(--message-width,88%);padding:12px 16px;border-radius:27px;background:var(--bg-card,#efefef);color:#202020;white-space:pre-wrap;overflow-wrap:anywhere}"
     },
     {
       "name": "Roster navigation",
@@ -355,20 +390,6 @@
       "description": "Selected roster row with the actual organic avatar silhouette.",
       "html": "<nav aria-label=\"Bots\"><button class=\"ds-row\"><svg viewBox=\"0 0 48 48\" aria-hidden=\"true\"><path fill=\"#13b6a9\" d=\"M8 11C11 5 22 3 29 5c8-1 15 10 15 20 2 7-7 16-14 16-7 5-13 0-18 1C3 40 1 28 4 23c-1-4 0-9 4-12Z\"/><path d=\"m23 15 3 7m7-11 3 7\" fill=\"none\" stroke=\"white\" stroke-width=\"4\" stroke-linecap=\"round\"/></svg><span><strong>Bot name</strong><small>Description preview</small></span></button></nav>",
       "css": ".ds-row{font-family:\"Inter Variable\",-apple-system,BlinkMacSystemFont,\"Segoe UI\",sans-serif;display:flex;align-items:center;gap:10px;width:100%;padding:13px 10px;text-align:left;border:0;border-radius:15px;background:#e5e5e5;color:#202020;cursor:pointer}.ds-row svg{width:46px;height:46px;flex-shrink:0}.ds-row strong{display:block;font-size:18px;line-height:1.2;font-weight:500}.ds-row small{display:block;margin-top:4px;font-size:16px;color:var(--text-muted,#696969)}.ds-row:hover{background:#e5e5e5}.ds-row:focus-visible{outline:2px solid #b51f70;outline-offset:3px}"
-    },
-    {
-      "name": "Bot creation dialog",
-      "kind": "card",
-      "description": "Bounded native agent modal with independently scrolling fields and persistent action footer.",
-      "html": "<section class=\"ds-dialog\" role=\"dialog\" aria-label=\"Create agent\"><h2>Meet your next agent.</h2><form class=\"ds-agent-form\"><div class=\"ds-agent-fields\"><label>Name<input aria-label=\"Name\" placeholder=\"Assistant\"></label></div><footer class=\"ds-agent-actions\"><button type=\"button\">Cancel</button><button type=\"button\">Create agent</button></footer></form></section>",
-      "css": ".ds-dialog{font-family:\"Inter Variable\",-apple-system,BlinkMacSystemFont,\"Segoe UI\",sans-serif;width:min(480px,calc(100vw - 32px));max-height:calc(100dvh - 32px);overflow:auto;padding:30px;border:1px solid #ddd;border-radius:20px;color:#202020;background:white}.ds-dialog h2{margin:0 0 24px;font-size:26px;letter-spacing:-.035em;font-weight:500}.ds-dialog label{display:block;margin:16px 0 6px;font-size:14px}.ds-dialog input{display:block;width:100%;padding:10px 12px;border:1px solid #ddd;border-radius:10px;background:white;color:#222}.ds-dialog input:focus-visible{outline:2px solid #b51f70;outline-offset:3px}.ds-dialog{display:flex;flex-direction:column;overflow:hidden}.ds-dialog h2{flex-shrink:0}.ds-agent-form{display:flex;flex-direction:column;min-height:0;overflow:hidden}.ds-agent-fields{min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:3px}.ds-agent-actions{display:flex;justify-content:flex-end;gap:10px;flex-shrink:0;background:white;padding-top:16px;margin-top:12px;border-top:1px solid #eee}.ds-agent-actions button{padding:10px 18px;border-radius:18px;border:1px solid #ddd;background:white;color:#202020;font:inherit;cursor:pointer}.ds-agent-actions button:last-child{background:#c5237b;border-color:#c5237b;color:white}.ds-agent-actions button:focus-visible{outline:2px solid #b51f70;outline-offset:3px}"
-    },
-    {
-      "name": "Run controls",
-      "kind": "custom",
-      "description": "Native run disclosure with named model controls, supported OpenAI power/thinking/speed settings, and advanced run sliders; no live runtime implied.",
-      "html": "<details class=\"ds-controls\"><summary>Controls</summary><div class=\"ds-popover\"><h3>Run controls</h3><label>Temperature <output>0.5</output><input aria-label=\"Temperature\" type=\"range\" min=\"0\" max=\"1.5\" step=\".1\" value=\".5\"></label><label>Typeface<select><option>Inter</option><option>System</option><option>Georgia</option></select></label></div></details>",
-      "css": ".ds-controls{position:relative;font:13px \"Inter Variable\",sans-serif}.ds-controls>summary{list-style:none;cursor:pointer;border:1px solid #ddd;border-radius:18px;padding:7px 14px;background:white}.ds-popover{margin-top:8px;width:260px;background:white;border:1px solid #ddd;border-radius:16px;padding:20px;box-shadow:0 14px 40px #00000015}.ds-popover h3{margin:0 0 20px;font-size:16px}.ds-popover label{display:block;margin:16px 0;color:#303030}.ds-popover output{float:right;color:#696969;font-size:12px}.ds-popover input{width:100%;display:block;margin-top:12px;accent-color:#c5237b}.ds-popover select{display:block;width:100%;margin-top:8px;border:1px solid #ddd;background:#f8f8f8;padding:9px;border-radius:8px;font-size:13px}.ds-controls summary:focus-visible,.ds-popover input:focus-visible,.ds-popover select:focus-visible{outline:2px solid #b51f70;outline-offset:3px}"
     },
     {
       "name": "Team member chip",
@@ -383,29 +404,47 @@
       "kind": "custom",
       "description": "QuickStart signature: task prompt, output choice, and start action. Preview does not send requests.",
       "html": "<form class=\"ds-task\" onsubmit=\"return false\"><textarea aria-label=\"Your task\" rows=\"3\" placeholder=\"Research something, make something, solve something\u2026\"></textarea><div><select aria-label=\"Task output\"><option>Ask anything</option><option>Create an image</option><option>Create a video</option></select><button type=\"button\">Start task \u2192</button></div></form>",
-      "css": ".ds-task{width:min(640px,100%);border:1px solid #dedede;border-radius:22px;background:white;box-shadow:0 5px 22px #00000005;padding:16px;font-family:\"Inter Variable\",sans-serif}.ds-task:focus-within{border-color:#b788a0}.ds-task textarea{width:100%;resize:none;border:0;background:none;font:16px/1.6 \"Inter Variable\",sans-serif;outline:none;padding:3px 2px 16px;color:#292929}.ds-task>div{display:flex;align-items:center;justify-content:space-between;gap:12px}.ds-task select{border:0;background:#f4f4f4;padding:9px 12px;border-radius:9px;font-size:12px;color:#555}.ds-task button{border:1px solid #c5237b;background:#c5237b;color:white;border-radius:18px;padding:11px 15px;font-size:13px;cursor:pointer}.ds-task button:focus-visible,.ds-task select:focus-visible{outline:2px solid #b51f70;outline-offset:3px}.ds-task select{width:auto;max-width:calc(100% - 125px)}.ds-task button{white-space:nowrap;flex-shrink:0}"
+      "css": ".ds-task{width:min(640px,100%);border:1px solid #dedede;border-radius:22px;background:white;box-shadow:0 5px 22px #00000005;padding:16px;font-family:\"Inter Variable\",sans-serif}.ds-task:focus-within{border-color:#b788a0}.ds-task textarea{width:100%;resize:none;border:0;background:none;font:16px/1.6 \"Inter Variable\",sans-serif;outline:none;padding:3px 2px 16px;color:#292929}.ds-task>div{display:flex;align-items:center;justify-content:space-between;gap:12px}.ds-task select{border:0;background:#f4f4f4;padding:9px 12px;border-radius:9px;font-size:12px;color:#555}.ds-task button{border:1px solid #c5237b;background:var(--accent-blue,#b42678);color:white;border-radius:18px;padding:11px 15px;font-size:13px;cursor:pointer}.ds-task button:focus-visible,.ds-task select:focus-visible{outline:2px solid #b51f70;outline-offset:3px}.ds-task select{width:auto;max-width:calc(100% - 125px)}.ds-task button{white-space:nowrap;flex-shrink:0}"
+    },
+    {
+      "name": "Glass select states",
+      "kind": "custom",
+      "refersTo": "glass-select-trigger",
+      "description": "Visual preview of the large glass trigger and menu; production uses Radix keyboard/typeahead semantics.",
+      "html": "<button class=\"ds-glass-trigger\" aria-haspopup=\"listbox\">GPT-6.1 Sol <span aria-hidden=\"true\">\u2304</span></button><div class=\"ds-glass-menu\" role=\"listbox\" aria-label=\"Model\"><div class=\"ds-glass-option\" role=\"option\" aria-selected=\"true\" tabindex=\"0\">\u2713 GPT-6.1 Sol</div><div class=\"ds-glass-option\" role=\"option\" aria-selected=\"false\" tabindex=\"0\">GPT-6 Luna</div></div>",
+      "css": ".ds-glass-trigger{font:15px \"Inter Variable\",sans-serif;display:inline-flex;align-items:center;justify-content:space-between;gap:16px;min-height:48px;max-width:100%;padding:12px 16px;border-radius:16px;background:rgba(255,255,255,.83);border:1px solid rgba(98,85,99,.16);box-shadow:inset 0 1px 0 #fff,0 3px 12px #30243407;backdrop-filter:blur(var(--glass-blur,24px)) saturate(140%);color:#29262c;cursor:pointer;transition:background 150ms ease,box-shadow 150ms ease}.ds-glass-trigger:hover{background:rgba(255,255,255,.95)}.ds-glass-trigger:focus-visible{outline:2px solid var(--focus-color,#b42678);outline-offset:3px}.ds-glass-menu{font-family:\"Inter Variable\",sans-serif;margin-top:8px;max-width:400px;padding:7px;border-radius:21px;background:rgba(252,251,253,.91);backdrop-filter:blur(var(--glass-blur,24px)) saturate(160%);border:1px solid #ffffffd9;box-shadow:0 18px 48px #24152425,inset 0 1px 0 #fff;color:#28242a}.ds-glass-option{display:flex;align-items:center;gap:14px;min-height:50px;padding:13px 17px;border-radius:13px;font-size:15px;line-height:1.45}.ds-glass-option:hover,.ds-glass-option:focus-visible{background:color-mix(in srgb,var(--focus-color,#b42678) 11%,white);outline:none}.ds-glass-option[aria-selected=true]{font-weight:550}"
+    },
+    {
+      "name": "Goal progress row",
+      "kind": "card",
+      "description": "Bounded goal progress with workspace and pause actions; preview does not invoke a scheduler.",
+      "html": "<section class=\"ds-goal\"><div><strong>Goal title</strong><span>Paused</span></div><p>1 of 3 runs \u00b7 every 60 minutes</p><p>Latest progress appears here.</p><button>Open workspace</button><button>Resume</button></section>",
+      "css": ".ds-goal{font-family:\"Inter Variable\",sans-serif;padding:0 0 18px;border-bottom:1px solid #e2dce5}.ds-goal>div{display:flex;justify-content:space-between;gap:12px}.ds-goal strong{font-size:15px}.ds-goal span{font-size:11px;color:#625b66}.ds-goal p{font-size:13px;line-height:1.6;color:#665e6b}.ds-goal button{font:12px \"Inter Variable\",sans-serif;padding:8px 14px;margin:8px 6px 0 0;min-height:44px;border:1px solid #ddd;border-radius:18px;background:white;color:#202020;cursor:pointer}.ds-goal button:focus-visible{outline:2px solid var(--focus-color,#b42678);outline-offset:3px}"
     }
   ],
   "narrative": {
-    "overview": "The implemented interface follows the supplied light GrokBot reference: a quiet gray roster beside a near-white conversation, with pink outgoing messages and organic colored bot marks. Rounded forms and restrained chrome keep names, message content, and the active identity prominent. The workspace now opens on a task-first prompt, with role presets, named models, team rooms, attachment input, and compact run controls. Configuration is progressively disclosed while preserving the same light visual system.\n\nThis document records the current CSS and React components, rather than claiming a pixel-exact screenshot match. The root Vercel Services and Daemon configuration is active and the authorized Atlas native database credential is configured. At the live checkpoint 2026-10-20T19:19:37Z, the replacement deployment is ready: Atlas database access and the worker are verified (database=true, worker=true, heartbeat age 0 seconds) after switching to the unpooled native connection. The session-PID guard had detected lost session affinity on the previous transaction-pooler URL; the worker lock key was changed to avoid the legacy pooled-session lock. Longer-term worker stability still needs observation. GPT-6.1 Sol failed its live check at 19:19:19Z and the DeepSeek V3.2 fallback failed at 19:19:20Z, both with HTTP 403 RestrictedModelsError requiring paid AI Gateway credits. No model response has succeeded. DeepWiki\u2019s actual read_wiki_structure invocation for vercel/ai passed at 19:19:22Z on the same date; that single call does not verify every connected server. LiteLLM 1.105.1 passed the real HTTP-adapter regression check; 17 tests and the Next.js production build passed. Forty-three imported variables and 177 inventoried names are recorded as configuration evidence. Image/video generation, managed Sandbox execution, and the complete agent task flow remain unverified. The interface must distinguish configuration from verified execution. Visible empty and error states remain part of the interface.",
+    "overview": "The light Grok messaging identity remains: quiet neutral roster, near-white conversation, organic two-stroke bot marks, and an adjustable rose default accent. The user-authorized extension adds larger liquid-glass menus and translucent dialogs, with readable labels and generous interaction targets. Glass belongs to controls and overlays; conversation content remains the primary visual anchor.\n\nProduction revision b473 previously verified database/worker operation, generated OpenAI PNG, Gemini JPEG, and Veo MP4 media, and a real GPT-6 Luna \u2192 Gemini group job. DeepWiki tool invocation was also verified. The former free-credit restriction is historical and no longer describes the current verified capability. The new glass controls, appearance preferences, goals, channels, and per-plugin tool controls have passed source checks (31 backend tests and the frontend production build), but have not yet been verified live. Prior live results do not prove the new workflows or every model, provider, sandbox, or connected service.",
     "keyCharacteristics": [
-      "Light neutral surfaces with a pink messaging accent.",
-      "A compact identity pill and organic two-stroke bot avatars.",
-      "Rounded messages, restrained borders, and a persistent composer.",
-      "A desktop roster that becomes a narrow vertical rail on small screens."
+      "Light neutral messaging workspace with browser-local accent customization.",
+      "Organic bot identities and rounded conversation bubbles.",
+      "Large translucent select menus with keyboard navigation.",
+      "Bounded scrolling dialogs with persistent actions.",
+      "Explicit progress, connection, goal, and delivery states."
     ],
     "rules": [],
     "dos": [
-      "Do preserve the light surface hierarchy and pink outgoing-message treatment.",
-      "Do retain the organic SVG bot identity with two white strokes.",
-      "Do keep visible empty, disabled, and error states truthful to runtime behavior.",
-      "Do preserve keyboard labels and visible focus on supported controls.",
-      "Do lead with the task prompt and named choices, keeping custom IDs and instructions in advanced configuration."
+      "Do preserve the light Grok identity while making glass controls generous and readable.",
+      "Do keep blur and motion user-adjustable and keyboard states visible.",
+      "Do keep dialog actions reachable while fields scroll.",
+      "Do use explicit state text for goals, queued work, blocked runs, and deliveries.",
+      "Do keep private credentials masked and separate from connection-status claims."
     ],
     "donts": [
-      "Don't turn screenshot text into real conversation data.",
-      "Don't describe the implementation as pixel exact or infer model, media, or tool success from database reachability or historical worker readiness.",
-      "Don't replace the mobile vertical rail with a top roster without an intentional layout change."
+      "Don't claim new goals, channels, preferences, or plugin controls are live verified from source tests alone.",
+      "Don't infer private-account OAuth access from a webhook or MCP URL.",
+      "Don't replace task content with invented successful examples.",
+      "Don't force every surface into a floating glass card.",
+      "Don't claim screenshot pixel fidelity or universal provider/tool readiness."
     ]
   }
 }

@@ -16,7 +16,7 @@ class TogglePlugin(BaseModel):
     enabled: bool
 
 def public(plugin):
-    return {'id': plugin.id, 'name': plugin.name, 'url': plugin.url, 'enabled': plugin.enabled, 'authenticated': bool(plugin.credential), 'tools': [{'name': t['name'], 'description': t['description']} for t in plugin.tools]}
+    return {'id': plugin.id, 'name': plugin.name, 'url': plugin.url, 'enabled': plugin.enabled, 'authenticated': bool(plugin.credential), 'tools': [{'name': t['name'], 'description': t['description'], 'enabled':t.get('enabled',True)} for t in plugin.tools]}
 
 @router.get('')
 async def list_plugins(db: AsyncSession = Depends(get_db)):
@@ -53,3 +53,22 @@ async def disconnect(id: UUID, db: AsyncSession = Depends(get_db)):
     plugin = await db.get(Plugin, str(id))
     if plugin: await db.delete(plugin); await db.commit()
     return {'status': 'disconnected'}
+
+@router.post('/{id}/refresh')
+async def refresh_tools(id:UUID,db:AsyncSession=Depends(get_db)):
+    from app.services.plugins import reveal
+    plugin=await db.get(Plugin,str(id))
+    if not plugin:raise HTTPException(404,'Plugin not found')
+    try:tools=await discover(plugin.url,reveal(plugin.credential))
+    except Exception:raise HTTPException(502,'Could not refresh tools. The saved connection was preserved.')
+    previous={t['name']:t.get('enabled',True) for t in plugin.tools}
+    plugin.tools=[{**t,'enabled':previous.get(t['name'],True)} for t in tools]
+    await db.commit();return public(plugin)
+
+@router.patch('/{id}/tools/{tool_name}')
+async def tool_state(id:UUID,tool_name:str,data:TogglePlugin,db:AsyncSession=Depends(get_db)):
+    plugin=(await db.execute(select(Plugin).where(Plugin.id==str(id)).with_for_update())).scalar_one_or_none()
+    if not plugin:raise HTTPException(404,'Plugin not found')
+    if not any(t['name']==tool_name for t in plugin.tools):raise HTTPException(404,'Tool not found')
+    plugin.tools=[{**t,'enabled':data.enabled} if t['name']==tool_name else t for t in plugin.tools]
+    await db.commit();return public(plugin)

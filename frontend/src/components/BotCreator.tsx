@@ -1,3 +1,4 @@
+import { GlassSelect } from './GlassSelect';
 import React, { useState, useEffect, useRef } from 'react';
 import { Bot } from '../lib/types';
 import { ModelControls, ModelValue } from './ModelControls';
@@ -25,7 +26,7 @@ export function BotCreator({ onClose, onCreate }: { onClose: () => void; onCreat
     <p className="dialog-intro">Pick a role. Everything else has a sensible default.</p>
     <form className="agent-form" onSubmit={submit}><div className="agent-form-fields">
       <label htmlFor="agent-role">What should it do?</label>
-      <select autoFocus id="agent-role" value={preset.id} onChange={e => { const next = AGENT_PRESETS.find(p => p.id === e.target.value)!; setPreset(next); setInstructions(next.prompt); }}>{AGENT_PRESETS.map(p => <option key={p.id} value={p.id}>{p.name} — {p.description}</option>)}</select>
+      <GlassSelect autoFocus id="agent-role" value={preset.id} onChange={e => { const next = AGENT_PRESETS.find(p => p.id === e.target.value)!; setPreset(next); setInstructions(next.prompt); }}>{AGENT_PRESETS.map(p => <option key={p.id} value={p.id}>{p.name} — {p.description}</option>)}</GlassSelect>
       <label htmlFor="bot-name">Name <span className="optional-label">optional</span></label><input id="bot-name" placeholder={preset.name} maxLength={80} value={name} onChange={e => setName(e.target.value)}/>
       <ModelControls value={modelValue} onChange={setModelValue}/>
       <details className="advanced-settings"><summary>Customize this agent</summary>
