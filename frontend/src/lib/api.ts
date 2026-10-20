@@ -7,7 +7,7 @@ async function request(path: string, init?: RequestInit) {
 }
 interface BotResponse { id: string; name: string; role: string; description?: string; status: BotStatus; llm_provider: string; llm_model: string; tools_enabled: string[]; system_prompt: string; }
 function botFromWire(b: BotResponse): Bot { return { ...b, llmProvider: b.llm_provider, llmModel: b.llm_model, toolsEnabled: b.tools_enabled, systemPrompt: b.system_prompt }; }
-function botToWire(b: Partial<Bot>) { return { name: b.name, role: b.role, description: b.description, system_prompt: b.systemPrompt, llm_provider: b.llmProvider || 'gemini', llm_model: b.llmModel || 'gemini-2.5-flash', tools_enabled: b.toolsEnabled || [] }; }
+function botToWire(b: Partial<Bot>) { return { name: b.name, role: b.role, description: b.description, system_prompt: b.systemPrompt, llm_provider: b.llmProvider || 'openai', llm_model: b.llmModel || 'gpt-6.1-sol', tools_enabled: b.toolsEnabled || [] }; }
 interface MessageResponse { id: string; conversation_id: string; sender_type: string; sender_bot_id?: string; content: string; message_type: MessageType; created_at: string; metadata_json?: { attachments?: Attachment[] }; }
 export const api = {
   getBots: async (): Promise<Bot[]> => (await request('/bots')).map(botFromWire),

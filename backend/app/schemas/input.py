@@ -28,7 +28,7 @@ class RunOptions(BaseModel):
     team_rounds: int = Field(default=1, ge=1, le=4)
     model: str | None = Field(default=None, min_length=1, max_length=160)
     provider: Literal['openai', 'gemini', 'anthropic', 'ollama', 'deepseek'] | None = None
-    reasoning_effort: Literal['none', 'low', 'medium', 'high', 'xhigh'] | None = None
+    reasoning_effort: Literal['none', 'low', 'medium', 'high', 'xhigh', 'max'] | None = None
     service_tier: Literal['default', 'priority', 'flex'] | None = None
 
 def content_parts(text, attachments):

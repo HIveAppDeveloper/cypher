@@ -1,9 +1,17 @@
 export const MODEL_CHOICES = [
-  { id: 'balanced', label: 'Gemini 2.5 Flash', detail: 'Quick, balanced everyday work', provider: 'gemini', model: 'gemini-2.5-flash' },
-  { id: 'efficient', label: 'GPT-4.1 mini', detail: 'Fast and economical', provider: 'openai', model: 'gpt-4.1-mini' },
-  { id: 'reasoning', label: 'GPT-5.4 mini', detail: 'Reasoning with lower cost', provider: 'openai', model: 'gpt-5.4-mini' },
-  { id: 'power', label: 'GPT-5.4', detail: 'More capable for complex work', provider: 'openai', model: 'gpt-5.4' },
-  { id: 'writing', label: 'Claude Sonnet 4.5', detail: 'Careful writing and coding', provider: 'anthropic', model: 'claude-sonnet-4-5' },
+ { id:'sol61',label:'GPT-6.1 Sol',detail:'OpenAI coordinator · reasoning and everyday work',provider:'openai',model:'gpt-6.1-sol' },
+ { id:'luna6',label:'GPT-6 Luna',detail:'Quick, economical supporting work',provider:'openai',model:'gpt-6-luna' },
+ { id:'astra6',label:'GPT-6 Astra',detail:'Complex reasoning and difficult tasks',provider:'openai',model:'gpt-6-astra' },
+ { id:'sol6',label:'GPT-6 Sol',detail:'General work and coding',provider:'openai',model:'gpt-6-sol' },
+ { id:'reasoning',label:'GPT-5.4 mini',detail:'Lower-cost reasoning',provider:'openai',model:'gpt-5.4-mini' },
+ { id:'power',label:'GPT-5.4',detail:'Complex professional work',provider:'openai',model:'gpt-5.4' },
+ { id:'efficient',label:'GPT-4.1 mini',detail:'Fast and economical',provider:'openai',model:'gpt-4.1-mini' },
+ { id:'balanced',label:'Gemini 3.5 Flash',detail:'Fast multimodal specialist',provider:'gemini',model:'gemini-3.5-flash' },
+ { id:'gemini-pro',label:'Gemini 3.1 Pro',detail:'Multimodal reasoning specialist',provider:'gemini',model:'gemini-3.1-pro-preview' },
+ { id:'gemini25',label:'Gemini 2.5 Flash',detail:'Balanced everyday work',provider:'gemini',model:'gemini-2.5-flash' },
+ { id:'writing',label:'Claude Sonnet 4.6',detail:'Writing and coding specialist',provider:'anthropic',model:'claude-sonnet-4.6' },
+ { id:'opus',label:'Claude Opus 4.8',detail:'Detailed review and complex work',provider:'anthropic',model:'claude-opus-4.8' },
+ { id:'deepseek',label:'DeepSeek V3.2',detail:'Alternative reasoning specialist',provider:'deepseek',model:'deepseek-v3.2' },
 ];
 export const AGENT_PRESETS = [
   { id: 'assistant', name: 'Assistant', description: 'A capable all-rounder', prompt: 'Complete the user’s task using the available tools. Make reasonable decisions without routine clarification. Check your work and give a concise result. Never claim an action succeeded without evidence. Explain a blocker clearly when a required connection is unavailable.' },

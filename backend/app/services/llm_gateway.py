@@ -18,11 +18,14 @@ def completion_options(model=None, provider=None):
                 key = None
         if not key:
             raise RuntimeError("Vercel AI Gateway credentials unavailable")
-        return {"model": "openai/" + gateway_model, "api_base": "https://ai-gateway.vercel.sh/v1", "api_key": key}
+        prefix = "openai/responses/" if provider == "openai" and model.startswith("gpt-6") else "openai/"
+        return {"model": prefix + gateway_model, "api_base": "https://ai-gateway.vercel.sh/v1", "api_key": key}
     if not model.startswith(provider + "/"):
         model = f"{provider}/{model}"
     key_name = {"gemini": "GEMINI_API_KEY", "anthropic": "ANTHROPIC_API_KEY", "openai": "OPENAI_API_KEY", "deepseek": "DEEPSEEK_API_KEY"}.get(provider, provider.upper() + "_API_KEY")
     key = settings.LLM_API_KEY or os.getenv("HIVE_" + key_name) or os.getenv("ATLAS_" + key_name) or os.getenv(key_name)
+    if provider == "openai" and model.removeprefix("openai/").startswith("gpt-6"):
+        model = "openai/responses/" + model.removeprefix("openai/")
     options = {"model": model}
     if key:
         options["api_key"] = key
@@ -34,7 +37,7 @@ def generation_options(options, provider, model):
     """Only forward settings supported by the selected provider/model."""
     kwargs = {"max_tokens": options.max_tokens}
     reasoning = options.reasoning_effort
-    is_gpt5 = provider == "openai" and model.removeprefix("openai/").startswith("gpt-5")
+    is_gpt5 = provider == "openai" and model.removeprefix("openai/").startswith(("gpt-5", "gpt-6"))
     if is_gpt5 and reasoning:
         kwargs["reasoning_effort"] = reasoning
     if not is_gpt5 or reasoning in (None, "none"):

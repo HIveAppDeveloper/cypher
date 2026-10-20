@@ -19,7 +19,7 @@ export default function Page() {
   useEffect(() => { let active = true; api.getConversations().then(data => { if (active) { setRooms(data.filter(c => c.is_group)); setRoomError(''); } }).catch(() => { if (active) setRoomError('Team rooms could not load.'); }); return () => { active = false; }; }, []);
   async function quickStart(prompt: string, options: Partial<RunOptions>) {
     const preset = AGENT_PRESETS[0];
-    const bot = bots.find(b => b.name === 'Assistant') || await createBot({ name: 'Assistant', role: preset.name, description: preset.description, systemPrompt: preset.prompt, llmProvider: 'gemini', llmModel: 'gemini-2.5-flash', toolsEnabled: ['browser', 'shell', 'filesystem', 'media'] }, false);
+    const bot = bots.find(b => b.name === 'Assistant') || await createBot({ name: 'Assistant', role: preset.name, description: preset.description, systemPrompt: preset.prompt, llmProvider: 'openai', llmModel: 'gpt-6.1-sol', toolsEnabled: ['browser', 'shell', 'filesystem', 'media'] }, false);
     const conversation = await api.conversationForBot(bot);
     await api.sendMessage(conversation, prompt, [], { ...DEFAULT_OPTIONS, ...options });
     setSelectedRoom(null); setSelectedBot(bot);
