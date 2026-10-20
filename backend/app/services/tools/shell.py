@@ -6,6 +6,7 @@ capturing stdout, stderr, and exit codes with timeout protection.
 """
 
 import logging
+import shlex
 from typing import Optional
 
 from app.services.sandbox import SandboxManager
@@ -37,9 +38,7 @@ class ShellTool:
         logger.info(f"Shell exec for bot {bot_id}: {command}")
 
         # Wrap command with timeout and working directory
-        wrapped_command = (
-            f"timeout {timeout} bash -c 'cd {working_dir} && {command}'"
-        )
+        wrapped_command = ["timeout", str(max(1, min(timeout, 300))), "bash", "-lc", f"cd {shlex.quote(working_dir)} && {command}"]
 
         try:
             result = SandboxManager.exec_in_sandbox(bot_id, wrapped_command)

@@ -315,6 +315,8 @@ class AgentOrchestrator:
 
                 # Done — exit the loop
                 break
+            else:
+                responses.append(await self._save_message(db, conversation_id, "system", None, "Agent iteration limit reached before completion.", message_type="status_update"))
 
         except Exception as e:
             logger.exception(f"Agent loop error for bot '{bot.name}': {e}")

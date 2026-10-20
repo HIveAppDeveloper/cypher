@@ -12,7 +12,7 @@ export default function Page() {
 
   return (
     <div className="app-layout">
-      {error ? <p role="alert">{error}</p> : null}
+      {error ? <p className="runtime-notice" role="alert">{error.replace(/^Error: /, "")}</p> : null}
       <BotRoster 
         bots={bots} 
         selectedBot={selectedBot} 

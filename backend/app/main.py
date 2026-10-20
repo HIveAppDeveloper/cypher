@@ -25,7 +25,7 @@ async def lifespan(app: FastAPI):
     # Initialize Redis (optional for local dev)
     try:
         import redis.asyncio as aioredis
-        app.state.redis = aioredis.from_url(settings.REDIS_URL)
+        app.state.redis = aioredis.from_url(settings.REDIS_URL, socket_connect_timeout=3, socket_timeout=3)
         await app.state.redis.ping()
         logger.info("Redis connected")
     except Exception as e:

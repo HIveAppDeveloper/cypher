@@ -55,7 +55,7 @@ docker build -t open-grokbot-sandbox:latest ./sandbox
 docker compose -f docker-compose.cloud.yml up --build -d
 ```
 
-Open `http://localhost:3000`. Create a bot with provider `gemini` and your chosen model. Send a message; the worker persists and runs the job. Click `Start computer` to launch the Docker sandbox. Browser/shell tools must be explicitly enabled on the bot through the API; the default bot has no tools enabled.
+Open `http://localhost:3000`. Create a bot with provider `gemini` and your chosen model. Send a message; the worker persists and runs the job. Click `Start computer` to launch the Docker sandbox. The upstream tool registry enables all tools when the bot tools list is empty. Set explicit tool categories through the API to limit a bot. These tools execute without an approval UI, so run only on your own trusted private host.
 
 ## Vercel frontend
 

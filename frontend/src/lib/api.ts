@@ -2,7 +2,7 @@ import { Bot, BotStatus, Message, MessageType } from './types';
 const API_URL = (process.env.NEXT_PUBLIC_API_URL || '').replace(/\/$/, '');
 async function request(path: string, init?: RequestInit) {
   const response = await fetch(`${API_URL}/api${path}`, { ...init, headers: { 'Content-Type': 'application/json', ...init?.headers } });
-  if (!response.ok) throw new Error(`API ${response.status}: ${await response.text()}`);
+  if (!response.ok) { const error = await response.json().catch(() => null); throw new Error(error?.detail || `Request failed (${response.status}).`); }
   return response.json();
 }
 interface BotResponse { id: string; name: string; role: string; description?: string; status: BotStatus; llm_provider: string; llm_model: string; tools_enabled: string[]; system_prompt: string; }
