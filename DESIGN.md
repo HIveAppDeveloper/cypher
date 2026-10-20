@@ -102,7 +102,7 @@ components:
 
 The implemented interface follows the supplied light GrokBot reference: a quiet gray roster beside a near-white conversation, with pink outgoing messages and organic colored bot marks. Rounded forms and restrained chrome keep names, message content, and the active identity prominent. The workspace now opens on a task-first prompt, with role presets, named models, team rooms, attachment input, and compact run controls. Configuration is progressively disclosed while preserving the same light visual system.
 
-This document records the current CSS and React components, rather than claiming a pixel-exact screenshot match. No backend is connected in the reviewed environment; provider behavior has only been exercised through mocked tests. Local builds and mocked tests do not establish live provider, database, media generation, or sandbox operation. The Vercel Services and Daemon deployment template is staged, not active; the interface must not imply always-on execution is connected. Visible empty and error states remain part of the interface.
+This document records the current CSS and React components, rather than claiming a pixel-exact screenshot match. The root Vercel Services and Daemon configuration is active and the authorized Atlas native database credential is configured. At this checkpoint deployment revision f2e345 is building; live runtime success is not established. Fifteen mocked-backend tests and a production frontend build passed, but do not establish live database, worker, provider, media, MCP, or sandbox operation. The interface must distinguish configuration from verified execution. Visible empty and error states remain part of the interface.
 
 **Key Characteristics:**
 - Light neutral surfaces with a pink messaging accent.
@@ -186,7 +186,7 @@ Uppercase section labels use (11px) type and (.05em) tracking. Team rooms use a 
 
 ### Agent Presets, Models, and Tools
 
-Agent creation begins with a role-preset select and an optional name. Blank names receive a safe available default such as Assistant or Assistant 2; an explicit duplicate name returns a visible validation error. Presets supply instructions, so the default flow does not require authoring a system prompt. Native Provider and Model menus expose named choices for Gemini, OpenAI, and Anthropic, with muted model-access help. Keep raw model identifiers behind Customize this agent and its Use a custom model checkbox. That advanced disclosure also contains editable instructions and four human-readable tool categories: browsing, code, files, and image/video generation. DeepSeek, Ollama, and compatible-provider entry belong to the custom configuration.
+GPT-6.1 Sol is the main default. Agent creation begins with a role-preset select and an optional name. Blank names receive a safe available default such as Assistant or Assistant 2; an explicit duplicate name returns a visible validation error. Presets supply instructions, so the default flow does not require authoring a system prompt. Native Provider and Model menus expose named choices for Gemini, OpenAI, and Anthropic, with muted model-access help. Keep raw model identifiers behind Customize this agent and its Use a custom model checkbox. That advanced disclosure also contains editable instructions and four human-readable tool categories: browsing, code, files, and image/video generation. DeepSeek, Ollama, and compatible-provider entry belong to the custom configuration.
 
 Advanced sections use a fine top divider, compact (13px) medium summary text, and a plus/minus indicator. Optional labels and helper copy remain small and gray. OpenAI adds a three-stop Model power slider with Everyday, Reasoning, and Advanced outputs; eligible models expose five Thinking effort stops from none through xhigh. Processing speed offers Economy, Standard, and Fast priority processing with cost and availability help. Range controls use pink accents, (22px) height, compact labels, right-aligned outputs, and small endpoint descriptions. These choices configure requests; they do not prove access or guarantee response speed.
 
@@ -202,9 +202,17 @@ A compact disclosure above the composer shows active work or recent work, up to 
 
 ### Workspace Setup and Media Output
 
-Workspace setup reuses the bounded native dialog. A gray connection card pairs a small amber dot with explicit checking or disconnected text; a green dot accompanies API reachability only. Supporting copy distinguishes API connection from model, worker, and tool readiness. A short ordered setup list and an optional deployment-guide disclosure keep the first view readable. Check again and Done use the established secondary and primary actions. The managed worker template is not evidence of active laptop-independent execution.
+Workspace setup reuses the bounded native dialog. A gray connection card pairs a small amber dot with explicit checking or disconnected text; a green dot accompanies API/database reachability, while explicit text distinguishes a recent worker heartbeat from an API whose worker is not ready. Supporting copy distinguishes those signals from model and tool readiness. A short ordered setup list and an optional deployment-guide disclosure keep the first view readable. Check again and Done use the established secondary and primary actions. The active managed worker configuration is not by itself evidence of verified laptop-independent execution.
 
 Conversation output controls use small gray native selects for text, image, or video and relevant media options, with concise credit-cost guidance. Rendered videos use browser controls in a rounded (14px) container, at most (480px) wide and (420px) high. The Python media-generation implementation exists, but live media generation is unverified in this environment; no sample media or progress display should imply a completed provider call.
+
+### Connections and Work Status
+
+Connections reuses the bounded modal with scrolling fields and a persistent footer. Two compact tabs separate MCP servers and Vercel variables; the active tab uses a pale mauve fill (`#f0e7ed`) and dark pink text (`#8f275d`). MCP rows use fine dividers, compact names, tool counts, expandable descriptions, an Enabled/Disabled pill, and a small disconnect action. Enabled switches use muted green ink (`#286347`) on pale green (`#e5eee8`). The password field accepts an optional bearer token; explanatory text describes encrypted storage and the scope of enabled tools.
+
+The variable inventory shows names, project labels, and Configured/Needs link states in divided rows, never secret values. Keep these statuses textual. The current inventory of 177 names and eight imported values is deployment context, not an enduring visual token or evidence that a service works. The sidebar Connections action collapses to its icon on mobile.
+
+Agent lounge displays six distinct member identities and coordinator/specialist contributions using the existing room, sender-label, and message patterns. Job rows include a compact pink cancellation action. Keep cancellation-requested, cancelled, interrupted, failed, and completed labels truthful; a cancellation does not imply rollback of completed external actions.
 
 ### Runtime Notice
 

@@ -1,6 +1,7 @@
 """Single-worker persisted job runner for the persistent backend host."""
 import asyncio
 import logging
+import os
 from contextlib import suppress
 from datetime import datetime
 from sqlalchemy import select, update, text
@@ -27,6 +28,9 @@ async def run_worker():
 
 async def heartbeat():
     from app.models.runtime import RuntimeHeartbeat
+    from app.services.verification import record
+    if os.getenv("AI_GATEWAY_API_KEY") or os.getenv("VERCEL_OIDC_TOKEN") or os.getenv("VERCEL_OIDC_TOKEN_FILE"):
+        await record("gateway_configured")
     async with AsyncSessionLocal() as db:
         item = await db.get(RuntimeHeartbeat, "worker")
         if item is None:
@@ -40,11 +44,19 @@ async def _run_worker_loop():
     async with AsyncSessionLocal() as db:
         await db.execute(update(Task).where(Task.status == "running").values(status="interrupted", completed_at=datetime.utcnow(), result={"error": "Backend restarted during execution; review before resubmitting."}))
         await db.commit()
+    if os.getenv("GROKBOT_VERIFY_CLOUD") == "true":
+        from app.services.verification import verify_cloud
+        check = asyncio.create_task(verify_cloud())
+        while not check.done():
+            await heartbeat()
+            await asyncio.wait({check}, timeout=5)
+        await check
     while True:
         await heartbeat()
         async with AsyncSessionLocal() as db:
-            task = (await db.execute(select(Task).where(Task.status == "pending").order_by(Task.created_at).limit(1))).scalar_one_or_none()
+            task = (await db.execute(select(Task).where(Task.status == "pending").order_by(Task.created_at).limit(1).with_for_update(skip_locked=True))).scalar_one_or_none()
             if task is None:
+                await db.commit()
                 await asyncio.sleep(POLL_SECONDS)
                 continue
             task.status = "running"

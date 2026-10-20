@@ -57,10 +57,10 @@ async def test_persisted_job_and_messages(tmp_path,monkeypatch):
     monkeypatch.setattr(orchestrator,'AsyncSessionLocal',sessions)
     monkeypatch.setattr(LLMGateway,'complete',complete)
     from app.config import settings
-    monkeypatch.setattr(settings, 'BACKEND_API_TOKEN', 'test-only-token')
+    monkeypatch.setattr(settings, 'BACKEND_API_TOKEN', 'test-only-token-32-characters-minimum')
     app.dependency_overrides[get_db]=get_session
     try:
-        async with AsyncClient(transport=ASGITransport(app=app),base_url='http://test',headers={'Authorization':'Bearer test-only-token'}) as client:
+        async with AsyncClient(transport=ASGITransport(app=app),base_url='http://test',headers={'Authorization':'Bearer test-only-token-32-characters-minimum'}) as client:
             assert (await client.get('/api/bots', headers={'Authorization':''})).status_code == 401
             response=await client.post('/api/bots',json={'name':'Hive Reach','role':'Outreach','system_prompt':'Research first.','llm_provider':'gemini','llm_model':'gemini-2.5-flash'})
             assert response.status_code==200,response.text
@@ -333,3 +333,50 @@ def test_sol61_uses_responses_bridge(monkeypatch):
     monkeypatch.setenv('AI_GATEWAY_API_KEY','test-only')
     options=llm_gateway.completion_options('gpt-6.1-sol','openai')
     assert options['model']=='openai/responses/openai/gpt-6.1-sol'
+
+
+@pytest.mark.asyncio
+async def test_coordinator_delegates_and_synthesizes_shared_work(tmp_path, monkeypatch):
+    from sqlalchemy.ext.asyncio import async_sessionmaker
+    from app.db.session import Base
+    from app.models.bot import Bot
+    from app.models.conversation import Conversation, ConversationParticipant
+    from app.services import orchestrator
+    from app.services.llm_gateway import LLMGateway
+    engine = create_async_engine(f'sqlite+aiosqlite:///{tmp_path}/coordinator.db')
+    sessions = async_sessionmaker(engine, expire_on_commit=False)
+    async with engine.begin() as conn: await conn.run_sync(Base.metadata.create_all)
+    monkeypatch.setattr(orchestrator, 'AsyncSessionLocal', sessions)
+    seen=[]
+    async def complete(**kwargs):
+        seen.append(kwargs)
+        system = kwargs['messages'][0]['content']
+        if 'Plan this task briefly' in system:
+            content='HANDOFF[Researcher: check the source]'
+        elif 'The specialist turns have finished' in system:
+            assert any('Verified source evidence' in str(m['content']) for m in kwargs['messages'])
+            content='Final synthesis from verified evidence.'
+        else: content='Verified source evidence.'
+        return SimpleNamespace(choices=[SimpleNamespace(message=SimpleNamespace(content=content,tool_calls=None))])
+    monkeypatch.setattr(LLMGateway,'complete',complete)
+    try:
+        async with sessions() as db:
+            bots=[Bot(name='Coordinator',role='Coordinator',llm_provider='openai',llm_model='gpt-6.1-sol',system_prompt='Lead.',tools_enabled=['none']), Bot(name='Researcher',role='Researcher',llm_provider='gemini',llm_model='gemini-3.5-flash',system_prompt='Find evidence.',tools_enabled=['none'])]
+            db.add_all(bots); await db.flush()
+            room=Conversation(title='Agent lounge',is_group=True);db.add(room);await db.flush()
+            for bot in bots:db.add(ConversationParticipant(conversation_id=room.id,bot_id=bot.id))
+            await db.commit(); cid=room.id
+        response=await orchestrator.AgentOrchestrator().process_message(cid,'Check this claim')
+        assert [call['provider'] for call in seen]==['openai','gemini','openai']
+        assert response[-1]['content']=='Final synthesis from verified evidence.'
+    finally: await engine.dispose()
+
+
+def test_plugin_credentials_require_private_key(monkeypatch):
+    from app.config import settings
+    from app.services.plugins import seal
+    monkeypatch.setattr(settings, 'BACKEND_API_TOKEN', '')
+    monkeypatch.setattr(settings, 'SECRET_KEY', 'local-only-change-before-exposure')
+    assert seal('') is None
+    with pytest.raises(ValueError, match='32 characters'):
+        seal('a-private-token')

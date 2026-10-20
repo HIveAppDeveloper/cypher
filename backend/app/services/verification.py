@@ -1,0 +1,36 @@
+"""Opt-in cloud smoke checks, recorded once without exposing credentials."""
+import asyncio
+import logging
+from datetime import datetime
+from sqlalchemy import select
+from app.db.session import AsyncSessionLocal
+from app.models.runtime import RuntimeHeartbeat
+logger = logging.getLogger(__name__)
+
+async def record(name):
+    async with AsyncSessionLocal() as db:
+        item = await db.get(RuntimeHeartbeat, name)
+        if item: item.updated_at = datetime.utcnow()
+        else: db.add(RuntimeHeartbeat(name=name, updated_at=datetime.utcnow()))
+        await db.commit()
+
+async def verify_cloud():
+    async with AsyncSessionLocal() as db:
+        if await db.get(RuntimeHeartbeat, 'cloud_check_finished'): return
+    from app.services.llm_gateway import LLMGateway
+    from app.services.plugins import discover
+    async def gateway():
+        result = await LLMGateway.complete(messages=[{'role':'user','content':'Reply with exactly: Cloud model ready'}], provider='openai', model='gpt-6.1-sol', max_tokens=2048, reasoning_effort='low')
+        if not result.choices[0].message.content: raise RuntimeError('Empty model reply')
+    async def mcp():
+        tools = await discover('https://mcp.deepwiki.com/mcp')
+        if not any(t['name']=='read_wiki_structure' for t in tools): raise RuntimeError('Expected documentation tool unavailable')
+    for name, check in [('gateway',gateway),('mcp',mcp)]:
+        try:
+            async with asyncio.timeout(90): await check()
+            await record(name+'_verified')
+            logger.info('Cloud self-check passed: %s', name)
+        except Exception as error:
+            await record(name+'_verification_failed')
+            logger.warning('Cloud self-check failed: %s (%s)',name,type(error).__name__)
+    await record('cloud_check_finished')

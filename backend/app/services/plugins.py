@@ -23,6 +23,8 @@ async def validate_endpoint(url):
 
 def cipher():
     secret = settings.BACKEND_API_TOKEN or settings.SECRET_KEY
+    if not secret or secret == "local-only-change-before-exposure" or len(secret) < 32:
+        raise ValueError("Configure a random BACKEND_API_TOKEN or SECRET_KEY of at least 32 characters before storing MCP credentials.")
     return Fernet(base64.urlsafe_b64encode(hashlib.sha256(secret.encode()).digest()))
 
 def seal(token): return cipher().encrypt(token.encode()).decode() if token else None

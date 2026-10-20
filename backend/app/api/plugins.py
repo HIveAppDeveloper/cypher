@@ -25,6 +25,10 @@ async def list_plugins(db: AsyncSession = Depends(get_db)):
 @router.post('')
 async def connect(data: ConnectPlugin, db: AsyncSession = Depends(get_db)):
     try:
+        credential = seal(data.token.strip())
+    except ValueError as error:
+        raise HTTPException(status_code=503, detail=str(error))
+    try:
         tools = await discover(data.url.strip(), data.token.strip() or None)
     except ValueError as error:
         raise HTTPException(status_code=422, detail=str(error))
@@ -32,7 +36,7 @@ async def connect(data: ConnectPlugin, db: AsyncSession = Depends(get_db)):
         raise HTTPException(status_code=502, detail='Could not connect to this MCP server. Check its HTTPS endpoint and bearer token.')
     if not tools:
         raise HTTPException(status_code=422, detail='This MCP server did not advertise any tools.')
-    plugin = Plugin(name=data.name.strip(), url=data.url.strip(), credential=seal(data.token.strip()), tools=tools, enabled=True)
+    plugin = Plugin(name=data.name.strip(), url=data.url.strip(), credential=credential, tools=tools, enabled=True)
     db.add(plugin); await db.commit(); await db.refresh(plugin)
     return public(plugin)
 

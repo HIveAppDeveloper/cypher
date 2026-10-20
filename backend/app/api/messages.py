@@ -63,7 +63,7 @@ async def get_attachment(id: UUID, message_id: UUID, index: int, db: AsyncSessio
 
 @router.post("/{id}/tasks/{task_id}/cancel", status_code=202)
 async def cancel_task(id: UUID, task_id: UUID, db: AsyncSession = Depends(get_db)):
-    task = await db.get(Task, str(task_id))
+    task = (await db.execute(select(Task).where(Task.id == str(task_id)).with_for_update())).scalar_one_or_none()
     if not task or task.conversation_id != str(id):
         raise HTTPException(status_code=404, detail="Task not found")
     if task.status not in ("pending", "running", "cancel_requested"):

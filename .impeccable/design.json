@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-10-20T18:23:11.987820+00:00",
+  "generatedAt": "2026-10-20T18:50:23.989038+00:00",
   "title": "Design System: Open GrokBot",
   "extensions": {
     "shadows": [
@@ -387,7 +387,7 @@
     }
   ],
   "narrative": {
-    "overview": "The implemented interface follows the supplied light GrokBot reference: a quiet gray roster beside a near-white conversation, with pink outgoing messages and organic colored bot marks. Rounded forms and restrained chrome keep names, message content, and the active identity prominent. The workspace now opens on a task-first prompt, with role presets, named models, team rooms, attachment input, and compact run controls. Configuration is progressively disclosed while preserving the same light visual system.\n\nThis document records the current CSS and React components, rather than claiming a pixel-exact screenshot match. No backend is connected in the reviewed environment; provider behavior has only been exercised through mocked tests. Local builds and mocked tests do not establish live provider, database, media generation, or sandbox operation. The Vercel Services and Daemon deployment template is staged, not active; the interface must not imply always-on execution is connected. Visible empty and error states remain part of the interface.",
+    "overview": "The implemented interface follows the supplied light GrokBot reference: a quiet gray roster beside a near-white conversation, with pink outgoing messages and organic colored bot marks. Rounded forms and restrained chrome keep names, message content, and the active identity prominent. The workspace now opens on a task-first prompt, with role presets, named models, team rooms, attachment input, and compact run controls. Configuration is progressively disclosed while preserving the same light visual system.\n\nThis document records the current CSS and React components, rather than claiming a pixel-exact screenshot match. The root Vercel Services and Daemon configuration is active and the authorized Atlas native database credential is configured. At this checkpoint deployment revision f2e345 is building; live runtime success is not established. Fifteen mocked-backend tests and a production frontend build passed, but do not establish live database, worker, provider, media, MCP, or sandbox operation. The interface must distinguish configuration from verified execution. Visible empty and error states remain part of the interface.",
     "keyCharacteristics": [
       "Light neutral surfaces with a pink messaging accent.",
       "A compact identity pill and organic two-stroke bot avatars.",
