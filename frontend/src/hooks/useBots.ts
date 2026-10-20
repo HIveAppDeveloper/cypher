@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Bot } from '../lib/types';
+import { modelPolicy } from '../lib/modelPolicy';
 import { api } from '../lib/api';
 export function useBots() {
   const [bots, setBots] = useState<Bot[]>([]);
@@ -12,5 +13,5 @@ export function useBots() {
 }
 
 function withSavedOptions(bot: Bot): Bot {
-  try { return { ...bot, defaultOptions: JSON.parse(localStorage.getItem('grokbot-options-' + bot.id) || '{}') }; } catch { return bot; }
+  try { return { ...bot, defaultOptions: modelPolicy(JSON.parse(localStorage.getItem('grokbot-options-' + bot.id) || '{}')) }; } catch { return bot; }
 }
