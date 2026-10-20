@@ -1,112 +1,42 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Bot, Message, MessageType } from '../lib/types';
-import { MessageBubble } from './MessageBubble';
+import React, { useEffect, useState } from 'react';
+import { Bot, Message } from '../lib/types';
 import { api } from '../lib/api';
-
-interface ChatPanelProps {
-  bot: Bot | null;
-}
-
-export function ChatPanel({ bot }: ChatPanelProps) {
+import { BotAvatar } from './BotAvatar';
+import { MessageBubble } from './MessageBubble';
+const POLL_INTERVAL_MS = 1500;
+export function ChatPanel({ bot }: { bot: Bot | null }) {
+  const [conversationId, setConversationId] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-
+  const [error, setError] = useState('');
+  const [sending, setSending] = useState(false);
   useEffect(() => {
-    if (bot) {
-      // Mock fetch messages
-      setMessages([
-        { id: '1', conversationId: '1', senderType: 'bot', senderBotId: bot.id, content: `Hello! I'm ${bot.name}, ready to work.`, messageType: MessageType.TEXT, createdAt: new Date().toISOString() }
-      ]);
-    } else {
-      setMessages([]);
-    }
-  }, [bot]);
-
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
-
-  const handleSend = async () => {
-    if (!input.trim() || !bot) return;
-    
-    const newMsg: Message = {
-      id: Date.now().toString(),
-      conversationId: '1', // Mock conv ID
-      senderType: 'user',
-      content: input,
-      messageType: MessageType.TEXT,
-      createdAt: new Date().toISOString()
+    let active = true;
+    let timer: ReturnType<typeof setTimeout>;
+    setConversationId(''); setMessages([]); setError('');
+    if (!bot) return;
+    const poll = async (id: string) => {
+      try { const data = await api.getMessages(id); if (active) { setMessages(data); setError(''); } }
+      catch (e) { if (active) setError(String(e)); }
+      if (active) timer = setTimeout(() => poll(id), POLL_INTERVAL_MS);
     };
-    
-    setMessages(prev => [...prev, newMsg]);
-    setInput('');
-    
-    // Mock response
-    setTimeout(() => {
-      setMessages(prev => [...prev, {
-        id: Date.now().toString(),
-        conversationId: '1',
-        senderType: 'bot',
-        senderBotId: bot.id,
-        content: `I received: ${newMsg.content}`,
-        messageType: MessageType.TEXT,
-        createdAt: new Date().toISOString()
-      }]);
-    }, 1000);
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSend();
-    }
-  };
-
-  if (!bot) {
-    return (
-      <div className="main-content" style={{ alignItems: 'center', justifyContent: 'center' }}>
-        <h2 className="h2" style={{ color: 'var(--text-muted)' }}>Select a bot to start chatting</h2>
-      </div>
-    );
+    api.conversationForBot(bot).then(id => { if (active) { setConversationId(id); void poll(id); } }).catch(e => { if (active) setError(String(e)); });
+    return () => { active = false; clearTimeout(timer); };
+  }, [bot?.id]);
+  async function send() {
+    if (!input.trim() || !conversationId || sending) return;
+    setSending(true); setError('');
+    try { await api.sendMessage(conversationId, input); setInput(''); }
+    catch (e) { setError(String(e)); }
+    finally { setSending(false); }
   }
-
-  return (
-    <div className="main-content">
-      <div style={{
-        padding: 'var(--space-md)',
-        borderBottom: '1px solid var(--border-light)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between'
-      }}>
-        <div>
-          <h2 className="h2">{bot.name}</h2>
-          <span className="small">{bot.role}</span>
-        </div>
-        <button className="btn-secondary" onClick={() => api.startBot(bot.id)}>Start Sandbox</button>
-      </div>
-
-      <div style={{ flex: 1, overflowY: 'auto', padding: 'var(--space-md)', display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
-        {messages.map(msg => (
-          <MessageBubble key={msg.id} message={msg} bot={bot || undefined} />
-        ))}
-        <div ref={messagesEndRef} />
-      </div>
-
-      <div style={{ padding: 'var(--space-md)', borderTop: '1px solid var(--border-light)' }}>
-        <div style={{ display: 'flex', gap: 'var(--space-sm)' }}>
-          <textarea
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="Send a message..."
-            style={{ resize: 'none', minHeight: '44px', maxHeight: '120px' }}
-            rows={1}
-          />
-          <button className="btn-primary" onClick={handleSend}>Send</button>
-        </div>
-      </div>
-    </div>
-  );
+  if (!bot) return <main className="main-content empty-chat"><h1>Your team, in one conversation.</h1><p>Create a bot to begin.</p></main>;
+  return <main className="main-content">
+    <header className="chat-header"><span className="identity-pill"><BotAvatar name={bot.name} small />{bot.name}</span><button className="sandbox-button" onClick={() => api.startBot(bot.id).catch(e => setError(String(e)))}>Start computer</button></header>
+    {error ? <p role="alert">{error}</p> : null}
+    <div className="message-stream" style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 12 }}>{messages.map(m => <MessageBubble key={m.id} message={m} bot={bot} />)}</div>
+    <div className="composer"><label htmlFor="message" className="visually-hidden">Message {bot.name}</label>
+    <textarea rows={1} placeholder={`Message ${bot.name}`} id="message" value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); void send(); } }} />
+    <button className="send-button" aria-label="Send message" disabled={!conversationId || sending || !input.trim()} onClick={send}><svg viewBox="0 0 24 24"><path d="M12 19V5m-6 6 6-6 6 6"/></svg></button></div>
+  </main>;
 }

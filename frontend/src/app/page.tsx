@@ -7,11 +7,12 @@ import { SettingsPanel } from '../components/SettingsPanel';
 import { BotCreator } from '../components/BotCreator';
 
 export default function Page() {
-  const { bots, selectedBot, setSelectedBot, createBot } = useBots();
+  const { bots, selectedBot, setSelectedBot, createBot, error } = useBots();
   const [showCreator, setShowCreator] = useState(false);
 
   return (
     <div className="app-layout">
+      {error ? <p role="alert">{error}</p> : null}
       <BotRoster 
         bots={bots} 
         selectedBot={selectedBot} 
@@ -21,7 +22,7 @@ export default function Page() {
       
       <ChatPanel bot={selectedBot} />
       
-      <SettingsPanel bot={selectedBot} />
+
       
       {showCreator && (
         <BotCreator 

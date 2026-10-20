@@ -1,18 +1,13 @@
+from sqlalchemy import MetaData
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from sqlalchemy.orm import declarative_base
 from app.config import settings
+from app.db.connection import engine_options
 
-connect_args = {}
-if settings.DATABASE_URL.startswith("sqlite"):
-    connect_args = {"check_same_thread": False}
-
-engine = create_async_engine(
-    settings.DATABASE_URL,
-    echo=False,
-    connect_args=connect_args,
-)
+url, options = engine_options(settings.DATABASE_URL)
+engine = create_async_engine(url, echo=False, **options)
 AsyncSessionLocal = async_sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
-Base = declarative_base()
+Base = declarative_base(metadata=MetaData(schema=settings.DATABASE_SCHEMA if engine.dialect.name == "postgresql" else None))
 
 async def get_db():
     async with AsyncSessionLocal() as session:

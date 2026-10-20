@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from sqlalchemy.schema import CreateSchema
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
 from app.db.session import engine, Base
@@ -6,6 +7,8 @@ from app.api import router as api_router
 from app.api.websocket import router as ws_router
 from contextlib import asynccontextmanager
 import logging
+import asyncio
+from contextlib import suppress
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -14,6 +17,8 @@ logger = logging.getLogger(__name__)
 async def lifespan(app: FastAPI):
     # Initialize DB tables
     async with engine.begin() as conn:
+        if engine.dialect.name == "postgresql":
+            await conn.execute(CreateSchema(settings.DATABASE_SCHEMA, if_not_exists=True))
         await conn.run_sync(Base.metadata.create_all)
     logger.info("Database tables created")
 
@@ -36,7 +41,14 @@ async def lifespan(app: FastAPI):
         logger.warning(f"Docker unavailable (sandbox features disabled): {e}")
         app.state.docker_client = None
 
-    yield
+    from app.services.worker import run_worker
+    worker = asyncio.create_task(run_worker())
+    try:
+        yield
+    finally:
+        worker.cancel()
+        with suppress(asyncio.CancelledError):
+            await worker
 
     # Cleanup
     if hasattr(app.state, 'redis') and app.state.redis:

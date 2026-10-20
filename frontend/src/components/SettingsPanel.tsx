@@ -13,16 +13,6 @@ export function SettingsPanel({ bot }: SettingsPanelProps) {
     return <div className="details-panel" style={{ padding: 'var(--space-md)' }} />;
   }
 
-  // Mock task for UI
-  const mockTask: Task = {
-    id: 't1', conversationId: 'c1', botId: bot.id, title: 'Analyze Repo', description: 'Read all TS files and find bugs.',
-    status: TaskStatus.RUNNING, createdAt: new Date().toISOString(),
-    steps: [
-      { id: 's1', description: 'Clone repo', completed: true },
-      { id: 's2', description: 'Run eslint', completed: false },
-      { id: 's3', description: 'Generate report', completed: false }
-    ]
-  };
 
   return (
     <div className="details-panel">
@@ -57,7 +47,7 @@ export function SettingsPanel({ bot }: SettingsPanelProps) {
               <span style={{ color: 'var(--status-green)', textTransform: 'capitalize' }}>{bot.status}</span>
             </div>
             
-            <button className="btn-secondary" style={{ width: '100%', color: 'var(--status-red)', borderColor: 'var(--status-red)' }}>
+            <button disabled title="Use the API to delete bots" className="btn-secondary" style={{ width: '100%', color: 'var(--status-red)', borderColor: 'var(--status-red)' }}>
               Delete Bot
             </button>
           </div>
@@ -66,7 +56,7 @@ export function SettingsPanel({ bot }: SettingsPanelProps) {
         {activeTab === 'tasks' && (
           <div className="animate-fade-in">
             <h3 className="h3" style={{ marginBottom: 'var(--space-md)' }}>Active Tasks</h3>
-            <TaskCard task={mockTask} />
+            <p className="small">Task monitoring is not implemented in this version.</p>
           </div>
         )}
 
@@ -75,7 +65,7 @@ export function SettingsPanel({ bot }: SettingsPanelProps) {
             <div style={{ width: '100%', aspectRatio: '16/9', backgroundColor: '#000', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <span className="small">No active browser session</span>
             </div>
-            <button className="btn-primary">Start Browser Session</button>
+            <p className="small">Start a bot sandbox and enable browser tools to use the browser.</p>
           </div>
         )}
       </div>

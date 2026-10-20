@@ -4,6 +4,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends     build-essen
 
 WORKDIR /app
 COPY pyproject.toml .
+COPY app ./app
 RUN pip install .
 
 FROM python:3.12-slim

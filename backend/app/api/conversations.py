@@ -7,6 +7,7 @@ from uuid import UUID
 from app.db.session import get_db
 from app.models.conversation import Conversation, ConversationParticipant
 from app.models.message import Message
+from app.models.bot import Bot
 from app.schemas.conversation import ConversationCreate, ConversationResponse
 from app.schemas.message import MessageResponse
 
@@ -14,11 +15,14 @@ router = APIRouter()
 
 @router.post("", response_model=ConversationResponse)
 async def create_conversation(conv: ConversationCreate, db: AsyncSession = Depends(get_db)):
+    for bot_id in conv.bot_ids:
+        if await db.get(Bot, str(bot_id)) is None:
+            raise HTTPException(status_code=404, detail="Bot not found")
     db_conv = Conversation(title=conv.title, is_group=conv.is_group)
     db.add(db_conv)
     await db.flush()
     for bot_id in conv.bot_ids:
-        part = ConversationParticipant(conversation_id=db_conv.id, bot_id=bot_id)
+        part = ConversationParticipant(conversation_id=db_conv.id, bot_id=str(bot_id))
         db.add(part)
     await db.commit()
     await db.refresh(db_conv)
@@ -32,7 +36,7 @@ async def list_conversations(db: AsyncSession = Depends(get_db)):
 @router.get("/{id}")
 async def get_conversation(id: UUID, db: AsyncSession = Depends(get_db)):
     result = await db.execute(
-        select(Conversation).options(selectinload(Conversation.messages)).filter(Conversation.id == id)
+        select(Conversation).options(selectinload(Conversation.messages)).filter(Conversation.id == str(id))
     )
     conv = result.scalars().first()
     if not conv:
@@ -41,14 +45,14 @@ async def get_conversation(id: UUID, db: AsyncSession = Depends(get_db)):
 
 @router.post("/{id}/participants")
 async def add_participant(id: UUID, bot_id: UUID, db: AsyncSession = Depends(get_db)):
-    part = ConversationParticipant(conversation_id=id, bot_id=bot_id)
+    part = ConversationParticipant(conversation_id=str(id), bot_id=str(bot_id))
     db.add(part)
     await db.commit()
     return {"status": "added"}
 
 @router.delete("/{id}/participants/{bot_id}")
 async def remove_participant(id: UUID, bot_id: UUID, db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(ConversationParticipant).filter_by(conversation_id=id, bot_id=bot_id))
+    result = await db.execute(select(ConversationParticipant).filter_by(conversation_id=str(id), bot_id=str(bot_id)))
     part = result.scalars().first()
     if part:
         await db.delete(part)

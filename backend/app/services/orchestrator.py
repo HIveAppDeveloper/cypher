@@ -74,7 +74,7 @@ class AgentOrchestrator:
                 sender_bot_id=sender_bot_id,
                 content=user_message_content,
                 message_type="text",
-                created_at=datetime.now(timezone.utc),
+                created_at=datetime.now(timezone.utc).replace(tzinfo=None),
             )
             db.add(incoming_msg)
             await db.commit()
@@ -146,7 +146,7 @@ class AgentOrchestrator:
 
         try:
             coord_response = await LLMGateway.complete(
-                messages=coordinator_prompt, model="gpt-4o-mini"
+                messages=coordinator_prompt, model=settings.LLM_MODEL, provider=settings.LLM_PROVIDER
             )
             responder_ids_raw = coord_response.choices[0].message.content.strip()
             # Parse JSON array from response
@@ -212,15 +212,11 @@ class AgentOrchestrator:
             # Build system prompt
             system_prompt = self._build_system_prompt(bot)
 
-            # Retrieve conversation history and persistent memory
-            context_messages = await self.memory.get_context(
-                bot_id, conversation_id
-            )
-
-            # Prepend system message
+            history = (await db.execute(select(Message).where(Message.conversation_id == conversation_id, Message.message_type == "text").order_by(Message.created_at.desc()).limit(50))).scalars().all()
             messages = [{"role": "system", "content": system_prompt}]
-            messages.extend(context_messages)
-            messages.append({"role": "user", "content": trigger_message})
+            for item in reversed(history):
+                if item.sender_type == "user" or item.sender_bot_id == bot_id:
+                    messages.append({"role": "user" if item.sender_type == "user" else "assistant", "content": item.content})
 
             # Get available tools for this bot
             tools = self.registry.get_tools_for_bot(bot)
@@ -325,7 +321,7 @@ class AgentOrchestrator:
             bot.status = "error"
             error_msg = await self._save_message(
                 db, conversation_id, "system", None,
-                f"Error: {str(e)}", message_type="status_update",
+                "Model execution failed. Check the configured provider and private server logs.", message_type="status_update",
             )
             responses.append(error_msg)
         else:
@@ -387,7 +383,7 @@ class AgentOrchestrator:
             content=content,
             message_type=message_type,
             metadata_json=metadata,
-            created_at=datetime.now(timezone.utc),
+            created_at=datetime.now(timezone.utc).replace(tzinfo=None),
         )
         db.add(msg)
         await db.commit()

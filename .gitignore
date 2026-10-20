@@ -50,3 +50,14 @@ Thumbs.db
 postgres_data/
 redis_data/
 minio_data/
+
+.env.*
+!.env.example
+!frontend/.env.example
+.vercel/
+!frontend/src/lib/
+!frontend/src/lib/**
+
+.private/
+*.db
+.pytest_cache/

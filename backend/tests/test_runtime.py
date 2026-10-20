@@ -1,0 +1,86 @@
+import os
+import asyncio
+import importlib.util
+from pathlib import Path
+from types import SimpleNamespace
+from uuid import uuid4
+
+os.environ['LITELLM_LOCAL_MODEL_COST_MAP'] = 'True'
+os.environ['GROKBOT_DATABASE_URL'] = 'sqlite+aiosqlite://'
+from app.db.connection import engine_options
+from app.config import Settings
+from sqlalchemy.ext.asyncio import create_async_engine
+from sqlalchemy.schema import CreateTable
+import pytest
+
+def test_native_postgres_tls_and_prisma_parameters():
+    url, options = engine_options('postgresql://user:p%40ss@db.example/test?sslmode=require&pgbouncer=true&connection_limit=1&schema=public')
+    assert url.drivername == 'postgresql+asyncpg'
+    assert url.password == 'p@ss'
+    assert options['connect_args']['ssl'] == 'require'
+    assert not {'pgbouncer','connection_limit','schema','sslmode'} & set(url.query)
+
+@pytest.mark.parametrize('url',['prisma://proxy.example/?api_key=fake','prisma+postgres://proxy.example/?api_key=fake'])
+def test_prisma_proxy_fails_clearly(url):
+    with pytest.raises(ValueError,match='native'):
+        engine_options(url)
+
+def test_namespaced_config_and_cors(monkeypatch):
+    monkeypatch.delenv('GROKBOT_DATABASE_URL')
+    monkeypatch.setenv('HIVE_DATABASE_URL','postgresql://hive/db')
+    monkeypatch.setenv('ATLAS_DATABASE_URL','postgresql://atlas/db')
+    monkeypatch.setenv('CORS_ORIGINS','http://localhost:3000,https://example.com')
+    s=Settings(_env_file=None)
+    assert s.DATABASE_URL == 'postgresql://hive/db'
+    assert len(s.CORS_ORIGINS)==2
+    with pytest.raises(ValueError): Settings(_env_file=None,DATABASE_SCHEMA='public; DROP SCHEMA public')
+
+@pytest.mark.asyncio
+async def test_persisted_job_and_messages(tmp_path,monkeypatch):
+    from httpx import ASGITransport, AsyncClient
+    from sqlalchemy.ext.asyncio import async_sessionmaker
+    from app.db.session import Base
+    from app.main import app
+    from app.db.session import get_db
+    from app.services import worker, orchestrator
+    from app.services.llm_gateway import LLMGateway
+    engine=create_async_engine(f'sqlite+aiosqlite:///{tmp_path}/test.db')
+    sessions=async_sessionmaker(engine,expire_on_commit=False)
+    async with engine.begin() as conn: await conn.run_sync(Base.metadata.create_all)
+    async def get_session():
+        async with sessions() as session: yield session
+    async def complete(**kwargs):
+        assert kwargs['messages'][-1]['content']=='Check the pipeline'
+        message=SimpleNamespace(content='Pipeline checked.',tool_calls=None)
+        return SimpleNamespace(choices=[SimpleNamespace(message=message)])
+    monkeypatch.setattr(worker,'AsyncSessionLocal',sessions)
+    monkeypatch.setattr(orchestrator,'AsyncSessionLocal',sessions)
+    monkeypatch.setattr(LLMGateway,'complete',complete)
+    app.dependency_overrides[get_db]=get_session
+    try:
+        async with AsyncClient(transport=ASGITransport(app=app),base_url='http://test') as client:
+            response=await client.post('/api/bots',json={'name':'Hive Reach','role':'Outreach','system_prompt':'Research first.','llm_provider':'gemini','llm_model':'gemini-2.5-flash'})
+            assert response.status_code==200,response.text
+            bot=response.json()
+            assert (await client.get('/api/bots/'+bot['id'])).status_code==200
+            conv=(await client.post('/api/conversations',json={'title':'Hive','bot_ids':[bot['id']]})).json()
+            response=await client.post(f"/api/conversations/{conv['id']}/messages",json={'sender_type':'user','content':'Check the pipeline'})
+            assert response.status_code==202,response.text
+            assert (await client.get(f"/api/conversations/{conv['id']}/tasks")).json()[0]['status']=='pending'
+            # Job survives request completion and is picked up by a separately started worker.
+            task=asyncio.create_task(worker.run_worker())
+            for _ in range(100):
+                await asyncio.sleep(.03)
+                jobs=(await client.get(f"/api/conversations/{conv['id']}/tasks")).json()
+                if jobs[0]['status'] in ('completed','failed'): break
+            assert jobs[0]['status']=='completed',jobs
+            task.cancel()
+            try: await task
+            except asyncio.CancelledError: pass
+            messages=(await client.get(f"/api/conversations/{conv['id']}/messages")).json()
+            assert [m['content'] for m in messages]==['Pipeline checked.','Check the pipeline']
+            assert (await client.post(f'/api/conversations/{uuid4()}/messages',json={'sender_type':'user','content':'x'})).status_code==404
+            assert (await client.get(f"/api/conversations/{conv['id']}/messages?limit=-1")).status_code==422
+    finally:
+        app.dependency_overrides.clear()
+        await engine.dispose()

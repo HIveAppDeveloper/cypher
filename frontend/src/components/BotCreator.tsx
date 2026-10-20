@@ -3,7 +3,7 @@ import { Bot } from '../lib/types';
 
 interface BotCreatorProps {
   onClose: () => void;
-  onCreate: (bot: Partial<Bot>) => void;
+  onCreate: (bot: Partial<Bot>) => Promise<Bot>;
 }
 
 export function BotCreator({ onClose, onCreate }: BotCreatorProps) {
@@ -12,13 +12,18 @@ export function BotCreator({ onClose, onCreate }: BotCreatorProps) {
     role: '',
     description: '',
     systemPrompt: '',
-    llmModel: 'gpt-4'
+    llmModel: 'gemini-2.5-flash',
+    llmProvider: 'gemini'
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [error, setError] = useState('');
+  const [saving, setSaving] = useState(false);
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onCreate(formData);
-    onClose();
+    setSaving(true);
+    try { await onCreate(formData); onClose(); }
+    catch (e) { setError(String(e)); }
+    finally { setSaving(false); }
   };
 
   return (
@@ -49,11 +54,9 @@ export function BotCreator({ onClose, onCreate }: BotCreatorProps) {
           
           <div>
             <label className="small" style={{ display: 'block', marginBottom: 'var(--space-xs)' }}>Model</label>
-            <select value={formData.llmModel} onChange={e => setFormData({...formData, llmModel: e.target.value})}>
-              <option value="gpt-4">GPT-4</option>
-              <option value="claude-3-opus">Claude 3 Opus</option>
-              <option value="llama-3">Llama 3 (Local)</option>
-            </select>
+            <input aria-label="Model" value={formData.llmModel} onChange={e => setFormData({...formData, llmModel: e.target.value})} />
+            <label className="small">Provider</label>
+            <input aria-label="Provider" value={formData.llmProvider} onChange={e => setFormData({...formData, llmProvider: e.target.value})} />
           </div>
           
           <div>
@@ -67,7 +70,8 @@ export function BotCreator({ onClose, onCreate }: BotCreatorProps) {
           
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-sm)', marginTop: 'var(--space-md)' }}>
             <button type="button" className="btn-secondary" onClick={onClose}>Cancel</button>
-            <button type="submit" className="btn-primary">Create Bot</button>
+            {error ? <p role="alert">{error}</p> : null}
+            <button disabled={saving} type="submit" className="btn-primary">Create Bot</button>
           </div>
         </form>
       </div>

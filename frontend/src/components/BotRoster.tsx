@@ -1,77 +1,14 @@
-import React from 'react';
-import { Bot, BotStatus } from '../lib/types';
-
-interface BotRosterProps {
-  bots: Bot[];
-  selectedBot: Bot | null;
-  onSelectBot: (bot: Bot) => void;
-  onCreateNew: () => void;
-}
-
-export function BotRoster({ bots, selectedBot, onSelectBot, onCreateNew }: BotRosterProps) {
-  const getStatusColor = (status: BotStatus) => {
-    switch (status) {
-      case BotStatus.ONLINE: return 'var(--status-green)';
-      case BotStatus.WORKING: return 'var(--status-amber)';
-      case BotStatus.ERROR: return 'var(--status-red)';
-      default: return 'var(--text-muted)';
-    }
-  };
-
-  return (
-    <div className="sidebar">
-      <div style={{ padding: 'var(--space-md)' }}>
-        <input type="text" placeholder="Search bots..." />
-      </div>
-      
-      <div style={{ flex: 1, overflowY: 'auto' }}>
-        <h3 className="small" style={{ padding: '0 var(--space-md)', margin: 'var(--space-sm) 0' }}>TEAM</h3>
-        
-        {bots.map(bot => (
-          <div 
-            key={bot.id}
-            onClick={() => onSelectBot(bot)}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              padding: 'var(--space-sm) var(--space-md)',
-              cursor: 'pointer',
-              backgroundColor: selectedBot?.id === bot.id ? 'var(--bg-card-hover)' : 'transparent',
-              transition: 'background-color 0.2s',
-              gap: 'var(--space-sm)'
-            }}
-          >
-            <div style={{
-              width: '32px', height: '32px', borderRadius: 'var(--radius-full)',
-              backgroundColor: 'var(--accent-blue)', color: 'white',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontWeight: 'bold', position: 'relative'
-            }}>
-              {bot.avatar || bot.name.charAt(0)}
-              <div 
-                className={bot.status === BotStatus.WORKING ? 'animate-pulse' : ''}
-                style={{
-                  position: 'absolute', bottom: -2, right: -2,
-                  width: '10px', height: '10px', borderRadius: 'var(--radius-full)',
-                  backgroundColor: getStatusColor(bot.status),
-                  border: '2px solid var(--bg-panel)'
-                }}
-              />
-            </div>
-            
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div className="p" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{bot.name}</div>
-              <div className="small" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{bot.role}</div>
-            </div>
-          </div>
-        ))}
-      </div>
-      
-      <div style={{ padding: 'var(--space-md)' }}>
-        <button className="btn-secondary" style={{ width: '100%' }} onClick={onCreateNew}>
-          + New Bot
-        </button>
-      </div>
-    </div>
-  );
+import { useState } from 'react';
+import { Bot } from '../lib/types';
+import { BotAvatar } from './BotAvatar';
+export function BotRoster({ bots, selectedBot, onSelectBot, onCreateNew }: { bots: Bot[]; selectedBot: Bot | null; onSelectBot: (bot: Bot) => void; onCreateNew: () => void }) {
+  const [query, setQuery] = useState('');
+  const [searching, setSearching] = useState(false);
+  return <aside className="sidebar">
+    <header className="roster-toolbar"><span className="workspace-name">GrokBot</span><button className="round-button" aria-label="Search bots" onClick={() => setSearching(v => !v)}><svg viewBox="0 0 24 24"><circle cx="10" cy="10" r="6.5"/><path d="m15 15 5 5"/></svg></button><button className="round-button" aria-label="Create bot" onClick={onCreateNew}><svg viewBox="0 0 24 24"><path d="M12 4v16M4 12h16"/></svg></button></header>
+    {searching ? <input autoFocus aria-label="Search bots" placeholder="Search bots" value={query} onChange={e => setQuery(e.target.value)} className="search-input" /> : null}
+    <nav className="roster-list" aria-label="Bots">{bots.filter(b => b.name.toLowerCase().includes(query.toLowerCase())).map(bot => <button key={bot.id} className={`bot-row ${selectedBot?.id === bot.id ? 'selected' : ''}`} onClick={() => onSelectBot(bot)}><BotAvatar name={bot.name}/><span className="bot-row-text"><strong>{bot.name}</strong><span>{bot.status === 'working' ? 'Working…' : bot.description || bot.role}</span></span></button>)}
+    {!bots.length ? <div className="roster-empty">Your team starts here.<button onClick={onCreateNew}>Create your first bot</button></div> : null}</nav>
+    <footer className="roster-footer"><span className="owner-avatar">B</span><span className="workspace-label">Hive + Atlas</span></footer>
+  </aside>;
 }

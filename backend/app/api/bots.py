@@ -25,14 +25,14 @@ async def list_bots(db: AsyncSession = Depends(get_db)):
 
 @router.get("/{bot_id}", response_model=BotResponse)
 async def get_bot(bot_id: UUID, db: AsyncSession = Depends(get_db)):
-    bot = await db.get(Bot, bot_id)
+    bot = await db.get(Bot, str(bot_id))
     if not bot:
         raise HTTPException(status_code=404, detail="Bot not found")
     return bot
 
 @router.put("/{bot_id}", response_model=BotResponse)
 async def update_bot(bot_id: UUID, bot_update: BotUpdate, db: AsyncSession = Depends(get_db)):
-    bot = await db.get(Bot, bot_id)
+    bot = await db.get(Bot, str(bot_id))
     if not bot:
         raise HTTPException(status_code=404, detail="Bot not found")
     for key, value in bot_update.model_dump(exclude_unset=True).items():
@@ -43,7 +43,7 @@ async def update_bot(bot_id: UUID, bot_update: BotUpdate, db: AsyncSession = Dep
 
 @router.delete("/{bot_id}")
 async def delete_bot(bot_id: UUID, db: AsyncSession = Depends(get_db)):
-    bot = await db.get(Bot, bot_id)
+    bot = await db.get(Bot, str(bot_id))
     if bot:
         await db.delete(bot)
         await db.commit()
@@ -51,10 +51,12 @@ async def delete_bot(bot_id: UUID, db: AsyncSession = Depends(get_db)):
 
 @router.post("/{bot_id}/start")
 async def start_bot(bot_id: UUID, db: AsyncSession = Depends(get_db)):
-    bot = await db.get(Bot, bot_id)
+    bot = await db.get(Bot, str(bot_id))
     if not bot:
         raise HTTPException(status_code=404, detail="Bot not found")
     container_id = SandboxManager.create_sandbox(str(bot.id))
+    if not container_id:
+        raise HTTPException(status_code=503, detail="Sandbox could not start; check Docker and SANDBOX_IMAGE")
     bot.container_id = container_id
     bot.status = "idle"
     await db.commit()
@@ -62,7 +64,7 @@ async def start_bot(bot_id: UUID, db: AsyncSession = Depends(get_db)):
 
 @router.post("/{bot_id}/stop")
 async def stop_bot(bot_id: UUID, db: AsyncSession = Depends(get_db)):
-    bot = await db.get(Bot, bot_id)
+    bot = await db.get(Bot, str(bot_id))
     if not bot:
         raise HTTPException(status_code=404, detail="Bot not found")
     SandboxManager.stop_sandbox(str(bot.id))
