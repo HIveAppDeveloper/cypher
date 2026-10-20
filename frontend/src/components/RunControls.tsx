@@ -1,6 +1,6 @@
 import { ModelControls } from './ModelControls';
 import { RunOptions } from '../lib/types';
-export const DEFAULT_OPTIONS: RunOptions = { temperature: 0.5, max_tokens: 2048, max_iterations: 10, team_rounds: 1 };
+export const DEFAULT_OPTIONS: RunOptions = { temperature: 0.5, max_tokens: 4096, max_iterations: 10, team_rounds: 1 };
 export function RunControls({ options, onChange, font, onFont, group, model }: { options: RunOptions; onChange: (options: RunOptions) => void; font: string; onFont: (font: string) => void; group: boolean; model?: { provider: string; model: string } }) {
   const reasoningActive = (options.provider || model?.provider) === 'openai' && (options.model || model?.model || '').match(/^gpt-[56]/) && !!options.reasoning_effort && options.reasoning_effort !== 'none';
   return <details className="run-controls"><summary>Controls</summary><div className="controls-popover">

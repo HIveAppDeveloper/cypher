@@ -8,7 +8,7 @@ export function BotCreator({ onClose, onCreate }: { onClose: () => void; onCreat
   const [name, setName] = useState('');
   const [modelValue, setModelValue] = useState<ModelValue>({ provider: 'openai', model: 'gpt-6.1-sol', reasoning_effort: 'medium' });
   const [instructions, setInstructions] = useState(preset.prompt);
-  const [tools, setTools] = useState(['browser', 'shell', 'filesystem', 'media']);
+  const [tools, setTools] = useState(['browser', 'shell', 'filesystem', 'media', 'plugins']);
   const [custom, setCustom] = useState(false);
   const [customProvider, setCustomProvider] = useState('openai');
   const [customModel, setCustomModel] = useState('');
@@ -33,7 +33,7 @@ export function BotCreator({ onClose, onCreate }: { onClose: () => void; onCreat
       {!custom ? <ModelControls value={modelValue} onChange={setModelValue}/> : <p className="field-help">Using your custom model configuration.</p>}
       <details className="advanced-settings"><summary>Customize this agent</summary>
         <label htmlFor="bot-prompt">Instructions</label><textarea id="bot-prompt" rows={5} required maxLength={20000} value={instructions} onChange={e => setInstructions(e.target.value)}/>
-        <fieldset className="tool-picker"><legend>Tools it can use</legend>{[{id:'browser',label:'Browse websites'},{id:'shell',label:'Run code'},{id:'filesystem',label:'Work with files'},{id:'media',label:'Generate images & video'}].map(tool => <label key={tool.id}><input type="checkbox" checked={tools.includes(tool.id)} onChange={e => setTools(e.target.checked ? [...tools, tool.id] : tools.filter(t => t !== tool.id))}/>{tool.label}</label>)}</fieldset>
+        <fieldset className="tool-picker"><legend>Tools it can use</legend>{[{id:'browser',label:'Browse websites'},{id:'shell',label:'Run code'},{id:'filesystem',label:'Work with files'},{id:'media',label:'Generate images & video'},{id:'plugins',label:'Use connected plugins'}].map(tool => <label key={tool.id}><input type="checkbox" checked={tools.includes(tool.id)} onChange={e => setTools(e.target.checked ? [...tools, tool.id] : tools.filter(t => t !== tool.id))}/>{tool.label}</label>)}</fieldset>
         <label className="check-row"><input type="checkbox" checked={custom} onChange={e => setCustom(e.target.checked)}/>Use a custom model</label>
         {custom ? <div className="custom-model-fields"><label htmlFor="custom-provider">Provider</label><select id="custom-provider" value={customProvider} onChange={e => setCustomProvider(e.target.value)}><option value="openai">OpenAI / compatible</option><option value="gemini">Google Gemini</option><option value="anthropic">Anthropic</option><option value="deepseek">DeepSeek</option><option value="ollama">Ollama</option></select><label htmlFor="custom-model">Custom model ID</label><input id="custom-model" required value={customModel} onChange={e => setCustomModel(e.target.value)}/></div> : null}
       </details>

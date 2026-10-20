@@ -59,3 +59,15 @@ async def get_attachment(id: UUID, message_id: UUID, index: int, db: AsyncSessio
         raise HTTPException(status_code=404, detail='Attachment not found')
     file = files[index]
     return Response(base64.b64decode(file['data']), media_type=file['mime'], headers={'Content-Disposition': "inline; filename*=UTF-8''" + quote(file['name'], safe=''), 'X-Content-Type-Options': 'nosniff', 'Cache-Control': 'private, no-store'})
+
+
+@router.post("/{id}/tasks/{task_id}/cancel", status_code=202)
+async def cancel_task(id: UUID, task_id: UUID, db: AsyncSession = Depends(get_db)):
+    task = await db.get(Task, str(task_id))
+    if not task or task.conversation_id != str(id):
+        raise HTTPException(status_code=404, detail="Task not found")
+    if task.status not in ("pending", "running", "cancel_requested"):
+        raise HTTPException(status_code=409, detail="This task has already finished.")
+    task.status = "cancelled" if task.status == "pending" else "cancel_requested"
+    await db.commit()
+    return {"status": task.status}

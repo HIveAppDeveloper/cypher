@@ -59,6 +59,18 @@ class ToolRegistry:
         }
         logger.info(f"Registered tool: {name}")
 
+    async def load_plugins(self, db, bot):
+        if "plugins" not in (bot.tools_enabled or []):
+            return
+        from sqlalchemy import select
+        from app.models.plugin import Plugin
+        from app.services.plugins import invoke
+        for plugin in (await db.execute(select(Plugin).where(Plugin.enabled == True))).scalars():
+            for index, tool in enumerate(plugin.tools):
+                async def handler(arguments, bot_id, pid=plugin.id, tool_name=tool['name']):
+                    return await invoke(pid, tool_name, arguments)
+                self.register(f"plugin_{plugin.id.replace('-', '')[:12]}_{index}", f"{plugin.name}: {tool['description']}", tool['schema'], handler)
+
     def register_default_tools(self):
         """Register all built-in tools."""
         for kind in ("image", "video"):
@@ -305,6 +317,7 @@ class ToolRegistry:
 
         # Map tool category names to tool prefixes
         category_map = {
+            "plugins": "plugin_",
             "media": ["generate_image", "generate_video"],
             "browser": ["browse_url", "browser_click", "browser_type", "browser_screenshot", "browser_extract", "browser_fill_form"],
             "shell": "shell",

@@ -7,6 +7,7 @@ multi-agent group chat conversations with autonomous handoffs.
 """
 
 import json
+import re
 import uuid
 import logging
 import asyncio
@@ -132,6 +133,9 @@ class AgentOrchestrator:
         bots = (await db.execute(select(Bot).where(Bot.id.in_(bot_ids)).order_by(Bot.created_at))).scalars().all()
         bot_map = {str(bot.id): bot for bot in bots}
         self.team_roster = "\n".join(f"{bot.name}: {bot.role}" for bot in bots)
+        coordinator = next((b for b in bots if b.role.casefold() == "coordinator" and b.llm_provider == "openai"), None)
+        if coordinator:
+            return await self._coordinate_team(db, conversation, bots, coordinator, message)
         all_responses = []
         # Bounded turns, shared DB history, and explicit handoffs between teammates.
         for _round in range(self.options.team_rounds):
@@ -150,6 +154,25 @@ class AgentOrchestrator:
                     if response.get("message_type") == "handoff" and target_id and visits.get(target_id, 0) < 2:
                         pending = [target_id] + [id for id in pending if id != target_id]
         return all_responses
+
+    async def _coordinate_team(self, db, conversation, bots, coordinator, message):
+        cid = str(conversation.id)
+        self.phase_instructions = "Plan this task briefly. Delegate only work that helps. Choose up to 3 teammates using HANDOFF[exact teammate name: concrete task]. Do not claim the task is done."
+        self.planning = True
+        responses = await self._run_agent_loop(db, cid, coordinator.id, message)
+        self.planning = False
+        requested = [name.strip().casefold() for response in responses for name in re.findall(r"HANDOFF\[([^:\]]+):", response.get("content", ""))]
+        specialists = [b for b in bots if b.id != coordinator.id and b.name.casefold() in requested][:3]
+        if not specialists:
+            specialists = [b for b in bots if b.id != coordinator.id][:2]
+        self.phase_instructions = "Execute your assigned part using the shared conversation. Read earlier teammates’ findings. Deliver evidence and finished work, and identify anything still blocked."
+        for _ in range(self.options.team_rounds):
+            for bot in specialists:
+                responses.extend(await self._run_agent_loop(db, cid, bot.id, message))
+        self.phase_instructions = "The specialist turns have finished. Review their results. Use tools to fix remaining gaps when possible. Give the user the final answer, deliverables, verification, and concrete blockers. Do not emit another HANDOFF. Never turn a failed tool call into a success claim."
+        responses.extend(await self._run_agent_loop(db, cid, coordinator.id, message))
+        self.phase_instructions = ""
+        return responses
 
     async def _run_agent_loop(
         self, db, conversation_id: str, bot_id: str, trigger_message: str
@@ -179,6 +202,8 @@ class AgentOrchestrator:
         try:
             # Build system prompt
             system_prompt = self._build_system_prompt(bot)
+            if getattr(self, "phase_instructions", ""):
+                system_prompt += "\nCurrent team phase: " + self.phase_instructions
             if getattr(self, "team_roster", None):
                 system_prompt += "\nYou are in a team conversation. Read teammates’ messages, challenge errors, and build on prior work. Do not invent actions. To hand off use HANDOFF[exact teammate name: task].\nTeam:\n" + self.team_roster
 
@@ -200,7 +225,8 @@ class AgentOrchestrator:
                     messages.append({"role": "user", "content": f"Teammate {names.get(item.sender_bot_id, 'Agent')}: {item.content}"})
 
             # Get available tools for this bot
-            tools = self.registry.get_tools_for_bot(bot)
+            await self.registry.load_plugins(db, bot)
+            tools = [] if getattr(self, "planning", False) else self.registry.get_tools_for_bot(bot)
 
             # Agent loop
             for iteration in range(getattr(self, "options", RunOptions()).max_iterations):
@@ -209,8 +235,8 @@ class AgentOrchestrator:
                 )
 
                 run = getattr(self, "options", RunOptions())
-                provider = run.provider or bot.llm_provider
-                model = run.model or bot.llm_model
+                provider = bot.llm_provider if getattr(self, "team_roster", None) else run.provider or bot.llm_provider
+                model = bot.llm_model if getattr(self, "team_roster", None) else run.model or bot.llm_model
                 response = await LLMGateway.complete(
                     messages=messages,
                     tools=tools if tools else None,
@@ -301,6 +327,8 @@ class AgentOrchestrator:
                         bot_id, conversation_id, "assistant", reply.content
                     )
 
+                if not reply.content:
+                    responses.append(await self._save_message(db, conversation_id, "system", None, "The model returned no visible answer. Increase response length or lower thinking effort, then try again.", message_type="status_update"))
                 # Done — exit the loop
                 break
             else:

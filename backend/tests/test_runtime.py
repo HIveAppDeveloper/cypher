@@ -72,6 +72,27 @@ async def test_persisted_job_and_messages(tmp_path,monkeypatch):
             first = (await client.post('/api/bots',json=defaults)).json()
             second = (await client.post('/api/bots',json=defaults)).json()
             assert first['name'] == 'Assistant' and second['name'] == 'Assistant 2'
+            lounge = (await client.post('/api/teams/default')).json()
+            again = (await client.post('/api/teams/default')).json()
+            assert lounge['id'] == again['id'] and len(lounge['bot_ids']) == 6
+            from app.api import plugins as plugin_api
+            async def fake_discover(url, token):
+                assert token == 'private-plugin-token'
+                return [{'name':'lookup','description':'Look up a record','schema':{'type':'object','properties':{}}}]
+            monkeypatch.setattr(plugin_api, 'discover', fake_discover)
+            connection = await client.post('/api/plugins', json={'name':'Example MCP','url':'https://example.com/mcp','token':'private-plugin-token'})
+            assert connection.status_code == 200
+            plugin = connection.json()
+            assert plugin['authenticated'] and 'credential' not in plugin and 'private-plugin-token' not in connection.text
+            from app.models.plugin import Plugin
+            async with sessions() as private_db:
+                saved = await private_db.get(Plugin, plugin['id'])
+                assert saved.credential != 'private-plugin-token'
+                from app.services.plugins import reveal
+                assert reveal(saved.credential) == 'private-plugin-token'
+            toggled = await client.patch('/api/plugins/' + plugin['id'], json={'enabled':False})
+            assert toggled.json()['enabled'] is False
+            assert (await client.delete('/api/plugins/' + plugin['id'])).status_code == 200
 
             conv=(await client.post('/api/conversations',json={'title':'Hive','bot_ids':[bot['id']]})).json()
             response=await client.post(f"/api/conversations/{conv['id']}/messages",json={'sender_type':'user','content':'Check the pipeline'})
@@ -91,6 +112,9 @@ async def test_persisted_job_and_messages(tmp_path,monkeypatch):
             assert [m['content'] for m in messages]==['Pipeline checked.','Check the pipeline']
             older=(await client.get(f"/api/conversations/{conv['id']}/messages?before_id={messages[0]['id']}")).json()
             assert [m['content'] for m in older]==['Check the pipeline']
+            extra = (await client.post(f"/api/conversations/{conv['id']}/messages", json={'sender_type':'user','content':'Do not execute this cancelled task'})).json()
+            cancelled = await client.post(f"/api/conversations/{conv['id']}/tasks/{extra['task_id']}/cancel")
+            assert cancelled.status_code == 202 and cancelled.json()['status'] == 'cancelled'
             assert (await client.get(f"/api/conversations/{conv['id']}/messages?before_id={uuid4()}")).status_code==404
             assert (await client.post(f'/api/conversations/{uuid4()}/messages',json={'sender_type':'user','content':'x'})).status_code==404
             assert (await client.get(f"/api/conversations/{conv['id']}/messages?limit=-1")).status_code==422
@@ -292,3 +316,20 @@ async def test_file_write_preserves_quotes_and_heredoc_text(monkeypatch):
     assert base64.b64encode(content.encode()).decode() in calls[0][2]
     assert shlex.quote("/workspace/it's.txt") in calls[0][2]
     assert '$(must-not-run)' not in calls[0][2]
+
+
+@pytest.mark.asyncio
+async def test_mcp_rejects_private_and_insecure_endpoints(monkeypatch):
+    from app.services.plugins import validate_endpoint
+    import socket
+    monkeypatch.setattr(socket,'getaddrinfo',lambda *a,**k:[(socket.AF_INET,socket.SOCK_STREAM,6,'',('127.0.0.1',443))])
+    for url in ['http://example.com/mcp','https://localhost/mcp','https://example.com/mcp?token=secret']:
+        with pytest.raises(ValueError): await validate_endpoint(url)
+
+
+def test_sol61_uses_responses_bridge(monkeypatch):
+    from app.services import llm_gateway
+    monkeypatch.setattr(llm_gateway.settings,'LLM_USE_GATEWAY',True)
+    monkeypatch.setenv('AI_GATEWAY_API_KEY','test-only')
+    options=llm_gateway.completion_options('gpt-6.1-sol','openai')
+    assert options['model']=='openai/responses/openai/gpt-6.1-sol'

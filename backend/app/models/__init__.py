@@ -1,3 +1,5 @@
+from .runtime import RuntimeHeartbeat
+from .plugin import Plugin
 from .bot import Bot
 from .conversation import Conversation, ConversationParticipant
 from .message import Message

@@ -1,7 +1,7 @@
 import { Bot, BotStatus, Message, MessageType, Attachment, RunOptions, Conversation, Job } from './types';
 const API_URL = (process.env.NEXT_PUBLIC_API_URL || '').replace(/\/$/, '');
 async function request(path: string, init?: RequestInit) {
-  const response = await fetch(`${API_URL}/api${path}`, { ...init, headers: { 'Content-Type': 'application/json', ...init?.headers } });
+  const response = await fetch(`${API_URL}/api${path}`, { ...init, signal: AbortSignal.timeout(35000), headers: { 'Content-Type': 'application/json', ...init?.headers } });
   if (!response.ok) { const error = await response.json().catch(() => null); const detail = error?.detail; throw new Error(typeof detail === 'string' ? detail : Array.isArray(detail) ? detail.map((item: { msg?: string }) => item.msg || 'Invalid input').join('. ') : `Request failed (${response.status}). Try again.`); }
   return response.json();
 }
@@ -10,6 +10,12 @@ function botFromWire(b: BotResponse): Bot { return { ...b, llmProvider: b.llm_pr
 function botToWire(b: Partial<Bot>) { return { name: b.name, role: b.role, description: b.description, system_prompt: b.systemPrompt, llm_provider: b.llmProvider || 'openai', llm_model: b.llmModel || 'gpt-6.1-sol', tools_enabled: b.toolsEnabled || [] }; }
 interface MessageResponse { id: string; conversation_id: string; sender_type: string; sender_bot_id?: string; content: string; message_type: MessageType; created_at: string; metadata_json?: { attachments?: Attachment[] }; }
 export const api = {
+  defaultTeam: (): Promise<Conversation> => request('/teams/default', { method: 'POST' }),
+  getPlugins: (): Promise<import('../components/PluginPanel').PluginConnection[]> => request('/plugins'),
+  connectPlugin: (data: { name: string; url: string; token: string }): Promise<import('../components/PluginPanel').PluginConnection> => request('/plugins', { method: 'POST', body: JSON.stringify(data) }),
+  togglePlugin: (id: string, enabled: boolean): Promise<import('../components/PluginPanel').PluginConnection> => request('/plugins/' + id, { method: 'PATCH', body: JSON.stringify({ enabled }) }),
+  disconnectPlugin: (id: string) => request('/plugins/' + id, { method: 'DELETE' }),
+  cancelJob: (conversation: string, id: string) => request(`/conversations/${conversation}/tasks/${id}/cancel`, { method: 'POST' }),
   getBots: async (): Promise<Bot[]> => (await request('/bots')).map(botFromWire),
   createBot: async (b: Partial<Bot>): Promise<Bot> => botFromWire(await request('/bots', { method: 'POST', body: JSON.stringify(botToWire(b)) })),
   updateBot: async (id: string, b: Partial<Bot>): Promise<Bot> => botFromWire(await request(`/bots/${id}`, { method: 'PUT', body: JSON.stringify(botToWire(b)) })),

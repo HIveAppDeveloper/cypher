@@ -15,12 +15,12 @@ dependencies = [
     "litellm>=1.50.0",
     "redis>=5.2.0",
     "docker>=7.1.0",
-    "browser-use>=0.1.40",
     "playwright>=1.49.0",
     "python-multipart>=0.0.12",
     "httpx>=0.28.0",
     "ai[vercel]==0.8.0",
     "vercel-sandbox==0.8.0",
+    "mcp==1.30.0",
     "python-jose[cryptography]>=3.3.0",
     "passlib[bcrypt]>=1.7.4",
     "minio>=7.2.0"

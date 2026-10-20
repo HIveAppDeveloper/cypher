@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Bot, Conversation } from '../lib/types';
 import { BotAvatar } from './BotAvatar';
-export function BotRoster({ bots, selectedBot, onSelectBot, onCreateNew, rooms, selectedRoom, onSelectRoom, onCreateRoom, onHome, onSetup }: { bots: Bot[]; selectedBot: Bot | null; onSelectBot: (bot: Bot) => void; onCreateNew: () => void; rooms: Conversation[]; selectedRoom: Conversation | null; onSelectRoom: (room: Conversation) => void; onCreateRoom: () => void; onHome: () => void; onSetup: () => void }) {
+export function BotRoster({ bots, selectedBot, onSelectBot, onCreateNew, rooms, selectedRoom, onSelectRoom, onCreateRoom, onHome, onSetup, onPlugins }: { bots: Bot[]; selectedBot: Bot | null; onSelectBot: (bot: Bot) => void; onCreateNew: () => void; rooms: Conversation[]; selectedRoom: Conversation | null; onSelectRoom: (room: Conversation) => void; onCreateRoom: () => void; onHome: () => void; onSetup: () => void; onPlugins: () => void }) {
   const [query, setQuery] = useState('');
   const [searching, setSearching] = useState(false);
   return <aside className="sidebar">
@@ -9,6 +9,6 @@ export function BotRoster({ bots, selectedBot, onSelectBot, onCreateNew, rooms, 
     {searching ? <input autoFocus aria-label="Search bots" placeholder="Search bots" value={query} onChange={e => setQuery(e.target.value)} className="search-input" /> : null}
     <nav className="roster-list" aria-label="Bots"><div className="section-label">Agents</div>{bots.filter(b => b.name.toLowerCase().includes(query.toLowerCase())).map(bot => <button key={bot.id} className={`bot-row ${selectedBot?.id === bot.id ? 'selected' : ''}`} onClick={() => onSelectBot(bot)}><BotAvatar name={bot.name}/><span className="bot-row-text"><strong>{bot.name}</strong><span>{bot.status === 'working' ? 'Working…' : bot.description || bot.role}</span></span></button>)}
     {!bots.length ? <div className="roster-empty">Your team starts here.<button onClick={onCreateNew}>Create your first bot</button></div> : null}<div className="section-label rooms-label"><span>Team rooms</span><button aria-label="Create team room" onClick={onCreateRoom}>New</button></div>{rooms.map(room => <button key={room.id} className={`bot-row ${selectedRoom?.id === room.id ? "selected" : ""}`} onClick={() => onSelectRoom(room)}><span className="room-avatar"><svg viewBox="0 0 24 24"><path d="M4 7h16v12H4zM7 3v4m10-4v4M8 11h8m-8 4h5"/></svg></span><span className="bot-row-text"><strong>{room.title}</strong><span>{room.bot_ids.length} agents · shared context</span></span></button>)}</nav>
-    <footer className="roster-footer"><span className="owner-avatar">B</span><button className="workspace-label" onClick={onSetup} aria-label="Workspace setup">Workspace setup</button></footer>
+    <button className="plugins-nav" onClick={onPlugins} aria-label="Connections"><svg viewBox="0 0 24 24"><path d="M8 3v5m8-5v5M6 8h12v4a6 6 0 0 1-12 0V8Zm6 10v3"/></svg><span>Connections</span></button><footer className="roster-footer"><span className="owner-avatar">B</span><button className="workspace-label" onClick={onSetup} aria-label="Workspace setup">Workspace setup</button></footer>
   </aside>;
 }

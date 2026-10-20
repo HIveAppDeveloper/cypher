@@ -38,9 +38,12 @@ def generation_options(options, provider, model):
     kwargs = {"max_tokens": options.max_tokens}
     reasoning = options.reasoning_effort
     is_gpt5 = provider == "openai" and model.removeprefix("openai/").startswith(("gpt-5", "gpt-6"))
-    if is_gpt5 and reasoning:
+    if is_gpt5:
+        reasoning = reasoning or ("medium" if model.removeprefix("openai/").startswith("gpt-6") else "none")
+        if model.removeprefix("openai/").startswith(("gpt-6.1-sol", "gpt-6-astra")) and reasoning == "none":
+            reasoning = "low"
         kwargs["reasoning_effort"] = reasoning
-    if not is_gpt5 or reasoning in (None, "none"):
+    if not is_gpt5 or reasoning == "none":
         kwargs["temperature"] = options.temperature
     if provider == "openai" and options.service_tier:
         if settings.LLM_USE_GATEWAY and options.service_tier != "default":

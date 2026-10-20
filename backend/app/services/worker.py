@@ -1,6 +1,7 @@
 """Single-worker persisted job runner for the persistent backend host."""
 import asyncio
 import logging
+from contextlib import suppress
 from datetime import datetime
 from sqlalchemy import select, update, text
 from app.db.session import AsyncSessionLocal, engine
@@ -24,12 +25,23 @@ async def run_worker():
     else:
         await _run_worker_loop()
 
+async def heartbeat():
+    from app.models.runtime import RuntimeHeartbeat
+    async with AsyncSessionLocal() as db:
+        item = await db.get(RuntimeHeartbeat, "worker")
+        if item is None:
+            item = RuntimeHeartbeat(name="worker", updated_at=datetime.utcnow())
+            db.add(item)
+        else: item.updated_at = datetime.utcnow()
+        await db.commit()
+
 async def _run_worker_loop():
     # Do not replay interrupted side effects automatically.
     async with AsyncSessionLocal() as db:
         await db.execute(update(Task).where(Task.status == "running").values(status="interrupted", completed_at=datetime.utcnow(), result={"error": "Backend restarted during execution; review before resubmitting."}))
         await db.commit()
     while True:
+        await heartbeat()
         async with AsyncSessionLocal() as db:
             task = (await db.execute(select(Task).where(Task.status == "pending").order_by(Task.created_at).limit(1))).scalar_one_or_none()
             if task is None:
@@ -40,9 +52,31 @@ async def _run_worker_loop():
             await db.commit()
             try:
                 request = (task.result or {}).get("request", {})
-                responses = await AgentOrchestrator().process_message(task.conversation_id, task.description, attachments=request.get("attachments", []), options=request.get("options", {}))
-                task.status = "failed" if any(r.get("message_type") == "status_update" for r in responses) else "completed"
-                task.result = {"responses": responses}
+                execution = asyncio.create_task(AgentOrchestrator().process_message(task.conversation_id, task.description, attachments=request.get("attachments", []), options=request.get("options", {})))
+                try:
+                    cancelled = False
+                    while not execution.done():
+                        await asyncio.wait({execution}, timeout=.5)
+                        if execution.done(): break
+                        await heartbeat()
+                        async with AsyncSessionLocal() as monitor:
+                            current = await monitor.get(Task, task.id)
+                            if current and current.status == "cancel_requested":
+                                execution.cancel()
+                                with suppress(asyncio.CancelledError): await execution
+                                cancelled = True
+                                break
+                    if cancelled:
+                        task.status = "cancelled"
+                        task.result = {"note": "Stopped future steps. An in-flight external action may already have completed."}
+                    else:
+                        responses = await execution
+                        task.status = "failed" if any(r.get("message_type") == "status_update" for r in responses) else "completed"
+                        task.result = {"responses": responses}
+                finally:
+                    if not execution.done():
+                        execution.cancel()
+                        with suppress(asyncio.CancelledError): await execution
             except asyncio.CancelledError:
                 raise
             except Exception:
