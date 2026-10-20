@@ -4,8 +4,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends     build-essen
 
 WORKDIR /app
 COPY pyproject.toml .
-COPY app ./app
-RUN pip install .
+RUN python -c "import tomllib; from pathlib import Path; Path('/tmp/requirements.txt').write_text('\\n'.join(tomllib.loads(Path('pyproject.toml').read_text())['project']['dependencies']))"
+RUN pip install --no-cache-dir -r /tmp/requirements.txt
 
 FROM python:3.12-slim
 

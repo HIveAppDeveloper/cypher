@@ -4,7 +4,7 @@ import logging
 from datetime import datetime
 from sqlalchemy import select
 from app.db.session import AsyncSessionLocal
-from app.models.runtime import RuntimeHeartbeat
+from app.models.runtime import RuntimeHeartbeat, RuntimeCheck
 logger = logging.getLogger(__name__)
 
 async def record(name):
@@ -16,7 +16,7 @@ async def record(name):
 
 async def verify_cloud():
     async with AsyncSessionLocal() as db:
-        if await db.get(RuntimeHeartbeat, 'cloud_check_finished'): return
+        if await db.get(RuntimeHeartbeat, 'cloud_check_finished_v2'): return
     from app.services.llm_gateway import LLMGateway
     from app.services.plugins import discover
     async def gateway():
@@ -29,8 +29,33 @@ async def verify_cloud():
         try:
             async with asyncio.timeout(90): await check()
             await record(name+'_verified')
+            await save_check(name,'passed',{})
             logger.info('Cloud self-check passed: %s', name)
         except Exception as error:
             await record(name+'_verification_failed')
+            await save_check(name,'failed',safe_error(error))
             logger.warning('Cloud self-check failed: %s (%s)',name,type(error).__name__)
-    await record('cloud_check_finished')
+    await record('cloud_check_finished_v2')
+
+
+def safe_error(error):
+    import os,re
+    message=str(error)
+    secrets=[os.getenv('AI_GATEWAY_API_KEY',''),os.getenv('BACKEND_API_TOKEN','')]
+    try:
+        from vercel.oidc import get_vercel_oidc_token_sync
+        secrets.append(get_vercel_oidc_token_sync())
+    except Exception: pass
+    for value in secrets:
+        if value: message=message.replace(value,'[redacted]')
+    message=re.sub(r'(?:sk-|vck_|eyJ)[A-Za-z0-9._-]{12,}','[redacted]',message)
+    message=re.sub(r'https?://[^\s]+','[endpoint]',message)
+    return {'type':type(error).__name__,'message':message[:1500]}
+
+async def save_check(name,status,detail):
+    async with AsyncSessionLocal() as db:
+        item=await db.get(RuntimeCheck,name)
+        if item:
+            item.status=status; item.detail=detail; item.updated_at=datetime.utcnow()
+        else: db.add(RuntimeCheck(name=name,status=status,detail=detail,updated_at=datetime.utcnow()))
+        await db.commit()

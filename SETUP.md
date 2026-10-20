@@ -2,7 +2,7 @@
 
 The managed deployment now uses the repository-root `vercel.json`. It is active configuration, not a staged template. It defines a Next.js frontend service, private Python container backend, an internal frontend-to-backend binding (`BACKEND_INTERNAL_URL`), and an `agent-worker` daemon running `python -m app.worker_main` with one instance in `iad1`, 2 GiB requested memory, and a 60-second termination grace period. The root rewrite sends public traffic to the frontend.
 
-The authorized Atlas native PostgreSQL credential is configured as the primary state database, using the isolated `grokbot` schema. It is not automatic dual writing to Hive and Atlas. At this checkpoint, deployment revision `f2e345` is building; successful production startup and task execution are not yet established.
+The authorized Atlas native PostgreSQL credential is configured as the primary state database, using the isolated `grokbot` schema. It is not automatic dual writing to Hive and Atlas. The deployed backend has successfully queried Atlas PostgreSQL and a live worker heartbeat has been observed. Revision `017457` adds opt-in model and MCP self-checks; their results are recorded separately from configuration status.
 
 ## Managed configuration
 
@@ -17,11 +17,12 @@ Configure secret values through the project's Vercel environment settings, keepi
 | `GROKBOT_BACKEND_API_TOKEN` | Matching server-only frontend proxy token. |
 | `LLM_USE_GATEWAY=true` | Route configured models through Vercel AI Gateway. |
 | `AI_GATEWAY_API_KEY` or Vercel OIDC | Server-side gateway authentication. Configuration alone does not establish model access or credit. |
+| `GROKBOT_VERIFY_CLOUD=true` | Opt-in one-time GPT-6.1 Sol response and public DeepWiki MCP discovery checks; stores timestamps, never secrets. |
 | `SANDBOX_BACKEND=vercel` | Managed Vercel Sandbox shell/file adapter; Docker is the default alternative. |
 
 The frontend automatically prefers its internal service binding. A separately hosted backend may instead use server-only `GROKBOT_BACKEND_URL`. Leave `NEXT_PUBLIC_API_URL` unset for the same-origin proxy. Keep deployment protection enabled: the app has backend bearer authentication but no account-isolated user system. Backend APIs should remain private. Playwright Chromium is installed in the backend container for hosted browser tools. Project environment secrets are not injected into shell/file sandboxes.
 
-Eight available Hive/Atlas values were imported under separate prefixes; an inventory records 177 variable names. The Connections → Vercel variables view shows names and Configured/Needs link states only. Protected values that Vercel would not export still need to be linked through authorized project configuration. Never infer a working service integration from a variable name.
+Forty-three available Hive/Atlas values were imported under separate prefixes; an inventory records 177 variable names. The Connections → Vercel variables view shows names and Configured/Needs link states only. Protected values that Vercel would not export still need to be linked through authorized project configuration. Never infer a working service integration from a variable name.
 
 ## Verify after the build completes
 
@@ -41,7 +42,7 @@ The composer accepts PNG/JPEG/WebP, PDF, UTF-8 text, MP3, and WAV, up to four fi
 
 ## Remote MCP connections
 
-Open Connections → MCP servers, supply a public HTTPS Streamable HTTP endpoint and optional bearer token, then Connect & enable. Discovery must advertise at least one tool. The app stores the token encrypted, never returns it through the public listing, and exposes discovered tools to agents with Plugins enabled. Connections can be toggled or disconnected. OAuth-only services need their own connection flow. These tools can read or change external service data; enable only intended connections. The UI lists tool names and descriptions, not credentials.
+Open Connections → MCP servers, supply a public HTTPS Streamable HTTP endpoint and optional bearer token, then Connect & enable. Discovery must advertise at least one tool. The app requires a private authentication/encryption secret of at least 32 characters before accepting a bearer credential. It stores the token encrypted, never returns it through the public listing, and exposes discovered tools to agents with Plugins enabled. Connections can be toggled or disconnected. OAuth-only services need their own connection flow. These tools can read or change external service data; enable only intended connections. The UI lists tool names and descriptions, not credentials.
 
 ## Local or Docker alternative
 
@@ -49,4 +50,4 @@ Use `.env.example` as a starting point. Set a native state database URL and expl
 
 ## Evidence and limits
 
-Fifteen backend tests passed with mocked model/provider and SDK interactions; the Next.js production build passed. These demonstrate implementation checks, not live cloud functionality. At this checkpoint, database connectivity, worker readiness, live provider/media calls, MCP execution, managed Sandbox access, and full production operation remain to be verified after the current deployment finishes. Do not report the system as connected or always-on until those checks succeed. There is no scheduler/routines UI, account isolation, interactive browser sign-in handoff, or service-specific Hive/Atlas integration merely from importing configuration.
+Sixteen backend tests passed with mocked model/provider and SDK interactions; the Next.js production build passed. These demonstrate implementation checks, not live cloud functionality. Database connectivity and worker readiness have been verified through the live protected runtime endpoint. Live provider/media calls, MCP execution, managed Sandbox access, and the complete user flow need separate evidence. Do not report the system as connected or always-on until those checks succeed. There is no scheduler/routines UI, account isolation, interactive browser sign-in handoff, or service-specific Hive/Atlas integration merely from importing configuration.
