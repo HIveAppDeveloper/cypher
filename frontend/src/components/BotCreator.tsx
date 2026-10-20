@@ -19,14 +19,14 @@ export function BotCreator({ onClose, onCreate }: { onClose: () => void; onCreat
     e.preventDefault(); setSaving(true); setError('');
     const model = { provider: modelValue.provider!, model: modelValue.model! };
     try {
-      await onCreate({ name: name.trim() || preset.name, role: preset.name, description: preset.description, systemPrompt: instructions, llmProvider: custom ? customProvider : model.provider, llmModel: custom ? customModel.trim() : model.model, toolsEnabled: tools.length ? tools : ['none'], defaultOptions: custom ? {} : { ...modelValue } });
+      await onCreate({ name: name.trim(), role: preset.name, description: preset.description, systemPrompt: instructions, llmProvider: custom ? customProvider : model.provider, llmModel: custom ? customModel.trim() : model.model, toolsEnabled: tools.length ? tools : ['none'], defaultOptions: custom ? {} : { ...modelValue } });
       onClose();
     } catch (e) { setError(String(e).replace(/^Error: /, '')); } finally { setSaving(false); }
   }
   return <dialog ref={dialog} className="bot-dialog" aria-labelledby="create-bot-heading" onCancel={e => { e.preventDefault(); if (!saving) onClose(); }}>
     <h2 id="create-bot-heading">Meet your next agent.</h2>
     <p className="dialog-intro">Pick a role. Everything else has a sensible default.</p>
-    <form onSubmit={submit}>
+    <form className="agent-form" onSubmit={submit}><div className="agent-form-fields">
       <label htmlFor="agent-role">What should it do?</label>
       <select autoFocus id="agent-role" value={preset.id} onChange={e => { const next = AGENT_PRESETS.find(p => p.id === e.target.value)!; setPreset(next); setInstructions(next.prompt); }}>{AGENT_PRESETS.map(p => <option key={p.id} value={p.id}>{p.name} — {p.description}</option>)}</select>
       <label htmlFor="bot-name">Name <span className="optional-label">optional</span></label><input id="bot-name" placeholder={preset.name} maxLength={80} value={name} onChange={e => setName(e.target.value)}/>
@@ -38,7 +38,7 @@ export function BotCreator({ onClose, onCreate }: { onClose: () => void; onCreat
         {custom ? <div className="custom-model-fields"><label htmlFor="custom-provider">Provider</label><select id="custom-provider" value={customProvider} onChange={e => setCustomProvider(e.target.value)}><option value="openai">OpenAI / compatible</option><option value="gemini">Google Gemini</option><option value="anthropic">Anthropic</option><option value="deepseek">DeepSeek</option><option value="ollama">Ollama</option></select><label htmlFor="custom-model">Custom model ID</label><input id="custom-model" required value={customModel} onChange={e => setCustomModel(e.target.value)}/></div> : null}
       </details>
       {error ? <p className="form-error" role="alert">{error}</p> : null}
-      <div className="dialog-actions"><button disabled={saving} type="button" className="btn-secondary" onClick={onClose}>Cancel</button><button disabled={saving} type="submit" className="btn-primary">{saving ? 'Creating…' : 'Create agent'}</button></div>
+      </div><div className="dialog-actions"><button disabled={saving} type="button" className="btn-secondary" onClick={onClose}>Cancel</button><button disabled={saving} type="submit" className="btn-primary">{saving ? 'Creating…' : 'Create agent'}</button></div>
     </form>
   </dialog>;
 }

@@ -66,6 +66,13 @@ async def test_persisted_job_and_messages(tmp_path,monkeypatch):
             assert response.status_code==200,response.text
             bot=response.json()
             assert (await client.get('/api/bots/'+bot['id'])).status_code==200
+            duplicate = await client.post('/api/bots', json={'name':'Hive Reach','role':'Outreach','system_prompt':'Research first.','llm_provider':'gemini','llm_model':'gemini-2.5-flash'})
+            assert duplicate.status_code == 409 and 'already in use' in duplicate.json()['detail']
+            defaults = {'name':'','role':'Assistant','system_prompt':'Help.','llm_provider':'gemini','llm_model':'gemini-2.5-flash'}
+            first = (await client.post('/api/bots',json=defaults)).json()
+            second = (await client.post('/api/bots',json=defaults)).json()
+            assert first['name'] == 'Assistant' and second['name'] == 'Assistant 2'
+
             conv=(await client.post('/api/conversations',json={'title':'Hive','bot_ids':[bot['id']]})).json()
             response=await client.post(f"/api/conversations/{conv['id']}/messages",json={'sender_type':'user','content':'Check the pipeline'})
             assert response.status_code==202,response.text
@@ -154,6 +161,23 @@ async def test_team_handoff_shares_context_and_preserves_attachment(tmp_path,mon
             download=await client.get(a['url'])
             assert download.content==b'Revenue grew 12 percent.'
             assert (await client.get(a['url'].replace(room['id'],str(uuid4())))).status_code==404
+            from app.services import media
+            async def fake_media(kind, prompt, aspect_ratio, duration):
+                assert kind == 'video' and duration == 4
+                return [{'name': 'result.mp4', 'mime': 'video/mp4', 'data': base64.b64encode(b'persisted-video').decode()}]
+            monkeypatch.setattr(media, 'generate_media', fake_media)
+            queued = (await client.post(f"/api/conversations/{room['id']}/messages", json={'sender_type': 'user', 'content': 'Make a video', 'options': {'output': 'video'}})).json()
+            for _ in range(100):
+                await asyncio.sleep(.03)
+                tasks = (await client.get(f"/api/conversations/{room['id']}/tasks")).json()
+                video_task = next(t for t in tasks if t['id'] == queued['task_id'])
+                if video_task['status'] in ('completed', 'failed'): break
+            assert video_task['status'] == 'completed'
+            output = (await client.get(f"/api/conversations/{room['id']}/messages")).json()
+            video_message = next(m for m in output if m['content'] == 'Your video is ready.')
+            file = video_message['metadata_json']['attachments'][0]
+            assert file['mime'] == 'video/mp4' and 'data' not in file
+            assert (await client.get(file['url'])).content == b'persisted-video'
     finally:
         if task:
             task.cancel()

@@ -2,7 +2,7 @@ import { Bot, BotStatus, Message, MessageType, Attachment, RunOptions, Conversat
 const API_URL = (process.env.NEXT_PUBLIC_API_URL || '').replace(/\/$/, '');
 async function request(path: string, init?: RequestInit) {
   const response = await fetch(`${API_URL}/api${path}`, { ...init, headers: { 'Content-Type': 'application/json', ...init?.headers } });
-  if (!response.ok) { const error = await response.json().catch(() => null); throw new Error(error?.detail || `Request failed (${response.status}).`); }
+  if (!response.ok) { const error = await response.json().catch(() => null); const detail = error?.detail; throw new Error(typeof detail === 'string' ? detail : Array.isArray(detail) ? detail.map((item: { msg?: string }) => item.msg || 'Invalid input').join('. ') : `Request failed (${response.status}). Try again.`); }
   return response.json();
 }
 interface BotResponse { id: string; name: string; role: string; description?: string; status: BotStatus; llm_provider: string; llm_model: string; tools_enabled: string[]; system_prompt: string; }

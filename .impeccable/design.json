@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-10-20T17:58:11.776474+00:00",
+  "generatedAt": "2026-10-20T18:23:11.987820+00:00",
   "title": "Design System: Open GrokBot",
   "extensions": {
     "shadows": [
@@ -18,6 +18,11 @@
         "name": "controls-popover",
         "value": "0 14px 40px #00000015",
         "purpose": "Run controls floating panel."
+      },
+      {
+        "name": "task-composer",
+        "value": "0 5px 22px #00000005",
+        "purpose": "Nearly flat task-first home input."
       }
     ],
     "motion": [],
@@ -299,7 +304,7 @@
       },
       "display": {
         "displayName": "Welcome heading",
-        "purpose": "Inter Variable, clamp(28px,3vw,42px), 500, 1.2 line height, -.035em tracking; 26px on mobile."
+        "purpose": "QuickStart heading: Inter Variable, clamp(25px,2.7vw,36px), 500, 1.2 line height, -.035em tracking; 25px on mobile."
       }
     }
   },
@@ -311,14 +316,6 @@
       "description": "Pink primary form action; no distinct hover fill is implemented.",
       "html": "<button class=\"ds-primary\">Create bot</button>",
       "css": ".ds-primary{font:16px \"Inter Variable\",-apple-system,BlinkMacSystemFont,\"Segoe UI\",sans-serif;padding:10px 18px;border:1px solid #c5237b;border-radius:18px;background:#c5237b;color:white;cursor:pointer}.ds-primary:focus-visible{outline:2px solid #b51f70;outline-offset:3px}"
-    },
-    {
-      "name": "Secondary action",
-      "kind": "button",
-      "refersTo": "button-secondary",
-      "description": "Quiet bordered secondary action.",
-      "html": "<button class=\"ds-secondary\">Cancel</button>",
-      "css": ".ds-secondary{font:16px \"Inter Variable\",-apple-system,BlinkMacSystemFont,\"Segoe UI\",sans-serif;padding:10px 18px;border:1px solid #ddd;border-radius:18px;background:white;color:#202020;cursor:pointer}.ds-secondary:focus-visible{outline:2px solid #b51f70;outline-offset:3px}"
     },
     {
       "name": "Round toolbar action",
@@ -362,14 +359,14 @@
     {
       "name": "Bot creation dialog",
       "kind": "card",
-      "description": "Bounded native modal with scrolling content and a dimmed backdrop.",
-      "html": "<div class=\"ds-dialog\" role=\"dialog\" aria-label=\"Create bot\"><h2>Create bot</h2><label>Bot name<input aria-label=\"Bot name\"></label></div>",
-      "css": ".ds-dialog{font-family:\"Inter Variable\",-apple-system,BlinkMacSystemFont,\"Segoe UI\",sans-serif;width:min(500px,calc(100% - 32px));max-height:calc(100dvh - 32px);overflow:auto;padding:28px;border:1px solid #ddd;border-radius:20px;color:#202020;background:white}.ds-dialog h2{margin:0 0 24px;font-size:24px;font-weight:500}.ds-dialog label{display:block;margin:16px 0 6px;font-size:14px}.ds-dialog input{display:block;width:100%;padding:10px 12px;border:1px solid #ddd;border-radius:10px;background:white;color:#222}.ds-dialog input:focus-visible{outline:2px solid #b51f70;outline-offset:3px}"
+      "description": "Bounded native agent modal with independently scrolling fields and persistent action footer.",
+      "html": "<section class=\"ds-dialog\" role=\"dialog\" aria-label=\"Create agent\"><h2>Meet your next agent.</h2><form class=\"ds-agent-form\"><div class=\"ds-agent-fields\"><label>Name<input aria-label=\"Name\" placeholder=\"Assistant\"></label></div><footer class=\"ds-agent-actions\"><button type=\"button\">Cancel</button><button type=\"button\">Create agent</button></footer></form></section>",
+      "css": ".ds-dialog{font-family:\"Inter Variable\",-apple-system,BlinkMacSystemFont,\"Segoe UI\",sans-serif;width:min(480px,calc(100vw - 32px));max-height:calc(100dvh - 32px);overflow:auto;padding:30px;border:1px solid #ddd;border-radius:20px;color:#202020;background:white}.ds-dialog h2{margin:0 0 24px;font-size:26px;letter-spacing:-.035em;font-weight:500}.ds-dialog label{display:block;margin:16px 0 6px;font-size:14px}.ds-dialog input{display:block;width:100%;padding:10px 12px;border:1px solid #ddd;border-radius:10px;background:white;color:#222}.ds-dialog input:focus-visible{outline:2px solid #b51f70;outline-offset:3px}.ds-dialog{display:flex;flex-direction:column;overflow:hidden}.ds-dialog h2{flex-shrink:0}.ds-agent-form{display:flex;flex-direction:column;min-height:0;overflow:hidden}.ds-agent-fields{min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:3px}.ds-agent-actions{display:flex;justify-content:flex-end;gap:10px;flex-shrink:0;background:white;padding-top:16px;margin-top:12px;border-top:1px solid #eee}.ds-agent-actions button{padding:10px 18px;border-radius:18px;border:1px solid #ddd;background:white;color:#202020;font:inherit;cursor:pointer}.ds-agent-actions button:last-child{background:#c5237b;border-color:#c5237b;color:white}.ds-agent-actions button:focus-visible{outline:2px solid #b51f70;outline-offset:3px}"
     },
     {
       "name": "Run controls",
       "kind": "custom",
-      "description": "Native disclosure with labeled slider and typeface menu; example does not invoke a runtime.",
+      "description": "Native run disclosure with named model controls, supported OpenAI power/thinking/speed settings, and advanced run sliders; no live runtime implied.",
       "html": "<details class=\"ds-controls\"><summary>Controls</summary><div class=\"ds-popover\"><h3>Run controls</h3><label>Temperature <output>0.5</output><input aria-label=\"Temperature\" type=\"range\" min=\"0\" max=\"1.5\" step=\".1\" value=\".5\"></label><label>Typeface<select><option>Inter</option><option>System</option><option>Georgia</option></select></label></div></details>",
       "css": ".ds-controls{position:relative;font:13px \"Inter Variable\",sans-serif}.ds-controls>summary{list-style:none;cursor:pointer;border:1px solid #ddd;border-radius:18px;padding:7px 14px;background:white}.ds-popover{margin-top:8px;width:260px;background:white;border:1px solid #ddd;border-radius:16px;padding:20px;box-shadow:0 14px 40px #00000015}.ds-popover h3{margin:0 0 20px;font-size:16px}.ds-popover label{display:block;margin:16px 0;color:#303030}.ds-popover output{float:right;color:#696969;font-size:12px}.ds-popover input{width:100%;display:block;margin-top:12px;accent-color:#c5237b}.ds-popover select{display:block;width:100%;margin-top:8px;border:1px solid #ddd;background:#f8f8f8;padding:9px;border-radius:8px;font-size:13px}.ds-controls summary:focus-visible,.ds-popover input:focus-visible,.ds-popover select:focus-visible{outline:2px solid #b51f70;outline-offset:3px}"
     },
@@ -380,10 +377,17 @@
       "html": "<span class=\"ds-member\"><svg viewBox=\"0 0 48 48\" aria-hidden=\"true\"><path fill=\"#13b6a9\" d=\"M8 11C11 5 22 3 29 5c8-1 15 10 15 20 2 7-7 16-14 16-7 5-13 0-18 1C3 40 1 28 4 23c-1-4 0-9 4-12Z\"/><path d=\"m23 15 3 7m7-11 3 7\" fill=\"none\" stroke=\"white\" stroke-width=\"4\" stroke-linecap=\"round\"/></svg>Agent name</span>",
       "css": ".ds-member{display:inline-flex;align-items:center;gap:4px;font:11px \"Inter Variable\",sans-serif;padding:3px 8px;background:#f1f1f1;color:#202020;border-radius:20px}.ds-member svg{width:20px;height:20px}",
       "refersTo": "team-member-chip"
+    },
+    {
+      "name": "Task-first composer",
+      "kind": "custom",
+      "description": "QuickStart signature: task prompt, output choice, and start action. Preview does not send requests.",
+      "html": "<form class=\"ds-task\" onsubmit=\"return false\"><textarea aria-label=\"Your task\" rows=\"3\" placeholder=\"Research something, make something, solve something\u2026\"></textarea><div><select aria-label=\"Task output\"><option>Ask anything</option><option>Create an image</option><option>Create a video</option></select><button type=\"button\">Start task \u2192</button></div></form>",
+      "css": ".ds-task{width:min(640px,100%);border:1px solid #dedede;border-radius:22px;background:white;box-shadow:0 5px 22px #00000005;padding:16px;font-family:\"Inter Variable\",sans-serif}.ds-task:focus-within{border-color:#b788a0}.ds-task textarea{width:100%;resize:none;border:0;background:none;font:16px/1.6 \"Inter Variable\",sans-serif;outline:none;padding:3px 2px 16px;color:#292929}.ds-task>div{display:flex;align-items:center;justify-content:space-between;gap:12px}.ds-task select{border:0;background:#f4f4f4;padding:9px 12px;border-radius:9px;font-size:12px;color:#555}.ds-task button{border:1px solid #c5237b;background:#c5237b;color:white;border-radius:18px;padding:11px 15px;font-size:13px;cursor:pointer}.ds-task button:focus-visible,.ds-task select:focus-visible{outline:2px solid #b51f70;outline-offset:3px}.ds-task select{width:auto;max-width:calc(100% - 125px)}.ds-task button{white-space:nowrap;flex-shrink:0}"
     }
   ],
   "narrative": {
-    "overview": "The implemented interface follows the supplied light GrokBot reference: a quiet gray roster beside a near-white conversation, with pink outgoing messages and organic colored bot marks. Rounded forms and restrained chrome keep names, message content, and the active identity prominent. The workspace now includes team rooms, attachment input, and compact run controls while preserving the same light visual system.\n\nThis document records the current CSS and React components, rather than claiming a pixel-exact screenshot match. No backend is connected in the reviewed environment; provider behavior has only been exercised through mocked tests (seven backend tests). Production frontend builds have passed locally; these checks do not establish live provider, database, or sandbox operation. Visible empty and error states remain part of the interface.",
+    "overview": "The implemented interface follows the supplied light GrokBot reference: a quiet gray roster beside a near-white conversation, with pink outgoing messages and organic colored bot marks. Rounded forms and restrained chrome keep names, message content, and the active identity prominent. The workspace now opens on a task-first prompt, with role presets, named models, team rooms, attachment input, and compact run controls. Configuration is progressively disclosed while preserving the same light visual system.\n\nThis document records the current CSS and React components, rather than claiming a pixel-exact screenshot match. No backend is connected in the reviewed environment; provider behavior has only been exercised through mocked tests. Local builds and mocked tests do not establish live provider, database, media generation, or sandbox operation. The Vercel Services and Daemon deployment template is staged, not active; the interface must not imply always-on execution is connected. Visible empty and error states remain part of the interface.",
     "keyCharacteristics": [
       "Light neutral surfaces with a pink messaging accent.",
       "A compact identity pill and organic two-stroke bot avatars.",
@@ -395,11 +399,12 @@
       "Do preserve the light surface hierarchy and pink outgoing-message treatment.",
       "Do retain the organic SVG bot identity with two white strokes.",
       "Do keep visible empty, disabled, and error states truthful to runtime behavior.",
-      "Do preserve keyboard labels and visible focus on supported controls."
+      "Do preserve keyboard labels and visible focus on supported controls.",
+      "Do lead with the task prompt and named choices, keeping custom IDs and instructions in advanced configuration."
     ],
     "donts": [
       "Don't turn screenshot text into real conversation data.",
-      "Don't describe the implementation as pixel exact or backend verified.",
+      "Don't describe the implementation as pixel exact, backend verified, media verified, or an active always-on cloud service.",
       "Don't replace the mobile vertical rail with a top roster without an intentional layout change."
     ]
   }

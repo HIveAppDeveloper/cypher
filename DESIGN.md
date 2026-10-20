@@ -17,9 +17,9 @@ colors:
   focus: "#b51f70"
   status-green: "#33785c"
   status-red: "#b82840"
-  notice-surface: "#fff5f8"
-  notice-border: "#e4b4c9"
-  notice-text: "#8b204d"
+  notice-surface: "#fff9fc"
+  notice-border: "#e4d8de"
+  notice-text: "#6e3f56"
   room-surface: "#e9e5e8"
   room-ink: "#77536a"
   member-chip: "#f1f1f1"
@@ -28,7 +28,7 @@ colors:
 typography:
   display:
     fontFamily: '"Inter Variable", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
-    fontSize: "clamp(28px,3vw,42px)"
+    fontSize: "clamp(25px,2.7vw,36px)"
     fontWeight: 500
     lineHeight: 1.2
     letterSpacing: "-.035em"
@@ -100,9 +100,9 @@ components:
 
 ## Overview
 
-The implemented interface follows the supplied light GrokBot reference: a quiet gray roster beside a near-white conversation, with pink outgoing messages and organic colored bot marks. Rounded forms and restrained chrome keep names, message content, and the active identity prominent. The workspace now includes team rooms, attachment input, and compact run controls while preserving the same light visual system.
+The implemented interface follows the supplied light GrokBot reference: a quiet gray roster beside a near-white conversation, with pink outgoing messages and organic colored bot marks. Rounded forms and restrained chrome keep names, message content, and the active identity prominent. The workspace now opens on a task-first prompt, with role presets, named models, team rooms, attachment input, and compact run controls. Configuration is progressively disclosed while preserving the same light visual system.
 
-This document records the current CSS and React components, rather than claiming a pixel-exact screenshot match. No backend is connected in the reviewed environment; provider behavior has only been exercised through mocked tests (seven backend tests). Production frontend builds have passed locally; these checks do not establish live provider, database, or sandbox operation. Visible empty and error states remain part of the interface.
+This document records the current CSS and React components, rather than claiming a pixel-exact screenshot match. No backend is connected in the reviewed environment; provider behavior has only been exercised through mocked tests. Local builds and mocked tests do not establish live provider, database, media generation, or sandbox operation. The Vercel Services and Daemon deployment template is staged, not active; the interface must not imply always-on execution is connected. Visible empty and error states remain part of the interface.
 
 **Key Characteristics:**
 - Light neutral surfaces with a pink messaging accent.
@@ -118,7 +118,7 @@ Pink is the messaging accent. The legacy `accent-blue` token is pink despite its
 
 ### Neutral
 
-White panels, near-white conversation, a light-gray sidebar, and gray incoming bubbles create the hierarchy. Dark text anchors names; muted text identifies previews and secondary actions. The selected roster row uses a gray fill. Runtime notices use a pale pink surface with a darker readable message.
+White panels, near-white conversation, a light-gray sidebar, and gray incoming bubbles create the hierarchy. Dark text anchors names; muted text identifies previews and secondary actions. The selected roster row uses a gray fill. Runtime notices use a very pale pink surface with a muted mauve message and border.
 
 Status green and red exist as CSS primitives; their presence does not establish a visible live-status system. Bot avatars choose deterministically from pink, red, black, teal, purple, brown, and orange in `BotAvatar.tsx`.
 
@@ -126,7 +126,7 @@ Status green and red exist as CSS primitives; their presence does not establish 
 
 Use self-hosted Inter Variable with the system fallbacks in the frontmatter. The workspace label is compact and semibold; bot names and identity labels use medium weight. Conversation text is larger and comfortably spaced. Timestamps are deliberately secondary at (11px).
 
-The empty-state heading uses the headline role; dialog headings use (24px) at medium weight. At the mobile breakpoint, message and composer text shrink to (15px), identity labels to (15px), and empty-state headings to (22px). Inter Variable is bundled locally rather than loaded from an external font service. The main panel can switch to System (`system-ui, sans-serif`) or Georgia (`Georgia, serif`), while the sidebar retains Inter. The welcome heading uses `clamp(28px,3vw,42px)`, medium weight, (1.2) line height, and (-.035em) tracking; its mobile size is (26px). A monospace primitive exists for tool-oriented content but does not replace conversation typography.
+The empty-state heading uses the headline role; dialog headings use (24px) at medium weight. At the mobile breakpoint, message and composer text shrink to (15px), identity labels to (15px), and empty-state headings to (22px). Inter Variable is bundled locally rather than loaded from an external font service. The main panel can switch to System (`system-ui, sans-serif`) or Georgia (`Georgia, serif`), while the sidebar retains Inter. The current QuickStart heading uses `clamp(25px,2.7vw,36px)`, medium weight, (1.2) line height, and (-.035em) tracking; its mobile size is (25px). A monospace primitive exists for tool-oriented content but does not replace conversation typography.
 
 ## Layout
 
@@ -172,23 +172,27 @@ The composer textarea restores a visible keyboard-focus outline in focus pink at
 
 ### Bot Creation Dialog
 
-A native dialog uses a white surface, fine gray border, (20px) corners, and (28px) padding. Width is capped at (500px), with (32px) total viewport clearance; maximum height is the dynamic viewport minus (32px), with internal scrolling. The translucent black backdrop (`#0005`) creates the modal layer. Labels use (14px) text, and action buttons align right with (10px) gaps.
+A native dialog uses a white surface, fine gray border, (20px) corners, and (30px) desktop padding ((24px) mobile). Width is capped at (480px), with (32px) total viewport clearance; maximum height is the dynamic viewport minus (32px), with internal scrolling. The translucent black backdrop (`#0005`) creates the modal layer. In agent creation, the title and introduction stay outside the scrolling form fields. The bounded form uses a shrinking, independently scrolling field region, while its white action footer remains visible with a fine top divider, (16px) top padding, and (12px) top margin. This preserves Cancel and Create agent on small screens. Other native dialogs retain their bounded whole-dialog scroll. Dialog titles now use (26px) medium text with (-.035em) tracking. Labels use (14px) text, and action buttons align right with (10px) gaps.
 
-### Welcome Workspace
+### QuickStart Task Workspace
 
-The centered welcome uses a (62px) organic bot mark, a two-line headline, restrained muted supporting copy at (15px/1.8), and primary/secondary agent and team actions. Small format labels sit below with (36px) top spacing. Mobile actions stack vertically and the welcome receives extra bottom clearance. This is an actionable empty state, not a sample transcript.
+The default home centers a (60px) organic bot mark, a compact question headline, muted supporting copy, and one task form. The form is at most (640px) wide, with (22px) corners, (16px) padding, a fine border, and faint shadow. Its three-line textarea uses (16px/1.6) text. Focus within shifts the enclosing border to muted pink (`#b788a0`); the textarea itself has no separate outline. The form footer combines a quiet gray native output menu with a pink Start task button and arrow icon. The menu offers Ask anything, Create an image, and Create a video, changing the prompt placeholder accordingly.
+
+Small outlined starter chips populate the prompt without submitting it. Agent and team shortcuts sit below as understated text actions. A short footnote names the runtime dependency and media credits. Submission errors retain the actual failure detail and keep the task text available. The output select sizes to its content with a bounded width; Start task and its icon do not shrink or wrap. On mobile, the form radius becomes (17px), padding (11px), and textarea text (14px); the home has (30px 16px 110px) padding. Do not replace this prompt-first home with the older two-action welcome.
 
 ### Team Room Navigation and Picker
 
 Uppercase section labels use (11px) type and (.05em) tracking. Team rooms use a muted mauve rounded-square identity tile (46px), shrinking to (40px) on mobile. The room dialog uses the same native modal as bot creation, with soft-gray selectable agent rows, small role descriptions, and pink-accent native (18px) checkboxes. Select 2–6 agents; selected members appear as compact gray chips with (20px) avatars above the stream. These member chips convey identity rather than a filter state.
 
-### Provider, Model, and Tool Menus
+### Agent Presets, Models, and Tools
 
-Bot creation uses native labeled provider and model selects. Provider choices include Gemini, OpenAI-compatible, Anthropic, Ollama, and DeepSeek. The model menu offers the implemented Gemini preset where applicable and a Custom model ID option with a labeled text field. Tool categories use compact native (16px) pink-accent checkboxes for browser, shell, and filesystem. These are actual configuration controls; their presence is not proof of a connected provider or working tool runtime.
+Agent creation begins with a role-preset select and an optional name. Blank names receive a safe available default such as Assistant or Assistant 2; an explicit duplicate name returns a visible validation error. Presets supply instructions, so the default flow does not require authoring a system prompt. Native Provider and Model menus expose named choices for Gemini, OpenAI, and Anthropic, with muted model-access help. Keep raw model identifiers behind Customize this agent and its Use a custom model checkbox. That advanced disclosure also contains editable instructions and four human-readable tool categories: browsing, code, files, and image/video generation. DeepSeek, Ollama, and compatible-provider entry belong to the custom configuration.
+
+Advanced sections use a fine top divider, compact (13px) medium summary text, and a plus/minus indicator. Optional labels and helper copy remain small and gray. OpenAI adds a three-stop Model power slider with Everyday, Reasoning, and Advanced outputs; eligible models expose five Thinking effort stops from none through xhigh. Processing speed offers Economy, Standard, and Fast priority processing with cost and availability help. Range controls use pink accents, (22px) height, compact labels, right-aligned outputs, and small endpoint descriptions. These choices configure requests; they do not prove access or guarantee response speed.
 
 ### Run Controls
 
-A native details/summary disclosure opens a right-aligned white popover with fine border, (16px) corners, (20px) padding, and desktop width (300px). Mobile width is `min(280px,calc(100vw - 110px))`, with bounded scrolling. It combines a response-style select, pink-accent native range sliders, right-aligned numerical outputs, and a typeface select. Temperature spans (0–1.5), response length (256–8192) tokens, tool steps (1–25), and team-only rounds (1–4). Defaults are (0.5), (2048), (10), and (1). Run settings apply to the next submitted job; the typeface changes the main-panel presentation immediately.
+A native details/summary disclosure opens a right-aligned white popover with fine border, (16px) corners, (20px) padding, and desktop width (300px). Its content is bounded to the viewport minus (92px), scrolls internally, and contains overscroll. Mobile width is `min(280px,calc(100vw - 110px))`, with bounded scrolling. It combines a response-style select, pink-accent native range sliders, right-aligned numerical outputs, and a typeface select. Temperature spans (0–1.5), response length (256–8192) tokens, tool steps (1–25), and team-only rounds (1–4). Defaults are (0.5), (2048), (10), and (1). Run settings apply to the next submitted job; the typeface changes the main-panel presentation immediately.
 
 ### Attachments and Job Tray
 
@@ -196,9 +200,15 @@ The composer accepts up to four files and (3 MB) combined: PNG/JPEG/WebP images,
 
 A compact disclosure above the composer shows active work or recent work, up to six job rows, with ellipsized titles and text statuses. Running is warm amber, completed green, and failed red. Tool output uses a disclosure with scroll-bounded monospace content at (12px/1.6); it does not dominate ordinary conversation text. Status labels remain readable independently of their colors.
 
+### Workspace Setup and Media Output
+
+Workspace setup reuses the bounded native dialog. A gray connection card pairs a small amber dot with explicit checking or disconnected text; a green dot accompanies API reachability only. Supporting copy distinguishes API connection from model, worker, and tool readiness. A short ordered setup list and an optional deployment-guide disclosure keep the first view readable. Check again and Done use the established secondary and primary actions. The managed worker template is not evidence of active laptop-independent execution.
+
+Conversation output controls use small gray native selects for text, image, or video and relevant media options, with concise credit-cost guidance. Rendered videos use browser controls in a rounded (14px) container, at most (480px) wide and (420px) high. The Python media-generation implementation exists, but live media generation is unverified in this environment; no sample media or progress display should imply a completed provider call.
+
 ### Runtime Notice
 
-Connection errors appear as readable alerts; the roster-level notice is fixed over the conversation and offset for the sidebar. Preserve the pale pink surface, fine border, and compact (13px) text. Never substitute successful mock conversation content for an unavailable runtime.
+Connection errors appear as readable alerts; the roster-level notice is fixed over the conversation and offset for the sidebar. Preserve the very pale pink surface, fine border, and compact (12px) text. Never substitute successful mock conversation content for an unavailable runtime.
 
 ## Do's and Don'ts
 
@@ -208,9 +218,10 @@ Connection errors appear as readable alerts; the roster-level notice is fixed ov
 - Do retain the organic SVG bot identity with two white strokes.
 - Do keep visible empty, disabled, and error states truthful to runtime behavior.
 - Do preserve keyboard labels and visible focus on supported controls.
+- Do lead with the task prompt and named choices, keeping custom IDs and instructions in advanced configuration.
 
 ### Don't:
 
 - Don't turn screenshot text into real conversation data.
-- Don't describe the implementation as pixel exact or backend verified.
+- Don't describe the implementation as pixel exact, backend verified, media verified, or an active always-on cloud service.
 - Don't replace the mobile vertical rail with a top roster without an intentional layout change.

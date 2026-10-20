@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.future import select
 from typing import List
 from uuid import UUID
@@ -12,9 +13,24 @@ router = APIRouter()
 
 @router.post("", response_model=BotResponse)
 async def create_bot(bot: BotCreate, db: AsyncSession = Depends(get_db)):
-    db_bot = Bot(**bot.model_dump())
+    data = bot.model_dump()
+    name = data["name"].strip()
+    if not name:
+        base = data["role"].strip()[:60] or "Agent"
+        existing = set((await db.execute(select(Bot.name).where(Bot.name.like(base + "%")))).scalars().all())
+        name = base
+        suffix = 2
+        while name in existing:
+            name = f"{base} {suffix}"
+            suffix += 1
+    data["name"] = name
+    db_bot = Bot(**data)
     db.add(db_bot)
-    await db.commit()
+    try:
+        await db.commit()
+    except IntegrityError:
+        await db.rollback()
+        raise HTTPException(status_code=409, detail="That agent name is already in use. Choose another name or leave it blank.")
     await db.refresh(db_bot)
     return db_bot
 

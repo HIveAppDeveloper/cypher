@@ -1,11 +1,11 @@
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 from typing import List, Optional
 from uuid import UUID
 from datetime import datetime
 
 class BotBase(BaseModel):
-    name: str
-    role: str
+    name: str = Field(default="", max_length=80)
+    role: str = Field(min_length=1, max_length=80)
     description: Optional[str] = None
     avatar_url: Optional[str] = None
     system_prompt: str
