@@ -215,6 +215,7 @@ async def test_queued_document_does_not_read_future_audio_and_transcript_is_cach
         messages = kwargs['messages']
         serialized = json.dumps(messages)
         assert 'input_audio' not in serialized
+        assert messages[-1] == {'role': 'user', 'content': ['Read the PDF only.', 'Listen to FUTURE-AUDIO-REQUEST.', 'Listen again.'][len(calls)]}
         if not calls:
             assert required_modalities(messages) == {'text', 'pdf'}
             assert 'FUTURE-AUDIO-REQUEST' not in serialized

@@ -256,6 +256,10 @@ class AgentOrchestrator:
                 else:
                     messages.append({"role": "user", "content": f"Teammate {names.get(item.sender_bot_id, 'Agent')}: {item.content}"})
 
+            # A previous queued turn can finish after this request was sent.
+            # Keep that result as context and make this task's request explicit.
+            messages.append({"role": "user", "content": trigger_message})
+
             # Get available tools for this bot
             await self.registry.load_plugins(db, bot)
             tools = [] if getattr(self, "planning", False) or not self.options.allow_tools else self.registry.get_tools_for_bot(bot)
