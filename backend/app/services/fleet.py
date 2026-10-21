@@ -43,5 +43,5 @@ class ModelFleet:
 
     def register(self, registry):
         registry.register('consult_specialist',
-            'Delegate a focused subtask to the model fleet: research uses Google Gemini, writing uses Anthropic Claude, analysis uses DeepSeek. Optional: use only when it improves the result. At most three calls per user task, no recursive agents. Include necessary evidence/context, never credentials. You remain responsible for tools, verification and the final answer.',
+            'Ask a tool-free specialist to analyze evidence you supply: research uses Google Gemini, writing uses Anthropic Claude, analysis uses DeepSeek. Specialists cannot search the web, browse, or take actions. Use search_web yourself first when current sources are needed. Optional; at most three calls per task. Include evidence/context, never credentials. You own verification and the final answer.',
             {'type':'object','properties':{'specialty':{'type':'string','enum':list(SPECIALISTS)},'task':{'type':'string','maxLength':12000}},'required':['specialty','task']}, self.consult)

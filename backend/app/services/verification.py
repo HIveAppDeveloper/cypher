@@ -87,8 +87,8 @@ def safe_error(error):
     message=str(error)
     secrets=[os.getenv('AI_GATEWAY_API_KEY',''),os.getenv('BACKEND_API_TOKEN','')]
     try:
-        from vercel.oidc import get_vercel_oidc_token_sync
-        secrets.append(get_vercel_oidc_token_sync())
+        from vercel.oidc import get_vercel_oidc_token
+        secrets.append(get_vercel_oidc_token())
     except Exception: pass
     for value in secrets:
         if value: message=message.replace(value,'[redacted]')

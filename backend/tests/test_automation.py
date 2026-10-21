@@ -132,7 +132,7 @@ async def test_plugin_tool_disable_is_enforced_and_refresh_preserves_choice(work
     from app.db import session as db_session
     monkeypatch.setattr(db_session,'AsyncSessionLocal',sessions)
     assert 'error' in await plugins.invoke(pid,'write',{})
-    async def discover(*args):return tools+[{'name':'new','description':'New','schema':{'type':'object'}}]
+    async def discover(*args, **kwargs):return tools+[{'name':'new','description':'New','schema':{'type':'object'}}]
     monkeypatch.setattr(plugin_api,'discover',discover)
     updated=(await client.post(f'/api/plugins/{pid}/refresh')).json()
     assert len(updated['tools'])==3 and not next(t for t in updated['tools'] if t['name']=='write')['enabled']

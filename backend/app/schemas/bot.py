@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 from typing import List, Optional
 from uuid import UUID
 from datetime import datetime
@@ -15,7 +15,14 @@ class BotBase(BaseModel):
     memory_enabled: bool = True
 
 class BotCreate(BotBase):
-    pass
+    @field_validator('llm_provider', 'llm_model', mode='before')
+    @classmethod
+    def valid_model(cls, value):
+        if isinstance(value, str):
+            value = value.strip()
+            if not value:
+                raise ValueError('Choose a provider and a non-empty model ID')
+        return value
 
 class BotUpdate(BaseModel):
     name: Optional[str] = None
@@ -28,6 +35,13 @@ class BotUpdate(BaseModel):
     tools_enabled: Optional[List[str]] = None
     memory_enabled: Optional[bool] = None
     status: Optional[str] = None
+
+    @field_validator('llm_provider', 'llm_model', mode='before')
+    @classmethod
+    def valid_model(cls, value):
+        if not isinstance(value, str) or not value.strip():
+            raise ValueError('Choose a provider and a non-empty model ID')
+        return value.strip()
 
 class BotResponse(BotBase):
     id: UUID

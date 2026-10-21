@@ -9,6 +9,7 @@ from pathlib import Path
 from urllib.parse import parse_qs,urlsplit
 import httpx
 import pytest
+import pytest_asyncio
 from sqlalchemy.ext.asyncio import create_async_engine,async_sessionmaker
 from fastapi import HTTPException
 from app.db.session import Base
@@ -20,7 +21,7 @@ from app.config import settings
 spec=importlib.util.spec_from_file_location('plugin_catalog_tests',Path(__file__).parents[1]/'app/api/plugin_catalog.py')
 catalog_api=importlib.util.module_from_spec(spec);spec.loader.exec_module(catalog_api)
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def db(tmp_path,monkeypatch):
     monkeypatch.setattr(settings,'BACKEND_API_TOKEN','test-only-encryption-key-not-for-production')
     engine=create_async_engine(f'sqlite+aiosqlite:///{tmp_path}/oauth.db')

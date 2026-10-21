@@ -2,13 +2,14 @@ import { ContextPanel } from './ContextPanel';
 import { SteeringPanel } from './SteeringPanel';
 import { GlassSelect } from './GlassSelect';
 import React, { useEffect, useState, useRef } from 'react';
-import { Bot, Message, MessageType, Attachment, Conversation, Job } from '../lib/types';
+import { Bot, Message, MessageType, Attachment, Conversation, Job, RunOptions } from '../lib/types';
 import { api } from '../lib/api';
 import { BotAvatar } from './BotAvatar';
 import { MessageBubble } from './MessageBubble';
 import { QuickStart } from './QuickStart';
 import { RunControls, DEFAULT_OPTIONS } from './RunControls';
 import { modelPolicy } from '../lib/modelPolicy';
+import { readAttachment } from '../lib/attachments';
 const POLL_MS = 1500;
 const MAX_BYTES = 3 * 1024 * 1024;
 export function ChatPanel({ bot, room, bots, onCreateBot, onCreateRoom, onQuickStart, onOpenLounge }: { bot: Bot | null; room: Conversation | null; bots: Bot[]; onCreateBot: () => void; onCreateRoom: () => void; onQuickStart: (prompt: string, options: Partial<import('../lib/types').RunOptions>) => Promise<void>; onOpenLounge: () => Promise<Conversation> }) {
@@ -26,8 +27,14 @@ export function ChatPanel({ bot, room, bots, onCreateBot, onCreateRoom, onQuickS
   const [computerBotId, setComputerBotId] = useState<string | null>(null);
   const [computerBusy, setComputerBusy] = useState(false);
   const [computerError, setComputerError] = useState('');
-  const [options, setOptions] = useState(() => { try { return { ...DEFAULT_OPTIONS, provider: 'openai', model: localStorage.getItem('grokbot-manager') === 'gpt-6-luna' ? 'gpt-6-luna' : 'gpt-6.1-sol', ...bot?.defaultOptions, ...modelPolicy(JSON.parse(localStorage.getItem('grokbot-options-' + bot?.id) || '{}')) }; } catch { return { ...DEFAULT_OPTIONS, ...bot?.defaultOptions }; } });
-  useEffect(() => { if (bot) { try { localStorage.setItem('grokbot-options-' + bot.id, JSON.stringify(options)); } catch {} } }, [options, bot?.id]);
+  const [options, setOptions] = useState<RunOptions>(() => ({ ...DEFAULT_OPTIONS, provider: 'openai', model: 'gpt-6.1-sol', ...bot?.defaultOptions }));
+  const [optionsRestored, setOptionsRestored] = useState(false);
+  useEffect(() => {
+    try { setOptions({ ...DEFAULT_OPTIONS, provider: 'openai', model: localStorage.getItem('grokbot-manager') === 'gpt-6-luna' ? 'gpt-6-luna' : 'gpt-6.1-sol', ...bot?.defaultOptions, ...modelPolicy(JSON.parse(localStorage.getItem('grokbot-options-' + bot?.id) || '{}')) }); }
+    catch { /* Keep the deterministic defaults when browser storage is unavailable. */ }
+    setOptionsRestored(true);
+  }, [bot?.id]);
+  useEffect(() => { if (optionsRestored && bot) { try { localStorage.setItem('grokbot-options-' + bot.id, JSON.stringify(options)); } catch {} } }, [options, bot?.id, optionsRestored]);
   const [font, setFont] = useState('inter');
   const [hasEarlier, setHasEarlier] = useState(false);
   const [loadingEarlier, setLoadingEarlier] = useState(false);
@@ -74,17 +81,16 @@ export function ChatPanel({ bot, room, bots, onCreateBot, onCreateRoom, onQuickS
       const existingBytes = attachments.reduce((sum, a) => sum + Math.floor(a.data.length * .75), 0);
       if (existingBytes + list.reduce((sum, f) => sum + f.size, 0) > MAX_BYTES) throw new Error('Keep combined attachments below 3 MB.');
       const allowed = ['image/png','image/jpeg','image/webp','application/pdf','text/plain','audio/wav','audio/mpeg'];
-      const loaded = await Promise.all(list.map(file => new Promise<Attachment>((resolve, reject) => {
+      const loaded = await Promise.all(list.map(file => {
         const extensions:Record<string,string>={png:'image/png',jpg:'image/jpeg',jpeg:'image/jpeg',webp:'image/webp',pdf:'application/pdf',txt:'text/plain',md:'text/plain',csv:'text/plain',json:'text/plain',wav:'audio/wav',mp3:'audio/mpeg'};
         const mime=allowed.includes(file.type)?file.type:extensions[file.name.split('.').pop()?.toLowerCase()||''];
-        if (!mime) return reject(new Error(`${file.name}: use PNG, JPEG, WebP, PDF, text, MP3, or WAV.`));
-        const reader = new FileReader(); reader.onerror = () => reject(new Error('File could not be read.')); reader.onload = () => resolve({ name: file.name, mime, data: String(reader.result).split(',')[1] }); reader.readAsDataURL(file);
-      })));
+        if (!mime) throw new Error(`${file.name}: use PNG, JPEG, WebP, PDF, text, MP3, or WAV.`);
+        return readAttachment(file, mime);
+      }));
       setAttachments(prev => [...prev, ...loaded]);
       setOptions(current=>({...current,output:'text'}));
     } catch (e) { setError(String(e)); }
-    setReadingFiles(false);
-    if (fileInput.current) fileInput.current.value = '';
+    finally { setReadingFiles(false); if (fileInput.current) fileInput.current.value = ''; }
   }
   async function toggleComputer() {
     if (!bot || computerBusy) return;

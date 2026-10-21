@@ -12,6 +12,7 @@ import json
 from datetime import datetime
 import logging
 from typing import Optional
+from urllib.parse import urlsplit
 
 from playwright.async_api import async_playwright, Browser, Page, BrowserContext
 
@@ -112,17 +113,26 @@ class BrowserTool:
         Returns:
             Dict with title, url, and status.
         """
-        page = await self._get_page(session_id)
+        if urlsplit(url).scheme not in {"http", "https"}:
+            return {"success": False, "error": "Use an HTTP or HTTPS website URL.", "url": url}
         try:
+            page = await self._get_page(session_id)
             response = await page.goto(url, wait_until="domcontentloaded", timeout=30000)
-            await page.wait_for_load_state("networkidle", timeout=10000)
+            # Analytics/live connections may never become idle. DOM content is
+            # enough to read; a network-idle timeout must not discard the page.
             await self._save_state(session_id)
             title = await page.title()
+            status = response.status if response else None
+            blocked = status is not None and status >= 400
+            challenge = ("/sorry/" in page.url and "google." in urlsplit(page.url).hostname) or title.lower() in {"just a moment...", "attention required! | cloudflare"}
+            if blocked or challenge:
+                return {"success": False, "title": title, "url": page.url, "status": status, "error": "The website denied access or requires a browser challenge. Use search_web for research or another public source. Do not treat this as an empty search result."}
             return {
                 "success": True,
                 "title": title,
                 "url": page.url,
-                "status": response.status if response else None,
+                "status": status,
+                "text_content": (await page.inner_text("body", timeout=5000))[:12000],
             }
         except Exception as e:
             logger.error(f"Navigation to {url} failed: {e}")

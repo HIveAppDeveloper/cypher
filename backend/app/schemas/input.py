@@ -19,6 +19,7 @@ class Attachment(BaseModel):
         return value
 
 class RunOptions(BaseModel):
+    allow_tools: bool = True
     steering: str = Field(default='', max_length=6000)
     output: Literal['text', 'image', 'video'] = 'text'
     aspect_ratio: Literal['1:1', '16:9', '9:16'] = '16:9'
@@ -31,6 +32,15 @@ class RunOptions(BaseModel):
     provider: Literal['openai', 'gemini', 'anthropic', 'ollama', 'deepseek'] | None = None
     reasoning_effort: Literal['none', 'low', 'medium', 'high', 'xhigh', 'max'] | None = None
     service_tier: Literal['default', 'priority', 'flex'] | None = None
+
+    @field_validator('model', mode='before')
+    @classmethod
+    def valid_model(cls, value):
+        if isinstance(value, str):
+            value = value.strip()
+            if not value:
+                raise ValueError('Choose a non-empty model ID')
+        return value
 
 def content_parts(text, attachments):
     if not attachments: return text

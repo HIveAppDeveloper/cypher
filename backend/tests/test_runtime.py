@@ -54,6 +54,9 @@ async def test_persisted_job_and_messages(tmp_path,monkeypatch):
         message=SimpleNamespace(content='Pipeline checked.',tool_calls=None)
         return SimpleNamespace(choices=[SimpleNamespace(message=message)])
     monkeypatch.setattr(worker,'AsyncSessionLocal',sessions)
+    from app.services import verification
+    monkeypatch.setattr(verification,'AsyncSessionLocal',sessions)
+    monkeypatch.delenv('GROKBOT_VERIFY_CLOUD',raising=False)
     monkeypatch.setattr(orchestrator,'AsyncSessionLocal',sessions)
     monkeypatch.setattr(LLMGateway,'complete',complete)
     from app.config import settings
@@ -161,6 +164,9 @@ async def test_team_handoff_shares_context_and_preserves_attachment(tmp_path,mon
         content='HANDOFF[Editor: review the attached brief]' if is_a else 'The team review is complete.'
         return SimpleNamespace(choices=[SimpleNamespace(message=SimpleNamespace(content=content,tool_calls=None))])
     monkeypatch.setattr(worker,'AsyncSessionLocal',sessions)
+    from app.services import verification
+    monkeypatch.setattr(verification,'AsyncSessionLocal',sessions)
+    monkeypatch.delenv('GROKBOT_VERIFY_CLOUD',raising=False)
     monkeypatch.setattr(orchestrator,'AsyncSessionLocal',sessions)
     monkeypatch.setattr(LLMGateway,'complete',complete)
     app.dependency_overrides[get_db]=get_session
@@ -183,7 +189,7 @@ async def test_team_handoff_shares_context_and_preserves_attachment(tmp_path,mon
             assert len(seen)==2
             editor_call=next(c for c in seen if 'EDITOR_ROLE' in c['messages'][0]['content'])
             assert any(isinstance(m['content'],str) and 'Teammate Researcher' in m['content'] for m in editor_call['messages'])
-            assert editor_call['temperature']==.3 and editor_call['max_tokens']==512
+            assert editor_call['options'].temperature==.3 and editor_call['options'].max_tokens==512
             rows=(await client.get(f"/api/conversations/{room['id']}/messages")).json()
             incoming=next(m for m in rows if m['sender_type']=='user')
             a=incoming['metadata_json']['attachments'][0]
@@ -219,6 +225,9 @@ async def test_team_handoff_shares_context_and_preserves_attachment(tmp_path,mon
 
 def test_gateway_model_mapping_and_credentials(monkeypatch):
     from app.services import llm_gateway
+    import vercel.oidc
+    from app.services.model_routing import ModelConfigurationError
+    monkeypatch.setattr(vercel.oidc, 'get_vercel_oidc_token', lambda: __import__('os').getenv('VERCEL_OIDC_TOKEN'))
     monkeypatch.setattr(llm_gateway.settings, "LLM_USE_GATEWAY", True)
     monkeypatch.setenv("VERCEL_OIDC_TOKEN", "test-oidc")
     monkeypatch.delenv("AI_GATEWAY_API_KEY", raising=False)
@@ -229,7 +238,7 @@ def test_gateway_model_mapping_and_credentials(monkeypatch):
     monkeypatch.delenv("AI_GATEWAY_API_KEY")
     monkeypatch.delenv("VERCEL_OIDC_TOKEN")
     import pytest
-    with pytest.raises(RuntimeError, match="credentials unavailable"):
+    with pytest.raises(ModelConfigurationError, match="credentials unavailable"):
         llm_gateway.completion_options()
 
 

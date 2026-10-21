@@ -82,6 +82,13 @@ class ToolRegistry:
                 handler=self._handle_generate_image if kind == "image" else self._handle_generate_video,
             )
         # --- Browser Tools ---
+        from app.services.tools.web_search import search_web
+        self.register(
+            name="search_web",
+            description="Search the live public web and return findings with source URLs. Use first for online research, people, companies, current facts, and finding websites. Prefer this over navigating Google/Bing/DuckDuckGo search pages. Specialists have no browsing tools; gather evidence here before consulting them.",
+            parameters={"type": "object", "properties": {"query": {"type": "string", "minLength": 1, "maxLength": 1000}}, "required": ["query"], "additionalProperties": False},
+            handler=search_web,
+        )
         self.register(
             name="browse_url",
             description=(
@@ -320,7 +327,7 @@ class ToolRegistry:
         category_map = {
             "plugins": "plugin_",
             "media": ["generate_image", "generate_video"],
-            "browser": ["browse_url", "browser_click", "browser_type", "browser_screenshot", "browser_extract", "browser_fill_form"],
+            "browser": ["search_web", "browse_url", "browser_click", "browser_type", "browser_screenshot", "browser_extract", "browser_fill_form"],
             "shell": "shell",
             "filesystem": ["read_file", "write_file", "list_directory", "search_files"],
         }

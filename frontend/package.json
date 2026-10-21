@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "test:attachments": "node --test tests/attachments.test.mjs",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
@@ -13,7 +14,9 @@
     "@radix-ui/react-select": "^2.4.1",
     "next": "^14.2.0",
     "react": "^18.3.0",
-    "react-dom": "^18.3.0"
+    "react-dom": "^18.3.0",
+    "react-markdown": "^10.1.0",
+    "remark-gfm": "^4.0.1"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",

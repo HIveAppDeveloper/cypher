@@ -1,0 +1,111 @@
+"""Validate input capabilities before inference; never turn images into text-only requests."""
+import time
+import httpx
+from app.config import settings
+
+
+class ModelConfigurationError(ValueError):
+    pass
+
+
+class ModelCapabilityError(ValueError):
+    pass
+
+
+_catalog: dict = {}
+_catalog_at = 0.0
+
+
+async def gateway_catalog():
+    global _catalog, _catalog_at
+    if _catalog and time.monotonic() - _catalog_at < 300:
+        return _catalog
+    try:
+        # Public metadata, no credential and no inference charge. Fail closed if
+        # capabilities cannot be verified rather than guessing or dropping data.
+        async with httpx.AsyncClient(timeout=5) as client:
+            response = await client.get("https://ai-gateway.vercel.sh/v1/models")
+            response.raise_for_status()
+            catalog = {m["id"]: m for m in response.json()["data"]}
+        if not catalog:
+            raise ValueError("Empty catalog")
+    except (httpx.HTTPError, ValueError, KeyError, TypeError) as error:
+        raise ModelConfigurationError("Model availability could not be checked. Try again when the gateway model catalog is reachable.") from error
+    _catalog, _catalog_at = catalog, time.monotonic()
+    return catalog
+
+
+def required_modalities(messages):
+    required = {"text"}
+    for message in messages:
+        content = message.get("content")
+        if not isinstance(content, list):
+            continue
+        for part in content:
+            kind = part.get("type")
+            if kind in {"image_url", "input_image"}:
+                required.add("image")
+            elif kind in {"file", "input_file"}:
+                required.add("pdf")
+            elif kind in {"input_audio", "audio"}:
+                required.add("audio")
+    return required
+
+
+async def validate_capabilities(messages, tools, provider, model):
+    required = required_modalities(messages)
+    if settings.LLM_USE_GATEWAY:
+        item = (await gateway_catalog()).get(f"{provider}/{model}")
+        if item is None or item.get("type") != "language":
+            raise ModelCapabilityError("The selected model is unavailable in the gateway catalog. Choose an available chat model in conversation settings.")
+        supported = set(item.get("modalities", {}).get("input", []))
+        supports_tools = "tools" in item.get("supported_parameters", [])
+    else:
+        from litellm.utils import supports_vision, supports_pdf_input, supports_audio_input, supports_function_calling
+        name = f"{provider}/{model}"
+        supported = {"text"}
+        for mode, check in (("image", supports_vision), ("pdf", supports_pdf_input), ("audio", supports_audio_input)):
+            if check(name):
+                supported.add(mode)
+        supports_tools = supports_function_calling(name)
+    missing = required - supported
+    if missing:
+        label = ", ".join(sorted(missing))
+        raise ModelCapabilityError(f"The selected model cannot read this request's {label} input. Choose a model that supports these files, or remove them and send a text-only request. The files were kept; no input was discarded.")
+    if tools and not supports_tools:
+        raise ModelCapabilityError("The selected model does not support tool calls. Choose a model with tool support before running this agent.")
+
+
+def retryable(error):
+    # Authentication, billing, policy and malformed input are never repaired by
+    # another model behind the same connection. Retry only a bounded outage.
+    status = getattr(error, "status_code", None)
+    if status in {401, 402, 403}:
+        return False
+    reason = str(error).lower()
+    if any(term in reason for term in ("quota", "credit", "budget", "authentication", "permission")):
+        return False
+    return status in {404, 408, 429, 500, 502, 503, 504} or type(error).__name__ in {"Timeout", "APITimeoutError", "APIConnectionError", "ServiceUnavailableError", "NotFoundError", "RateLimitError"}
+
+
+def public_model_error(error):
+    """Actionable messages contain no raw provider body, credential or endpoint."""
+    if isinstance(error, (ModelConfigurationError, ModelCapabilityError)):
+        return str(error)
+    status = getattr(error, "status_code", None)
+    kind, reason = type(error).__name__.lower(), str(error).lower()
+    if status == 401 or "authentication" in kind or "authentication" in reason:
+        return "The model connection could not authenticate. Check the backend and worker's gateway key or rotating Vercel OIDC token. Your message and files are saved; no model result was produced."
+    if status == 402 or any(word in reason for word in ("credit", "quota", "budget", "restrictedmodelserror", "free tier users")):
+        return "The model provider reports a credit, quota, or budget limit. Review the provider account before retrying. Your message and files are saved."
+    if status == 403:
+        return "The provider denied access to this model. Check model permissions or choose an available model. Your message and files are saved."
+    if status == 404 or "notfound" in kind:
+        return "The provider could not find the selected model. Check the model ID and its availability, then retry. Your message and files are saved."
+    if status == 429:
+        return "The model provider is busy or rate limited. Wait briefly and retry. Your message and files are saved."
+    if retryable(error):
+        return "The model connection is temporarily unavailable. Try again shortly. Your message and files are saved."
+    if status == 400 or "badrequest" in kind:
+        return "The provider rejected this request's inputs or model settings. Check the selected model's file support and conversation settings. Your message and files are saved."
+    return "The model request failed. Your message and files are saved. Try again, or check the private server logs using the error reference below."

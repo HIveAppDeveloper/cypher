@@ -17,19 +17,21 @@ router = APIRouter()
 async def send_message(id: UUID, msg: MessageCreate, db: AsyncSession = Depends(get_db)):
     if not msg.content.strip() and not msg.attachments:
         raise HTTPException(status_code=422, detail="Message cannot be empty")
+    if msg.attachments and msg.options.output != 'text':
+        raise HTTPException(status_code=422, detail="Choose Automatic output to discuss attached files. Media generation accepts a text prompt.")
     participant = (await db.execute(select(ConversationParticipant).where(ConversationParticipant.conversation_id == str(id)).limit(1))).scalar_one_or_none()
     if participant is None:
         raise HTTPException(status_code=404, detail="Conversation or bot not found")
     incoming_id = str(msg.client_message_id or uuid4())
+    files = [a.model_dump() for a in msg.attachments]
     existing = await db.get(Message, incoming_id)
     if existing:
-        if existing.conversation_id != str(id) or existing.sender_type != 'user' or existing.content != msg.content:
+        if existing.conversation_id != str(id) or existing.sender_type != 'user' or existing.content != msg.content or (existing.metadata_json or {}).get('attachments', []) != files:
             raise HTTPException(status_code=409, detail="Message identifier already used. Send a new message.")
         previous_task = (existing.metadata_json or {}).get('task_id')
         if previous_task:
             return {'status':'queued','task_id':previous_task,'message_id':incoming_id}
         raise HTTPException(status_code=409, detail="Message identifier already used.")
-    files = [a.model_dump() for a in msg.attachments]
     task = Task(id=str(uuid4()),conversation_id=str(id), bot_id=participant.bot_id, title=msg.content[:100], description=msg.content or "Review the attached files.", status="pending", result={"request": {"incoming_message_id":incoming_id,"attachments": files, "options": msg.options.model_dump()}})
     db.add(task)
     db.add(Message(id=incoming_id,conversation_id=str(id),sender_type='user',content=msg.content,message_type='text',metadata_json={'attachments':files,'task_id':task.id}))

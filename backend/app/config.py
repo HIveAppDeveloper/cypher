@@ -15,6 +15,9 @@ class Settings(BaseSettings):
     LLM_API_KEY: str = ""
     LLM_API_BASE: str | None = None
     LLM_MODEL: str = "gpt-6.1-sol"
+    # Optional, explicitly configured backup. Never discard unsupported inputs.
+    LLM_FALLBACK_MODEL: str | None = None
+    LLM_FALLBACK_PROVIDER: str | None = None
     RUN_EMBEDDED_WORKER: bool = True
     LLM_USE_GATEWAY: bool = False
     IMAGE_MODEL: str = "openai/gpt-image-2"

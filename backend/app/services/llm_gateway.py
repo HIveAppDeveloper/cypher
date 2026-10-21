@@ -1,32 +1,49 @@
 import os
+import logging
 import litellm
 from app.config import settings
+from app.services.model_routing import (
+    ModelConfigurationError, ModelCapabilityError, validate_capabilities, retryable,
+)
 
-def completion_options(model=None, provider=None, *, specialist=False):
-    provider = provider or settings.LLM_PROVIDER
-    model = model or settings.LLM_MODEL
+logger = logging.getLogger(__name__)
+
+def model_selection(model=None, provider=None, *, specialist=False):
+    provider = settings.LLM_PROVIDER if provider is None else provider
+    model = settings.LLM_MODEL if model is None else model
+    if not isinstance(model, str) or not model.strip() or not isinstance(provider, str) or not provider.strip():
+        raise ModelConfigurationError("Set a provider and a non-empty model ID before sending a message.")
+    provider, model = provider.strip(), model.strip()
     allowed_specialist = specialist and settings.LLM_USE_GATEWAY and (provider, model) in {("gemini", "gemini-3.5-flash"), ("anthropic", "claude-sonnet-4.6"), ("deepseek", "deepseek-v3.2")}
     if not allowed_specialist and (provider != "openai" or model not in {"gpt-6.1-sol", "gpt-6-luna"}):
-        raise ValueError("Model policy allows only OpenAI GPT-6.1 Sol and GPT-6 Luna.")
+        raise ModelConfigurationError("Model policy allows only OpenAI GPT-6.1 Sol and GPT-6 Luna for chat. Choose one in conversation settings.")
+    return provider, model
+
+def completion_options(model=None, provider=None, *, specialist=False):
+    provider, model = model_selection(model, provider, specialist=specialist)
     if settings.LLM_USE_GATEWAY:
         gateway_provider = {"gemini": "google"}.get(provider, provider)
         model = {"claude-sonnet-4-5": "claude-sonnet-4.5"}.get(model, model)
         gateway_model = model if "/" in model else f"{gateway_provider}/{model}"
         key = os.getenv("AI_GATEWAY_API_KEY")
         if not key:
-            from vercel.oidc import get_vercel_oidc_token_sync, VercelOidcTokenError
+            # The legacy *_sync alias reads ambient tokens without checking expiry.
+            # The expiry-aware accessor reads the daemon's rotating token file.
+            from vercel.oidc import get_vercel_oidc_token, VercelOidcTokenError
             try:
-                key = get_vercel_oidc_token_sync()
+                key = get_vercel_oidc_token()
             except VercelOidcTokenError:
                 key = None
         if not key:
-            raise RuntimeError("Vercel AI Gateway credentials unavailable")
+            raise ModelConfigurationError("Vercel AI Gateway credentials unavailable. Configure a valid gateway key or enable deployment OIDC, including the worker's rotating token file.")
         prefix = "openai/responses/" if provider == "openai" and model.startswith("gpt-6") else "openai/"
         return {"model": prefix + gateway_model, "api_base": "https://ai-gateway.vercel.sh/v1", "api_key": key}
     if not model.startswith(provider + "/"):
         model = f"{provider}/{model}"
     key_name = {"gemini": "GEMINI_API_KEY", "anthropic": "ANTHROPIC_API_KEY", "openai": "OPENAI_API_KEY", "deepseek": "DEEPSEEK_API_KEY"}.get(provider, provider.upper() + "_API_KEY")
     key = settings.LLM_API_KEY or os.getenv("HIVE_" + key_name) or os.getenv("ATLAS_" + key_name) or os.getenv(key_name)
+    if not key:
+        raise ModelConfigurationError("The model connection needs authentication. Configure the selected provider's API key on the backend and worker.")
     if provider == "openai" and model.removeprefix("openai/").startswith("gpt-6"):
         model = "openai/responses/" + model.removeprefix("openai/")
     options = {"model": model}
@@ -57,11 +74,46 @@ def generation_options(options, provider, model):
 
 class LLMGateway:
     @staticmethod
-    async def complete(messages, tools=None, model=None, provider=None, **run_options):
-        return await litellm.acompletion(messages=messages, tools=tools, **run_options, **completion_options(model, provider))
+    async def complete(messages, tools=None, model=None, provider=None, options=None, **run_options):
+        provider, model = model_selection(model, provider)
+        routes = [(provider, model)]
+        if settings.LLM_FALLBACK_MODEL is not None:
+            backup = model_selection(settings.LLM_FALLBACK_MODEL, settings.LLM_FALLBACK_PROVIDER or provider)
+            if backup not in routes:
+                routes.append(backup)
+        last_error = None
+        for index, (route_provider, route_model) in enumerate(routes):
+            try:
+                connection = completion_options(route_model, route_provider)
+                await validate_capabilities(messages, tools, route_provider, route_model)
+            except (ModelConfigurationError, ModelCapabilityError) as error:
+                # Only capability mismatch can select an explicitly configured backup.
+                if isinstance(error, ModelCapabilityError) and index + 1 < len(routes):
+                    last_error = error
+                    continue
+                if index and last_error is not None:
+                    raise last_error from error
+                raise
+            generation = generation_options(options, route_provider, route_model) if options is not None else run_options
+            try:
+                response = await litellm.acompletion(messages=messages, tools=tools, **generation, **connection, num_retries=0)
+                # Keep routing observable without changing the provider's result shape.
+                if isinstance(getattr(response, "_hidden_params", None), dict):
+                    response._hidden_params["grokbot_route"] = {"provider": route_provider, "model": route_model, "fallback": bool(index)}
+                logger.info("Model route succeeded provider=%s model=%s fallback=%s", route_provider, route_model, bool(index))
+                return response
+            except Exception as error:
+                last_error = error
+                if index + 1 >= len(routes) or not retryable(error):
+                    raise
+                logger.warning("Model route unavailable provider=%s model=%s type=%s; trying configured backup", route_provider, route_model, type(error).__name__)
+        raise last_error
 
     @staticmethod
     async def stream(messages, tools=None, model=None, provider=None):
-        response = await litellm.acompletion(messages=messages, tools=tools, stream=True, **completion_options(model, provider))
+        provider, model = model_selection(model, provider)
+        connection = completion_options(model, provider)
+        await validate_capabilities(messages, tools, provider, model)
+        response = await litellm.acompletion(messages=messages, tools=tools, stream=True, num_retries=0, **connection)
         async for chunk in response:
             yield chunk
