@@ -18,6 +18,7 @@ dependencies = [
     "playwright>=1.49.0",
     "python-multipart>=0.0.12",
     "httpx>=0.28.0",
+    "google-auth[requests]>=2.40.0",
     "ai[vercel]==0.8.0",
     "vercel-oidc==0.10.0",
     "vercel-sandbox==0.8.0",

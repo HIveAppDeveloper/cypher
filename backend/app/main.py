@@ -67,7 +67,7 @@ app = FastAPI(
 @app.middleware("http")
 async def authenticate_backend(request: Request, call_next):
     api_request = request.url.path.startswith("/api/")
-    public_auth_path = request.url.path in {"/api/auth/email/request", "/api/auth/email/verify"}
+    public_auth_path = request.url.path in {"/api/auth/email/request", "/api/auth/email/verify", "/api/auth/google/verify"}
     channel_ingress = request.method == "POST" and re.fullmatch(r"/api/channels/[0-9a-fA-F-]{36}/events", request.url.path) is not None
     if settings.BACKEND_API_TOKEN and api_request:
         expected = "Bearer " + settings.BACKEND_API_TOKEN
