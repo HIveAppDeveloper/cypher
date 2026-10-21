@@ -7,7 +7,7 @@ from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 class Settings(BaseSettings):
     DATABASE_URL: str = Field(default="sqlite+aiosqlite:///./grokbot.db", validation_alias=AliasChoices("GROKBOT_DATABASE_URL", "HIVE_DATABASE_URL", "HIVE_POSTGRES_URL", "DATABASE_URL", "POSTGRES_URL"))
     DATABASE_SCHEMA: str = "grokbot"
-    REDIS_URL: str = "redis://localhost:6379/0"
+    REDIS_URL: str | None = None  # Optional cache; PostgreSQL owns persisted work.
     MINIO_ENDPOINT: str = "localhost:9000"
     MINIO_ACCESS_KEY: str = Field(default="minioadmin", validation_alias=AliasChoices("MINIO_ACCESS_KEY", "MINIO_ROOT_USER"))
     MINIO_SECRET_KEY: str = Field(default="minioadmin", validation_alias=AliasChoices("MINIO_SECRET_KEY", "MINIO_ROOT_PASSWORD"))

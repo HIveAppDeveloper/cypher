@@ -14,13 +14,15 @@ from app.services.orchestrator import AgentOrchestrator
 logger = logging.getLogger(__name__)
 POLL_SECONDS = 2
 
-async def run_worker():
+async def run_worker(stop_event=None):
+    stop_event = stop_event or asyncio.Event()
     # Hold a dedicated Postgres session lock across the loop. During rolling
     # deployments the next worker waits until the old one exits; it cannot
     # claim the same pending task or interrupt another live worker's work.
     if engine.dialect.name == "postgresql":
         async with engine.connect() as lock_connection:
             while True:
+                if stop_event.is_set(): return
                 acquired = await lock_connection.scalar(text("SELECT pg_try_advisory_lock(1763000274)"))
                 await lock_connection.commit()
                 if acquired: break
@@ -28,17 +30,18 @@ async def run_worker():
             owner_pid = await lock_connection.scalar(text("SELECT pg_backend_pid()"))
             await lock_connection.commit()
             try:
-                await _run_worker_loop(lock_connection, owner_pid)
+                await _run_worker_loop(lock_connection, owner_pid, stop_event)
             finally:
                 with suppress(Exception):
                     await lock_connection.execute(text("SELECT pg_advisory_unlock(1763000274)"))
                     await lock_connection.commit()
     else:
-        await _run_worker_loop()
+        await _run_worker_loop(stop_event=stop_event)
 
 async def heartbeat():
     from app.models.runtime import RuntimeHeartbeat
     from app.services.verification import record
+    from app.services.runtime_identity import runtime_identity
     if os.getenv("AI_GATEWAY_API_KEY") or os.getenv("VERCEL_OIDC_TOKEN") or os.getenv("VERCEL_OIDC_TOKEN_FILE"):
         await record("gateway_configured")
     async with AsyncSessionLocal() as db:
@@ -47,9 +50,17 @@ async def heartbeat():
             item = RuntimeHeartbeat(name="worker", updated_at=datetime.utcnow())
             db.add(item)
         else: item.updated_at = datetime.utcnow()
+        release = await db.get(RuntimeCheck, 'worker_release')
+        if release is None:
+            db.add(RuntimeCheck(name='worker_release', status='running', detail=runtime_identity(), updated_at=datetime.utcnow()))
+        else:
+            release.detail = runtime_identity()
+            release.updated_at = datetime.utcnow()
         await db.commit()
 
-async def _run_worker_loop(lock_connection=None, owner_pid=None):
+async def _run_worker_loop(lock_connection=None, owner_pid=None, stop_event=None):
+    stop_event = stop_event or asyncio.Event()
+    if stop_event.is_set(): return
     last_heartbeat = 0
     async def pulse():
         nonlocal last_heartbeat
@@ -84,7 +95,7 @@ async def _run_worker_loop(lock_connection=None, owner_pid=None):
             await db.commit()
     if os.getenv("GROKBOT_VERIFY_CLOUD") == "true":
         await run_checks()
-    while True:
+    while not stop_event.is_set():
         await pulse()
         async with AsyncSessionLocal() as commands:
             request_check = await commands.get(RuntimeCheck, 'check_request')
@@ -103,8 +114,12 @@ async def _run_worker_loop(lock_connection=None, owner_pid=None):
         from app.services.automation import tick_goals,tick_deliveries
         await tick_goals(AsyncSessionLocal)
         await tick_deliveries(AsyncSessionLocal)
+        if stop_event.is_set(): break
         async with AsyncSessionLocal() as db:
             task = (await db.execute(select(Task).where(Task.status == "pending").order_by(Task.created_at).limit(1).with_for_update(skip_locked=True))).scalar_one_or_none()
+            if stop_event.is_set():
+                await db.rollback()
+                break
             if task is None:
                 await db.commit()
                 await asyncio.sleep(POLL_SECONDS)

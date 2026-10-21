@@ -4,6 +4,8 @@ The managed deployment now uses the repository-root `vercel.json`. It is active 
 
 The authorized Atlas native PostgreSQL credential is configured as the primary state database, using the isolated `grokbot` schema. It is not automatic dual writing to Hive and Atlas. Use the unpooled native connection for the worker’s session-level advisory lock: a transaction-pooler URL cannot preserve the required session affinity. The replacement deployment is ready and its fresh worker heartbeat has been verified; longer-term stability remains under observation.
 
+The production app is https://open-grokbot-hiveapp.vercel.app. Sign in with your verified email or a configured Google account. Your Mac and browser can be closed after a job is queued: the Vercel daemon executes it and PostgreSQL retains the result. Sandboxes run in Vercel, without a local Docker daemon.
+
 ## Managed configuration
 
 Configure secret values through the project's Vercel environment settings, keeping backend credentials out of browser-visible `NEXT_PUBLIC_*` variables. Both backend service and worker require the state database, model access, and compatible authentication/encryption configuration.
@@ -19,20 +21,26 @@ Configure secret values through the project's Vercel environment settings, keepi
 | `AI_GATEWAY_API_KEY` or Vercel OIDC | Server-side gateway authentication. Configuration alone does not establish model access or credit. |
 | `GROKBOT_VERIFY_CLOUD=true` | Opt-in one-time GPT-6.1 Sol response and public DeepWiki MCP discovery checks; stores timestamps, never secrets. |
 | `SANDBOX_BACKEND=vercel` | Managed Vercel Sandbox shell/file adapter; Docker is the default alternative. |
+| `REQUIRE_USER_AUTH=true` | Require a verified account for private workspace APIs. |
+| `AUTH_SESSION_SECRET` | Stable server-only secret signing account sessions. |
+| `GROKBOT_PUBLIC_URL` | Stable production origin for email sign-in links. |
+| `REDIS_URL` | Optional cache endpoint; leave unset in the managed PostgreSQL deployment. |
 
-The frontend automatically prefers its internal service binding. A separately hosted backend may instead use server-only `GROKBOT_BACKEND_URL`. Leave `NEXT_PUBLIC_API_URL` unset for the same-origin proxy. Keep deployment protection enabled: the app has backend bearer authentication but no account-isolated user system. Backend APIs should remain private. Playwright Chromium is installed in the backend container for hosted browser tools. Project environment secrets are not injected into shell/file sandboxes.
+The frontend automatically prefers its internal service binding. A separately hosted backend may instead use server-only `GROKBOT_BACKEND_URL`. Leave `NEXT_PUBLIC_API_URL` unset for the same-origin proxy. Production uses Vercel Standard Protection: preview and generated deployment URLs require Vercel access, while stable production domains reach the app's own account sign-in. Private APIs require a valid signed session, and the internal backend additionally requires its bearer token. Playwright Chromium is installed in the backend container for hosted browser tools. Project environment secrets are not injected into shell/file sandboxes.
 
 Forty-three available Hive/Atlas values were imported under separate prefixes; an inventory records 177 variable names. The Connections → Vercel variables view shows names and Configured/Needs link states only. Protected values that Vercel would not export still need to be linked through authorized project configuration. Never infer a working service integration from a variable name.
 
 ## Verify after the build completes
 
-1. Open Workspace setup. The runtime check verifies the database and reports the worker's last heartbeat. A heartbeat younger than 30 seconds marks the worker ready; API reachability alone is insufficient.
+1. Open Workspace setup. The runtime check verifies the database, worker heartbeat, and release identity. A fresh heartbeat from a different deployment reports the worker as updating rather than ready. Missing release metadata is reported as unknown. Also inspect `vercel daemons inspect agent-worker --project open-grokbot --scope hiveapp --json` and compare its deployment with production; a READY web build alone does not prove the daemon rolled out.
 2. Start a small text task in Agent lounge. Confirm persisted user messages, queued/running/completed status, actual model replies, specialist contributions, and final coordinator synthesis.
 3. Test an enabled tool, then reload the conversation to verify persistence. Verify managed sandbox, browser, media generation, and each connected MCP service independently; none is proven by a text reply.
 4. Cancel a queued and a running task. Pending tasks can cancel immediately; running jobs request cancellation and stop future steps. An in-flight external action may already have completed.
 5. Confirm the hosted worker continues with the browser closed. The daemon configuration expresses this deployment intent; only live observation establishes operation.
 
 The single runner uses PostgreSQL advisory lock `1763000274`, including across rolling deployments, and checks the owning backend PID to detect lost session affinity. This replaces the prior key to avoid a legacy pooled-session lock. A stale heartbeat must not be shown as a healthy worker. Startup marks abandoned running jobs interrupted rather than automatically replaying external side effects. Review interrupted work before resubmitting.
+
+On shutdown, the worker stops claiming jobs and lets the current execution finish for up to 50 seconds within Vercel's 60-second grace period. Work exceeding the deadline is interrupted and requires review. The next worker handles queued jobs after acquiring the database lock.
 
 ## Models, teams, and files
 
@@ -70,7 +78,7 @@ Open Goals and specify the desired outcome, measurable completion criteria, work
 
 Create a channel with an existing room, Sol or Luna manager, and optional public HTTPS result destination. Save the displayed key immediately; it is not shown again. Incoming requests use `POST /api/channels/{id}/events`, `X-Grokbot-Channel-Key`, and JSON containing a unique `event_id` plus `text`. Repeated IDs return the original task instead of queueing another. The app accepts at most ten new events per channel per minute and rejects channel work when the workspace already has 20 pending/running tasks.
 
-Frontend channel endpoints remain behind Vercel deployment protection; an external sender must also provide the deployment’s automation bypass header when protection requires it. A channel key does not bypass that layer. The channel does not grant private-app login/OAuth or permission to access another service.
+Use the stable production origin for external channel events. It accepts the channel key without a browser session or Vercel bypass. Preview and generated deployment URLs still require deployment protection access. The channel does not grant private-app login/OAuth or permission to access another service.
 
 Finished results use the database outbox. Outgoing payloads contain `task.finished`, task ID, status, and result text; they are signed with HMAC-SHA256 using the channel key in `X-Grokbot-Signature: sha256=…`, plus an `Idempotency-Key`. Verify the signature against raw request bytes and deduplicate deliveries at the receiver. The outbox makes at most three attempts with increasing retry delays. Disabling a channel stops new intake and skips pending delivery. Use Run connection test and Delivery log to inspect actual task/delivery status; queueing a test does not establish delivery success. A live browser-created channel queued and completed its Luna connection test. External outgoing delivery remains covered by mocked signature/retry tests, rather than a live third-party receiver.
 

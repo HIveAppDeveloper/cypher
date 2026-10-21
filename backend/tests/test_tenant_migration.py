@@ -29,13 +29,14 @@ async def test_actual_lifespan_keeps_fastapi_app_and_starts_with_optional_redis_
     from app.services import worker
     class RedisUnavailable:
         async def ping(self):raise ConnectionError('optional redis unavailable')
-        async def close(self):pass
+        async def aclose(self):pass
     async def idle_worker():await asyncio.Event().wait()
     engine=create_async_engine(f'sqlite+aiosqlite:///{tmp_path}/startup.db')
     monkeypatch.setattr(main,'engine',engine)
     monkeypatch.setattr(aioredis,'from_url',lambda *a,**k:RedisUnavailable())
     monkeypatch.setattr(worker,'run_worker',idle_worker)
     monkeypatch.setattr(settings,'SANDBOX_BACKEND','vercel')
+    monkeypatch.setattr(settings,'REDIS_URL','redis://test.invalid:6379/0')
     async with main.lifespan(main.app):
         assert main.app.state.redis is None
         assert main.app.state.docker_client is None

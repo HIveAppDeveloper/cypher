@@ -12,6 +12,8 @@ class MemoryManager:
         self._redis = None
 
     async def _get_redis(self):
+        if not settings.REDIS_URL:
+            return None
         if self._redis is None:
             try:
                 self._redis = aioredis.from_url(settings.REDIS_URL)

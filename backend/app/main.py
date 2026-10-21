@@ -23,15 +23,18 @@ async def lifespan(app: FastAPI):
     await initialize_database(engine)
     logger.info("Database tables created")
 
-    # Initialize Redis (optional for local dev)
-    try:
+    # Redis is optional in hosted mode: tasks, history, and saved context use SQL.
+    app.state.redis = None
+    if settings.REDIS_URL:
         import redis.asyncio as aioredis
-        app.state.redis = aioredis.from_url(settings.REDIS_URL, socket_connect_timeout=3, socket_timeout=3)
-        await app.state.redis.ping()
-        logger.info("Redis connected")
-    except Exception as e:
-        logger.warning(f"Redis unavailable (non-critical for local dev): {e}")
-        app.state.redis = None
+        cache = aioredis.from_url(settings.REDIS_URL, socket_connect_timeout=3, socket_timeout=3)
+        try:
+            await cache.ping()
+            app.state.redis = cache
+            logger.info("Redis connected")
+        except Exception as e:
+            await cache.aclose()
+            logger.warning(f"Optional Redis cache unavailable: {e}")
 
     app.state.docker_client = None
     if settings.SANDBOX_BACKEND == "docker":
@@ -54,7 +57,7 @@ async def lifespan(app: FastAPI):
 
     # Cleanup
     if hasattr(app.state, 'redis') and app.state.redis:
-        await app.state.redis.close()
+        await app.state.redis.aclose()
     await engine.dispose()
 
 app = FastAPI(
