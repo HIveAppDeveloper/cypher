@@ -4,6 +4,7 @@ import json
 from datetime import datetime, timedelta
 from sqlalchemy import select
 from app.models.execution import ExecutionStep, TaskExecution
+from app.models.task import Task
 
 MAX_ATTEMPTS = 4
 
@@ -16,19 +17,33 @@ class RetryTask(RuntimeError):
     pass
 
 
+class ExecutionSuperseded(RuntimeError):
+    """A replacement owns this attempt; the old runner must relinquish control."""
+    pass
+
+
 class ExecutionJournal:
-    def __init__(self, task_id, sessions):
-        self.task_id, self.sessions = task_id, sessions
+    def __init__(self, task_id, sessions, attempt=None):
+        self.task_id, self.sessions, self.attempt = task_id, sessions, attempt
+
+    async def assert_current(self, db):
+        if self.attempt is None:return
+        state=(await db.execute(select(TaskExecution).where(TaskExecution.task_id==self.task_id).with_for_update())).scalar_one_or_none()
+        status=await db.scalar(select(Task.status).where(Task.id==self.task_id))
+        if not state or state.attempts!=self.attempt or status not in ('running','cancel_requested'):
+            raise ExecutionSuperseded('A replacement worker owns this task.')
 
     async def cached(self, key):
         if not self.task_id: return False, None
         async with self.sessions() as db:
+            await self.assert_current(db)
             step = await db.get(ExecutionStep, (self.task_id, key))
             return (True, copy.deepcopy(step.output)) if step and step.status == 'completed' else (False, None)
 
     async def run(self, key, name, replay_safe, operation):
         if not self.task_id: return await operation()
         async with self.sessions() as db:
+            await self.assert_current(db)
             step = await db.get(ExecutionStep, (self.task_id, key))
             if step and step.status == 'completed': return copy.deepcopy(step.output)
             if step and not step.replay_safe and step.status in ('running', 'uncertain'):
@@ -42,8 +57,11 @@ class ExecutionJournal:
             await db.commit()  # Intent must be durable before an external action.
         try:
             result = await operation()
+        except ExecutionSuperseded:
+            raise
         except Exception:
             async with self.sessions() as db:
+                await self.assert_current(db)
                 step = await db.get(ExecutionStep, (self.task_id, key))
                 step.status = 'retryable' if replay_safe else 'uncertain'
                 step.updated_at = datetime.utcnow()
@@ -52,6 +70,7 @@ class ExecutionJournal:
         # Cancellation/process death leaves the durable running intent intact.
         result = json.loads(json.dumps(result, default=str))
         async with self.sessions() as db:
+            await self.assert_current(db)
             step = await db.get(ExecutionStep, (self.task_id, key))
             step.output, step.status, step.updated_at = result, 'completed', datetime.utcnow()
             await db.commit()
@@ -67,7 +86,7 @@ async def unsafe_inflight(db, task_id):
 
 async def retry_or_interrupt(db, task, *, immediate=False):
     """The same task resumes; a crash never consumes another goal run."""
-    state = await db.get(TaskExecution, task.id)
+    state = (await db.execute(select(TaskExecution).where(TaskExecution.task_id==task.id).with_for_update())).scalar_one_or_none()
     unsafe = await unsafe_inflight(db, task.id)
     if state is None or unsafe:
         task.status = 'interrupted'

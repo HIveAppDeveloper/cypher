@@ -28,7 +28,7 @@ from app.services.llm_gateway import LLMGateway
 from app.services.memory import MemoryManager
 from app.services.sandbox import SandboxManager
 from app.services.tools.registry import ToolRegistry
-from app.services.execution import ExecutionJournal, RecoveryReviewRequired, RetryTask
+from app.services.execution import ExecutionJournal, RecoveryReviewRequired, RetryTask, ExecutionSuperseded
 
 logger = logging.getLogger(__name__)
 
@@ -64,6 +64,7 @@ class AgentOrchestrator:
         goal_id: str | None = None,
         task_id: str | None = None,
         incoming_message_id: str | None = None,
+        execution_attempt: int | None = None,
     ) -> list[dict]:
         """Main entry point — process an incoming message in a conversation.
 
@@ -80,7 +81,7 @@ class AgentOrchestrator:
         await register_goal_tools(self.registry, conversation_id, goal_id, AsyncSessionLocal, task_id=task_id)
         from app.services.context import register_context_tools
         self.task_id = task_id
-        self.journal = ExecutionJournal(task_id, AsyncSessionLocal)
+        self.journal = ExecutionJournal(task_id, AsyncSessionLocal, execution_attempt)
         self.scope_counter = 0
         self.options = RunOptions(**(options or {}))
         async with AsyncSessionLocal() as db:
@@ -434,7 +435,7 @@ class AgentOrchestrator:
                 responses.append(await self._save_message(db, conversation_id, "system", None, "Agent iteration limit reached before completion.", message_type="status_update"))
 
         except Exception as e:
-            if isinstance(e, (RecoveryReviewRequired, RetryTask)):
+            if isinstance(e, (RecoveryReviewRequired, RetryTask, ExecutionSuperseded)):
                 bot.status = 'idle'
                 raise
             from app.services.model_routing import public_model_error

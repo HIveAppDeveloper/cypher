@@ -12,7 +12,7 @@ from app.db.tenancy import current_tenant_id
 from app.models.task import Task
 from app.models.runtime import RuntimeCheck
 from app.models.execution import TaskExecution
-from app.services.execution import retry_or_interrupt
+from app.services.execution import retry_or_interrupt, ExecutionSuperseded
 from app.services.orchestrator import AgentOrchestrator
 logger = logging.getLogger(__name__)
 POLL_SECONDS = 2
@@ -82,7 +82,7 @@ async def _run_worker_loop(lock_connection=None, owner_pid=None, stop_event=None
         if lock_connection is not None:
             pid = await lock_connection.scalar(text("SELECT pg_backend_pid()"))
             await lock_connection.commit()
-            if pid != owner_pid: raise RuntimeError("Worker lost its PostgreSQL session lock")
+            if pid != owner_pid: raise ExecutionSuperseded("Worker lost its PostgreSQL session lock")
         await heartbeat()
         last_heartbeat = time.monotonic()
     # Only the lock owner recovers work. Completed steps are replayed from SQL;
@@ -153,13 +153,14 @@ async def _run_worker_loop(lock_connection=None, owner_pid=None, stop_event=None
                     state = TaskExecution(task_id=task.id, attempts=0, recoveries=0)
                     db.add(state)
                 state.attempts += 1
+                claimed_attempt = state.attempts
                 state.next_attempt_at = None
                 state.updated_at = datetime.utcnow()
                 task.status = 'running'
                 task.started_at = task.started_at or datetime.utcnow()
                 await db.commit()
                 request = (task.result or {}).get("request", {})
-                execution = asyncio.create_task(AgentOrchestrator().process_message(task.conversation_id, task.description, attachments=request.get("attachments", []), options=request.get("options", {}), goal_id=request.get("goal_id"), task_id=task.id, incoming_message_id=request.get("incoming_message_id")))
+                execution = asyncio.create_task(AgentOrchestrator().process_message(task.conversation_id, task.description, attachments=request.get("attachments", []), options=request.get("options", {}), goal_id=request.get("goal_id"), task_id=task.id, incoming_message_id=request.get("incoming_message_id"), execution_attempt=state.attempts))
                 try:
                     cancelled = False
                     while not execution.done():
@@ -186,6 +187,8 @@ async def _run_worker_loop(lock_connection=None, owner_pid=None, stop_event=None
                         with suppress(asyncio.CancelledError): await execution
             except asyncio.CancelledError:
                 raise
+            except ExecutionSuperseded:
+                raise
             except Exception:
                 logger.exception("Job failed: %s", task.id)
                 await db.rollback()
@@ -194,6 +197,9 @@ async def _run_worker_loop(lock_connection=None, owner_pid=None, stop_event=None
                 await db.commit()
                 current_tenant_id.reset(tenant_token)
                 continue
+            with db.no_autoflush:
+                owner=(await db.execute(select(TaskExecution.attempts).where(TaskExecution.task_id==task.id).with_for_update())).scalar_one()
+                if owner!=claimed_attempt:raise ExecutionSuperseded('A replacement owns the task result.')
             task.completed_at = datetime.utcnow()
             if request.get('goal_id'):
                 from app.models.automation import Goal

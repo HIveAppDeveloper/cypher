@@ -38,6 +38,8 @@ async def connect_entry(item, sessions=None):
     token = mapped_credential(item['url'], current_tenant_id.get())
     if item.get('setup_note'):
         return {'status':'setup_required','message':item['setup_note']}
+    if item.get('auth')=='api_key' and not token:
+        return {'status':'key_required','message':'Add this service’s API key, or link its compatible server credential.'}
     if item['url'].rstrip('/')=='https://mcp.vercel.com' and not token:
         return {'status':'setup_required','message':'Vercel requires approval of this app’s OAuth callback before account access can connect. Existing Codex credentials are specific to Codex.'}
     try:

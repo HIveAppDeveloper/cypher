@@ -4,7 +4,7 @@ from datetime import datetime
 import pytest
 from app.models.execution import ExecutionStep, TaskExecution
 from app.models.task import Task
-from app.services.execution import ExecutionJournal, RecoveryReviewRequired, retry_or_interrupt
+from app.services.execution import ExecutionJournal, RecoveryReviewRequired, ExecutionSuperseded, retry_or_interrupt
 from app.db.tenancy import current_tenant_id
 from .test_workspace_workflows import workspace, room
 
@@ -35,6 +35,14 @@ async def test_checkpoint_replay_and_ambiguous_write_are_different(workspace):
             assert row.result['request']['goal_id']=='preserved'
             await db.commit()
         assert await journal.run('read','search_web',True,external)=={'success':True,'value':[1]}
+        stale=ExecutionJournal(task.id,sessions,attempt=1)
+        async with sessions() as db:
+            row=await db.get(Task,task.id);row.status='running'
+            state=await db.get(TaskExecution,task.id);state.attempts=2
+            await db.commit()
+        before=len(calls)
+        with pytest.raises(ExecutionSuperseded):await stale.run('late-write','send_email',False,external)
+        assert len(calls)==before
         with pytest.raises(asyncio.CancelledError):await journal.run('unknown','send_email',False,interrupted)
         with pytest.raises(RecoveryReviewRequired):await journal.run('unknown','send_email',False,external)
         async with sessions() as db:
