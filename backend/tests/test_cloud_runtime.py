@@ -50,7 +50,7 @@ async def cloud_db(tmp_path, monkeypatch):
     ('dpl_current', 1, True, True),
     ('dpl_old', 1, False, False),
     ('dpl_current', 90, False, True),
-    (None, 1, True, None),
+    (None, 1, False, None),
 ])
 async def test_runtime_reports_worker_release_and_stale_heartbeats(cloud_db, release, age, ready, matches):
     client, sessions = cloud_db
@@ -76,6 +76,17 @@ async def test_worker_persists_current_release_with_heartbeat(cloud_db):
         assert release.detail['deployment_id'] == 'dpl_current'
         assert release.detail['commit'] == 'current-commit'
         assert await db.get(RuntimeHeartbeat, 'worker') is not None
+
+
+@pytest.mark.asyncio
+async def test_local_runtime_does_not_require_platform_release_metadata(cloud_db, monkeypatch):
+    client, _ = cloud_db
+    monkeypatch.delenv('VERCEL_DEPLOYMENT_ID')
+    monkeypatch.delenv('VERCEL_GIT_COMMIT_SHA')
+    await worker.heartbeat()
+    result = (await client.get('/api/runtime')).json()
+    assert result['worker'] is True
+    assert result['worker_version_matches'] is None
 
 
 def test_release_identity_prefers_deployment_over_commit():

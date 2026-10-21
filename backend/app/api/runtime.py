@@ -17,6 +17,7 @@ async def runtime(db=Depends(get_db)):
     worker_deployment = worker_release.detail if worker_release else {}
     version_matches = same_release(deployment, worker_deployment)
     worker_fresh = age is not None and 0 <= age < 30
+    version_ready = version_matches is True or not (deployment['deployment_id'] or deployment['commit'])
     checks = {}
     for name in ('gateway_verified', 'mcp_verified', 'mcp_tool_verified', 'gateway_verification_failed', 'mcp_verification_failed'):
         item = await db.get(RuntimeHeartbeat, name)
@@ -26,7 +27,7 @@ async def runtime(db=Depends(get_db)):
         result = await db.get(RuntimeCheck,name)
         if result: details[name] = {'status':result.status,'detail':result.detail,'checked_at':result.updated_at.isoformat()+'Z'}
     configured = await db.get(RuntimeHeartbeat, 'gateway_configured')
-    return {'checks':details, **checks, 'database':True,'worker':worker_fresh and version_matches is not False,'worker_last_seen_seconds':int(age) if age is not None else None,'worker_version_matches':version_matches,'deployment':deployment,'worker_deployment':worker_deployment,'gateway_configured':bool(configured or os.getenv('AI_GATEWAY_API_KEY') or os.getenv('VERCEL_OIDC_TOKEN') or os.getenv('VERCEL_OIDC_TOKEN_FILE')),'sandbox_backend':settings.SANDBOX_BACKEND}
+    return {'checks':details, **checks, 'database':True,'worker':worker_fresh and version_ready,'worker_last_seen_seconds':int(age) if age is not None else None,'worker_version_matches':version_matches,'deployment':deployment,'worker_deployment':worker_deployment,'gateway_configured':bool(configured or os.getenv('AI_GATEWAY_API_KEY') or os.getenv('VERCEL_OIDC_TOKEN') or os.getenv('VERCEL_OIDC_TOKEN_FILE')),'sandbox_backend':settings.SANDBOX_BACKEND}
 
 @router.post('/checks', status_code=202)
 async def request_checks(db=Depends(get_db)):
