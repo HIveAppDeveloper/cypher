@@ -3,18 +3,18 @@ name: Open GrokBot
 description: A light agent workspace with team conversations, multimodal input, and adjustable run controls.
 colors:
   panel: "#fff"
-  conversation: "#fdfdfd"
-  sidebar: "#f5f5f5"
-  card: "#efefef"
+  conversation: "#fff"
+  sidebar: "#f4f4f6"
+  card: "transparent"
   card-hover: "#e4e4e4"
-  selected: "#e5e5e5"
+  selected: "#e7e5ec"
   border-light: "#e6e6e6"
-  text: "#202020"
-  text-muted: "#696969"
-  accent-blue: "#b42678"
-  outgoing: "#b42678"
-  send: "#b42678"
-  focus: "#b42678"
+  text: "#242329"
+  text-muted: "#6e6b75"
+  accent-blue: "#404047"
+  outgoing: "#404047"
+  send: "#404047"
+  focus: "#404047"
   status-green: "#33785c"
   status-red: "#b82840"
   notice-surface: "#fff9fc"
@@ -37,8 +37,8 @@ colors:
 typography:
   display:
     fontFamily: '"Inter Variable", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
-    fontSize: "clamp(25px,2.7vw,36px)"
-    fontWeight: 500
+    fontSize: "clamp(28px,3.2vw,42px)"
+    fontWeight: 550
     lineHeight: 1.2
     letterSpacing: "-.035em"
   headline:
@@ -53,7 +53,7 @@ typography:
   body:
     fontFamily: '"Inter Variable", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
     fontSize: "16px"
-    lineHeight: 1.5
+    lineHeight: 1.65
   label:
     fontFamily: '"Inter Variable", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
     fontSize: "15px"
@@ -63,9 +63,9 @@ rounded:
   md: "12px"
   lg: "24px"
   full: "999px"
-  roster-row: "15px"
-  message: "27px"
-  composer: "36px"
+  roster-row: "12px"
+  message: "18px 18px 5px 18px"
+  composer: "18px"
 spacing:
   xs: "4px"
   sm: "8px"
@@ -76,11 +76,11 @@ components:
   button-primary:
     backgroundColor: "{colors.outgoing}"
     textColor: "{colors.panel}"
-    rounded: "18px"
+    rounded: "12px"
     padding: "10px 18px"
   button-secondary:
     backgroundColor: "{colors.panel}"
-    rounded: "18px"
+    rounded: "12px"
     padding: "10px 18px"
   button-round:
     backgroundColor: "{colors.panel}"
@@ -89,13 +89,13 @@ components:
     rounded: "50%"
   message-incoming:
     backgroundColor: "{colors.card}"
-    rounded: "{rounded.message}"
-    padding: "12px 16px"
+    rounded: "0px"
+    padding: "0px"
   message-outgoing:
     backgroundColor: "{colors.outgoing}"
     textColor: "{colors.panel}"
     rounded: "{rounded.message}"
-    padding: "12px 16px"
+    padding: "13px 18px"
   team-member-chip:
     backgroundColor: "{colors.member-chip}"
     rounded: "20px"
@@ -103,7 +103,7 @@ components:
   glass-select-trigger:
     backgroundColor: "{colors.glass-trigger}"
     textColor: "{colors.glass-ink}"
-    rounded: "16px"
+    rounded: "12px"
     padding: "12px 16px"
     height: "48px"
   glass-select-option:
@@ -112,7 +112,7 @@ components:
     height: "50px"
   glass-dialog:
     backgroundColor: "{colors.glass-dialog}"
-    rounded: "28px"
+    rounded: "24px"
   search-input:
     rounded: "{rounded.md}"
     padding: "10px"
@@ -122,13 +122,13 @@ components:
 
 ## Overview
 
-The light Grok messaging identity remains: quiet neutral roster, near-white conversation, organic two-stroke bot marks, and an adjustable rose default accent. The user-authorized extension adds larger liquid-glass menus and translucent dialogs, with readable labels and generous interaction targets. Glass belongs to controls and overlays; conversation content remains the primary visual anchor.
+The light Grok workspace uses a quiet neutral roster, white conversation, subdued initials avatars, and an adjustable Graphite default accent. A framed desktop workspace and a single conversation toolbar establish hierarchy. Glass remains available for menus and dialogs; conversation text stays the primary visual anchor.
 
 Production revision b473 previously verified database/worker operation, generated OpenAI PNG, Gemini JPEG, and Veo MP4 media, and a real GPT-6 Luna → Gemini group job. DeepWiki tool invocation was also verified. The former free-credit restriction is historical and no longer describes the current verified capability. The new glass controls, appearance preferences, goals, channels, and per-plugin tool controls have passed source checks (31 backend tests and the frontend production build), but have not yet been verified live. Prior live results do not prove the new workflows or every model, provider, sandbox, or connected service.
 
 **Key Characteristics:**
 - Light neutral messaging workspace with browser-local accent customization.
-- Organic bot identities and rounded conversation bubbles.
+- Muted initials identities, plain incoming text, and rounded outgoing messages.
 - Large translucent select menus with keyboard navigation.
 - Bounded scrolling dialogs with persistent actions.
 - Explicit progress, connection, goal, and delivery states.
@@ -137,29 +137,31 @@ Production revision b473 previously verified database/worker operation, generate
 
 ### Primary
 
-Rose is the default active appearance accent. Preferences can switch to Violet, Forest, Slate blue, or Graphite. The source retains the legacy `accent-blue` name; appearance applies its value to outgoing bubbles, send actions, primary actions, and the focus variable. Some legacy literal pink accents remain in secondary details; do not claim every existing pink is dynamically bound.
+Graphite is the default active appearance accent. Preferences can switch to Rose, Violet, Forest, or Slate blue; existing saved choices remain effective. The source retains the legacy `accent-blue` name; appearance applies its value to outgoing bubbles, send actions, primary actions, and the focus variable. Some legacy literal pink accents remain in secondary details; do not claim every existing pink is dynamically bound.
 
 ### Neutral
 
-Keep the white/near-white conversation, light-gray sidebar, gray incoming messages, muted previews, and hairline dividers. Glass uses translucent near-white surfaces and subdued violet-gray borders rather than saturated translucent panels. Selected menu rows mix the current focus accent at 11% with white. Status text remains explicit independently of green, red, or amber color.
+Keep the white/near-white conversation, light-gray sidebar, plain incoming text, muted previews, and hairline dividers. Glass uses translucent near-white surfaces and subdued violet-gray borders rather than saturated translucent panels. Selected menu rows mix the current focus accent at 11% with white. Status text remains explicit independently of green, red, or amber color.
 
 ## Typography
 
-Use self-hosted Inter Variable with the frontmatter fallbacks. The QuickStart heading uses the display role: medium weight, tight tracking, and responsive size, becoming (25px) on mobile. Default messages now use (16px/1.5), adjustable from (14–22px). Names and active identities remain medium weight; timestamps and metadata remain small and muted. Main-panel font selection offers Inter, system sans, and Georgia; browser-local appearance controls message size separately.
+Use self-hosted Inter Variable with the frontmatter fallbacks. The QuickStart heading uses the display role: medium weight, tight tracking, and responsive size, with the earlier mobile rule setting (30px). Default messages use (16px/1.65), with markdown line height (1.8) and mobile message text bound to the same appearance size variable, adjustable from (14–22px). Names and active identities remain medium weight; timestamps and metadata remain small and muted. Main-panel font selection offers Inter, system sans, and Georgia; browser-local appearance controls message size separately.
 
 Select triggers and options use (15px) text, with mobile options (14px), and labels in agent/model forms (14px/1.5). Menu descriptions and selectable labels must wrap or truncate intentionally rather than forcing unreadable tiny text.
 
 ## Layout
 
-The app fills (100dvh) with a desktop roster at (27%) width, bounded by (270–380px), and an independently scrolling conversation. At (700px) and below, the roster becomes a (90px) icon rail. Default desktop message width is (88%), adjustable (60–100%); mobile messages permit full available width. The workspace toolbar remains (54px) high, followed by conversation identity, member chips, stream, work status, attachments, composer, and input guidance.
+The app fills (100dvh). Desktop uses a pale outer canvas with (12px) padding and gap around the white main workspace, whose border and (20px) corners frame the conversation. The sidebar defaults to (280px) in state; the stylesheet fallback is (260px), with a CSS clamp from (220px) to the smaller of (420px) and viewport width minus (420px). Collapse, resize, and docking remain available. The single conversation toolbar is (76px) high; message stream and composer align within a (900px) content measure. Default message width is (88%), bounded at (75ch), adjustable (60–100%).
 
-QuickStart centers its task composer at up to (640px), with output choice and a nonwrapping Start task action. Dialog width is capped at (480px), with viewport clearance (32px) and bounded dynamic-viewport height. Titles and intro remain outside the shrinking, independently scrolling form region; footer actions remain visible. Mobile dialog padding is (24px 18px).
+At (1000px) and below, secondary toolbar labels hide while accessible names remain. At (760px) and below, the frame padding, gap, border, and corners disappear; the toolbar becomes (68px), navigation opens in a labeled native modal drawer, and messages permit (94%) available width. Mobile toolbar actions are at least (44px); output and tools controls are at least (40px). Search inputs use (16px) on mobile. The Work drawer uses (8px) viewport clearance on mobile.
+
+QuickStart centers its task composer at up to (700px), with output choice and a nonwrapping Start task action; the action spans its own row on mobile. General dialogs retain a (480px) cap, (32px) viewport clearance, independently scrolling form body, and persistent actions. Mobile dialog padding is (24px 18px).
 
 Agent-list density uses vertical row padding of (8px) compact, (13px) comfortable, or (18px) spacious. Preferences apply immediately and persist only in this browser. They do not establish account-level synchronization.
 
 ## Elevation & Depth
 
-The message workspace stays mostly flat. Identity and composer retain faint shadows. Glass triggers use an inset white highlight plus a very soft outer shadow. Menus use a stronger diffuse shadow and translucent blur; dialogs use a broad ambient shadow and blurred dim backdrop. Menu content renders at z-index (1000) and portals into its nearest native dialog when present, keeping popovers within the dialog top layer.
+The message workspace stays mostly flat. Incoming text and identity have no enclosing shadow; composer shadow appears on focus. The authoritative workspace layer removes the legacy glass trigger shadow. Menus use a stronger diffuse shadow and translucent blur; dialogs use a broad ambient shadow and blurred dim backdrop. Menu content renders at z-index (1000) and portals into its nearest native dialog when present, keeping popovers within the dialog top layer.
 
 Default glass blur is (24px), adjustable (0–40px). Triggers saturate backdrop at (140%), menus (160%), and dialogs (145%). Dialog blur is implemented on a noninteractive isolated pseudo-element, keeping portaled select content positioned correctly; do not move that filter onto the dialog ancestor. The backdrop has its own (5px) blur.
 
@@ -167,7 +169,7 @@ Menu entrance lasts (160ms) with `cubic-bezier(.16,1,.3,1)`, moving from (-4px) 
 
 ## Shapes
 
-Keep rounded messages (27px), broad composer (36px), circular tool controls, and organic bot marks. Glass overlays extend the family: trigger (16px), menu (21px), options (13px), and dialog (28px). General form inputs have (14px) corners and minimum height (48px). Compact task/output triggers use (15px) corners with minimum height (44px); standard select triggers remain at least (48px). Options remain at least (50px), including mobile.
+Outgoing messages use an asymmetric (18px 18px 5px 18px) silhouette; incoming text has no bubble padding or radius. The composer uses (18px) corners, initials avatars (11px), and shared controls (12px). Glass overlays extend the family: trigger (12px), menu (16px), options (13px), and dialog (24px). General form inputs have (14px) corners and minimum height (48px). Compact task/output triggers use (15px) corners with minimum height (44px); standard select triggers remain at least (48px). Options remain at least (50px), including mobile.
 
 ## Components
 
@@ -181,11 +183,11 @@ Primary and secondary actions have minimum height (44px). The primary binds to t
 
 ### Conversation and Media
 
-Incoming bubbles remain gray, outgoing use the active accent, timestamps sit beneath, and tool disclosures use bounded monospace output. Attachments have removable staging chips, image previews, file links, audio controls, and video controls. Prior production verification includes PNG/JPEG/MP4 output; this is evidence of those tested paths, not a guarantee for every model or future request. Do not fabricate media or completed-work previews.
+Incoming replies use plain text on white; outgoing messages use the active accent, timestamps sit beneath, and tool disclosures use bounded monospace output. Attachments have removable staging chips, image previews, file links, audio controls, and video controls. Prior production verification includes PNG/JPEG/MP4 output; this is evidence of those tested paths, not a guarantee for every model or future request. Do not fabricate media or completed-work previews.
 
 ### Appearance
 
-The native dialog groups accent and density glass selects with text-size, message-width, and blur sliders, plus an Interface animations checkbox. Defaults are Rose, (16px), (88%), (24px), comfortable density, and animations enabled. Outputs use tabular numerals and align right. Reset appearance and Done stay visible in the footer.
+The native dialog groups accent and density glass selects with text-size, message-width, and blur sliders, plus an Interface animations checkbox. Defaults are Graphite, (16px), (88%), (24px), comfortable density, and animations enabled. Outputs use tabular numerals and align right. Reset appearance and Done stay visible in the footer.
 
 ### Goals and Channels
 
@@ -246,3 +248,30 @@ The agent list keeps at least 104px of usable height. In short windows the surro
 Workspace failures appear inline with Retry and Connection settings; they no longer cover the composer. Chat drafts store text in session storage per conversation and survive switching away. Active tasks expose Stop beside the composer, and scrolling away reveals Jump to latest. Plugin catalog and connected-service loading fail independently and offer refresh and clear-filter recovery. First tasks submit with Enter, with Shift+Enter retained for writing. Accepted first tasks open immediately; retries use an idempotent request ID.
 
 Validation: Next production compilation and type checking, four existing attachment tests, and six simulated interaction checks (mobile navigation, email error/retry, draft restoration, Stop, task keyboard submission, and plugin partial-failure recovery). Simulated checks mock network requests and native dialog behavior; they do not verify provider authentication, model execution, or actual mobile browser focus trapping. Live signed-out login is the accessible visual surface; authenticated visual review requires sign-in.
+
+
+## Workspace refinement — October 21, 2026
+
+This refinement supersedes the earlier toolbar, organic avatar, bubble, and desktop sizing descriptions where they differ. Preserve existing agent, team, plugin, media, memory, steering, appearance, and account behavior.
+
+### Command palette
+
+Search workspace opens a native dialog through a body portal, including from mobile navigation. Cmd+K or Ctrl+K toggles it. Its search matches conversation/action labels, groups, and descriptions, showing at most 20 results. Arrow keys move selection, Enter opens the selected result, and Escape or the close control dismisses. Choosing an action closes mobile navigation. This searches available workspace destinations and actions; it does not search message history. Use an (18px) dialog radius, (560px) width cap, (16dvh) top offset, and results bounded by the smaller of (420px) and (55dvh).
+
+### Conversation controls
+
+One toolbar holds the conversation title, Search, Work count, and Conversation settings. Remove the duplicated identity heading. Keep teammates in a collapsed disclosure and computer controls separate when a direct agent conversation exposes them. Search this conversation filters the currently loaded noninternal message content, case-insensitively; show the result count and explicit empty state. Loading earlier messages expands that searchable set. Escape and Close clear the query and return focus to Search. Do not imply server-side or complete-history search.
+
+The composer exposes Text/Image/Video response format and a Tools on/off toggle, with model metadata aligned to the right. These controls share the same run options as Conversation settings. Media-specific controls remain available there. Composer attachment and send buttons use (36px) visuals with (4px) surrounding margins. Keep real attachment staging, validation failures, in-flight send state, Stop, and Jump to latest behavior. Text drafts remain tab-local per conversation.
+
+### Work and direction
+
+Work opens the native Work & direction drawer, capped at (430px), with (12px) desktop viewport clearance, (20px) corners, a persistent header/navigation, and an independently scrolling body. Recent work prioritizes real active jobs, then recency, and displays up to 30 jobs with explicit queued, running, stopping, completed, failed, stopped, or interrupted text. Stop task remains available only for pending/running jobs and reports failures inline. Direction reuses the existing steering controls, distinguishing future-message settings from an active-task redirect. Never invent progress, results, or presence.
+
+### Identity and motion
+
+Bot avatars use initials from the first two name words with a deterministic muted background chosen from warm gray, sage, blue gray, and mauve. Standard avatars are (36px) with (11px) corners; small avatars are (28px) with (9px) corners. Roster names use (13px/550), descriptions (11px), and rows at least (56px). Names carry identity; color is supplementary.
+
+The drawer entrance uses (220ms cubic-bezier(.16,1,.3,1)), moving from (20px) right at (.65) opacity to rest. OS reduced motion removes all animations, transitions, and smooth scrolling; the appearance motion switch removes animations/transitions. Jump to latest respects the OS preference.
+
+Validation for this refinement: source review resolved six listed issues; four mocked interaction checks and the attachment suite passed. The production build and type checks passed after the final fixes. These checks establish no screenshot comparison, visual approval, live provider execution, or real mobile focus-trap verification. Earlier validation notes above describe earlier revisions.

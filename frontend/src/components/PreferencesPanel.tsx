@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { GlassSelect } from './GlassSelect';
 export interface Appearance { accent:string; fontSize:number; width:number; glass:number; density:string; motion:boolean; }
-export const DEFAULT_APPEARANCE:Appearance={accent:'#b42678',fontSize:16,width:88,glass:24,density:'comfortable',motion:true};
+export const DEFAULT_APPEARANCE:Appearance={accent:'#404047',fontSize:16,width:88,glass:24,density:'comfortable',motion:true};
 export function applyAppearance(value:Appearance){const root=document.documentElement;root.style.setProperty('--accent-blue',value.accent);root.style.setProperty('--focus-color',value.accent);root.style.setProperty('--chat-font-size',`${value.fontSize}px`);root.style.setProperty('--message-width',`${value.width}%`);root.style.setProperty('--glass-blur',`${value.glass}px`);root.dataset.density=value.density;root.dataset.motion=String(value.motion);}
 export function restoreAppearance(){try{const saved={...DEFAULT_APPEARANCE,...JSON.parse(localStorage.getItem('grokbot-appearance')||'{}')};applyAppearance(saved);}catch{applyAppearance(DEFAULT_APPEARANCE);}}
 export function PreferencesPanel({onClose}:{onClose:()=>void}){
