@@ -238,3 +238,4 @@ button:focus-visible,input:focus-visible,textarea:focus-visible{outline-color:va
 .runtime-notice{left:24px;right:24px;max-width:720px;margin:0 auto}
 @media(max-width:760px){.workspace-toolbar{padding:0 12px}.chat-header{padding:14px 12px}.message-stream{padding:16px 12px}.composer{margin:8px 12px;border-radius:20px}.message-content{font-size:15px;padding:10px 13px}.thread-members{padding:0 12px 8px}}
 @media(max-width:760px){.sidebar-layout-tools button[aria-expanded]{display:none}}
+.connector-login-actions{display:flex;gap:20px;flex-wrap:wrap}

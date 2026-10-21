@@ -153,3 +153,17 @@ async def status(flow_id:UUID,db:AsyncSession=Depends(get_db)):
     state=row.status
     if state=='awaiting_login' and time.time()-row.created_at>FLOW_TTL:state='expired'
     return {'status':state,'name':row.name,'plugin_id':row.plugin_id}
+
+class CancelAuthorization(BaseModel):
+    flow_id:UUID
+    binding:str=Field(min_length=16,max_length=200)
+
+@router.post('/oauth/cancel')
+async def cancel_authorization(body:CancelAuthorization,db:AsyncSession=Depends(get_db)):
+    row=(await db.execute(select(PluginAuthorization).where(PluginAuthorization.id==str(body.flow_id)).with_for_update())).scalar_one_or_none()
+    if not row or not secrets.compare_digest(row.binding_hash or '',hashlib.sha256(body.binding.encode()).hexdigest()):
+        raise HTTPException(400,'This sign-in request does not belong to this browser.')
+    if row.status not in {'awaiting_login','discovering'}:
+        raise HTTPException(409,'Sign-in is already finishing or has ended. Check Connected for the result.')
+    row.status='cancelled';row.payload=None;row.state_hash=None;row.binding_hash=None;await db.commit()
+    return {'status':'cancelled'}

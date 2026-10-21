@@ -51,6 +51,7 @@ export function PluginPanel({onClose}:{onClose:()=>void}){
     }
     void poll();return()=>{active=false;clearTimeout(timer);};
   },[flow]);
+  async function cancelSignIn(){try{await api.cancelPluginAuth(flow);popup.current?.close();setFlow('');setBusy(false);setNotice('Sign-in cancelled. You can choose another service or try again.');setError('');}catch(e){setError(e instanceof Error?e.message:'Could not cancel sign-in.');}}
   function chooseView(next:View){setView(next);setError('');setNotice('');}
   function preparePopup(){
     const opened=window.open('about:blank','grokbot-service-login','popup,width=620,height=760');
@@ -95,7 +96,7 @@ export function PluginPanel({onClose}:{onClose:()=>void}){
     <header className="connectors-header"><div><h2 id="plugins-title">Plugins</h2><p>Your team, connected to your tools.</p></div><button className="connector-close" aria-label="Close plugins" onClick={onClose}><svg viewBox="0 0 24 24"><path d="m6 6 12 12M6 18 18 6"/></svg></button></header>
     <nav className="connector-tabs" aria-label="Plugin pages">{([['browse','Browse'],['connected',`Connected${plugins.length?' · '+plugins.length:''}`],['custom','Advanced'],['settings','Settings']] as const).map(([id,label])=><button key={id} aria-pressed={view===id} onClick={()=>chooseView(id)}>{label}</button>)}</nav>
     <div className="connectors-body">
-      {notice?<div className="connector-notice" role="status">{notice}{flow?<button onClick={()=>{popup.current?.focus();}}>Open sign-in window</button>:null}</div>:null}
+      {notice?<div className="connector-notice" role="status">{notice}{flow?<div className="connector-login-actions"><button onClick={()=>{popup.current?.focus();}}>Open sign-in window</button><button onClick={()=>void cancelSignIn()}>Cancel sign-in</button></div>:null}</div>:null}
       {error?<div className="connector-error" role="alert">{error}</div>:null}
       {view==='browse'?<>
         <form className="website-connect" onSubmit={event=>void connectWebsite(event)}><label htmlFor="company-website">Connect a company website</label><div><input id="company-website" value={website} onChange={event=>setWebsite(event.target.value)} placeholder="vercel.com, notion.so, linear.app…" required maxLength={1000} autoComplete="url"/><button className="btn-primary" disabled={busy||!website.trim()}>{busy?'Connecting…':'Connect'}</button></div><p>Paste a website. We find its published connector and open sign-in when supported.</p></form>

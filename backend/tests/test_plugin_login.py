@@ -178,3 +178,12 @@ async def test_reconnect_preserves_existing_connection_until_verified(db,monkeyp
     assert plugin.tools[0]['enabled'] is False
     assert await db.get(PluginAuthorization,old.id) is None
     assert row.status=='connected'
+
+@pytest.mark.asyncio
+async def test_cancel_sign_in_invalidates_callback_and_preserves_old_plugin(db,monkeypatch):
+    row,binding=await create_flow(db);_,saved,_=await prepare_consent(db,row,monkeypatch)
+    state=parse_qs(urlsplit(saved['authorization_url']).query)['state'][0]
+    with pytest.raises(HTTPException):await catalog_api.cancel_authorization(catalog_api.CancelAuthorization(flow_id=row.id,binding='another-browser-binding'),db)
+    result=await catalog_api.cancel_authorization(catalog_api.CancelAuthorization(flow_id=row.id,binding=binding),db)
+    assert result['status']=='cancelled' and row.payload is None and row.state_hash is None
+    with pytest.raises(HTTPException):await catalog_api.callback(catalog_api.Callback(state=state,code='temporary-code',binding=binding),db)
