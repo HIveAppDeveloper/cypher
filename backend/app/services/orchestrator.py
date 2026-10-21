@@ -380,7 +380,9 @@ class AgentOrchestrator:
             bot.status = "error"
             reason = str(e).lower()
             explanation = "Model execution failed. Check the configured provider and private server logs."
-            if 'restrictedmodelserror' in reason or 'free tier users' in reason:
+            if 'authenticationerror' in type(e).__name__.lower() or 'authentication failed' in reason or 'credentials unavailable' in reason:
+                explanation = 'The model connection needs authentication. Configure AI_GATEWAY_API_KEY in this project’s Vercel environment variables and redeploy, then send your message again. No successful result was recorded.'
+            elif 'restrictedmodelserror' in reason or 'free tier users' in reason:
                 explanation = "Vercel AI Gateway requires paid credits for this model. Add gateway credits in your Vercel team, then retry. Your ChatGPT subscription does not include API usage."
             elif 'insufficient' in reason or 'credit' in reason or 'quota' in reason:
                 explanation = "The model provider reports a credit or quota limit. Check your gateway/provider billing and retry."

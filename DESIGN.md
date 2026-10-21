@@ -226,3 +226,6 @@ A collapsed Steer your team disclosure precedes Message options. Its brief, cons
 ### Immediate messaging, memory, and account controls
 
 Sent text appears immediately with Sending state and is reconciled by message UUID. Attachments retain previews, removable file chips, visible read/error states, and a drag target. The conversation adds Context & memory as a collapsed disclosure beside steering and message options; notes remain editable and deletable without filling the thread with settings. Connections nests signup assistance and optional passkey enrollment under Accounts & device approval, with explicit unconnected Gmail/Resend states. No simulated biometric success or provider login state is shown.
+
+## Simplified conversation toolbar
+Move the stacked Recent work, Context & memory, Steer your team, and Message options disclosures into a single Settings popover at the top. Keep the composer free of configuration rows, with 44px attachment/send targets and a text field that grows up to 150px. Preserve Inter and the existing light glass palette. Plugins is a named sidebar destination; Add plugin reveals custom MCP setup while the catalog remains browsable.

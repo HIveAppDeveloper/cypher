@@ -33,3 +33,6 @@ Production revision b473 previously verified database/worker operation, generate
 ## Team-thread behavior
 
 The existing shared team conversation is the default arrival surface, with individual agent conversations still available. Managers receive concise teammate-style instructions: own the outcome, use tools, coordinate privately, verify results, and report concrete blockers. Model and media settings remain available through Message options. Work indicators reflect actual task state rather than simulated conversation. Start computer uses the Vercel SDK's persistent sandbox name, with connection feedback and a stop action.
+
+## Simplified conversation controls
+The composer shows attachments, text, and send. Recent work, retained context, steering, output, and model controls are under Settings in the top toolbar. The sidebar Plugins entry opens a catalog and a dedicated Add plugin form for remote MCP servers. An authenticated model-provider failure explains the server-side credential setup needed; UI changes do not establish valid provider credentials.
