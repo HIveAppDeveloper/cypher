@@ -196,3 +196,25 @@ async def test_browser_screenshot_is_sent_as_image_evidence_not_encoded_tool_tex
             rows=(await db.execute(select(Message).where(Message.message_type=='tool_result'))).scalars().all()
             assert all('screenshot_base64' not in row.content for row in rows)
     finally:current_tenant_id.reset(token)
+
+@pytest.mark.asyncio
+async def test_delete_used_agent_preserves_records_and_removes_private_access(workspace,monkeypatch):
+    client,sessions=workspace
+    from app.api.bots import SandboxManager
+    monkeypatch.setattr(SandboxManager,'stop_sandbox',lambda *args:None)
+    cid=await room(client,A['x-grokbot-user-id']);bid=(await client.get('/api/bots',headers=A)).json()[0]['id']
+    await client.post('/api/workspace/knowledge',headers=A,json={'scope':'bot:'+bid,'name':'private','content':'private memory'})
+    queued=(await client.post('/api/conversations/'+cid+'/messages',headers=A,json={'sender_type':'user','content':'Controlled prior work'})).json()
+    assert (await client.delete('/api/bots/'+bid,headers=A)).status_code==409
+    async with sessions() as db:
+        task=await db.get(Task,queued['task_id']);task.status='completed';await db.commit()
+    assert (await client.delete('/api/bots/'+bid,headers=B)).status_code==200
+    assert len((await client.get('/api/bots',headers=A)).json())==1
+    assert (await client.delete('/api/bots/'+bid,headers=A)).status_code==200
+    assert (await client.get('/api/bots',headers=A)).json()==[]
+    assert (await client.get('/api/workspace/knowledge',headers=A)).json()==[]
+    async with sessions() as db:
+        assert await db.get(Task,queued['task_id'])
+        assert (await db.get(Bot,bid)).status=='deleted'
+    again=await client.post('/api/bots',headers=A,json={'name':'Workflow agent','role':'Assistant','system_prompt':'New agent','llm_provider':'openai','llm_model':'gpt-6-luna'})
+    assert again.status_code==200,again.text

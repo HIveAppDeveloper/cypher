@@ -19,7 +19,8 @@ def protect(value):
     except ValueError as error:raise HTTPException(503,str(error))
 
 async def bot_exists(db,id):
-    if not await db.get(Bot,str(id)):raise HTTPException(404,'Agent not found')
+    bot=await db.get(Bot,str(id))
+    if not bot or bot.status=='deleted':raise HTTPException(404,'Agent not found')
 
 class ControlInput(BaseModel):takeover:bool
 @router.post('/{id}/control')

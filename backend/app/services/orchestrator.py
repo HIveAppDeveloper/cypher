@@ -229,9 +229,9 @@ class AgentOrchestrator:
         self.task_scope = getattr(self, 'scope_counter', 0)
         self.scope_counter = self.task_scope + 1
         scope_key = f'scope:{self.task_scope}:{bot_id}'
-        result = await db.execute(select(Bot).where(Bot.id == bot_id))
+        result = await db.execute(select(Bot).where(Bot.id == bot_id).with_for_update())
         bot = result.scalar_one_or_none()
-        if not bot:
+        if not bot or bot.status=='deleted':
             logger.error(f"Bot {bot_id} not found")
             return []
 

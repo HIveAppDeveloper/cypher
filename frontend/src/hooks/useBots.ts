@@ -8,7 +8,7 @@ export function useBots() {
   const [error, setError] = useState('');
   useEffect(() => { let active = true; api.getBots().then(data => { if (active) { const restored = data.map(withSavedOptions); setBots(restored); } }).catch(e => { if (active) setError(String(e)); }); return () => { active = false; }; }, []);
   const createBot = async (data: Partial<Bot>, select = true) => { const bot = { ...await api.createBot(data), defaultOptions: data.defaultOptions }; try { localStorage.setItem('grokbot-options-' + bot.id, JSON.stringify(data.defaultOptions || {})); } catch {} setBots(prev => [...prev, bot]); if (select) setSelectedBot(bot); return bot; };
-  const refreshBots = async () => { setBots((await api.getBots()).map(withSavedOptions)); setError(''); };
+  const refreshBots = async () => { const updated=(await api.getBots()).map(withSavedOptions);setBots(updated);setSelectedBot(current=>current?updated.find(bot=>bot.id===current.id)||null:null);setError(''); };
   return { refreshBots, bots, selectedBot, setSelectedBot, createBot, error };
 }
 
