@@ -76,7 +76,7 @@ app = FastAPI(
 @app.middleware("http")
 async def authenticate_backend(request: Request, call_next):
     api_request = request.url.path.startswith("/api/")
-    public_auth_path = request.url.path in {"/api/auth/email/request", "/api/auth/email/verify"}
+    public_auth_path = request.url.path in {"/api/auth/email/request", "/api/auth/email/verify", "/api/auth/google/verify"}
     if settings.BACKEND_API_TOKEN and api_request:
         expected = "Bearer " + settings.BACKEND_API_TOKEN
         if not secrets.compare_digest(request.headers.get("authorization", ""), expected):

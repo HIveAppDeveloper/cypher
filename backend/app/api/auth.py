@@ -1,5 +1,6 @@
 """Passwordless account creation and ownership binding."""
 
+import asyncio
 import hashlib
 import os
 import re
@@ -117,3 +118,48 @@ async def current_user(request: Request, db: AsyncSession = Depends(get_db)):
     if not user:
         raise HTTPException(status_code=401, detail="Sign in again to finish setting up your account.")
     return {"id": user.id, "email": user.email, "display_name": user.display_name}
+
+
+class GoogleLoginRequest(BaseModel):
+    credential: str = Field(min_length=20, max_length=12000)
+
+
+def verify_google_credential(credential: str) -> dict:
+    from google.oauth2 import id_token
+    from google.auth.transport.requests import Request as GoogleRequest
+    client_id = os.getenv("GOOGLE_AUTH_CLIENT_ID") or os.getenv("HIVE_GOOGLE_AUTH_CLIENT_ID")
+    if not client_id:
+        raise HTTPException(503, "Google sign-in is not configured yet.")
+    try:
+        claims = id_token.verify_oauth2_token(credential, GoogleRequest(), client_id)
+    except Exception as error:
+        raise HTTPException(401, "Google could not verify this sign-in. Try again.") from error
+    if not claims.get("sub") or claims.get("email_verified") is not True or not claims.get("email"):
+        raise HTTPException(401, "Use a Google account with a verified email address.")
+    return claims
+
+
+@router.post("/google/verify")
+async def verify_google_login(data: GoogleLoginRequest, db: AsyncSession = Depends(get_db)):
+    claims = await asyncio.to_thread(verify_google_credential, data.credential)
+    subject = claims["sub"]
+    email = normalize_email(claims["email"])
+    owner = (await db.execute(select(User).where(User.google_subject == subject))).scalar_one_or_none()
+    if owner is None:
+        owner = (await db.execute(select(User).where(User.email == email).with_for_update())).scalar_one_or_none()
+        if owner is not None:
+            # Google is authoritative for Gmail and Workspace, not arbitrary third-party email.
+            if owner.google_subject or not (email.endswith("@gmail.com") or claims.get("hd")):
+                raise HTTPException(409, "Sign in with your email link to access this existing workspace.")
+            owner.google_subject = subject
+        else:
+            owner = User(id=account_id_for(email), email=email, google_subject=subject,
+                         display_name=str(claims.get("name") or email.split("@", 1)[0])[:200])
+            db.add(owner)
+            if settings.LEGACY_OWNER_EMAIL.strip().lower() == email:
+                for mapper in Base.registry.mappers:
+                    model = mapper.class_
+                    if isinstance(model, type) and issubclass(model, TenantScoped):
+                        await db.execute(update(model).where(model.tenant_id == LEGACY_TENANT_ID).values(tenant_id=owner.id).execution_options(skip_tenant_filter=True))
+    await db.commit()
+    return {"id": owner.id, "email": owner.email, "display_name": owner.display_name}

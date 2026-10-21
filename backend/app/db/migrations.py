@@ -33,3 +33,11 @@ def ensure_tenant_schema(connection):
             if constraint.get("column_names") == ["name"] and constraint.get("name"):
                 connection.exec_driver_sql(f"ALTER TABLE {formatted} DROP CONSTRAINT {preparer.quote(constraint['name'])}")
         connection.exec_driver_sql(f"CREATE UNIQUE INDEX IF NOT EXISTS {quote('uq_bot_tenant_name_idx')} ON {formatted} ({quote('tenant_id')}, {quote('name')})")
+
+    if "users" in existing:
+        table = Base.metadata.tables.get(f"{schema}.users" if schema else "users")
+        columns = {column["name"] for column in inspect(connection).get_columns("users", schema=schema)}
+        if "google_subject" not in columns:
+            formatted = preparer.format_table(table, use_schema=bool(schema))
+            connection.exec_driver_sql(f"ALTER TABLE {formatted} ADD COLUMN {quote('google_subject')} VARCHAR(255)")
+            connection.exec_driver_sql(f"CREATE UNIQUE INDEX {quote('uq_users_google_subject')} ON {formatted} ({quote('google_subject')})")

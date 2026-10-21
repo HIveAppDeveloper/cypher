@@ -10,5 +10,6 @@ class User(Base):
 
     id = Column(String(255), primary_key=True)
     email = Column(String(254), nullable=False, unique=True, index=True)
+    google_subject = Column(String(255), nullable=True, unique=True)
     display_name = Column(String(200), nullable=True)
     created_at = Column(DateTime, nullable=False, default=datetime.datetime.utcnow)
