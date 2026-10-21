@@ -24,7 +24,7 @@ async def lifespan(app: FastAPI):
         if engine.dialect.name == "postgresql":
             await conn.execute(text("SELECT pg_advisory_xact_lock(1763000272)"))
             await conn.execute(CreateSchema(settings.DATABASE_SCHEMA, if_not_exists=True))
-        import app.models  # register every table before migrations/create_all
+        from app import models as _registered_models  # do not shadow the FastAPI app
         from app.db.migrations import ensure_tenant_schema
         await conn.run_sync(ensure_tenant_schema)
         await conn.run_sync(Base.metadata.create_all)
