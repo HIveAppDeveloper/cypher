@@ -66,6 +66,7 @@ class Begin(BaseModel):
     name:str=Field(min_length=1,max_length=80)
     url:str=Field(min_length=8,max_length=1000)
     approval_id:str|None=Field(default=None,max_length=36)
+    reconnect:bool=False
 
 @router.post('/authorize')
 async def authorize(body:Begin,db:AsyncSession=Depends(get_db)):
@@ -75,10 +76,10 @@ async def authorize(body:Begin,db:AsyncSession=Depends(get_db)):
     except (ValueError,OSError): raise HTTPException(422,'Use a public HTTPS connector URL. A company website belongs in the website lookup field.')
     await require_device(db,body.approval_id,'connect_plugin:'+url)
     existing=(await db.execute(select(Plugin).where(Plugin.url==url))).scalars().first()
-    if existing: return {'status':'connected','plugin_id':existing.id,'name':existing.name}
-    await db.execute(delete(PluginAuthorization).where(PluginAuthorization.plugin_id.is_(None),PluginAuthorization.created_at<time.time()-FLOW_TTL))
+    if existing and not body.reconnect: return {'status':'connected','plugin_id':existing.id,'name':existing.name}
+    await db.execute(delete(PluginAuthorization).where(PluginAuthorization.status!='connected',PluginAuthorization.created_at<time.time()-FLOW_TTL))
     binding=secrets.token_urlsafe(32)
-    row=PluginAuthorization(name=body.name.strip(),url=url,created_at=time.time(),binding_hash=hashlib.sha256(binding.encode()).hexdigest(),status='discovering')
+    row=PluginAuthorization(name=body.name.strip(),url=url,created_at=time.time(),binding_hash=hashlib.sha256(binding.encode()).hexdigest(),status='discovering',plugin_id=existing.id if existing else None)
     db.add(row);await db.commit();await db.refresh(row)
     provider=await make_provider(db,row,CALLBACK_URL)
     try:
@@ -90,8 +91,13 @@ async def authorize(body:Begin,db:AsyncSession=Depends(get_db)):
         raise HTTPException(422,'This service could not start automatic sign-in. It may require an API key, an administrator-installed app, or a different MCP endpoint. Your account has not been connected.')
     if not tools:
         row.status='failed';await db.commit();raise HTTPException(422,'The server connected but did not publish any tools.')
-    plugin=Plugin(name=row.name,url=url,tools=tools,enabled=True);db.add(plugin);await db.flush()
-    row.plugin_id=plugin.id;row.status='connected';await db.commit()
+    plugin=existing or Plugin(name=row.name,url=url,tools=tools,enabled=True)
+    if existing:
+        old={tool['name']:tool.get('enabled',True) for tool in existing.tools}
+        plugin.tools=[{**tool,'enabled':old.get(tool['name'],True)} for tool in tools]
+        await db.execute(delete(PluginAuthorization).where(PluginAuthorization.plugin_id==plugin.id,PluginAuthorization.id!=row.id))
+    else:db.add(plugin)
+    await db.flush();row.plugin_id=plugin.id;row.status='connected';await db.commit()
     return {'status':'connected','flow_id':row.id,'plugin_id':plugin.id,'name':row.name}
 
 class Callback(BaseModel):
@@ -122,7 +128,15 @@ async def callback(body:Callback,db:AsyncSession=Depends(get_db)):
         await provider._handle_token_response(response)
         tools=await discover(row.url,auth=provider)
         if not tools: raise ValueError('No tools')
-        plugin=Plugin(name=row.name,url=row.url,enabled=True,tools=tools);db.add(plugin);await db.flush()
+        plugin=await db.get(Plugin,row.plugin_id) if row.plugin_id else None
+        if row.plugin_id and not plugin:raise ValueError('The plugin was disconnected during sign-in.')
+        if plugin:
+            old={tool['name']:tool.get('enabled',True) for tool in plugin.tools}
+            plugin.tools=[{**tool,'enabled':old.get(tool['name'],True)} for tool in tools]
+            await db.execute(delete(PluginAuthorization).where(PluginAuthorization.plugin_id==plugin.id,PluginAuthorization.id!=row.id))
+        else:
+            plugin=Plugin(name=row.name,url=row.url,enabled=True,tools=tools);db.add(plugin)
+        await db.flush()
         row.plugin_id=plugin.id;row.status='connected';row.state_hash=None;row.binding_hash=None
         clean=storage.read();clean.pop('verifier',None);clean.pop('authorization_url',None)
         from app.services.plugins import seal

@@ -152,3 +152,29 @@ async def test_expired_saved_token_refreshes_before_tool_request(db,monkeypatch)
         assert (await client.get(row.url)).status_code==200
     assert len(requests)==2 and requests[0].url.path=='/token'
     assert (await storage.get_tokens()).refresh_token=='refresh-me'
+
+@pytest.mark.asyncio
+async def test_public_connection_does_not_create_invalid_oauth_provider(db):
+    from app.services.plugin_auth import provider_for_plugin
+    plugin=Plugin(name='Public tools',url='https://public.example/mcp',tools=[],enabled=True);db.add(plugin);await db.flush()
+    row=PluginAuthorization(name=plugin.name,url=plugin.url,created_at=time.time(),status='connected',plugin_id=plugin.id)
+    db.add(row);await db.commit()
+    assert await provider_for_plugin(db,plugin.id) is None
+
+@pytest.mark.asyncio
+async def test_reconnect_preserves_existing_connection_until_verified(db,monkeypatch):
+    plugin=Plugin(name='Existing',url='https://service.example/mcp',tools=[{'name':'lookup','enabled':False}],enabled=False);db.add(plugin);await db.flush()
+    old=PluginAuthorization(name=plugin.name,url=plugin.url,created_at=time.time(),status='connected',plugin_id=plugin.id);db.add(old);await db.commit()
+    row,binding=await create_flow(db);row.plugin_id=plugin.id;await db.commit()
+    _,saved,_=await prepare_consent(db,row,monkeypatch)
+    assert await db.get(PluginAuthorization,old.id) is not None and not plugin.enabled
+    state=parse_qs(urlsplit(saved['authorization_url']).query)['state'][0]
+    def exchange(request):return httpx.Response(200,json={'access_token':'new-private-access','token_type':'Bearer','expires_in':3600})
+    monkeypatch.setattr(catalog_api,'http_client',lambda:httpx.AsyncClient(transport=httpx.MockTransport(exchange)))
+    async def tools(url,token=None,auth=None):return [{'name':'lookup','description':'Look up records','schema':{}},{'name':'new_tool','description':'New tool','schema':{}}]
+    monkeypatch.setattr(catalog_api,'discover',tools)
+    result=await catalog_api.callback(catalog_api.Callback(state=state,code='temporary-code',binding=binding),db)
+    assert result['plugin_id']==plugin.id and not plugin.enabled
+    assert plugin.tools[0]['enabled'] is False
+    assert await db.get(PluginAuthorization,old.id) is None
+    assert row.status=='connected'

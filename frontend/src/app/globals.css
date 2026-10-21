@@ -169,7 +169,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible{outline-color:va
 .website-connect>p{font-size:12px;line-height:1.6;color:#746f7b;margin:10px 0 0}
 .catalog-heading{display:flex;gap:20px;align-items:center;justify-content:space-between;margin:0 0 14px}
 .catalog-heading h3{font-size:16px;font-weight:550;margin:0;white-space:nowrap;letter-spacing:-.015em}
-.catalog-heading h3 span{display:inline-block;color:#77717f;font-size:12px;font-weight:400;padding:3px 7px;margin-left:5px;border-radius:6px;background:#eceaf0;font-variant-numeric:tabular-nums}
+.catalog-heading h3 span{display:inline-block;color:#67606f;font-size:12px;font-weight:400;padding:3px 7px;margin-left:5px;border-radius:6px;background:#eceaf0;font-variant-numeric:tabular-nums}
 .catalog-heading input{width:250px;max-width:52%;font-size:12px;min-height:38px}
 .connector-categories{display:flex;gap:6px;overflow:auto;padding:0 0 16px;scrollbar-width:thin}
 .connector-categories button{flex-shrink:0;min-height:32px;padding:6px 11px;border-radius:8px;color:#6c6576;background:transparent;font-size:12px;white-space:nowrap}
@@ -185,11 +185,11 @@ button:focus-visible,input:focus-visible,textarea:focus-visible{outline-color:va
 .connector-entry-title>div>span{display:block;font-size:10px;color:#77707f;margin-top:3px}
 .connector-entry>p{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;font-size:12px;line-height:1.6;color:#716a7a;margin:14px 0 16px;min-height:58px}
 .connector-entry-footer{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:auto}
-.connector-entry-footer>a{font-size:11px;color:#837a8d;text-decoration:none;min-height:36px;display:flex;align-items:center}
+.connector-entry-footer>a{font-size:11px;color:#6d6378;text-decoration:none;min-height:36px;display:flex;align-items:center}
 .connector-entry-footer>a:hover{text-decoration:underline}
 .connector-connect{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:500;color:#4e455c;background:#f1eef6;min-height:36px;padding:7px 10px;border-radius:8px}
 .connector-connect svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
-.catalog-note{font-size:11px;color:#817a89;line-height:1.6;margin:20px 0 0}
+.catalog-note{font-size:11px;color:#716879;line-height:1.6;margin:20px 0 0}
 .connector-notice,.connector-error{padding:12px 14px;border-radius:12px;font-size:13px;line-height:1.6;margin:0 0 20px;overflow-wrap:anywhere}
 .connector-notice{background:#eeedf2;color:#55505f}
 .connector-error{background:#fbebee;color:#943447}
@@ -200,7 +200,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible{outline-color:va
 .connector-custom h3,.connector-settings h3{font-size:18px;font-weight:550;margin:0 0 8px}
 .connector-custom>p,.connector-settings p{font-size:13px;color:#71697b;line-height:1.7;margin:0 0 24px}
 .connector-custom label,.connector-settings label{display:block;font-size:13px;font-weight:500;margin:18px 0 8px}
-.connector-custom label span{color:#8b8394;font-weight:400;margin-left:5px;font-size:12px}
+.connector-custom label span{color:#716879;font-weight:400;margin-left:5px;font-size:12px}
 .connector-custom input,.connector-settings input{width:100%}
 .connector-custom .field-help{font-size:12px;margin:16px 0 20px}
 .connected-service{padding:20px 0;border-bottom:1px solid #e4e0e9}

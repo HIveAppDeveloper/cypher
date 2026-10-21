@@ -93,4 +93,5 @@ async def make_provider(db, row, callback_url=None):
 
 async def provider_for_plugin(db, plugin_id):
     row=(await db.execute(select(PluginAuthorization).where(PluginAuthorization.plugin_id==plugin_id,PluginAuthorization.status=='connected'))).scalar_one_or_none()
-    return await make_provider(db,row) if row else None
+    if not row or not DatabaseTokenStorage(db,row).read().get('tokens'):return None
+    return await make_provider(db,row)
