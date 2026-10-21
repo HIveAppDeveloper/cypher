@@ -21,9 +21,14 @@ def start(bot_id):
 
 def stop(bot_id):
     from vercel.sandbox.sync import SyncSandboxClient
+    from vercel.sandbox import SandboxApiError
     client = SyncSandboxClient.create()
     try:
         client.get_sandbox(name='grokbot-' + str(UUID(bot_id))).stop()
+    except SandboxApiError as error:
+        # A plugin-only agent may never have needed a computer. Repeated Stop
+        # must also succeed after a sandbox has expired or already stopped.
+        if error.status_code not in (404,410):raise
     finally:
         client.close()
 

@@ -84,7 +84,10 @@ async def stop_bot(bot_id: UUID, db: AsyncSession = Depends(get_db)):
     bot = await db.get(Bot, str(bot_id))
     if not bot:
         raise HTTPException(status_code=404, detail="Bot not found")
-    await asyncio.to_thread(SandboxManager.stop_sandbox, str(bot.id))
+    try:
+        await asyncio.to_thread(SandboxManager.stop_sandbox, str(bot.id))
+    except Exception:
+        raise HTTPException(503,'The computer could not stop. Retry shortly or check the sandbox connection.')
     bot.container_id = None
     bot.status = "offline"
     await db.commit()

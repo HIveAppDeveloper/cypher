@@ -148,3 +148,16 @@ async def test_unconfigured_redis_is_not_contacted(monkeypatch):
     def unexpected(*args, **kwargs): raise AssertionError('No Redis endpoint is configured')
     monkeypatch.setattr(redis, 'from_url', unexpected)
     assert await MemoryManager()._get_redis() is None
+def test_stopping_an_absent_managed_computer_is_idempotent(monkeypatch):
+    import httpx2
+    from uuid import uuid4
+    from vercel.sandbox import SandboxApiError
+    from vercel.sandbox.sync import SyncSandboxClient
+    from app.services.managed_sandbox import stop
+    closed=[]
+    class Client:
+        def get_sandbox(self,**kwargs):raise SandboxApiError(httpx2.Response(404),'not found')
+        def close(self):closed.append(True)
+    monkeypatch.setattr(SyncSandboxClient,'create',lambda:Client())
+    stop(str(uuid4()))
+    assert closed==[True]
