@@ -84,10 +84,14 @@ async def authorize(body:Begin,db:AsyncSession=Depends(get_db)):
     provider=await make_provider(db,row,CALLBACK_URL)
     try:
         tools=await discover(url,auth=provider)
-    except Exception:
+    except Exception as error:
         if row.status=='awaiting_login':
             return {'status':'awaiting_login','flow_id':row.id,'authorization_url':DatabaseTokenStorage(db,row).read()['authorization_url'],'binding':binding,'name':row.name}
         row.status='failed';await db.commit()
+        def rejected_redirect(error):
+            return 'invalid_redirect_uri' in str(error) or any(rejected_redirect(child) for child in getattr(error,'exceptions',[])) or bool(error.__cause__ and rejected_redirect(error.__cause__))
+        if rejected_redirect(error):
+            raise HTTPException(422,'This provider requires approval for this app’s callback address before sign-in can work. Ask the provider to approve '+CALLBACK_URL+'. The service has not been connected.')
         raise HTTPException(422,'This service could not start automatic sign-in. It may require an API key, an administrator-installed app, or a different MCP endpoint. Your account has not been connected.')
     if not tools:
         row.status='failed';await db.commit();raise HTTPException(422,'The server connected but did not publish any tools.')

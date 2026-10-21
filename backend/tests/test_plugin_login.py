@@ -33,8 +33,8 @@ async def db(tmp_path,monkeypatch):
 @pytest.mark.asyncio
 async def test_website_resolution_and_catalog(monkeypatch):
     monkeypatch.setattr(catalog_api,'http_client',lambda:httpx.AsyncClient(transport=httpx.MockTransport(lambda request:httpx.Response(404))))
-    assert len(catalog_api.catalog())==100
-    assert len({item['url'] for item in catalog_api.catalog()})==100
+    assert len(catalog_api.catalog())==500
+    assert len({item['url'] for item in catalog_api.catalog()})==500
     result=await catalog_api.resolve(catalog_api.Website(website='https://vercel.com/hiveapp/open-grokbot'))
     assert result['url']=='https://mcp.vercel.com'
     for url in ['vercel.com','https://www.vercel.com/','notion.so','linear.app']:
@@ -188,3 +188,51 @@ async def test_cancel_sign_in_invalidates_callback_and_preserves_old_plugin(db,m
     result=await catalog_api.cancel_authorization(catalog_api.CancelAuthorization(flow_id=row.id,binding=binding),db)
     assert result['status']=='cancelled' and row.payload is None and row.state_hash is None
     with pytest.raises(HTTPException):await catalog_api.callback(catalog_api.Callback(state=state,code='temporary-code',binding=binding),db)
+
+@pytest.mark.asyncio
+async def test_large_tool_catalog_is_paginated_and_not_truncated(monkeypatch):
+    from contextlib import asynccontextmanager
+    from app.services import plugins
+    from mcp.types import Tool, ListToolsResult
+    class Client:
+        async def list_tools(self,cursor=None):
+            start=40 if cursor else 0
+            return ListToolsResult(tools=[Tool(name=f'tool_{n}',inputSchema={'type':'object'}) for n in range(start,start+40)],nextCursor=None if cursor else 'page2')
+    @asynccontextmanager
+    async def session(*args):yield Client()
+    monkeypatch.setattr(plugins,'session',session)
+    tools=await plugins.discover('https://public.example/mcp')
+    assert len(tools)==80
+    assert tools[-1]['name']=='tool_79'
+
+def test_custom_api_key_header_is_retained_and_unsafe_headers_rejected():
+    from app.services.plugins import credential_headers
+    assert credential_headers('test-token')=={'Authorization':'Bearer test-token'}
+    assert credential_headers('{"X-API-Key":"example"}')=={'X-API-Key':'example'}
+    for token in ['{"Host":"private"}','{"X-API-Key":"x\\r\\nx: y"}','{"Cookie":"session"}']:
+        with pytest.raises(ValueError):credential_headers(token)
+
+@pytest.mark.asyncio
+async def test_500_connections_keep_model_tools_bounded_and_reject_disabled(db,monkeypatch):
+    from app.services.tools.registry import ToolRegistry
+    from app.services import plugins
+    for n in range(500):
+        db.add(Plugin(name=f'Service {n}',url=f'https://service{n}.example/mcp',tools=[{'name':'list_records','description':'Read project records','schema':{'type':'object'}}],enabled=True))
+    await db.commit()
+    bot=types.SimpleNamespace(tools_enabled=['plugins'])
+    registry=ToolRegistry()
+    await registry.load_plugins(db,bot)
+    assert {t['function']['name'] for t in registry.get_tools_for_bot(bot)}=={'plugin_search','plugin_call'}
+    found=await registry.execute_tool('plugin_search',{'query':'Service 499'},'bot')
+    exact=next(t for t in found['tools'] if t['service']=='Service 499')
+    calls=[]
+    async def invoke(*args):calls.append(args);return {'success':True,'content':'A real handler response'}
+    monkeypatch.setattr(plugins,'invoke',invoke)
+    # Rebuild closures after replacing the invocation transport.
+    await registry.load_plugins(db,bot)
+    result=await registry.execute_tool('plugin_call',{'plugin_id':exact['plugin_id'],'tool_name':exact['name'],'arguments':{}},'bot')
+    assert result['success'] and calls
+    invalid=await registry.execute_tool('plugin_call',{'plugin_id':exact['plugin_id'],'tool_name':'delete_records','arguments':{}},'bot')
+    assert 'error' in invalid
+    await registry.load_plugins(db,types.SimpleNamespace(tools_enabled=['browser']))
+    assert not any(name.startswith('plugin_') for name in registry._tools)

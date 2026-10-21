@@ -13,6 +13,7 @@ class ConnectPlugin(BaseModel):
     name: str = Field(min_length=1, max_length=80)
     url: str = Field(min_length=8, max_length=1000)
     token: str = Field(default='', max_length=4096)
+    auth_header: str = Field(default='Authorization',pattern=r'^[A-Za-z][A-Za-z0-9-]{0,63}$')
 class TogglePlugin(BaseModel):
     enabled: bool
 
@@ -21,18 +22,31 @@ def public(plugin):
 
 @router.get('')
 async def list_plugins(db: AsyncSession = Depends(get_db)):
-    return [public(p) for p in (await db.execute(select(Plugin))).scalars()]
+    from app.models.runtime import RuntimeCheck
+    authenticated=set((await db.execute(select(PluginAuthorization.plugin_id).where(PluginAuthorization.status=='connected',PluginAuthorization.payload.is_not(None)))).scalars())
+    output=[]
+    for plugin in (await db.execute(select(Plugin))).scalars():
+        item=public(plugin);item['authenticated']=item['authenticated'] or plugin.id in authenticated
+        check=await db.get(RuntimeCheck,'plugin:'+plugin.id)
+        item['verification']={'status':check.status,'detail':check.detail,'checked_at':check.updated_at.isoformat()+'Z'} if check else {'status':'not_tested'}
+        output.append(item)
+    return output
 
 @router.post('')
 async def connect(data: ConnectPlugin, db: AsyncSession = Depends(get_db)):
     from app.api.device import require_device
     await require_device(db,data.approval_id,'connect_plugin:'+data.url.strip())
     try:
-        credential = seal(data.token.strip())
+        import json
+        from app.services.plugins import credential_headers
+        token=data.token.strip()
+        saved_token=token if data.auth_header.lower()=='authorization' else json.dumps({data.auth_header:token}) if token else ''
+        credential_headers(saved_token)
+        credential = seal(saved_token)
     except ValueError as error:
         raise HTTPException(status_code=503, detail=str(error))
     try:
-        tools = await discover(data.url.strip(), data.token.strip() or None)
+        tools = await discover(data.url.strip(), saved_token or None)
     except ValueError as error:
         raise HTTPException(status_code=422, detail=str(error))
     except Exception:
@@ -105,3 +119,41 @@ async def account_setup(body:AccountSetup,db:AsyncSession=Depends(get_db)):
             'If inbox access, consent, or a human-only step is unavailable, report the exact blocker and the next link. '
             'Do not send unrelated messages. Verify account state before reporting success. Creating an account does not automatically connect its MCP server.')
     return await send_message(room['id'],MessageCreate(sender_type='user',content=prompt,options={'model':'gpt-6-luna','provider':'openai','reasoning_effort':'low','max_iterations':8,'max_tokens':2048}),db)
+
+
+@router.post('/{id}/test')
+async def test_connection(id:UUID,db:AsyncSession=Depends(get_db)):
+    """Run a known read-only smoke operation; never guess a write tool."""
+    import time, asyncio
+    from urllib.parse import urlsplit
+    from app.services.plugins import invoke
+    from app.services.verification import save_check
+    plugin=await db.get(Plugin,str(id))
+    if not plugin or not plugin.enabled:raise HTTPException(409,'Enable the connection before testing it.')
+    host=urlsplit(plugin.url).hostname
+    examples={
+        'mcp.deepwiki.com': [('read_wiki_structure',{'repoName':'vercel/ai'})],
+        'learn.microsoft.com': [('microsoft_docs_search',{'query':'Azure Functions overview'})],
+        'docs.mcp.cloudflare.com': [('search_cloudflare_documentation',{'query':'Workers overview'})],
+        'mcp.linear.app': [('list_teams',{}),('list_projects',{})],
+    }
+    names={t['name'] for t in plugin.tools if t.get('enabled',True)}
+    example=next(((name,args) for name,args in examples.get(host,[]) if name in names),None)
+    if not example:
+        # Protocol discovery alone is explicitly labelled, not a tool-call pass.
+        from app.services.plugin_auth import provider_for_plugin
+        from app.services.plugins import reveal
+        try:
+            tools=await discover(plugin.url,reveal(plugin.credential),await provider_for_plugin(db,plugin.id))
+        except Exception:raise HTTPException(502,'The connection did not respond. Reconnect and check provider access.')
+        return {'status':'discovered','tool_count':len(tools),'message':'Connection responded. No known read-only smoke operation is available; execution is not verified.'}
+    started=time.monotonic()
+    try:
+        async with asyncio.timeout(45):
+            result=await invoke(plugin.id,example[0],example[1])
+        passed=result.get('success') is True
+    except Exception:
+        passed=False
+    detail={'tool':example[0],'latency_ms':round((time.monotonic()-started)*1000),'message':'A read-only tool returned successfully.' if passed else 'The read-only test failed. Reconnect or check the service permissions.'}
+    await save_check('plugin:'+plugin.id,'passed' if passed else 'failed',detail)
+    return {'status':'passed' if passed else 'failed',**detail}

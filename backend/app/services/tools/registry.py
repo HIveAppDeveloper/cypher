@@ -60,17 +60,35 @@ class ToolRegistry:
         logger.info(f"Registered tool: {name}")
 
     async def load_plugins(self, db, bot):
+        self._tools = {name: tool for name, tool in self._tools.items() if not name.startswith("plugin_")}
         if "plugins" not in (bot.tools_enabled or []):
             return
         from sqlalchemy import select
         from app.models.plugin import Plugin
         from app.services.plugins import invoke
-        for plugin in (await db.execute(select(Plugin).where(Plugin.enabled == True))).scalars():
-            for index, tool in enumerate(plugin.tools):
-                if not tool.get('enabled',True):continue
-                async def handler(arguments, bot_id, pid=plugin.id, tool_name=tool['name']):
-                    return await invoke(pid, tool_name, arguments)
-                self.register(f"plugin_{plugin.id.replace('-', '')[:12]}_{index}", f"{plugin.name}: {tool['description']}", tool['schema'], handler)
+        # Do not accumulate schemas or stale tools across turns. Two small routing
+        # tools keep model context bounded even with hundreds of connections.
+        connections = list((await db.execute(select(Plugin).where(Plugin.enabled == True))).scalars())
+        manifest = [dict(plugin_id=p.id, service=p.name, **tool) for p in connections for tool in p.tools if tool.get('enabled', True)]
+        if not manifest:
+            return
+        async def search(arguments, bot_id):
+            import re
+            words = set(re.findall(r"[a-z0-9]+", arguments.get('query', '').lower()))
+            ranked = []
+            for item in manifest:
+                haystack = (item['service']+' '+item['name']+' '+item.get('description', '')).lower()
+                score = sum(1 for word in words if word in haystack)
+                if score or not words:
+                    ranked.append((score, item))
+            ranked.sort(key=lambda pair: pair[0], reverse=True)
+            return {'tools': [{'plugin_id':t['plugin_id'], 'service':t['service'], 'name':t['name'], 'description':t.get('description',''), 'parameters':t['schema']} for _,t in ranked[:12]], 'total_matches':len(ranked), 'instruction':'Call plugin_call with the exact plugin_id, tool_name and arguments matching its parameters. Search again with a more specific service or action if needed.'}
+        async def call(arguments, bot_id):
+            if not any(t['plugin_id']==arguments.get('plugin_id') and t['name']==arguments.get('tool_name') for t in manifest):
+                return {'error':'Search enabled plugin tools first and use an exact returned service/tool.'}
+            return await invoke(arguments['plugin_id'], arguments['tool_name'], arguments.get('arguments', {}))
+        self.register('plugin_search', 'Find tools in connected services. Search by service name and action before calling plugin_call. Only enabled, connected tools are returned.', {'type':'object','properties':{'query':{'type':'string'}},'required':['query']}, search)
+        self.register('plugin_call', 'Run a connected service tool returned by plugin_search. Match its exact parameters. Verify the returned result before claiming success.', {'type':'object','properties':{'plugin_id':{'type':'string'},'tool_name':{'type':'string'},'arguments':{'type':'object','additionalProperties':True}},'required':['plugin_id','tool_name','arguments']}, call)
 
     def register_default_tools(self):
         """Register all built-in tools."""

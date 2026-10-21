@@ -2,6 +2,7 @@
 import asyncio
 import base64
 import hashlib
+import json
 import ipaddress
 import socket
 from contextlib import asynccontextmanager
@@ -37,10 +38,21 @@ def http_client(headers=None, timeout=None, auth=None):
         await validate_endpoint(parsed._replace(query='',fragment='').geturl())
     return httpx.AsyncClient(headers=headers, timeout=timeout or 20, auth=auth, follow_redirects=False, event_hooks={'request':[guard]})
 
+def credential_headers(token):
+    if not token: return {}
+    if token.startswith('{'):
+        headers=json.loads(token)
+        if not isinstance(headers,dict) or len(headers)!=1:raise ValueError('Invalid saved credential.')
+        import re
+        if any(not re.fullmatch(r'[A-Za-z][A-Za-z0-9-]{0,63}',name) or name.lower() in {'host','cookie','content-length','transfer-encoding','connection','proxy-authorization'} or not isinstance(value,str) or '\r' in value or '\n' in value for name,value in headers.items()):
+            raise ValueError('Invalid authentication header.')
+        return headers
+    return {'Authorization':'Bearer '+token}
+
 @asynccontextmanager
 async def session(url, token=None, auth=None):
     await validate_endpoint(url)
-    headers = {'Authorization': 'Bearer ' + token} if token else {}
+    headers = credential_headers(token)
     async with streamablehttp_client(url, headers=headers, timeout=15, sse_read_timeout=25, httpx_client_factory=http_client, auth=auth) as streams:
         async with ClientSession(streams[0], streams[1], read_timeout_seconds=timedelta(seconds=60)) as client:
             await client.initialize()
@@ -49,8 +61,19 @@ async def session(url, token=None, auth=None):
 async def discover(url, token=None, auth=None):
     async with asyncio.timeout(25):
         async with session(url, token, auth) as client:
-            result = await client.list_tools()
-            return [{'name': t.name, 'description': (t.description or '')[:2000], 'schema': t.inputSchema} for t in result.tools[:40]]
+            tools = []
+            cursor = None
+            seen = set()
+            while True:
+                result = await client.list_tools(cursor=cursor)
+                tools.extend({'name': t.name, 'description': (t.description or '')[:2000], 'schema': t.inputSchema, 'read_only': bool(getattr(t, 'annotations', None) and t.annotations.readOnlyHint)} for t in result.tools)
+                cursor = result.nextCursor
+                if not cursor:
+                    return tools
+                if cursor in seen or len(tools)>5000:
+                    raise ValueError('The server returned an invalid or excessive tool catalog.')
+                seen.add(cursor)
+
 
 async def invoke(plugin_id, tool_name, arguments):
     from app.db.session import AsyncSessionLocal

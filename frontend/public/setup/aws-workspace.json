@@ -1,0 +1,215 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "Private Open GrokBot workspace: EC2, encrypted disk, PostgreSQL, Redis, HTTPS and owner login. AWS usage is billed to your account. Single host; arrange backups before relying on it.",
+  "Parameters": {
+    "DomainName": {
+      "Type": "String",
+      "AllowedPattern": "[a-z0-9][a-z0-9.-]+[a-z0-9]",
+      "Description": "Domain you control. Point its DNS A record to the HostAddress output."
+    },
+    "VpcId": {
+      "Type": "AWS::EC2::VPC::Id"
+    },
+    "SubnetId": {
+      "Type": "AWS::EC2::Subnet::Id",
+      "Description": "A public subnet in the selected VPC, with an Internet Gateway route."
+    },
+    "ModelKeyParameter": {
+      "Type": "String",
+      "Default": "/grokbot/openai-api-key",
+      "AllowedPattern": "/[a-zA-Z0-9/_.-]+",
+      "Description": "Existing SSM SecureString containing your OpenAI API key."
+    },
+    "InstanceType": {
+      "Type": "String",
+      "Default": "t3.large",
+      "AllowedValues": [
+        "t3.large",
+        "t3.xlarge",
+        "m6i.large"
+      ]
+    },
+    "ImageId": {
+      "Type": "AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>",
+      "Default": "/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64"
+    }
+  },
+  "Resources": {
+    "Firewall": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupDescription": "HTTPS owner login only; no SSH or direct database access",
+        "VpcId": {
+          "Ref": "VpcId"
+        },
+        "SecurityGroupIngress": [
+          {
+            "IpProtocol": "tcp",
+            "FromPort": 80,
+            "ToPort": 80,
+            "CidrIp": "0.0.0.0/0"
+          },
+          {
+            "IpProtocol": "tcp",
+            "FromPort": 443,
+            "ToPort": 443,
+            "CidrIp": "0.0.0.0/0"
+          }
+        ]
+      }
+    },
+    "HostRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": [
+                  "ec2.amazonaws.com"
+                ]
+              },
+              "Action": [
+                "sts:AssumeRole"
+              ]
+            }
+          ]
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Sub": "arn:${AWS::Partition}:iam::aws:policy/AmazonSSMManagedInstanceCore"
+          }
+        ],
+        "Policies": [
+          {
+            "PolicyName": "WorkspaceCredentials",
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "ssm:GetParameter"
+                  ],
+                  "Resource": {
+                    "Fn::Sub": "arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter${ModelKeyParameter}"
+                  }
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "ssm:PutParameter"
+                  ],
+                  "Resource": {
+                    "Fn::Sub": "arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter/grokbot/${AWS::StackName}/login"
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "HostProfile": {
+      "Type": "AWS::IAM::InstanceProfile",
+      "Properties": {
+        "Roles": [
+          {
+            "Ref": "HostRole"
+          }
+        ]
+      }
+    },
+    "Host": {
+      "Type": "AWS::EC2::Instance",
+      "CreationPolicy": {
+        "ResourceSignal": {
+          "Count": 1,
+          "Timeout": "PT45M"
+        }
+      },
+      "Properties": {
+        "ImageId": {
+          "Ref": "ImageId"
+        },
+        "InstanceType": {
+          "Ref": "InstanceType"
+        },
+        "IamInstanceProfile": {
+          "Ref": "HostProfile"
+        },
+        "NetworkInterfaces": [
+          {
+            "DeviceIndex": "0",
+            "AssociatePublicIpAddress": true,
+            "SubnetId": {
+              "Ref": "SubnetId"
+            },
+            "GroupSet": [
+              {
+                "Ref": "Firewall"
+              }
+            ]
+          }
+        ],
+        "BlockDeviceMappings": [
+          {
+            "DeviceName": "/dev/xvda",
+            "Ebs": {
+              "VolumeSize": 60,
+              "VolumeType": "gp3",
+              "Encrypted": true
+            }
+          }
+        ],
+        "MetadataOptions": {
+          "HttpTokens": "required",
+          "HttpEndpoint": "enabled"
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": {
+              "Fn::Sub": "${AWS::StackName}-grokbot"
+            }
+          }
+        ],
+        "UserData": {
+          "Fn::Base64": {
+            "Fn::Sub": "#!/bin/bash\nset -euo pipefail\n# Supplied by CloudFormation, without embedding model credentials.\nGROKBOT_DOMAIN='${DomainName}'\nGROKBOT_STACK='${AWS::StackName}'\nGROKBOT_REGION='${AWS::Region}'\nGROKBOT_MODEL_PARAMETER='${ModelKeyParameter}'\ntrap 'result=$?; /opt/aws/bin/cfn-signal -e \"$result\" --stack \"$GROKBOT_STACK\" --resource Host --region \"$GROKBOT_REGION\"' EXIT\n\ndnf install -y docker git aws-cfn-bootstrap\nsystemctl enable --now docker\ninstall -d -m 755 /usr/local/lib/docker/cli-plugins\ncurl --fail --location --silent --show-error https://github.com/docker/compose/releases/download/v2.39.2/docker-compose-linux-x86_64 -o /usr/local/lib/docker/cli-plugins/docker-compose\nchmod 755 /usr/local/lib/docker/cli-plugins/docker-compose\ngit clone --depth 1 https://github.com/HIveAppDeveloper/open-grokbot.git /opt/grokbot\ncd /opt/grokbot\numask 077\nGROKBOT_TOKEN=$(openssl rand -hex 32)\nGROKBOT_PASSWORD=$(openssl rand -hex 16)\nGROKBOT_MODEL_KEY=$(aws ssm get-parameter --name \"$GROKBOT_MODEL_PARAMETER\" --with-decryption --region \"$GROKBOT_REGION\" --query Parameter.Value --output text)\naws ssm put-parameter --name \"/grokbot/$GROKBOT_STACK/login\" --type SecureString --value \"$GROKBOT_PASSWORD\" --region \"$GROKBOT_REGION\" --overwrite >/dev/null\nGROKBOT_PASSWORD_HASH=$(docker run --rm caddy:2-alpine caddy hash-password --plaintext \"$GROKBOT_PASSWORD\")\ncat > .env.aws <<EOF\nGROKBOT_DATABASE_URL=postgresql+asyncpg://grokbot:$GROKBOT_TOKEN@database:5432/grokbot\nPOSTGRES_PASSWORD=$GROKBOT_TOKEN\nBACKEND_API_TOKEN=$GROKBOT_TOKEN\nGROKBOT_BACKEND_API_TOKEN=$GROKBOT_TOKEN\nOPENAI_API_KEY=$GROKBOT_MODEL_KEY\nLLM_USE_GATEWAY=false\nGROKBOT_PUBLIC_URL=https://$GROKBOT_DOMAIN\nCORS_ORIGINS=https://$GROKBOT_DOMAIN\nREDIS_URL=redis://redis:6379/0\nSANDBOX_BACKEND=docker\nEOF\ncat > Caddyfile <<EOF\n$GROKBOT_DOMAIN {\n  basic_auth {\n    owner $GROKBOT_PASSWORD_HASH\n  }\n  reverse_proxy frontend:3000\n}\nEOF\ncat > compose.aws.yml <<'EOF'\nservices:\n  database:\n    image: postgres:17-alpine\n    env_file: .env.aws\n    environment:\n      POSTGRES_DB: grokbot\n      POSTGRES_USER: grokbot\n    volumes: [database:/var/lib/postgresql/data]\n    healthcheck:\n      test: [CMD-SHELL, pg_isready -U grokbot]\n      interval: 5s\n      retries: 20\n    restart: unless-stopped\n  redis:\n    image: redis:7-alpine\n    command: redis-server --appendonly yes\n    volumes: [redis:/data]\n    restart: unless-stopped\n  backend:\n    build: ./backend\n    env_file: .env.aws\n    volumes: [/var/run/docker.sock:/var/run/docker.sock, uploads:/app/uploads]\n    depends_on:\n      database: {condition: service_healthy}\n    restart: unless-stopped\n  frontend:\n    build: ./frontend\n    env_file: .env.aws\n    environment:\n      GROKBOT_BACKEND_URL: http://backend:8000\n    depends_on: [backend]\n    restart: unless-stopped\n  web:\n    image: caddy:2-alpine\n    ports: ['80:80', '443:443']\n    volumes: [./Caddyfile:/etc/caddy/Caddyfile:ro, caddy:/data]\n    depends_on: [frontend]\n    restart: unless-stopped\nvolumes:\n  database:\n  redis:\n  uploads:\n  caddy:\nEOF\ndocker build -t open-grokbot-sandbox:latest ./sandbox\ndocker compose -f compose.aws.yml up -d --build\n# Creation is successful only after the private API and database respond.\nfor attempt in $(seq 1 60); do\n  if docker compose -f compose.aws.yml exec -T backend python -c 'import os,urllib.request; r=urllib.request.Request(\"http://127.0.0.1:8000/api/runtime\",headers={\"Authorization\":\"Bearer \"+os.environ[\"BACKEND_API_TOKEN\"]}); urllib.request.urlopen(r,timeout=5).read()'; then\n    exit 0\n  fi\n  sleep 5\ndone\nexit 1\n"
+          }
+        }
+      }
+    }
+  },
+  "Outputs": {
+    "HostAddress": {
+      "Value": {
+        "Fn::GetAtt": [
+          "Host",
+          "PublicIp"
+        ]
+      }
+    },
+    "WorkspaceURL": {
+      "Value": {
+        "Fn::Sub": "https://${DomainName}"
+      }
+    },
+    "LoginUser": {
+      "Value": "owner"
+    },
+    "LoginPasswordParameter": {
+      "Value": {
+        "Fn::Sub": "/grokbot/${AWS::StackName}/login"
+      }
+    },
+    "InstanceId": {
+      "Value": {
+        "Ref": "Host"
+      }
+    }
+  }
+}
