@@ -94,11 +94,14 @@ async def verify_email_login(token: str, request: Request, db: AsyncSession = De
     if owner is None:
         owner = User(id=account_id, email=email, display_name=email.split("@", 1)[0][:200])
         db.add(owner)
-        if settings.LEGACY_OWNER_EMAIL.strip().lower() == email:
-            for mapper in Base.registry.mappers:
-                model = mapper.class_
-                if isinstance(model, type) and issubclass(model, TenantScoped):
-                    await db.execute(update(model).where(model.tenant_id == LEGACY_TENANT_ID).values(tenant_id=account_id).execution_options(skip_tenant_filter=True))
+    # Retry ownership binding on a later verified sign-in if configuration was
+    # added after the account was first created. Never assign legacy data to an
+    # arbitrary first registrant.
+    if settings.LEGACY_OWNER_EMAIL.strip().lower() == email:
+        for mapper in Base.registry.mappers:
+            model = mapper.class_
+            if isinstance(model, type) and issubclass(model, TenantScoped):
+                await db.execute(update(model).where(model.tenant_id == LEGACY_TENANT_ID).values(tenant_id=account_id).execution_options(skip_tenant_filter=True))
     challenge.used = True
     tenant_token = current_tenant_id.set(account_id)
     try:

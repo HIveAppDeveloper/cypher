@@ -97,17 +97,23 @@ async def deliveries(id:str,db:AsyncSession=Depends(get_db)):
     return [{'id':d.id,'status':d.status,'attempts':d.attempts,'detail':d.detail} for d in rows]
 @router.post('/channels/{id}/events',status_code=202)
 async def channel_event(id:str,data:ChannelMessage,x_grokbot_channel_key:str=Header(default=''),db:AsyncSession=Depends(get_db)):
-    c=(await db.execute(select(Channel).where(Channel.id==id).with_for_update())).scalar_one_or_none()
+    # External senders authenticate with this channel's key, not a browser login.
+    c=(await db.execute(select(Channel).where(Channel.id==id).with_for_update().execution_options(skip_tenant_filter=True))).scalar_one_or_none()
     if not c or not c.enabled or not secrets.compare_digest(c.token_hash,hashlib.sha256(x_grokbot_channel_key.encode()).hexdigest()):raise HTTPException(401,'Invalid channel credentials or disabled channel.')
-    old=(await db.execute(select(ChannelEvent).where(ChannelEvent.channel_id==id,ChannelEvent.event_id==data.event_id))).scalar_one_or_none()
-    if old:return {'status':'duplicate','task_id':old.task_id}
-    count=await db.scalar(select(func.count()).select_from(ChannelEvent).where(ChannelEvent.channel_id==id,ChannelEvent.created_at>datetime.utcnow()-timedelta(minutes=1)))
-    if count>=10:raise HTTPException(429,'Channel event limit reached. Try again in a minute.')
-    if await db.scalar(select(func.count()).select_from(Task).where(Task.status.in_(['pending','running'])))>=20:raise HTTPException(429,'The workspace queue is full.')
-    p=await participant(db,c.conversation_id)
-    task=Task(id=str(uuid.uuid4()),conversation_id=c.conversation_id,bot_id=p.bot_id,title=data.text[:100],description=data.text,status='pending',result={'request':{'channel_id':id,'options':{'provider':'openai','model':c.manager_model,'max_tokens':2048,'reasoning_effort':'low','max_iterations':8,'team_rounds':1}}})
-    db.add(task);db.add(ChannelEvent(channel_id=id,event_id=data.event_id,task_id=task.id));await db.commit()
-    return {'status':'queued','task_id':task.id}
+    from app.db.tenancy import current_tenant_id
+    tenant_token=current_tenant_id.set(c.tenant_id)
+    try:
+        old=(await db.execute(select(ChannelEvent).where(ChannelEvent.channel_id==id,ChannelEvent.event_id==data.event_id))).scalar_one_or_none()
+        if old:return {'status':'duplicate','task_id':old.task_id}
+        count=await db.scalar(select(func.count()).select_from(ChannelEvent).where(ChannelEvent.channel_id==id,ChannelEvent.created_at>datetime.utcnow()-timedelta(minutes=1)))
+        if count>=10:raise HTTPException(429,'Channel event limit reached. Try again in a minute.')
+        if await db.scalar(select(func.count()).select_from(Task).where(Task.status.in_(['pending','running'])))>=20:raise HTTPException(429,'The workspace queue is full.')
+        p=await participant(db,c.conversation_id)
+        task=Task(id=str(uuid.uuid4()),conversation_id=c.conversation_id,bot_id=p.bot_id,title=data.text[:100],description=data.text,status='pending',result={'request':{'channel_id':id,'options':{'provider':'openai','model':c.manager_model,'max_tokens':2048,'reasoning_effort':'low','max_iterations':8,'team_rounds':1}}})
+        db.add(task);db.add(ChannelEvent(channel_id=id,event_id=data.event_id,task_id=task.id));await db.commit()
+        return {'status':'queued','task_id':task.id}
+    finally:
+        current_tenant_id.reset(tenant_token)
 
 
 @router.post('/channels/{id}/test',status_code=202)

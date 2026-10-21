@@ -128,7 +128,10 @@ async def test_plugin_tool_disable_is_enforced_and_refresh_preserves_choice(work
     assert changed.status_code==200 and not changed.json()['tools'][1]['enabled']
     async with sessions() as db:
         bot=(await db.execute(select(Bot))).scalar_one();registry=ToolRegistry();await registry.load_plugins(db,bot)
-        assert len(registry.get_tools_for_bot(bot))==1
+        assert {t['function']['name'] for t in registry.get_tools_for_bot(bot)} == {'plugin_search','plugin_call'}
+        found = await registry.execute_tool('plugin_search', {'query':'Tools'}, bot.id)
+        assert [t['name'] for t in found['tools']] == ['read']
+        assert 'error' in await registry.execute_tool('plugin_call', {'plugin_id':pid,'tool_name':'write','arguments':{}}, bot.id)
     from app.db import session as db_session
     monkeypatch.setattr(db_session,'AsyncSessionLocal',sessions)
     assert 'error' in await plugins.invoke(pid,'write',{})

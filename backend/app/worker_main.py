@@ -3,18 +3,12 @@ import asyncio
 import logging
 import signal
 from contextlib import suppress
-from sqlalchemy.schema import CreateSchema
-from sqlalchemy import text
-from app.config import settings
-from app.db.session import engine, Base
+from app.db.session import engine
 from app.services.worker import run_worker
 
 async def main():
-    async with engine.begin() as conn:
-        if engine.dialect.name == "postgresql":
-            await conn.execute(text("SELECT pg_advisory_xact_lock(1763000272)"))
-            await conn.execute(CreateSchema(settings.DATABASE_SCHEMA, if_not_exists=True))
-        await conn.run_sync(Base.metadata.create_all)
+    from app.db.bootstrap import initialize_database
+    await initialize_database()
     task = asyncio.create_task(run_worker())
     loop = asyncio.get_running_loop()
     for sig in (signal.SIGTERM, signal.SIGINT):
