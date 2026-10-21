@@ -1,3 +1,4 @@
+import pytest
 from types import SimpleNamespace
 from sqlalchemy import MetaData, Table, Column, String
 from sqlalchemy.dialects.postgresql import dialect
@@ -18,6 +19,7 @@ def test_existing_postgres_table_migration_never_coerces_table_to_boolean(monkey
     assert any('tenant_id' in sql and 'CREATE UNIQUE INDEX' in sql for sql in statements)
 
 
+@pytest.mark.asyncio
 async def test_actual_lifespan_keeps_fastapi_app_and_starts_with_optional_redis_down(tmp_path,monkeypatch):
     import asyncio
     import redis.asyncio as aioredis

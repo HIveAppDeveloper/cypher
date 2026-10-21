@@ -171,3 +171,18 @@ async def test_verified_existing_owner_can_recover_legacy_data(workspace, monkey
     assert len(own.json()) == 1
     assert (await client.get('/api/bots', headers={'x-grokbot-user-id': 'stranger'})).json() == []
     assert (await client.get('/api/auth/email/verify', params={'token': token})).status_code == 400
+
+
+@pytest.mark.asyncio
+async def test_participant_changes_cannot_attach_another_owners_room_or_agent(workspace):
+    client, sessions = workspace
+    own_room = await room(client, 'participant-owner')
+    foreign_room = await room(client, 'different-owner')
+    own_bot = (await client.get('/api/bots', headers={'x-grokbot-user-id': 'participant-owner'})).json()[0]['id']
+    foreign_bot = (await client.get('/api/bots', headers={'x-grokbot-user-id': 'different-owner'})).json()[0]['id']
+    headers = {'x-grokbot-user-id': 'participant-owner'}
+    for conversation, bot in [(foreign_room, own_bot), (own_room, foreign_bot)]:
+        response = await client.post(f'/api/conversations/{conversation}/participants', params={'bot_id': bot}, headers=headers)
+        assert response.status_code == 404, response.text
+    response = await client.post(f'/api/conversations/{own_room}/participants', params={'bot_id': own_bot}, headers=headers)
+    assert response.status_code == 409, response.text

@@ -47,6 +47,15 @@ async def get_conversation(id: UUID, db: AsyncSession = Depends(get_db)):
 
 @router.post("/{id}/participants")
 async def add_participant(id: UUID, bot_id: UUID, db: AsyncSession = Depends(get_db)):
+    conversation = await db.get(Conversation, str(id))
+    bot = await db.get(Bot, str(bot_id))
+    if conversation is None or bot is None:
+        raise HTTPException(status_code=404, detail="Conversation or bot not found")
+    participants = (await db.execute(select(ConversationParticipant).where(ConversationParticipant.conversation_id == str(id)))).scalars().all()
+    if any(part.bot_id == str(bot_id) for part in participants):
+        raise HTTPException(status_code=409, detail="This agent is already in the conversation")
+    if len(participants) >= 6:
+        raise HTTPException(status_code=422, detail="A conversation can contain at most six agents")
     part = ConversationParticipant(conversation_id=str(id), bot_id=str(bot_id))
     db.add(part)
     await db.commit()
@@ -54,6 +63,8 @@ async def add_participant(id: UUID, bot_id: UUID, db: AsyncSession = Depends(get
 
 @router.delete("/{id}/participants/{bot_id}")
 async def remove_participant(id: UUID, bot_id: UUID, db: AsyncSession = Depends(get_db)):
+    if await db.get(Conversation, str(id)) is None:
+        raise HTTPException(status_code=404, detail="Conversation not found")
     result = await db.execute(select(ConversationParticipant).filter_by(conversation_id=str(id), bot_id=str(bot_id)))
     part = result.scalars().first()
     if part:

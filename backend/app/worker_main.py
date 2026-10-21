@@ -8,7 +8,7 @@ from app.services.worker import run_worker
 
 async def main():
     from app.db.bootstrap import initialize_database
-    await initialize_database()
+    await initialize_database(engine)
     task = asyncio.create_task(run_worker())
     loop = asyncio.get_running_loop()
     for sig in (signal.SIGTERM, signal.SIGINT):

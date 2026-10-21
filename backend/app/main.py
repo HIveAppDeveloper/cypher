@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 async def lifespan(app: FastAPI):
     # Initialize DB tables
     from app.db.bootstrap import initialize_database
-    await initialize_database()
+    await initialize_database(engine)
     logger.info("Database tables created")
 
     # Initialize Redis (optional for local dev)
