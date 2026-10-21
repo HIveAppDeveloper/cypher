@@ -1,0 +1,1470 @@
+[
+  {
+    "id": "37a30e4bfcf9dbab",
+    "name": "Vercel",
+    "url": "https://mcp.vercel.com",
+    "description": "Deployments, projects, logs, and Vercel documentation. Sign in with your Vercel account.",
+    "category": "Development",
+    "domains": [
+      "vercel.com",
+      "mcp.vercel.com"
+    ],
+    "source": "https://vercel.com/docs/agent-resources/vercel-mcp",
+    "iconSource": "https://mcp.vercel.com/icons/vercel-light.svg",
+    "auth": "auto",
+    "icon": "/connector-icons/37a30e4bfcf9dbab.svg"
+  },
+  {
+    "id": "1cbd18bf1818c780",
+    "name": "Notion",
+    "url": "https://mcp.notion.com/mcp",
+    "description": "Search and work with your Notion workspace. Connect through Notion sign-in.",
+    "category": "Research",
+    "domains": [
+      "notion.so",
+      "notion.com",
+      "mcp.notion.com"
+    ],
+    "source": "https://www.notion.com/help/notion-mcp",
+    "iconSource": "https://www.notion.com/front-static/favicon.ico",
+    "auth": "auto",
+    "icon": "/connector-icons/1cbd18bf1818c780.png"
+  },
+  {
+    "id": "fb39103c7d2edac2",
+    "name": "Linear",
+    "url": "https://mcp.linear.app/mcp",
+    "description": "Issues, projects, and team workflows in Linear.",
+    "category": "Productivity",
+    "domains": [
+      "linear.app",
+      "mcp.linear.app"
+    ],
+    "source": "https://linear.app/docs/mcp",
+    "iconSource": "https://linear.app/favicon.ico",
+    "auth": "auto",
+    "icon": "/connector-icons/fb39103c7d2edac2.png"
+  },
+  {
+    "id": "5b64146edc1804e6",
+    "name": "Figma",
+    "url": "https://mcp.figma.com/mcp",
+    "description": "Bring Figma designs and design context into your team’s work.",
+    "category": "Images & media",
+    "domains": [
+      "figma.com",
+      "mcp.figma.com"
+    ],
+    "source": "https://developers.figma.com/docs/figma-mcp-server/remote-server-installation/",
+    "iconSource": "https://static.figma.com/app/icon/1/favicon.png",
+    "auth": "auto"
+  },
+  {
+    "id": "bcef8851a44049aa",
+    "name": "Stripe",
+    "url": "https://mcp.stripe.com",
+    "description": "Connect Stripe tools using the permissions you approve.",
+    "category": "Productivity",
+    "domains": [
+      "stripe.com",
+      "mcp.stripe.com"
+    ],
+    "source": "https://docs.stripe.com/mcp",
+    "iconSource": "https://stripe.com/favicon.ico",
+    "auth": "auto",
+    "icon": "/connector-icons/bcef8851a44049aa.png"
+  },
+  {
+    "id": "ac8625207ef936e9",
+    "name": "DeepWiki",
+    "url": "https://mcp.deepwiki.com/mcp",
+    "description": "Understand public GitHub repositories through documentation and code research.",
+    "category": "Research",
+    "domains": [
+      "deepwiki.com",
+      "mcp.deepwiki.com"
+    ],
+    "source": "https://docs.devin.ai/work-with-devin/deepwiki-mcp",
+    "iconSource": "https://deepwiki.com/favicon.ico",
+    "auth": "auto",
+    "icon": "/connector-icons/ac8625207ef936e9.png"
+  },
+  {
+    "id": "b4114941dc55dc3c",
+    "name": "Microsoft Learn",
+    "url": "https://learn.microsoft.com/api/mcp",
+    "description": "Search official Microsoft documentation and code samples.",
+    "category": "Research",
+    "domains": [
+      "learn.microsoft.com",
+      "microsoft.com"
+    ],
+    "source": "https://learn.microsoft.com/training/support/mcp",
+    "iconSource": "https://learn.microsoft.com/favicon.ico",
+    "auth": "auto",
+    "icon": "/connector-icons/b4114941dc55dc3c.png"
+  },
+  {
+    "id": "c33b751bf4d7e474",
+    "name": "Cloudflare Docs",
+    "url": "https://docs.mcp.cloudflare.com/mcp",
+    "description": "Search Cloudflare’s platform reference and technical documentation.",
+    "category": "Research",
+    "domains": [
+      "cloudflare.com",
+      "docs.mcp.cloudflare.com"
+    ],
+    "source": "https://developers.cloudflare.com/agents/model-context-protocol/mcp-servers-for-cloudflare/",
+    "iconSource": "https://www.cloudflare.com/favicon.ico",
+    "auth": "auto",
+    "icon": "/connector-icons/c33b751bf4d7e474.png"
+  },
+  {
+    "id": "17fb03d8b3d8a7db",
+    "name": "Supabase",
+    "url": "https://mcp.supabase.com/mcp",
+    "description": "MCP server for interacting with the Supabase platform",
+    "category": "Productivity",
+    "domains": [
+      "supabase.com",
+      "mcp.supabase.com"
+    ],
+    "source": "https://registry.modelcontextprotocol.io/?q=com.supabase/mcp",
+    "iconSource": "https://supabase.com/favicon/favicon-16x16.png",
+    "auth": "auto"
+  },
+  {
+    "id": "db14b32d899ecd5d",
+    "name": "BeliefState",
+    "url": "https://beliefstate.ai/mcp",
+    "description": "Stock research, investor theses, dated evidence, catalysts, risks and belief changes.",
+    "category": "Research",
+    "domains": [
+      "docs.beliefstate.ai",
+      "beliefstate.ai"
+    ],
+    "source": "https://registry.modelcontextprotocol.io/?q=ai.beliefstate/investor-research",
+    "iconSource": "https://beliefstate.ai/brand/beliefstate-icon-bone.png",
+    "auth": "auto",
+    "icon": "/connector-icons/db14b32d899ecd5d.png"
+  },
+  {
+    "id": "0fc0d4d28968d3ac",
+    "name": "Fodda Deep Research",
+    "url": "https://mcp.fodda.ai/deep-research",
+    "description": "Autonomous deep research reports merging PSFK trend graphs with citable sources.",
+    "category": "Research",
+    "domains": [
+      "fodda.ai",
+      "mcp.fodda.ai"
+    ],
+    "source": "https://registry.modelcontextprotocol.io/?q=ai.fodda/deep-research",
+    "iconSource": "https://ucarecdn.com/6e7893d7-6b14-426b-83bc-574a3f72d6bc/foddafavicon.png",
+    "auth": "api_key",
+    "icon": "/connector-icons/0fc0d4d28968d3ac.png"
+  },
+  {
+    "id": "8047d2c17b839c7b",
+    "name": "G62 Patent Search",
+    "url": "https://g62.ai/mcp",
+    "description": "Public patent search with ranked candidates, source links and coverage context. Developer beta.",
+    "category": "Research",
+    "domains": [
+      "g62.ai"
+    ],
+    "source": "https://registry.modelcontextprotocol.io/?q=ai.g62/patent-search",
+    "iconSource": "https://g62.ai/g62-favicon.svg",
+    "auth": "api_key",
+    "icon": "/connector-icons/8047d2c17b839c7b.svg"
+  },
+  {
+    "id": "34ba2c84a2653d5a",
+    "name": "Hyperresearch",
+    "url": "https://mcp.hyperresearch.ai/mcp",
+    "description": "Start cited deep-research runs, read reports, search your source vault, and verify citations.",
+    "category": "Research",
+    "domains": [
+      "hyperresearch.ai",
+      "mcp.hyperresearch.ai"
+    ],
+    "source": "https://registry.modelcontextprotocol.io/?q=ai.hyperresearch/hyperresearch",
+    "iconSource": "https://hyperresearch.ai/og/logo-512.png",
+    "auth": "auto",
+    "icon": "/connector-icons/34ba2c84a2653d5a.png"
+  },
+  {
+    "id": "cd3143a14b73253c",
+    "name": "Kolect Creator Search",
+    "url": "https://app.kolect.ai/mcp",
+    "description": "Search 300M+ TikTok, Instagram and YouTube creators by brief; check fake followers; get emails.",
+    "category": "Research",
+    "domains": [
+      "kolect.ai",
+      "app.kolect.ai"
+    ],
+    "source": "https://registry.modelcontextprotocol.io/?q=ai.kolect.app/creator-search",
+    "iconSource": "https://app.kolect.ai/kolect-logo-mark.png",
+    "auth": "api_key",
+    "icon": "/connector-icons/cd3143a14b73253c.png"
+  },
+  {
+    "id": "326d4ad8476d7fa0",
+    "name": "Parallel Search MCP",
+    "url": "https://search-mcp.parallel.ai/mcp",
+    "description": "The best web search for your AI Agent",
+    "category": "Research",
+    "domains": [
+      "parallel.ai",
+      "search-mcp.parallel.ai"
+    ],
+    "source": "https://registry.modelcontextprotocol.io/?q=ai.parallel/search-mcp",
+    "iconSource": "https://assets.p0web.com/dark-parallel-symbol-270.png",
+    "auth": "auto",
+    "icon": "/connector-icons/326d4ad8476d7fa0.png"
+  },
+  {
+    "id": "a01f70a7f78a6f6f",
+    "name": "SearchConsole.ai",
+    "url": "https://searchconsole.ai/mcp",
+    "description": "Read-only Search Console analytics, URL inspection, indexing diagnostics, and sitemaps.",
+    "category": "Research",
+    "domains": [
+      "searchconsole.ai"
+    ],
+    "source": "https://registry.modelcontextprotocol.io/?q=ai.searchconsole/searchconsole-ai",
+    "iconSource": "https://searchconsole.ai/favicon-32x32.png",
+    "auth": "auto",
+    "icon": "/connector-icons/a01f70a7f78a6f6f.png"
+  },
+  {
+    "id": "da177c0cfda1f405",
+    "name": "Apostle — AI Men's Skincare Commerce",
+    "url": "https://searchshopai-mcp.fly.dev/mcp/apostleman",
+    "description": "Search, compare, and buy Apostle men's skincare: tinted moisturizer, face wash, and sets.",
+    "category": "Research",
+    "domains": [
+      "apostleman.co",
+      "searchshopai-mcp.fly.dev"
+    ],
+    "source": "https://registry.modelcontextprotocol.io/?q=ai.searchshop/apostleman",
+    "iconSource": "https://searchshopai-mcp.fly.dev/icons/apostleman-400.png",
+    "auth": "auto",
+    "icon": "/connector-icons/da177c0cfda1f405.png"
+  },
+  {
+    "id": "666ed1b7af21a769",
+    "name": "Surfing Dog Search",
+    "url": "https://surfingdog.ai/mcp",
+    "description": "Find businesses an AI agent can message, book or buy from, and check what an agent can do on a site.",
+    "category": "Research",
+    "domains": [
+      "surfingdog.ai"
+    ],
+    "source": "https://registry.modelcontextprotocol.io/?q=ai.surfingdog/search",
+    "iconSource": "https://surfingdog.ai/icon-512.png",
+    "auth": "auto",
+    "icon": "/connector-icons/666ed1b7af21a769.png"
+  },
+  {
+    "id": "28b8d99a43745ac8",
+    "name": "Market Research API",
+    "url": "https://market-research.api.trendsapi.ai/mcp",
+    "description": "Consumer demand signals across search, shopping and social. Free key at trendsapi.ai",
+    "category": "Research",
+    "domains": [
+      "trendsapi.ai",
+      "market-research.api.trendsapi.ai"
+    ],
+    "source": "https://registry.modelcontextprotocol.io/?q=ai.trendsapi/market-research",
+    "iconSource": "https://trendsapi.ai/static/assets/favicon.svg",
+    "auth": "api_key",
+    "icon": "/connector-icons/28b8d99a43745ac8.svg"
+  },
+  {
+    "id": "b41977669cc799e5",
+    "name": "Market Research Trends MCP",
+    "url": "https://market-research.api.trendsmcp.ai/mcp",
+    "description": "See if a market is heating or cooling. Trend volume and growth signals. Free key at trendsmcp.ai",
+    "category": "Research",
+    "domains": [
+      "trendsmcp.ai",
+      "market-research.api.trendsmcp.ai"
+    ],
+    "source": "https://registry.modelcontextprotocol.io/?q=ai.trendsmcp/market-research",
+    "iconSource": "https://www.trendsmcp.ai/static/pages/trendsmcp/assets/trend.svg",
+    "auth": "api_key",
+    "icon": "/connector-icons/b41977669cc799e5.svg"
+  },
+  {
+    "id": "0884108831bb337c",
+    "name": "CutGPT Research & Fact-Check",
+    "url": "https://mcp.cutgpt.app/mcp",
+    "description": "Free fact-checks, papers, source vetting, plus verified AI pricing, comparisons, guides, and tools.",
+    "category": "Research",
+    "domains": [
+      "cutgpt.app",
+      "mcp.cutgpt.app"
+    ],
+    "source": "https://registry.modelcontextprotocol.io/?q=app.cutgpt/research",
+    "iconSource": "https://cutgpt.app/static/favicon/favicon-96x96.png",
+    "auth": "auto",
+    "icon": "/connector-icons/0884108831bb337c.png"
+  },
+  {
+    "id": "848cd667f4f38568",
+    "name": "Research Agent by Nova (CIVAI)",
+    "url": "https://nova.civai.co/mcp/agents/research-agent",
+    "description": "I do everything related to research and reports",
+    "category": "Research",
+    "domains": [
+      "nova.civai.co"
+    ],
+    "source": "https://registry.modelcontextprotocol.io/?q=co.civai.nova/research-agent",
+    "iconSource": "https://nova.civai.co/catalog-icons/FireIcon.svg",
+    "auth": "auto",
+    "icon": "/connector-icons/848cd667f4f38568.svg"
+  },
+  {
+    "id": "07a93b01bc6c8217",
+    "name": "Frontier: evidence-scored science breakthroughs",
+    "url": "https://frontierresearch.co/api/mcp",
+    "description": "New papers from Nature, Science, Cell, NEJM and other top journals, scored on evidence and novelty.",
+    "category": "Research",
+    "domains": [
+      "frontierresearch.co"
+    ],
+    "source": "https://registry.modelcontextprotocol.io/?q=co.frontierresearch/frontier",
+    "iconSource": "https://frontierresearch.co/brand/icon.svg",
+    "auth": "auto",
+    "icon": "/connector-icons/07a93b01bc6c8217.svg"
+  },
+  {
+    "id": "3f83acbd41c39de4",
+    "name": "The Coin Daily Research",
+    "url": "https://mcp.thecoindaily.co/mcp",
+    "description": "Read-only crypto research: prices, funding, liquidations, market context, news and shows.",
+    "category": "Research",
+    "domains": [
+      "thecoindaily.co",
+      "mcp.thecoindaily.co"
+    ],
+    "source": "https://registry.modelcontextprotocol.io/?q=co.thecoindaily/research",
+    "iconSource": "https://mcp.thecoindaily.co/apple-touch-icon.png",
+    "auth": "auto",
+    "icon": "/connector-icons/3f83acbd41c39de4.png"
+  },
+  {
+    "id": "2023a72a6f20749d",
+    "name": "Cerulean Jobs",
+    "url": "https://ceruleanjobs.com/api/mcp",
+    "description": "Open jobs at luxury houses and brands worldwide: search them, read one in full, find roles like it.",
+    "category": "Research",
+    "domains": [
+      "ceruleanjobs.com"
+    ],
+    "source": "https://registry.modelcontextprotocol.io/?q=com.ceruleanjobs/search",
+    "iconSource": "https://ceruleanjobs.com/.well-known/mcp/icon.svg",
+    "auth": "auto",
+    "icon": "/connector-icons/2023a72a6f20749d.svg"
+  },
+  {
+    "id": "4a4aa75739ed1e49",
+    "name": "Arc Research",
+    "url": "https://www.getarcresearch.com/mcp",
+    "description": "Commodities research MCP: knowledge graph, COT, NG storage/weather, quotes, and stories.",
+    "category": "Research",
+    "domains": [
+      "getarcresearch.com",
+      "www.getarcresearch.com"
+    ],
+    "source": "https://registry.modelcontextprotocol.io/?q=com.getarcresearch/arc-research",
+    "iconSource": "https://www.getarcresearch.com/favicons/android-chrome-512x512.png",
+    "auth": "api_key",
+    "icon": "/connector-icons/4a4aa75739ed1e49.png"
+  },
+  {
+    "id": "ef639ccfd9dc9f4b",
+    "name": "Cirra AI Salesforce Admin MCP Server",
+    "url": "https://mcp.cirra.ai/sfdc/mcp",
+    "description": "Comprehensive Salesforce administration and management",
+    "category": "Business",
+    "domains": [
+      "docs.cirra.ai",
+      "cirra.ai",
+      "mcp.cirra.ai"
+    ],
+    "source": "https://registry.modelcontextprotocol.io/?q=ai.cirra/salesforce-mcp",
+    "iconSource": "https://cirra.ai/icon-gradient-onwhite.svg",
+    "auth": "auto",
+    "icon": "/connector-icons/ef639ccfd9dc9f4b.svg"
+  },
+  {
+    "id": "888eb89ee5853bde",
+    "name": "GENOSYS UAE",
+    "url": "https://genosys.ae/mcp",
+    "description": "Shop GENOSYS Korean skincare in the UAE from chat: find products, AED prices, order and pay.",
+    "category": "Productivity",
+    "domains": [
+      "genosys.ae"
+    ],
+    "source": "https://registry.modelcontextprotocol.io/?q=ae.genosys/genosys",
+    "iconSource": "https://genosys.ae/icon-512x512.png",
+    "auth": "auto",
+    "icon": "/connector-icons/888eb89ee5853bde.png"
+  },
+  {
+    "id": "d68ae98758c08444",
+    "name": "Plant Guide: Dubai gardening research",
+    "url": "https://plantguide.ae/mcp",
+    "description": "What to plant in Dubai, indoor plants, plant care in the heat, garden styles and Garden Care prices.",
+    "category": "Research",
+    "domains": [
+      "plantguide.ae"
+    ],
+    "source": "https://registry.modelcontextprotocol.io/?q=ae.plantguide/dubai-gardening",
+    "iconSource": "https://plantguide.ae/brand/plantguide-mark.svg",
+    "auth": "auto",
+    "icon": "/connector-icons/d68ae98758c08444.svg"
+  },
+  {
+    "id": "fc2bf3f491231659",
+    "name": "Projectory",
+    "url": "https://mcp.projectory.ae/mcp",
+    "description": "Find UAE off-plan developments and registered residential sales.",
+    "category": "Business",
+    "domains": [
+      "projectory.ae",
+      "mcp.projectory.ae"
+    ],
+    "source": "https://registry.modelcontextprotocol.io/?q=ae.projectory/mcp",
+    "iconSource": "https://projectory.ae/apple-touch-icon.png",
+    "auth": "auto",
+    "icon": "/connector-icons/fc2bf3f491231659.png"
+  },
+  {
+    "id": "5e91fbf10fc5015b",
+    "name": "UGC, the Human Ad Network",
+    "url": "https://api.ugc.africa/mcp",
+    "description": "The Human Ad Network. Campaigns, clipping, and Clip Studio from chat.",
+    "category": "Productivity",
+    "domains": [
+      "ugc.africa",
+      "api.ugc.africa"
+    ],
+    "source": "https://registry.modelcontextprotocol.io/?q=africa.ugc/ugc",
+    "iconSource": "https://ugc.africa/icon-512.png",
+    "auth": "auto",
+    "icon": "/connector-icons/5e91fbf10fc5015b.png"
+  },
+  {
+    "id": "20b549032a4f19d5",
+    "name": "JustIdea Agency",
+    "url": "https://justidea.agency/mcp",
+    "description": "Services, prices, inquiries and free analytics, AI and Google visibility scans by JustIdea, Poland.",
+    "category": "Productivity",
+    "domains": [
+      "justidea.agency"
+    ],
+    "source": "https://registry.modelcontextprotocol.io/?q=agency.justidea/justidea-agency",
+    "iconSource": "https://justidea.agency/icon-512.png",
+    "auth": "auto",
+    "icon": "/connector-icons/20b549032a4f19d5.png"
+  },
+  {
+    "id": "2059344e1d575cc4",
+    "name": "0si.ai Disclosures",
+    "url": "https://app.0si.ai/api/mcp",
+    "description": "Korean (DART/KIND) and US SEC filings with AI summaries, direction labels and market reaction.",
+    "category": "Business",
+    "domains": [
+      "0si.ai",
+      "app.0si.ai"
+    ],
+    "source": "https://registry.modelcontextprotocol.io/?q=ai.0si/disclosures",
+    "iconSource": "https://0si.ai/static/favicon-512.png",
+    "auth": "auto",
+    "icon": "/connector-icons/2059344e1d575cc4.png"
+  },
+  {
+    "id": "69d85ae32d5ff134",
+    "name": "1ClickWebsite",
+    "url": "https://www.1clickwebsite.ai/api/mcp",
+    "description": "Build and edit WordPress websites for local service businesses and run Lead Gen demo-site batches.",
+    "category": "Productivity",
+    "domains": [
+      "1clickwebsite.ai",
+      "www.1clickwebsite.ai"
+    ],
+    "source": "https://registry.modelcontextprotocol.io/?q=ai.1clickwebsite/mcp",
+    "iconSource": "https://www.1clickwebsite.ai/app-icon.png",
+    "auth": "auto",
+    "icon": "/connector-icons/69d85ae32d5ff134.png"
+  },
+  {
+    "id": "7be495ddeca1ec5f",
+    "name": "Aard",
+    "url": "https://api.aard.ai/mcp",
+    "description": "Official statistics from 170+ publishers, resolved from natural language with provenance.",
+    "category": "Productivity",
+    "domains": [
+      "aard.ai",
+      "api.aard.ai"
+    ],
+    "source": "https://registry.modelcontextprotocol.io/?q=ai.aard/aard",
+    "iconSource": "https://aard.ai/aard_logo.svg",
+    "auth": "auto",
+    "icon": "/connector-icons/7be495ddeca1ec5f.svg"
+  },
+  {
+    "id": "983945556a761bc5",
+    "name": "ABMeter",
+    "url": "https://mcp.abmeter.ai",
+    "description": "Run A/B experiments through your AI assistant. SDKs for Ruby, Python, JS, Node, React Native, Go.",
+    "category": "Productivity",
+    "domains": [
+      "abmeter.ai",
+      "mcp.abmeter.ai"
+    ],
+    "source": "https://registry.modelcontextprotocol.io/?q=ai.abmeter/abmeter",
+    "iconSource": "https://abmeter.ai/abmeter-icon-192.png",
+    "auth": "auto",
+    "icon": "/connector-icons/983945556a761bc5.png"
+  },
+  {
+    "id": "c151597f0d7058b0",
+    "name": "AdAdvisor MCP Server",
+    "url": "https://api.adadvisor.ai/mcp",
+    "description": "Query Meta Ads performance data — accounts, campaigns, ad sets, ads, metrics & settings.",
+    "category": "Productivity",
+    "domains": [
+      "adadvisor.ai",
+      "api.adadvisor.ai"
+    ],
+    "source": "https://registry.modelcontextprotocol.io/?q=ai.adadvisor/mcp-server",
+    "iconSource": "https://app.adadvisor.ai/adadvisor-logo.png",
+    "auth": "api_key",
+    "icon": "/connector-icons/c151597f0d7058b0.png"
+  },
+  {
+    "id": "5e907b627a029a18",
+    "name": "adplane",
+    "url": "https://mcp.adplane.ai",
+    "description": "Google, Meta, Microsoft and TikTok Ads in Claude or ChatGPT: reports and changes, created paused.",
+    "category": "Productivity",
+    "domains": [
+      "adplane.ai",
+      "mcp.adplane.ai"
+    ],
+    "source": "https://registry.modelcontextprotocol.io/?q=ai.adplane/google-ads",
+    "iconSource": "https://adplane.ai/adplane-icon-512.png",
+    "auth": "auto",
+    "icon": "/connector-icons/5e907b627a029a18.png"
+  },
+  {
+    "id": "586f80203f2e50ca",
+    "name": "Aevia",
+    "url": "https://app.aeviamodeler.ai/api/v1/connector/mcp",
+    "description": "AI-powered life cycle assessment and modelling: connect to LCA databases, build and analyze systems",
+    "category": "Development",
+    "domains": [
+      "aeviamodeler.ai",
+      "app.aeviamodeler.ai"
+    ],
+    "source": "https://registry.modelcontextprotocol.io/?q=ai.aeviamodeler/aevia",
+    "iconSource": "https://app.aeviamodeler.ai/icon-512.png",
+    "auth": "auto",
+    "icon": "/connector-icons/586f80203f2e50ca.png"
+  },
+  {
+    "id": "af8840ee5a1320cc",
+    "name": "Agenlify AI Agent Directory",
+    "url": "https://agenlify.ai/mcp",
+    "description": "Find AI tools by task, with pricing context, setup steps, limitations and official sources.",
+    "category": "Productivity",
+    "domains": [
+      "agenlify.ai"
+    ],
+    "source": "https://registry.modelcontextprotocol.io/?q=ai.agenlify/catalog",
+    "iconSource": "https://agenlify.ai/favicon.svg",
+    "auth": "auto",
+    "icon": "/connector-icons/af8840ee5a1320cc.svg"
+  },
+  {
+    "id": "76770373d48a68fc",
+    "name": "agent-bev",
+    "url": "https://mcp.bev-buyer.ai/mcp",
+    "description": "The world's largest agentic B2B hub for beer, wine and spirits. Powered by CUVEE. Trade only.",
+    "category": "Productivity",
+    "domains": [
+      "agent-bev.ai",
+      "bev-buyer.ai",
+      "mcp.bev-buyer.ai"
+    ],
+    "source": "https://registry.modelcontextprotocol.io/?q=ai.agent-bev/bev-door",
+    "iconSource": "https://agent-bev.ai/brand/icon-512.png",
+    "auth": "auto",
+    "icon": "/connector-icons/76770373d48a68fc.png"
+  },
+  {
+    "id": "9401a81874daab05",
+    "name": "Agent Ready Report",
+    "url": "https://scan.agenticplug.ai/mcp",
+    "description": "Scan any public website and see how ready it is for AI agents and AI search, explained plainly.",
+    "category": "Research",
+    "domains": [
+      "agenticplug.ai",
+      "scan.agenticplug.ai"
+    ],
+    "source": "https://registry.modelcontextprotocol.io/?q=ai.agenticplug/agent-ready-report",
+    "iconSource": "https://agenticplug.ai/icon.png",
+    "auth": "auto",
+    "icon": "/connector-icons/9401a81874daab05.png"
+  },
+  {
+    "id": "009e0bf3c8a619f8",
+    "name": "AgentPlaybooks",
+    "url": "https://agentplaybooks.ai/api/mcp/manage",
+    "description": "Manage portable AI agent playbooks, Agent Skills, MCP configurations, personas, and memory.",
+    "category": "Productivity",
+    "domains": [
+      "agentplaybooks.ai"
+    ],
+    "source": "https://registry.modelcontextprotocol.io/?q=ai.agentplaybooks/agentplaybooks",
+    "iconSource": "https://agentplaybooks.ai/icon.svg",
+    "auth": "api_key",
+    "icon": "/connector-icons/009e0bf3c8a619f8.svg"
+  },
+  {
+    "id": "bfa4c5422ce6571b",
+    "name": "AgentRoam",
+    "url": "https://agentroam.ai/api/mcp",
+    "description": "Buy travel eSIMs, gift cards and mobile top-ups with crypto — user confirms before any order.",
+    "category": "Productivity",
+    "domains": [
+      "agentroam.ai"
+    ],
+    "source": "https://registry.modelcontextprotocol.io/?q=ai.agentroam/agentroam",
+    "iconSource": "https://agentroam.ai/brand/icon-256.png",
+    "auth": "auto",
+    "icon": "/connector-icons/bfa4c5422ce6571b.png"
+  },
+  {
+    "id": "ae90c62287403cba",
+    "name": "AgentsIndex",
+    "url": "https://agentsindex.ai/mcp",
+    "description": "The editors' index of AI-native software, from AI agents to the models and frameworks behind them.",
+    "category": "Productivity",
+    "domains": [
+      "agentsindex.ai"
+    ],
+    "source": "https://registry.modelcontextprotocol.io/?q=ai.agentsindex/mcp",
+    "iconSource": "https://agentsindex.ai/favicon.svg",
+    "auth": "auto",
+    "icon": "/connector-icons/ae90c62287403cba.svg"
+  },
+  {
+    "id": "418aa6fd45438ee1",
+    "name": "Amazon Seller Central & Ads MCP",
+    "url": "https://agentxray.ai/api/mcp",
+    "description": "Amazon Seller Central and Ads inside Claude or ChatGPT. Real fees from your own settlements.",
+    "category": "Productivity",
+    "domains": [
+      "agentxray.ai"
+    ],
+    "source": "https://registry.modelcontextprotocol.io/?q=ai.agentxray/mcp",
+    "iconSource": "https://agentxray.ai/brand-mark-dark-512.png",
+    "auth": "auto",
+    "icon": "/connector-icons/418aa6fd45438ee1.png"
+  },
+  {
+    "id": "d0e9318a5956ace3",
+    "name": "AITOPIA",
+    "url": "https://mcp.aitopia.ai/mcp",
+    "description": "Generate and edit images, video and audio: 300+ AI models, video tools, voice cloning, transcripts.",
+    "category": "Images & media",
+    "domains": [
+      "aitopia.ai",
+      "mcp.aitopia.ai"
+    ],
+    "source": "https://registry.modelcontextprotocol.io/?q=ai.aitopia/aitopia",
+    "iconSource": "https://raw.githubusercontent.com/AITOPIAai/skills/main/assets/icon.png",
+    "auth": "auto",
+    "icon": "/connector-icons/d0e9318a5956ace3.png"
+  },
+  {
+    "id": "2cc214d67e8ac77c",
+    "name": "Alcock Arena",
+    "url": "https://alcock.ai/api/mcp",
+    "description": "AI forecasting gym: markets, sports, policy and tech. Graded by reality, measured against markets.",
+    "category": "Business",
+    "domains": [
+      "alcock.ai"
+    ],
+    "source": "https://registry.modelcontextprotocol.io/?q=ai.alcock/arena",
+    "iconSource": "https://alcock.ai/apple-icon.png",
+    "auth": "auto",
+    "icon": "/connector-icons/2cc214d67e8ac77c.png"
+  },
+  {
+    "id": "4004fb8534a1ce9d",
+    "name": "AlphaCreek SEC Filings MCP",
+    "url": "https://mcp.alphacreek.ai/mcp",
+    "description": "Access SEC filings efficiently (10-K, 10-Q, etc), save time and tokens, and get cited answers.",
+    "category": "Productivity",
+    "domains": [
+      "alphacreek.ai",
+      "mcp.alphacreek.ai"
+    ],
+    "source": "https://registry.modelcontextprotocol.io/?q=ai.alphacreek/alphacreek-mcp",
+    "iconSource": "https://www.alphacreek.ai/assets/images/logo/logo400x400.png",
+    "auth": "api_key",
+    "icon": "/connector-icons/4004fb8534a1ce9d.png"
+  },
+  {
+    "id": "a6f0bba5cdefd17e",
+    "name": "Alpic",
+    "url": "https://mcp.alpic.ai",
+    "description": "Manage your projects, debug deployments, and check analytics for any MCP server you host with Alpic.",
+    "category": "Development",
+    "domains": [
+      "alpic.ai",
+      "mcp.alpic.ai"
+    ],
+    "source": "https://registry.modelcontextprotocol.io/?q=ai.alpic.mcp/alpic-mcp",
+    "iconSource": "https://raw.githubusercontent.com/alpic-ai/public-assets/refs/heads/main/alpic%20logo%20light%20200x200.png",
+    "auth": "auto",
+    "icon": "/connector-icons/a6f0bba5cdefd17e.png"
+  },
+  {
+    "id": "440ae32bd81dff1b",
+    "name": "Ankra",
+    "url": "https://platform.ankra.app/api/v1/mcp",
+    "description": "Deploy and operate Kubernetes: clusters, stacks, apps, logs, metrics and security, with OAuth.",
+    "category": "Development",
+    "domains": [
+      "docs.ankra.ai",
+      "platform.ankra.app"
+    ],
+    "source": "https://registry.modelcontextprotocol.io/?q=ai.ankra/platform",
+    "iconSource": "https://ankra.ai/images/android-chrome-512x512.png",
+    "auth": "auto",
+    "icon": "/connector-icons/440ae32bd81dff1b.png"
+  },
+  {
+    "id": "bdffef40c0cfebf0",
+    "name": "AppDeploy",
+    "url": "https://api-v2.appdeploy.ai/mcp",
+    "description": "AppDeploy turns app ideas described in AI chat into live full-stack web applications",
+    "category": "Development",
+    "domains": [
+      "appdeploy.ai",
+      "api-v2.appdeploy.ai"
+    ],
+    "source": "https://registry.modelcontextprotocol.io/?q=ai.appdeploy/deploy-app",
+    "iconSource": "https://appdeploy.ai/assets/favicon-512.png",
+    "auth": "auto",
+    "icon": "/connector-icons/bdffef40c0cfebf0.png"
+  },
+  {
+    "id": "2a8796b6dbe870f5",
+    "name": "Arcdeck",
+    "url": "https://arcdeck.ai/mcp",
+    "description": "Create consulting-style presentation decks (editable PowerPoint) from a topic or notes.",
+    "category": "Productivity",
+    "domains": [
+      "arcdeck.ai"
+    ],
+    "source": "https://registry.modelcontextprotocol.io/?q=ai.arcdeck/arcdeck",
+    "iconSource": "https://arcdeck.ai/apple-icon.png",
+    "auth": "auto",
+    "icon": "/connector-icons/2a8796b6dbe870f5.png"
+  },
+  {
+    "id": "04b04cb1f22b2788",
+    "name": "Arketo",
+    "url": "https://arketo.ai/api/mcp",
+    "description": "Draw your app's architecture on a live canvas and flag the bottlenecks and security gaps.",
+    "category": "Productivity",
+    "domains": [
+      "arketo.ai"
+    ],
+    "source": "https://registry.modelcontextprotocol.io/?q=ai.arketo/arketo",
+    "iconSource": "https://arketo.ai/icon",
+    "auth": "api_key",
+    "icon": "/connector-icons/04b04cb1f22b2788.png"
+  },
+  {
+    "id": "6a002b3baf0fcaee",
+    "name": "Ask Gina",
+    "url": "https://askgina.ai/ai/gina/mcp",
+    "description": "Read-only research on tokens, Hyperliquid perps, Polymarket markets and your Ask Gina account.",
+    "category": "Research",
+    "domains": [
+      "docs.askgina.ai",
+      "askgina.ai"
+    ],
+    "source": "https://registry.modelcontextprotocol.io/?q=ai.askgina/gina",
+    "iconSource": "https://docs.askgina.ai/favicon.svg",
+    "auth": "auto",
+    "icon": "/connector-icons/6a002b3baf0fcaee.svg"
+  },
+  {
+    "id": "3daa083ca9742034",
+    "name": "AskWatch Google Search Console MCP",
+    "url": "https://mcp.askwatch.ai/gsc",
+    "description": "Ask Google Search Console in plain language. Hosted, free, no Google Cloud project.",
+    "category": "Research",
+    "domains": [
+      "askwatch.ai",
+      "mcp.askwatch.ai"
+    ],
+    "source": "https://registry.modelcontextprotocol.io/?q=ai.askwatch/gsc",
+    "iconSource": "https://askwatch.ai/favicon-512.png",
+    "auth": "api_key",
+    "icon": "/connector-icons/3daa083ca9742034.png"
+  },
+  {
+    "id": "e18e094423c3b33f",
+    "name": "Ask Your Audience",
+    "url": "https://mcp.askyouraudience.ai/mcp",
+    "description": "Test ideas, messages and ads with Human Digital Twins built from real people, in your AI assistant.",
+    "category": "Productivity",
+    "domains": [
+      "developers.askyouraudience.ai",
+      "askyouraudience.ai",
+      "mcp.askyouraudience.ai"
+    ],
+    "source": "https://registry.modelcontextprotocol.io/?q=ai.askyouraudience/ask-your-audience",
+    "iconSource": "https://www.askyouraudience.ai/web-app-manifest-512x512.png",
+    "auth": "auto",
+    "icon": "/connector-icons/e18e094423c3b33f.png"
+  },
+  {
+    "id": "e1a9ce9f5afaf1c3",
+    "name": "ASRM (AI Search Rank Monitor)",
+    "url": "https://asrm.ai/mcp",
+    "description": "Check a website's AI readiness and answer AI visibility and GEO questions from ASRM's guides.",
+    "category": "Research",
+    "domains": [
+      "asrm.ai"
+    ],
+    "source": "https://registry.modelcontextprotocol.io/?q=ai.asrm/asrm",
+    "iconSource": "https://asrm.ai/apple-icon.png",
+    "auth": "auto",
+    "icon": "/connector-icons/e1a9ce9f5afaf1c3.png"
+  },
+  {
+    "id": "d1c9dc97b241abc0",
+    "name": "AthenaHQ",
+    "url": "https://api.athenahq.ai/api/mcp",
+    "description": "Track how AI assistants mention, cite, and rank your brand and competitors in AI search.",
+    "category": "Research",
+    "domains": [
+      "docs.athenahq.ai",
+      "athenahq.ai",
+      "api.athenahq.ai"
+    ],
+    "source": "https://registry.modelcontextprotocol.io/?q=ai.athenahq/mcp",
+    "iconSource": "https://app.athenahq.ai/icon.png",
+    "auth": "auto",
+    "icon": "/connector-icons/d1c9dc97b241abc0.png"
+  },
+  {
+    "id": "bd6915af52fd58d0",
+    "name": "AudioPod AI",
+    "url": "https://mcp.audiopod.ai",
+    "description": "Audio AI tools: transcription with speakers, stems, noise removal, MIDI, speech, voices and music.",
+    "category": "Images & media",
+    "domains": [
+      "docs.audiopod.ai",
+      "audiopod.ai",
+      "mcp.audiopod.ai"
+    ],
+    "source": "https://registry.modelcontextprotocol.io/?q=ai.audiopod/audiopod",
+    "iconSource": "https://audiopod.ai/logo/logo.svg",
+    "auth": "auto",
+    "icon": "/connector-icons/bd6915af52fd58d0.svg"
+  },
+  {
+    "id": "d09cbb3d16519e3c",
+    "name": "AutEng Docs — Agent Document Workspace & Publishing",
+    "url": "https://auteng.ai/mcp/docs",
+    "description": "Agent document workspace with wallet auth. Create, update and share markdown docs. By AutEng.ai",
+    "category": "Productivity",
+    "domains": [
+      "auteng.ai"
+    ],
+    "source": "https://registry.modelcontextprotocol.io/?q=ai.auteng/docs",
+    "iconSource": "https://auteng.ai/auteng-sqr.jpg",
+    "auth": "auto",
+    "icon": "/connector-icons/d09cbb3d16519e3c.png"
+  },
+  {
+    "id": "d3ada7c71a7a0405",
+    "name": "Authoryze",
+    "url": "https://authoryze.ai/api/mcp",
+    "description": "Give your AI agent a spending limit: approval controls and single-use virtual cards.",
+    "category": "Productivity",
+    "domains": [
+      "authoryze.ai"
+    ],
+    "source": "https://registry.modelcontextprotocol.io/?q=ai.authoryze/authoryze",
+    "iconSource": "https://authoryze.ai/logos/icon-64.png",
+    "auth": "auto",
+    "icon": "/connector-icons/d3ada7c71a7a0405.png"
+  },
+  {
+    "id": "34715604bccd7dcd",
+    "name": "Auxen",
+    "url": "https://api.auxen.ai/mcp",
+    "description": "Provision private AI model endpoints on dedicated GPUs (Llama, Qwen, Mistral). Pay per minute.",
+    "category": "Productivity",
+    "domains": [
+      "auxen.ai",
+      "api.auxen.ai"
+    ],
+    "source": "https://registry.modelcontextprotocol.io/?q=ai.auxen/auxen",
+    "iconSource": "https://auxen.ai/logo.svg",
+    "auth": "auto",
+    "icon": "/connector-icons/34715604bccd7dcd.svg"
+  },
+  {
+    "id": "f9898ec52cacb5cd",
+    "name": "AwardCast Federal Contracts",
+    "url": "https://awardcast.ai/mcp",
+    "description": "US federal contracting data: open solicitations, buying agencies, contractors, price history.",
+    "category": "Productivity",
+    "domains": [
+      "awardcast.ai"
+    ],
+    "source": "https://registry.modelcontextprotocol.io/?q=ai.awardcast/federal-contracts",
+    "iconSource": "https://awardcast.ai/awardcast-logo.png",
+    "auth": "auto",
+    "icon": "/connector-icons/f9898ec52cacb5cd.png"
+  },
+  {
+    "id": "bcec739ff4350c4d",
+    "name": "BAMF.ai",
+    "url": "https://mcp.bamf.ai",
+    "description": "LinkedIn and X content, scheduling, analytics and outreach agent for founders, via your BAMF login.",
+    "category": "Productivity",
+    "domains": [
+      "bamf.ai",
+      "mcp.bamf.ai"
+    ],
+    "source": "https://registry.modelcontextprotocol.io/?q=ai.bamf/bamf",
+    "iconSource": "https://bamf.ai/icons/icon-128.png",
+    "auth": "auto",
+    "icon": "/connector-icons/bcec739ff4350c4d.png"
+  },
+  {
+    "id": "a95113a5d6461cd9",
+    "name": "baseray",
+    "url": "https://api.baseray.ai/mcp",
+    "description": "Building data: address, use, size, height, age, roof, solar panels and registered businesses.",
+    "category": "Productivity",
+    "domains": [
+      "baseray.ai",
+      "api.baseray.ai"
+    ],
+    "source": "https://registry.modelcontextprotocol.io/?q=ai.baseray/baseray",
+    "iconSource": "https://baseray.ai/icon-512.png",
+    "auth": "auto",
+    "icon": "/connector-icons/a95113a5d6461cd9.png"
+  },
+  {
+    "id": "4f93d616eb97e76f",
+    "name": "Beatra",
+    "url": "https://mcp.beatra.ai/mcp",
+    "description": "Images, video, music, speech, and public social data for AI agents.",
+    "category": "Images & media",
+    "domains": [
+      "beatra.ai",
+      "mcp.beatra.ai"
+    ],
+    "source": "https://registry.modelcontextprotocol.io/?q=ai.beatra/beatra",
+    "iconSource": "https://beatra.ai/brand/favicon.svg",
+    "auth": "api_key",
+    "icon": "/connector-icons/4f93d616eb97e76f.svg"
+  },
+  {
+    "id": "f29327f2a9147dd8",
+    "name": "BetSlip Doctor",
+    "url": "https://api.betslipdoctor.ai/api/mcp",
+    "description": "Your agent grades every slip A+ to F-, links your books and tracks your record. No wager placement.",
+    "category": "Productivity",
+    "domains": [
+      "betslipdoctor.ai",
+      "api.betslipdoctor.ai"
+    ],
+    "source": "https://registry.modelcontextprotocol.io/?q=ai.betslipdoctor/mcp",
+    "iconSource": "https://betslipdoctor.ai/web/brand/bsd-mark-512.png",
+    "auth": "auto",
+    "icon": "/connector-icons/f29327f2a9147dd8.png"
+  },
+  {
+    "id": "27e9bd1338d47eba",
+    "name": "bitHuman docs",
+    "url": "https://docs.bithuman.ai/docs-mcp",
+    "description": "The bitHuman docs over MCP: two read-only tools, search and fetch; it needs no account and no key.",
+    "category": "Research",
+    "domains": [
+      "docs.bithuman.ai"
+    ],
+    "source": "https://registry.modelcontextprotocol.io/?q=ai.bithuman/docs",
+    "iconSource": "https://docs.bithuman.ai/favicon.png",
+    "auth": "auto",
+    "icon": "/connector-icons/27e9bd1338d47eba.png"
+  },
+  {
+    "id": "42d020be2c7c73f1",
+    "name": "Blipsmith Sound Effects",
+    "url": "https://blipsmith.ai/api/mcp",
+    "description": "Game sound effects from a text prompt: game-ready WAVs with seamless loops and variations.",
+    "category": "Productivity",
+    "domains": [
+      "blipsmith.ai"
+    ],
+    "source": "https://registry.modelcontextprotocol.io/?q=ai.blipsmith/sound-effects",
+    "iconSource": "https://blipsmith.ai/brand/blipsmith-icon.png",
+    "auth": "auto",
+    "icon": "/connector-icons/42d020be2c7c73f1.png"
+  },
+  {
+    "id": "6e1f4c9a03f2ae22",
+    "name": "BlitzAPI",
+    "url": "https://api.blitz-api.ai/mcp",
+    "description": "Search and enrich B2B companies and people: verified work emails, US phone numbers, job postings.",
+    "category": "Research",
+    "domains": [
+      "blitz-api.ai",
+      "api.blitz-api.ai"
+    ],
+    "source": "https://registry.modelcontextprotocol.io/?q=ai.blitz-api/b2b-data",
+    "iconSource": "https://www.blitz-api.ai/brand/logo/blitzapi-app-icon-512.png",
+    "auth": "auto",
+    "icon": "/connector-icons/6e1f4c9a03f2ae22.png"
+  },
+  {
+    "id": "9eb2bba18b51fc2b",
+    "name": "Bloopo — AI Ad & Creative Studio",
+    "url": "https://mcp.bloopo.ai/mcp",
+    "description": "Turn one sentence into finished ads: video ads, UGC, product photos, voiceover, brand kits, A/B.",
+    "category": "Images & media",
+    "domains": [
+      "bloopo.ai",
+      "mcp.bloopo.ai"
+    ],
+    "source": "https://registry.modelcontextprotocol.io/?q=ai.bloopo/bloopo",
+    "iconSource": "https://mcp.bloopo.ai/icon.png",
+    "auth": "auto",
+    "icon": "/connector-icons/9eb2bba18b51fc2b.png"
+  },
+  {
+    "id": "5845cbac1099824a",
+    "name": "BoardMark",
+    "url": "https://mcp.boardmark.ai/mcp",
+    "description": "Issue board for teams: find, create and move issues, run sprints, comment and keep project docs.",
+    "category": "Productivity",
+    "domains": [
+      "boardmark.ai",
+      "mcp.boardmark.ai"
+    ],
+    "source": "https://registry.modelcontextprotocol.io/?q=ai.boardmark/boardmark",
+    "iconSource": "https://www.boardmark.ai/android-chrome-512x512.png",
+    "auth": "auto",
+    "icon": "/connector-icons/5845cbac1099824a.png"
+  },
+  {
+    "id": "b6645c04a8099c1d",
+    "name": "Bordet AI",
+    "url": "https://www.bordet.ai/api/mcp/mcp",
+    "description": "Ask a room of Claude, GPT and Gemini from your AI tool, search its memory and log decisions.",
+    "category": "Research",
+    "domains": [
+      "bordet.ai",
+      "www.bordet.ai"
+    ],
+    "source": "https://registry.modelcontextprotocol.io/?q=ai.bordet/bordet",
+    "iconSource": "https://www.bordet.ai/icon1.png",
+    "auth": "auto",
+    "icon": "/connector-icons/b6645c04a8099c1d.png"
+  },
+  {
+    "id": "4fd33fcc1e51a2f7",
+    "name": "BoxCompute",
+    "url": "https://mcp.boxcompute.ai/mcp",
+    "description": "Linux VMs for AI agents: create VMs, run commands, edit files and open preview URLs.",
+    "category": "Productivity",
+    "domains": [
+      "boxcompute.ai",
+      "mcp.boxcompute.ai"
+    ],
+    "source": "https://registry.modelcontextprotocol.io/?q=ai.boxcompute/boxcompute",
+    "iconSource": "https://boxcompute.ai/boxcompute-app-icon-512.png",
+    "auth": "auto",
+    "icon": "/connector-icons/4fd33fcc1e51a2f7.png"
+  },
+  {
+    "id": "bdd7aed41c578540",
+    "name": "Brain Memory",
+    "url": "https://mcp.brainmemory.ai/mcp",
+    "description": "Persistent memory for AI agents: one brain shared across Claude, Cursor, Codex and more.",
+    "category": "Development",
+    "domains": [
+      "brainmemory.ai",
+      "mcp.brainmemory.ai"
+    ],
+    "source": "https://registry.modelcontextprotocol.io/?q=ai.brainmemory/brain",
+    "iconSource": "https://brainmemory.ai/icon.svg",
+    "auth": "auto",
+    "icon": "/connector-icons/bdd7aed41c578540.svg"
+  },
+  {
+    "id": "4809d1685937fa44",
+    "name": "BugTape",
+    "url": "https://app.bugtape.ai/mcp",
+    "description": "Production bugs with replay, network, console and stack, ranked for your coding agent to fix.",
+    "category": "Productivity",
+    "domains": [
+      "bugtape.ai",
+      "app.bugtape.ai"
+    ],
+    "source": "https://registry.modelcontextprotocol.io/?q=ai.bugtape/bugtape",
+    "iconSource": "https://bugtape.ai/assets/brand/icon-512.png",
+    "auth": "auto",
+    "icon": "/connector-icons/4809d1685937fa44.png"
+  },
+  {
+    "id": "7cda6c520c0f9919",
+    "name": "Build & Ship",
+    "url": "https://api.buildandship.ai/mcp",
+    "description": "Prompt your Build & Ship agent to create web pages and publish them to your CDN, Git or API.",
+    "category": "Development",
+    "domains": [
+      "buildandship.ai",
+      "api.buildandship.ai"
+    ],
+    "source": "https://registry.modelcontextprotocol.io/?q=ai.buildandship/agent",
+    "iconSource": "https://buildandship.ai/icon-512.png",
+    "auth": "auto",
+    "icon": "/connector-icons/7cda6c520c0f9919.png"
+  },
+  {
+    "id": "d0fe06dca65feccd",
+    "name": "BUMIT",
+    "url": "https://bumit.ai/mcp",
+    "description": "Swiss business verification with per-check source provenance and evidence freshness.",
+    "category": "Productivity",
+    "domains": [
+      "bumit.ai"
+    ],
+    "source": "https://registry.modelcontextprotocol.io/?q=ai.bumit/verify-business",
+    "iconSource": "https://bumit.ai/brand/bumit-icon-light.png",
+    "auth": "auto",
+    "icon": "/connector-icons/d0fe06dca65feccd.png"
+  },
+  {
+    "id": "885ac11dc8a4f4d8",
+    "name": "Buzzberg",
+    "url": "https://mcp.buzzberg.ai/mcp",
+    "description": "Trade ideas, author track records and sentiment from X, YouTube, Reddit, Substack; earnings calls",
+    "category": "Productivity",
+    "domains": [
+      "buzzberg.ai",
+      "mcp.buzzberg.ai"
+    ],
+    "source": "https://registry.modelcontextprotocol.io/?q=ai.buzzberg/mcp",
+    "iconSource": "https://buzzberg.ai/static/favicon.svg",
+    "auth": "auto",
+    "icon": "/connector-icons/885ac11dc8a4f4d8.svg"
+  },
+  {
+    "id": "1d5e7c1949f56765",
+    "name": "Bynor",
+    "url": "https://mcp.bynor.ai/mcp",
+    "description": "Social media for brands: editorial plans, on-brand images, scheduling, publishing and analytics.",
+    "category": "Images & media",
+    "domains": [
+      "bynor.ai",
+      "mcp.bynor.ai"
+    ],
+    "source": "https://registry.modelcontextprotocol.io/?q=ai.bynor/bynor",
+    "iconSource": "https://app.bynor.ai/static/mcp-icon.svg",
+    "auth": "auto",
+    "icon": "/connector-icons/1d5e7c1949f56765.svg"
+  },
+  {
+    "id": "08969bdcf287fed1",
+    "name": "ByteRay AI",
+    "url": "https://mcp.byteray.ai/mcp",
+    "description": "Hunt zero-days by talking to binaries. 40+ tools. Hosted, OAuth + SSO, invite: hi@byteray.ai",
+    "category": "Productivity",
+    "domains": [
+      "byteray.ai",
+      "mcp.byteray.ai"
+    ],
+    "source": "https://registry.modelcontextprotocol.io/?q=ai.byteray/byteray-mcp",
+    "iconSource": "https://byteray.ai/favicon.svg",
+    "auth": "auto",
+    "icon": "/connector-icons/08969bdcf287fed1.svg"
+  },
+  {
+    "id": "1e88271a5dc38428",
+    "name": "Cactal",
+    "url": "https://api.cactal.ai/v1/mcp",
+    "description": "The website platform for AI agents. One API to build, host, and operate real websites.",
+    "category": "Development",
+    "domains": [
+      "cactal.ai",
+      "api.cactal.ai"
+    ],
+    "source": "https://registry.modelcontextprotocol.io/?q=ai.cactal/cactal",
+    "iconSource": "https://cdn.cactal.app/website-assets/TxIyGV6L5vqxpJb7nJU49.png",
+    "auth": "auto"
+  },
+  {
+    "id": "ae931d062295e02f",
+    "name": "Canvora",
+    "url": "https://api.canvora.ai/mcp",
+    "description": "Turn any idea, URL, doc, or PDF into on-brand visuals: 100+ formats, native in 150+ languages",
+    "category": "Productivity",
+    "domains": [
+      "canvora.ai",
+      "api.canvora.ai"
+    ],
+    "source": "https://registry.modelcontextprotocol.io/?q=ai.canvora/canvora",
+    "iconSource": "https://canvora.ai/apple-touch-icon.png",
+    "auth": "auto",
+    "icon": "/connector-icons/ae931d062295e02f.png"
+  },
+  {
+    "id": "62d6b0cca4647fe5",
+    "name": "Capital Company",
+    "url": "https://capitalcompany.ai/mcp",
+    "description": "Launch SPVs and funds, invite investors and send capital calls through Capital Company.",
+    "category": "Development",
+    "domains": [
+      "capitalcompany.ai"
+    ],
+    "source": "https://registry.modelcontextprotocol.io/?q=ai.capitalcompany/capital-company",
+    "iconSource": "https://capitalcompany.ai/icons/web-app-manifest-512x512.png",
+    "auth": "auto",
+    "icon": "/connector-icons/62d6b0cca4647fe5.png"
+  },
+  {
+    "id": "6aef8eb99de22977",
+    "name": "Capxule",
+    "url": "https://capxule.ai/mcp",
+    "description": "The context marketplace: expert guided journeys your assistant runs step by step.",
+    "category": "Business",
+    "domains": [
+      "capxule.com",
+      "capxule.ai"
+    ],
+    "source": "https://registry.modelcontextprotocol.io/?q=ai.capxule/capxule",
+    "iconSource": "https://capxule.ai/brand/capxule-mark-accent.svg",
+    "auth": "auto",
+    "icon": "/connector-icons/6aef8eb99de22977.svg"
+  },
+  {
+    "id": "3ee907b964adff5c",
+    "name": "Catalyst evidence graph",
+    "url": "https://catalystproject.ai/mcp",
+    "description": "Findings on what compounds and supplements do in the body, with evidence strength, quote and paper.",
+    "category": "Research",
+    "domains": [
+      "catalystproject.ai"
+    ],
+    "source": "https://registry.modelcontextprotocol.io/?q=ai.catalystproject/evidence-graph",
+    "iconSource": "https://catalystproject.ai/icon.svg",
+    "auth": "auto",
+    "icon": "/connector-icons/3ee907b964adff5c.svg"
+  },
+  {
+    "id": "8c1bc9ec42fa5d9c",
+    "name": "CatchMyCall",
+    "url": "https://mcp.catchmycall.ai/mcp",
+    "description": "Place calls, send WhatsApp messages, and read call records, contacts, leads and campaigns",
+    "category": "Productivity",
+    "domains": [
+      "app.catchmycall.ai",
+      "catchmycall.ai",
+      "mcp.catchmycall.ai"
+    ],
+    "source": "https://registry.modelcontextprotocol.io/?q=ai.catchmycall/cpaas",
+    "iconSource": "https://app.catchmycall.ai/brand/catchmycall-connector-icon.png",
+    "auth": "auto",
+    "icon": "/connector-icons/8c1bc9ec42fa5d9c.png"
+  },
+  {
+    "id": "51d51649944e5830",
+    "name": "Central City",
+    "url": "https://centralcity.ai/mcp/open",
+    "description": "Every AI. One room. The open hub where the world's AI agents meet, work together and exchange.",
+    "category": "Productivity",
+    "domains": [
+      "centralcity.ai"
+    ],
+    "source": "https://registry.modelcontextprotocol.io/?q=ai.centralcity/central-city",
+    "iconSource": "https://centralcity.ai/brand/central-city-mark.png",
+    "auth": "auto",
+    "icon": "/connector-icons/51d51649944e5830.png"
+  },
+  {
+    "id": "d45eb9be114050bb",
+    "name": "CertifiKit COI tools",
+    "url": "https://certifikit.ai/mcp",
+    "description": "Certificate of insurance tools: build subcontractor insurance requirements, check an ACORD 25.",
+    "category": "Productivity",
+    "domains": [
+      "certifikit.ai"
+    ],
+    "source": "https://registry.modelcontextprotocol.io/?q=ai.certifikit/coi-tools",
+    "iconSource": "https://certifikit.ai/brand/mark-512.png",
+    "auth": "auto",
+    "icon": "/connector-icons/d45eb9be114050bb.png"
+  },
+  {
+    "id": "cfd2b80097048961",
+    "name": "CertScore.ai MCP Light",
+    "url": "https://mcp.certscore.ai/mcp/light",
+    "description": "Free website privacy scanner for pre-consent cookies, trackers, consent, policy, and HTTPS/TLS.",
+    "category": "Productivity",
+    "domains": [
+      "certscore.ai",
+      "mcp.certscore.ai"
+    ],
+    "source": "https://registry.modelcontextprotocol.io/?q=ai.certscore/mcp-light",
+    "iconSource": "https://certscore.ai/certscore-mark-dark.png",
+    "auth": "auto",
+    "icon": "/connector-icons/cfd2b80097048961.png"
+  },
+  {
+    "id": "3d7c628fac1dcd14",
+    "name": "AgentMart",
+    "url": "https://agentmart.ciphyr.ai/mcp",
+    "description": "Webhook inbox, memory, wake-up calls, uptime watch and code kits for AI agents. Prepaid balance.",
+    "category": "Development",
+    "domains": [
+      "agentmart.ciphyr.ai"
+    ],
+    "source": "https://registry.modelcontextprotocol.io/?q=ai.ciphyr.agentmart/agentmart",
+    "iconSource": "https://agentmart.ciphyr.ai/favicon.svg",
+    "auth": "auto",
+    "icon": "/connector-icons/3d7c628fac1dcd14.svg"
+  },
+  {
+    "id": "db8420f56e46da8d",
+    "name": "citepath",
+    "url": "https://citepath.ai/api/mcp",
+    "description": "Citepath public MCP server for LLM readiness audits and public scan results.",
+    "category": "Productivity",
+    "domains": [
+      "citepath.ai"
+    ],
+    "source": "https://registry.modelcontextprotocol.io/?q=ai.citepath/citepath",
+    "iconSource": "https://citepath.ai/apple-icon",
+    "auth": "auto",
+    "icon": "/connector-icons/db8420f56e46da8d.png"
+  },
+  {
+    "id": "4befb8e2e0c00715",
+    "name": "Clawfight",
+    "url": "https://clawfight.ai/mcp",
+    "description": "An AI agent battle league: build a crab fighter over MCP and rap-battle in a rendered arena.",
+    "category": "Productivity",
+    "domains": [
+      "clawfight.ai"
+    ],
+    "source": "https://registry.modelcontextprotocol.io/?q=ai.clawfight/mcp",
+    "iconSource": "https://clawfight.ai/brand/icon-512.png",
+    "auth": "auto",
+    "icon": "/connector-icons/4befb8e2e0c00715.png"
+  },
+  {
+    "id": "41a01cdfc8691335",
+    "name": "CleanVector",
+    "url": "https://cleanvector.ai/api/mcp",
+    "description": "Create professional SVG artwork, icons and vector logos from a prompt, or vectorize any image.",
+    "category": "Images & media",
+    "domains": [
+      "cleanvector.ai"
+    ],
+    "source": "https://registry.modelcontextprotocol.io/?q=ai.cleanvector/cleanvector",
+    "iconSource": "https://cleanvector.ai/logo.png",
+    "auth": "api_key",
+    "icon": "/connector-icons/41a01cdfc8691335.png"
+  },
+  {
+    "id": "36157844829181a9",
+    "name": "Clear Tape",
+    "url": "https://app.cleartape.ai/mcp",
+    "description": "Free trading calculators, trading-system rules, a glossary and lesson search. No market data.",
+    "category": "Research",
+    "domains": [
+      "cleartape.ai",
+      "app.cleartape.ai"
+    ],
+    "source": "https://registry.modelcontextprotocol.io/?q=ai.cleartape/clear-tape",
+    "iconSource": "https://cleartape.ai/apple-touch-icon.png",
+    "auth": "auto",
+    "icon": "/connector-icons/36157844829181a9.png"
+  },
+  {
+    "id": "80d1867d8da6e656",
+    "name": "Cleve",
+    "url": "https://app.cleve.ai/mcp",
+    "description": "Search workspace knowledge, save ideas, update notes, organize folders, and share public links.",
+    "category": "Research",
+    "domains": [
+      "cleve.ai",
+      "app.cleve.ai"
+    ],
+    "source": "https://registry.modelcontextprotocol.io/?q=ai.cleve/cleve",
+    "iconSource": "https://cleve.ai/brand/cleve-icon-square.svg",
+    "auth": "auto",
+    "icon": "/connector-icons/80d1867d8da6e656.svg"
+  },
+  {
+    "id": "831818adae936bd8",
+    "name": "Clevera",
+    "url": "https://app.clevera.ai/mcp",
+    "description": "Make how-to videos, social clips and help articles from Claude or ChatGPT, and run your help center.",
+    "category": "Images & media",
+    "domains": [
+      "clevera.ai",
+      "app.clevera.ai"
+    ],
+    "source": "https://registry.modelcontextprotocol.io/?q=ai.clevera/mcp",
+    "iconSource": "https://framerusercontent.com/images/3nQPCNvr245IlucyvMlD7T8ryU.png",
+    "auth": "auto"
+  },
+  {
+    "id": "64d65539861cee4b",
+    "name": "Clip Studio MCP",
+    "url": "https://clipstudio.ai/api/mcp",
+    "description": "Hosted MCP for Clip Studio public products — same plan as the website.",
+    "category": "Productivity",
+    "domains": [
+      "clipstudio.ai"
+    ],
+    "source": "https://registry.modelcontextprotocol.io/?q=ai.clipstudio/mcp",
+    "iconSource": null,
+    "auth": "auto"
+  },
+  {
+    "id": "d9f934ca6c6e0313",
+    "name": "CloneKit",
+    "url": "https://clonekit.ai/mcp",
+    "description": "Expert know-how (kits) any AI can read or run, always the latest version.",
+    "category": "Productivity",
+    "domains": [
+      "clonekit.ai"
+    ],
+    "source": "https://registry.modelcontextprotocol.io/?q=ai.clonekit/clonekit",
+    "iconSource": "https://clonekit.ai/brand/icon-512.png",
+    "auth": "auto",
+    "icon": "/connector-icons/d9f934ca6c6e0313.png"
+  }
+]

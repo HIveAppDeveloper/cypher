@@ -32,20 +32,23 @@ def seal(token): return cipher().encrypt(token.encode()).decode() if token else 
 def reveal(token): return cipher().decrypt(token.encode()).decode() if token else None
 
 def http_client(headers=None, timeout=None, auth=None):
-    return httpx.AsyncClient(headers=headers, timeout=timeout or 30, auth=auth, follow_redirects=False)
+    async def guard(request):
+        parsed = urlsplit(str(request.url))
+        await validate_endpoint(parsed._replace(query='',fragment='').geturl())
+    return httpx.AsyncClient(headers=headers, timeout=timeout or 20, auth=auth, follow_redirects=False, event_hooks={'request':[guard]})
 
 @asynccontextmanager
-async def session(url, token=None):
+async def session(url, token=None, auth=None):
     await validate_endpoint(url)
     headers = {'Authorization': 'Bearer ' + token} if token else {}
-    async with streamablehttp_client(url, headers=headers, timeout=20, sse_read_timeout=60, httpx_client_factory=http_client) as streams:
+    async with streamablehttp_client(url, headers=headers, timeout=15, sse_read_timeout=25, httpx_client_factory=http_client, auth=auth) as streams:
         async with ClientSession(streams[0], streams[1], read_timeout_seconds=timedelta(seconds=60)) as client:
             await client.initialize()
             yield client
 
-async def discover(url, token=None):
-    async with asyncio.timeout(45):
-        async with session(url, token) as client:
+async def discover(url, token=None, auth=None):
+    async with asyncio.timeout(25):
+        async with session(url, token, auth) as client:
             result = await client.list_tools()
             return [{'name': t.name, 'description': (t.description or '')[:2000], 'schema': t.inputSchema} for t in result.tools[:40]]
 
@@ -57,7 +60,9 @@ async def invoke(plugin_id, tool_name, arguments):
         if not plugin or not plugin.enabled or tool_name not in {t['name'] for t in plugin.tools if t.get('enabled',True)}:
             return {'error': 'Plugin or tool is disabled.'}
         async with asyncio.timeout(90):
-            async with session(plugin.url, reveal(plugin.credential)) as client:
+            from app.services.plugin_auth import provider_for_plugin
+            auth = await provider_for_plugin(db, plugin_id)
+            async with session(plugin.url, reveal(plugin.credential), auth) as client:
                 result = await client.call_tool(tool_name, arguments)
                 text = '\n'.join(c.text for c in result.content if c.type == 'text')
                 return {'success': not result.isError, 'content': text[:20000] or 'The plugin returned no text.', 'plugin': plugin.name}

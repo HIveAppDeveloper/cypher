@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.session import get_db
-from app.models.plugin import Plugin
+from app.models.plugin import Plugin, PluginAuthorization
 from app.services.plugins import discover, seal
 
 router = APIRouter()
@@ -54,7 +54,10 @@ async def toggle(id: UUID, data: TogglePlugin, db: AsyncSession = Depends(get_db
 @router.delete('/{id}')
 async def disconnect(id: UUID, db: AsyncSession = Depends(get_db)):
     plugin = await db.get(Plugin, str(id))
-    if plugin: await db.delete(plugin); await db.commit()
+    if plugin:
+        from sqlalchemy import delete
+        await db.execute(delete(PluginAuthorization).where(PluginAuthorization.plugin_id==str(id)))
+        await db.delete(plugin); await db.commit()
     return {'status': 'disconnected'}
 
 @router.post('/{id}/refresh')
@@ -62,7 +65,9 @@ async def refresh_tools(id:UUID,db:AsyncSession=Depends(get_db)):
     from app.services.plugins import reveal
     plugin=await db.get(Plugin,str(id))
     if not plugin:raise HTTPException(404,'Plugin not found')
-    try:tools=await discover(plugin.url,reveal(plugin.credential))
+    from app.services.plugin_auth import provider_for_plugin
+    auth=await provider_for_plugin(db,str(id))
+    try:tools=await discover(plugin.url,reveal(plugin.credential),auth=auth)
     except Exception:raise HTTPException(502,'Could not refresh tools. The saved connection was preserved.')
     previous={t['name']:t.get('enabled',True) for t in plugin.tools}
     plugin.tools=[{**t,'enabled':previous.get(t['name'],True)} for t in tools]

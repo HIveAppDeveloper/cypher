@@ -229,3 +229,8 @@ Sent text appears immediately with Sending state and is reconciled by message UU
 
 ## Simplified conversation toolbar
 Move the stacked Recent work, Context & memory, Steer your team, and Message options disclosures into a single Settings popover at the top. Keep the composer free of configuration rows, with 44px attachment/send targets and a text field that grows up to 150px. Preserve Inter and the existing light glass palette. Plugins is a named sidebar destination; Add plugin reveals custom MCP setup while the catalog remains browsable.
+
+## Dockable sidebar and connector browser
+The existing light workspace now uses a 280px default sidebar, adjustable from 220px to 480px while preserving at least 360px for the conversation; narrow screens use a 64px rail. The collapsed desktop rail is 72px. A 32px desktop layout strip contains docking, collapse, and reset; its grip previews the drop side. Sidebar names use 14px Inter with 12px descriptions and 36px avatars. Pin and actual-work filters improve scanning without invented activity.
+
+The Plugins surface is a 920px maximum, 760px maximum-height dialog with a 24px corner and independently scrolling content. Browse contains a single website input, followed by source-backed service tiles with actual logos, short descriptions, categories, and Connect actions. Connected tools, custom server setup, and settings use separate tabs. Desktop tiles form 3 columns, intermediate widths 2, and mobile 1. Graphite primary buttons and pale lavender secondary controls preserve the incumbent system while removing the former oversized technical form. No server is labeled connected until tool discovery succeeds. Provider logos retain source URLs in the committed catalog and origin metadata in PNG assets.

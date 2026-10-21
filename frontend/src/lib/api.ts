@@ -1,7 +1,7 @@
 import { Bot, BotStatus, Message, MessageType, Attachment, RunOptions, Conversation, Job } from './types';
 const API_URL = (process.env.NEXT_PUBLIC_API_URL || '').replace(/\/$/, '');
-async function request(path: string, init?: RequestInit) {
-  const response = await fetch(`${API_URL}/api${path}`, { ...init, signal: AbortSignal.timeout(35000), headers: { 'Content-Type': 'application/json', ...init?.headers } });
+async function request(path: string, init?: RequestInit, timeout=35000) {
+  const response = await fetch(`${API_URL}/api${path}`, { ...init, signal: AbortSignal.timeout(timeout), headers: { 'Content-Type': 'application/json', ...init?.headers } });
   if (!response.ok) { const error = await response.json().catch(() => null); const detail = error?.detail; throw new Error(typeof detail === 'string' ? detail : Array.isArray(detail) ? detail.map((item: { msg?: string }) => item.msg || 'Invalid input').join('. ') : `Request failed (${response.status}). Try again.`); }
   return response.json();
 }
@@ -24,6 +24,10 @@ export const api = {
   testChannel: (id:string) => request('/channels/'+id+'/test',{method:'POST'}),
   getDeliveries: (id:string): Promise<{id:string;status:string;attempts:number;detail:string}[]> => request('/channels/'+id+'/deliveries'),
   defaultTeam: (): Promise<Conversation> => request('/teams/default', { method: 'POST' }),
+  getPluginCatalog: (): Promise<import('../components/PluginPanel').CatalogEntry[]> => request('/plugins/catalog'),
+  resolvePlugin: (website:string): Promise<import('../components/PluginPanel').CatalogEntry> => request('/plugins/resolve',{method:'POST',body:JSON.stringify({website})}),
+  authorizePlugin: (data:{name:string;url:string;approval_id?:string}): Promise<{status:string;flow_id?:string;authorization_url?:string;name:string}> => request('/plugins/authorize',{method:'POST',body:JSON.stringify(data)},65000),
+  pluginAuthStatus: (id:string): Promise<{status:string;name:string}> => request('/plugins/oauth/status/'+id),
   getPlugins: (): Promise<import('../components/PluginPanel').PluginConnection[]> => request('/plugins'),
   connectPlugin: (data: { name: string; url: string; token: string; approval_id?:string }): Promise<import('../components/PluginPanel').PluginConnection> => request('/plugins', { method: 'POST', body: JSON.stringify(data) }),
   refreshPlugin: (id:string): Promise<import('../components/PluginPanel').PluginConnection> => request('/plugins/'+id+'/refresh',{method:'POST'}),

@@ -24,6 +24,8 @@ router.include_router(context_router,prefix="/conversations",tags=["context"])
 router.include_router(automation_router,tags=["automation"])
 router.include_router(runtime_router, prefix="/runtime", tags=["runtime"])
 router.include_router(teams_router, prefix="/teams", tags=["teams"])
+from .plugin_catalog import router as plugin_catalog_router
+router.include_router(plugin_catalog_router,prefix='/plugins',tags=['plugins'])
 router.include_router(plugins_router, prefix="/plugins", tags=["plugins"])
 router.include_router(bots_router, prefix="/bots", tags=["bots"])
 router.include_router(conversations_router, prefix="/conversations", tags=["conversations"])

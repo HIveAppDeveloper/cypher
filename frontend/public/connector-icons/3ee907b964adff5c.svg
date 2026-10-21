@@ -1,0 +1,11 @@
+<ns0:svg xmlns:ns0="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  
+  <ns0:rect width="32" height="32" rx="7" fill="#fbf6ee" />
+
+  
+  <ns0:circle cx="15.74" cy="16" r="9.52" fill="none" stroke="#1c1915" stroke-width="5.93" />
+
+  
+  <ns0:circle cx="23.57" cy="16" r="6.61" fill="#fbf6ee" />
+  <ns0:circle cx="23.57" cy="16" r="5.18" fill="#ee5f19" />
+</ns0:svg>

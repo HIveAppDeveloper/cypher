@@ -36,3 +36,8 @@ The existing shared team conversation is the default arrival surface, with indiv
 
 ## Simplified conversation controls
 The composer shows attachments, text, and send. Recent work, retained context, steering, output, and model controls are under Settings in the top toolbar. The sidebar Plugins entry opens a catalog and a dedicated Add plugin form for remote MCP servers. An authenticated model-provider failure explains the server-side credential setup needed; UI changes do not establish valid provider credentials.
+
+## Website-based plugin connections and workspace layout
+A company website resolves against a 100-entry source-backed connector catalog, then falls back to an exact-domain match in the public MCP registry. Published Streamable HTTP endpoints can begin the pinned MCP SDK’s OAuth discovery and dynamic registration flow. Consent pauses durably in PostgreSQL; a browser-bound HttpOnly cookie, state, issuer, PKCE, expiry, and one-use callback protect completion. Access and refresh tokens are encrypted. A plugin becomes enabled only after tools are discovered. Some providers require keys, client registration approval, paid plans, or unsupported authentication; catalog inclusion is not a successful connection or a universal one-click guarantee. The public callback origin defaults to the production GrokBot hostname and is configurable with GROKBOT_PUBLIC_URL.
+
+The sidebar resizes on desktop, docks left/right by drag or button, collapses to icons, and remembers the layout in this browser. Keyboard resizing and a collapse shortcut are available. Agents can be pinned and filtered by actual working status; search covers names, roles, descriptions, and room titles. These controls do not change model capabilities or provider permissions.
