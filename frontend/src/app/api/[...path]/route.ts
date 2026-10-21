@@ -4,8 +4,9 @@ export const dynamic = 'force-dynamic';
 async function proxy(request: NextRequest, { params }: { params: { path: string[] } }) {
   const path = params.path.join('/');
   const publicAuthPath = path === 'auth/email/request' || path === 'auth/email/verify';
+  const channelIngress = request.method === 'POST' && params.path.length === 3 && params.path[0] === 'channels' && params.path[2] === 'events';
   const session = getSessionFromCookieHeader(request.headers.get('cookie'));
-  if (process.env.REQUIRE_USER_AUTH === 'true' && !session && !publicAuthPath) return NextResponse.json({ detail: 'Sign in to continue.' }, { status: 401 });
+  if (process.env.REQUIRE_USER_AUTH === 'true' && !session && !publicAuthPath && !channelIngress) return NextResponse.json({ detail: 'Sign in to continue.' }, { status: 401 });
   const backend = process.env.BACKEND_INTERNAL_URL || process.env.GROKBOT_BACKEND_URL;
   if (!backend) return NextResponse.json({ detail: 'Your cloud runtime is not connected. Open Workspace setup to connect it.' }, { status: 503 });
   const url = new URL('/api/' + params.path.map(encodeURIComponent).join('/'), backend);

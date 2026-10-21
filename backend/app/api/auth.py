@@ -95,11 +95,14 @@ async def verify_email_login(token: str, request: Request, db: AsyncSession = De
     if owner is None:
         owner = User(id=account_id, email=email, display_name=email.split("@", 1)[0][:200])
         db.add(owner)
-        if settings.LEGACY_OWNER_EMAIL.strip().lower() == email:
-            for mapper in Base.registry.mappers:
-                model = mapper.class_
-                if isinstance(model, type) and issubclass(model, TenantScoped):
-                    await db.execute(update(model).where(model.tenant_id == LEGACY_TENANT_ID).values(tenant_id=account_id).execution_options(skip_tenant_filter=True))
+    # Retry ownership binding on a later verified sign-in if configuration was
+    # added after the account was first created. Never assign legacy data to an
+    # arbitrary first registrant.
+    if settings.LEGACY_OWNER_EMAIL.strip().lower() == email:
+        for mapper in Base.registry.mappers:
+            model = mapper.class_
+            if isinstance(model, type) and issubclass(model, TenantScoped):
+                await db.execute(update(model).where(model.tenant_id == LEGACY_TENANT_ID).values(tenant_id=account_id).execution_options(skip_tenant_filter=True))
     challenge.used = True
     tenant_token = current_tenant_id.set(account_id)
     try:
@@ -156,10 +159,10 @@ async def verify_google_login(data: GoogleLoginRequest, db: AsyncSession = Depen
             owner = User(id=account_id_for(email), email=email, google_subject=subject,
                          display_name=str(claims.get("name") or email.split("@", 1)[0])[:200])
             db.add(owner)
-            if settings.LEGACY_OWNER_EMAIL.strip().lower() == email:
-                for mapper in Base.registry.mappers:
-                    model = mapper.class_
-                    if isinstance(model, type) and issubclass(model, TenantScoped):
-                        await db.execute(update(model).where(model.tenant_id == LEGACY_TENANT_ID).values(tenant_id=owner.id).execution_options(skip_tenant_filter=True))
+    if settings.LEGACY_OWNER_EMAIL.strip().lower() == owner.email:
+        for mapper in Base.registry.mappers:
+            model = mapper.class_
+            if isinstance(model, type) and issubclass(model, TenantScoped):
+                await db.execute(update(model).where(model.tenant_id == LEGACY_TENANT_ID).values(tenant_id=owner.id).execution_options(skip_tenant_filter=True))
     await db.commit()
     return {"id": owner.id, "email": owner.email, "display_name": owner.display_name}

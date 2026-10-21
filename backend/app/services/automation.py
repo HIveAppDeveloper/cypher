@@ -13,18 +13,24 @@ async def tick_goals(session_factory=None):
     async with sessions() as db:
         goals=(await db.execute(select(Goal).where(Goal.status=='active').with_for_update(skip_locked=True).limit(10))).scalars().all()
         for g in goals:
-            previous=await db.get(Task,g.last_task_id) if g.last_task_id else None
-            if previous and previous.status in ('pending','running','cancel_requested'):continue
-            if previous and previous.status!='completed':
-                g.status='blocked';g.last_summary='Previous execution did not complete. Review it before resuming.';continue
-            if previous and g.completion_requested:g.status='completed';g.next_run_at=None;continue
-            if g.runs>=g.max_runs:g.status='limit_reached';g.next_run_at=None;continue
-            if g.next_run_at and g.next_run_at>datetime.utcnow():continue
-            p=(await db.execute(select(ConversationParticipant).where(ConversationParticipant.conversation_id==g.conversation_id).limit(1))).scalar_one_or_none()
-            if not p:g.status='blocked';continue
-            prompt=f'Continue goal: {g.title}\nObjective: {g.objective}\nSuccess criteria: {g.success_criteria}\nRun {g.runs+1} of {g.max_runs}. Use existing shared history to avoid repeating completed actions. Work autonomously within this goal and connected tool permissions. Call complete_goal only when evidence shows the success criteria are met. Otherwise report progress and the next useful step. Do not create nested goals.'
-            task=Task(id=str(uuid.uuid4()),conversation_id=g.conversation_id,bot_id=p.bot_id,title=f'Goal: {g.title}'[:100],description=prompt,status='pending',result={'request':{'goal_id':g.id,'options':{'provider':'openai','model':g.manager_model,'max_tokens':2048,'reasoning_effort':'low','max_iterations':8,'team_rounds':1}}})
-            db.add(task);g.last_task_id=task.id;g.runs+=1;g.next_run_at=datetime.utcnow()+timedelta(minutes=g.interval_minutes)
+            from app.db.tenancy import current_tenant_id
+            token=current_tenant_id.set(g.tenant_id)
+            try:
+                previous=await db.get(Task,g.last_task_id) if g.last_task_id else None
+                if previous and previous.status in ('pending','running','cancel_requested'):continue
+                if previous and previous.status!='completed':
+                    g.status='blocked';g.last_summary='Previous execution did not complete. Review it before resuming.';continue
+                if previous and g.completion_requested:g.status='completed';g.next_run_at=None;continue
+                if g.runs>=g.max_runs:g.status='limit_reached';g.next_run_at=None;continue
+                if g.next_run_at and g.next_run_at>datetime.utcnow():continue
+                p=(await db.execute(select(ConversationParticipant).where(ConversationParticipant.conversation_id==g.conversation_id).limit(1))).scalar_one_or_none()
+                if not p:g.status='blocked';continue
+                prompt=f'Continue goal: {g.title}\nObjective: {g.objective}\nSuccess criteria: {g.success_criteria}\nRun {g.runs+1} of {g.max_runs}. Use existing shared history to avoid repeating completed actions. Work autonomously within this goal and connected tool permissions. Call complete_goal only when evidence shows the success criteria are met. Otherwise report progress and the next useful step. Do not create nested goals.'
+                task=Task(id=str(uuid.uuid4()),conversation_id=g.conversation_id,bot_id=p.bot_id,title=f'Goal: {g.title}'[:100],description=prompt,status='pending',result={'request':{'goal_id':g.id,'options':{'provider':'openai','model':g.manager_model,'max_tokens':2048,'reasoning_effort':'low','max_iterations':8,'team_rounds':1}}})
+                db.add(task);g.last_task_id=task.id;g.runs+=1;g.next_run_at=datetime.utcnow()+timedelta(minutes=g.interval_minutes)
+                await db.flush()
+            finally:
+                current_tenant_id.reset(token)
         await db.commit()
 
 async def register_goal_tools(registry,conversation_id,goal_id,session_factory=None):
@@ -69,19 +75,24 @@ async def tick_deliveries(session_factory=None):
     async with sessions() as db:
         d=(await db.execute(select(Delivery).where(Delivery.status=='pending',Delivery.next_attempt_at<=datetime.utcnow()).with_for_update(skip_locked=True).limit(1))).scalar_one_or_none()
         if not d:return
-        c=await db.get(Channel,d.channel_id);t=await db.get(Task,d.task_id)
-        if not c or not c.enabled or not c.webhook_url or not t:d.status='skipped';await db.commit();return
-        public=[r for r in (t.result or {}).get('responses',[]) if not (r.get('metadata') or {}).get('internal') and r.get('sender_type')!='user']
-        payload=json.dumps({'event':'task.finished','task_id':t.id,'status':t.status,'text':'\n\n'.join(r.get('content','') for r in public)[:24000]},separators=(',',':')).encode()
-        d.attempts+=1
+        from app.db.tenancy import current_tenant_id
+        token=current_tenant_id.set(d.tenant_id)
         try:
-            async with asyncio.timeout(12):
-                await validate_endpoint(c.webhook_url)
-                signature=hmac.new(reveal(c.signing_secret).encode(),payload,hashlib.sha256).hexdigest()
-                async with http_client() as client:
-                    response=await client.post(c.webhook_url,content=payload,headers={'Content-Type':'application/json','X-Grokbot-Signature':'sha256='+signature,'Idempotency-Key':d.id},timeout=8)
-            if not 200<=response.status_code<300:raise RuntimeError(f'Webhook returned HTTP {response.status_code}')
-            d.status='delivered';d.detail='Accepted by destination.'
-        except Exception as error:
-            d.status='failed' if d.attempts>=3 else 'pending';d.next_attempt_at=datetime.utcnow()+timedelta(seconds=60*d.attempts);d.detail=type(error).__name__
-        await db.commit()
+            c=await db.get(Channel,d.channel_id);t=await db.get(Task,d.task_id)
+            if not c or not c.enabled or not c.webhook_url or not t:d.status='skipped';await db.commit();return
+            public=[r for r in (t.result or {}).get('responses',[]) if not (r.get('metadata') or {}).get('internal') and r.get('sender_type')!='user']
+            payload=json.dumps({'event':'task.finished','task_id':t.id,'status':t.status,'text':'\n\n'.join(r.get('content','') for r in public)[:24000]},separators=(',',':')).encode()
+            d.attempts+=1
+            try:
+                async with asyncio.timeout(12):
+                    await validate_endpoint(c.webhook_url)
+                    signature=hmac.new(reveal(c.signing_secret).encode(),payload,hashlib.sha256).hexdigest()
+                    async with http_client() as client:
+                        response=await client.post(c.webhook_url,content=payload,headers={'Content-Type':'application/json','X-Grokbot-Signature':'sha256='+signature,'Idempotency-Key':d.id},timeout=8)
+                if not 200<=response.status_code<300:raise RuntimeError(f'Webhook returned HTTP {response.status_code}')
+                d.status='delivered';d.detail='Accepted by destination.'
+            except Exception as error:
+                d.status='failed' if d.attempts>=3 else 'pending';d.next_attempt_at=datetime.utcnow()+timedelta(seconds=60*d.attempts);d.detail=type(error).__name__
+            await db.commit()
+        finally:
+            current_tenant_id.reset(token)

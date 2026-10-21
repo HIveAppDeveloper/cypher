@@ -1,11 +1,10 @@
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 import secrets
-from sqlalchemy.schema import CreateSchema
-from sqlalchemy import text, update, or_
+import re
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
-from app.db.session import engine, Base
+from app.db.session import engine
 from app.db.tenancy import current_tenant_id
 from app.api import router as api_router
 from app.api.websocket import router as ws_router
@@ -20,16 +19,8 @@ logger = logging.getLogger(__name__)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Initialize DB tables
-    async with engine.begin() as conn:
-        if engine.dialect.name == "postgresql":
-            await conn.execute(text("SELECT pg_advisory_xact_lock(1763000272)"))
-            await conn.execute(CreateSchema(settings.DATABASE_SCHEMA, if_not_exists=True))
-        from app import models as _registered_models  # do not shadow the FastAPI app
-        from app.db.migrations import ensure_tenant_schema
-        await conn.run_sync(ensure_tenant_schema)
-        await conn.run_sync(Base.metadata.create_all)
-        from app.models.bot import Bot
-        await conn.execute(update(Bot).where(or_(Bot.llm_provider != 'openai', Bot.llm_model.notin_(['gpt-6.1-sol', 'gpt-6-luna']))).values(llm_provider='openai', llm_model='gpt-6.1-sol'))
+    from app.db.bootstrap import initialize_database
+    await initialize_database()
     logger.info("Database tables created")
 
     # Initialize Redis (optional for local dev)
@@ -77,12 +68,13 @@ app = FastAPI(
 async def authenticate_backend(request: Request, call_next):
     api_request = request.url.path.startswith("/api/")
     public_auth_path = request.url.path in {"/api/auth/email/request", "/api/auth/email/verify", "/api/auth/google/verify"}
+    channel_ingress = request.method == "POST" and re.fullmatch(r"/api/channels/[0-9a-fA-F-]{36}/events", request.url.path) is not None
     if settings.BACKEND_API_TOKEN and api_request:
         expected = "Bearer " + settings.BACKEND_API_TOKEN
         if not secrets.compare_digest(request.headers.get("authorization", ""), expected):
             return JSONResponse({"detail": "Unauthorized"}, status_code=401)
     user_id = request.headers.get("x-grokbot-user-id") if api_request else None
-    if settings.REQUIRE_USER_AUTH and api_request and not user_id and not public_auth_path:
+    if settings.REQUIRE_USER_AUTH and api_request and not user_id and not public_auth_path and not channel_ingress:
         return JSONResponse({"detail": "Sign in to continue."}, status_code=401)
     request.state.user_id = user_id
     tenant_token = current_tenant_id.set(user_id)
