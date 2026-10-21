@@ -37,6 +37,27 @@ class Website(BaseModel):
 async def list_catalog():
     return catalog()
 
+class SyncInput(BaseModel):
+    approval_id:str|None=Field(default=None,max_length=36)
+
+@router.post('/catalog/sync',status_code=202)
+async def sync_catalog(body:SyncInput,db:AsyncSession=Depends(get_db)):
+    from app.api.device import require_device
+    from app.models.plugin_sync import PluginSync
+    from app.services.plugin_sync import public
+    await require_device(db,body.approval_id,'connect_plugin:catalog')
+    job=(await db.execute(select(PluginSync).where(PluginSync.status.in_(('pending','running'))))).scalars().first()
+    if not job:
+        job=PluginSync();db.add(job);await db.commit();await db.refresh(job)
+    return public(job,len(catalog()))
+
+@router.get('/catalog/sync')
+async def sync_status(db:AsyncSession=Depends(get_db)):
+    from app.models.plugin_sync import PluginSync
+    from app.services.plugin_sync import public
+    job=(await db.execute(select(PluginSync).order_by(PluginSync.created_at.desc()).limit(1))).scalar_one_or_none()
+    return public(job,len(catalog())) if job else None
+
 @router.post('/resolve')
 async def resolve(body:Website):
     host=hostname(body.website.strip())

@@ -60,6 +60,7 @@ class ToolRegistry:
         logger.info(f"Registered tool: {name}")
 
     async def load_plugins(self, db, bot):
+        self._plugin_manifest = []
         self._tools = {name: tool for name, tool in self._tools.items() if not name.startswith("plugin_")}
         if "plugins" not in (bot.tools_enabled or []):
             return
@@ -69,7 +70,9 @@ class ToolRegistry:
         # Do not accumulate schemas or stale tools across turns. Two small routing
         # tools keep model context bounded even with hundreds of connections.
         connections = list((await db.execute(select(Plugin).where(Plugin.enabled == True))).scalars())
-        manifest = [dict(plugin_id=p.id, service=p.name, **tool) for p in connections for tool in p.tools if tool.get('enabled', True)]
+        from app.services.plugins import is_read_only
+        manifest = [{**tool, 'plugin_id':p.id, 'service':p.name, 'read_only':is_read_only(p.url, tool)} for p in connections for tool in p.tools if tool.get('enabled', True)]
+        self._plugin_manifest = manifest
         if not manifest:
             return
         async def search(arguments, bot_id):
@@ -89,6 +92,13 @@ class ToolRegistry:
             return await invoke(arguments['plugin_id'], arguments['tool_name'], arguments.get('arguments', {}))
         self.register('plugin_search', 'Find tools in connected services. Search by service name and action before calling plugin_call. Only enabled, connected tools are returned.', {'type':'object','properties':{'query':{'type':'string'}},'required':['query']}, search)
         self.register('plugin_call', 'Run a connected service tool returned by plugin_search. Match its exact parameters. Verify the returned result before claiming success.', {'type':'object','properties':{'plugin_id':{'type':'string'},'tool_name':{'type':'string'},'arguments':{'type':'object','additionalProperties':True}},'required':['plugin_id','tool_name','arguments']}, call)
+
+    def replay_safe(self, name, arguments):
+        if name == 'plugin_call':
+            return any(t['plugin_id'] == arguments.get('plugin_id') and t['name'] == arguments.get('tool_name') and t.get('read_only') for t in getattr(self, '_plugin_manifest', []))
+        return name in {'read_file', 'list_directory', 'search_files', 'search_web',
+                        'search_chat_history', 'consult_specialist', 'plugin_search',
+                        'complete_goal', 'remember_context'}
 
     def register_default_tools(self):
         """Register all built-in tools."""

@@ -13,7 +13,7 @@
       "root": "backend",
       "entrypoint": "Dockerfile",
       "command": ["python", "-m", "app.worker_main"],
-      "instances": {"iad1": 1},
+      "instances": {"iad1": 2},
       "resources": {"requests": {"memory": "2Gi"}},
       "terminationGracePeriodSeconds": 60
     }

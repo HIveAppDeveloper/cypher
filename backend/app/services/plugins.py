@@ -14,6 +14,58 @@ from mcp import ClientSession
 from mcp.client.streamable_http import streamablehttp_client
 from app.config import settings
 
+def is_read_only(url, tool):
+    if tool.get('read_only'): return True
+    # Reviewed public documentation operations also predate annotation support.
+    known = {
+        'mcp.deepwiki.com': {'read_wiki_structure', 'read_wiki_contents', 'ask_question'},
+        'learn.microsoft.com': {'microsoft_docs_search', 'microsoft_docs_fetch', 'microsoft_code_sample_search'},
+        'docs.mcp.cloudflare.com': {'search_cloudflare_documentation', 'get_cloudflare_documentation'},
+    }
+    return tool.get('name') in known.get(urlsplit(url).hostname, set())
+
+
+def transient_failure(error):
+    children = getattr(error, 'exceptions', None)
+    if children: return all(transient_failure(item) for item in children)
+    status = getattr(error, 'status_code', None)
+    if status is None: status = getattr(getattr(error, 'response', None), 'status_code', None)
+    return status in {408, 429, 500, 502, 503, 504} or isinstance(error, (TimeoutError, httpx.TransportError))
+
+
+def authentication_failure(error):
+    from app.services.plugin_auth import SignInRequired
+    if isinstance(error, SignInRequired): return True
+    if getattr(getattr(error, 'response', None), 'status_code', None) in {401,403}: return True
+    return any(authentication_failure(child) for child in getattr(error, 'exceptions', []))
+
+
+def tool_result(result, name):
+    parts = []
+    attachments = []
+    for item in result.content:
+        if item.type == 'text': parts.append(item.text)
+        elif item.type == 'resource' and hasattr(item.resource, 'text'): parts.append(item.resource.text)
+        elif item.type in {'image','audio'} and len(attachments)<3:
+            formats={'image/png':'png','image/jpeg':'jpg','image/webp':'webp','audio/mpeg':'mp3','audio/wav':'wav','audio/ogg':'ogg'}
+            mime=getattr(item,'mimeType','')
+            try:
+                if mime in formats and len(item.data)<4*1024*1024 and len(base64.b64decode(item.data,validate=True))<=3*1024*1024:
+                    attachments.append({'name':f'plugin-output-{len(attachments)+1}.{formats[mime]}','mime':mime,'data':item.data})
+            except (ValueError,TypeError):pass
+    structured = getattr(result, 'structuredContent', None)
+    if structured is not None and not parts: parts.append(json.dumps(structured, default=str))
+    output = {'success': not result.isError, 'content': '\n'.join(parts)[:20000], 'plugin': name}
+    if structured is not None:
+        encoded = json.dumps(structured, default=str)
+        if len(encoded) <= 20000: output['structured_content'] = structured
+        else: output['structured_content_truncated'] = True
+    other_types = sorted({item.type for item in result.content if item.type not in ('text', 'resource')})
+    if other_types: output['content_types'] = other_types
+    if attachments: output['_attachments'] = attachments
+    if not output['content']: output['content'] = 'The plugin returned '+(', '.join(other_types)+' content.' if other_types else 'an empty result.')
+    return output
+
 async def validate_endpoint(url):
     parsed = urlsplit(url)
     if parsed.scheme != 'https' or not parsed.hostname or parsed.username or parsed.password or parsed.query or parsed.fragment or parsed.port not in (None, 443):
@@ -66,7 +118,7 @@ async def discover(url, token=None, auth=None):
             seen = set()
             while True:
                 result = await client.list_tools(cursor=cursor)
-                tools.extend({'name': t.name, 'description': (t.description or '')[:2000], 'schema': t.inputSchema, 'read_only': bool(getattr(t, 'annotations', None) and t.annotations.readOnlyHint)} for t in result.tools)
+                tools.extend({'name': t.name, 'description': (t.description or '')[:2000], 'schema': t.inputSchema, 'read_only': is_read_only(url, {'name':t.name, 'read_only':bool(getattr(t, 'annotations', None) and t.annotations.readOnlyHint)})} for t in result.tools)
                 cursor = result.nextCursor
                 if not cursor:
                     return tools
@@ -81,11 +133,26 @@ async def invoke(plugin_id, tool_name, arguments):
     async with AsyncSessionLocal() as db:
         plugin = await db.get(Plugin, plugin_id)
         if not plugin or not plugin.enabled or tool_name not in {t['name'] for t in plugin.tools if t.get('enabled',True)}:
-            return {'error': 'Plugin or tool is disabled.'}
+            return {'success':False, 'error': 'Plugin or tool is disabled.', 'code':'disabled'}
+        tool = next(t for t in plugin.tools if t['name'] == tool_name)
+        from jsonschema import Draft202012Validator, ValidationError, SchemaError
+        try:
+            Draft202012Validator(tool['schema']).validate(arguments)
+        except (ValidationError, SchemaError):
+            return {'success':False, 'error':'Arguments do not match this plugin tool. Search its current schema and correct the parameters.', 'code':'invalid_arguments'}
         async with asyncio.timeout(90):
-            from app.services.plugin_auth import provider_for_plugin
-            auth = await provider_for_plugin(db, plugin_id)
-            async with session(plugin.url, reveal(plugin.credential), auth) as client:
-                result = await client.call_tool(tool_name, arguments)
-                text = '\n'.join(c.text for c in result.content if c.type == 'text')
-                return {'success': not result.isError, 'content': text[:20000] or 'The plugin returned no text.', 'plugin': plugin.name}
+            for attempt in range(3 if is_read_only(plugin.url, tool) else 1):
+                try:
+                    from app.services.plugin_auth import provider_for_plugin
+                    auth = await provider_for_plugin(db, plugin_id)
+                    async with session(plugin.url, reveal(plugin.credential), auth) as client:
+                        result = await client.call_tool(tool_name, arguments)
+                        return tool_result(result, plugin.name)
+                except Exception as error:
+                    if attempt < 2 and is_read_only(plugin.url, tool) and transient_failure(error):
+                        await asyncio.sleep(2 ** attempt)
+                        continue
+                    # Do not leak raw transport/OAuth responses into agent context.
+                    if authentication_failure(error):
+                        return {'success':False, 'error':'This plugin needs sign-in again. Reconnect it in Plugins.', 'code':'sign_in_required'}
+                    return {'success':False, 'error':'The plugin call failed. Check its connection and service permissions; no successful result was returned.', 'code':'unavailable'}

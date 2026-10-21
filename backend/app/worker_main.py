@@ -25,18 +25,38 @@ async def drain_worker(task, stop_event, timeout=50):
             with suppress(asyncio.CancelledError): await task
 
 async def main():
-    from app.db.bootstrap import initialize_database
-    await initialize_database(engine)
     stop_event = asyncio.Event()
-    task = asyncio.create_task(run_worker(stop_event=stop_event))
     loop = asyncio.get_running_loop()
     for sig in (signal.SIGTERM, signal.SIGINT):
         loop.add_signal_handler(sig, stop_event.set)
     try:
-        with suppress(asyncio.CancelledError):
-            await drain_worker(task, stop_event)
+        await supervise_worker(stop_event)
     finally:
         await engine.dispose()
+
+
+async def supervise_worker(stop_event, minimum_delay=2, maximum_delay=30):
+    """Recover from startup, database, and runner failures without a browser."""
+    from app.db.bootstrap import initialize_database
+    failures = 0
+    while not stop_event.is_set():
+        started = asyncio.get_running_loop().time()
+        try:
+            await initialize_database(engine)
+            await drain_worker(asyncio.create_task(run_worker(stop_event=stop_event)), stop_event)
+            if stop_event.is_set(): return
+            raise RuntimeError('Worker loop exited unexpectedly')
+        except asyncio.CancelledError:
+            raise
+        except Exception as error:
+            failures = 0 if asyncio.get_running_loop().time() - started > 60 else failures + 1
+            delay = min(maximum_delay, minimum_delay * 2 ** min(failures - 1, 5))
+            logging.getLogger(__name__).error('Worker stopped (%s); restarting in %s seconds', type(error).__name__, delay)
+            await engine.dispose()
+            try:
+                await asyncio.wait_for(stop_event.wait(), timeout=delay)
+            except asyncio.TimeoutError:
+                pass
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)

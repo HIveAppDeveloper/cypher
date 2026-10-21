@@ -33,7 +33,7 @@ async def tick_goals(session_factory=None):
                 current_tenant_id.reset(token)
         await db.commit()
 
-async def register_goal_tools(registry,conversation_id,goal_id,session_factory=None):
+async def register_goal_tools(registry,conversation_id,goal_id,session_factory=None,task_id=None):
     sessions=session_factory or AsyncSessionLocal
     created_goal=False
     async def set_goal(args,bot_id):
@@ -42,6 +42,10 @@ async def register_goal_tools(registry,conversation_id,goal_id,session_factory=N
         if goal_id:return {'error':'Nested goals are disabled. Finish the current goal.'}
         from app.api.automation import GoalInput,create_goal,goal_public
         async with sessions() as db:
+            if task_id:
+                from app.models.execution import ExecutionStep
+                previous=(await db.execute(select(ExecutionStep).where(ExecutionStep.task_id==task_id,ExecutionStep.name=='set_goal',ExecutionStep.status=='completed'))).scalars().first()
+                if previous:return {'error':'One follow-up goal per task. Continue the existing goal instead.'}
             data=GoalInput(conversation_id=conversation_id,title=args['title'],objective=args['objective'],success_criteria=args['success_criteria'],interval_minutes=max(15,int(args.get('interval_minutes',60))),max_runs=min(3,max(1,int(args.get('max_runs',3)))),manager_model=args.get('manager_model','gpt-6.1-sol'))
             g=await create_goal(db,data)
             created_goal=True

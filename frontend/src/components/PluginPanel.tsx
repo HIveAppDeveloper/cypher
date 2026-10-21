@@ -3,6 +3,7 @@ import { approveConnection, enrollDevice } from '../lib/device';
 import { api } from '../lib/api';
 export interface PluginConnection { id:string;name:string;url:string;enabled:boolean;authenticated:boolean;verification?:{status:string;checked_at?:string;detail?:{tool?:string;latency_ms?:number;message?:string}};tools:{name:string;description:string;enabled?:boolean}[]; }
 export interface CatalogEntry { id:string;name:string;url:string;description:string;category:string;domains:string[];icon?:string;source?:string;auth?:string;auth_header?:string;setup_note?:string; }
+export interface PluginSync {id:string;status:string;checked:number;total:number;counts:Record<string,number>;results:Record<string,{status:string;message:string;tool_count?:number;credential_source?:string}>;}
 type View='browse'|'connected'|'custom'|'settings';
 const AUTH_POLL_MS=2000;
 function Logo({item}:{item:Pick<CatalogEntry,'name'|'icon'>}){
@@ -16,6 +17,8 @@ export function PluginPanel({onClose}:{onClose:()=>void}){
   const [view,setView]=useState<View>('browse');
   const [catalog,setCatalog]=useState<CatalogEntry[]>([]);
   const [plugins,setPlugins]=useState<PluginConnection[]>([]);
+  const [sync,setSync]=useState<PluginSync|null>(null);
+  const syncing=sync?.status==='pending'||sync?.status==='running';
   const [loading,setLoading]=useState(true);
   const [website,setWebsite]=useState('');
   const [search,setSearch]=useState('');
@@ -33,6 +36,7 @@ export function PluginPanel({onClose}:{onClose:()=>void}){
     const previous=document.activeElement as HTMLElement;dialog.current?.showModal();let active=true;
     Promise.allSettled([api.getPluginCatalog(),api.getPlugins()]).then(([items,connections])=>{if(!active)return;if(items.status==='fulfilled')setCatalog(items.value);if(connections.status==='fulfilled')setPlugins(connections.value);if(items.status==='rejected'||connections.status==='rejected')setError('Some connections could not load. Retry to refresh the catalog and your connected services.');setLoading(false);});
     api.deviceStatus().then(s=>{if(active)setDevice(s.enrolled);}).catch(()=>{});
+    api.pluginSyncStatus().then(s=>{if(active)setSync(s);}).catch(()=>{});
     api.accountStatus().then(s=>{if(active)setAccountState(s);}).catch(()=>{});
     fetch('/api/connections').then(r=>r.json()).then(data=>{if(active)setVariables(data.variables||[]);}).catch(()=>{});
     const result=new URLSearchParams(window.location.search).get('plugins');
@@ -41,6 +45,16 @@ export function PluginPanel({onClose}:{onClose:()=>void}){
   },[]);
   useEffect(()=>{ if(error || notice) body.current?.scrollTo({top:0}); },[error,notice]);
   async function retryLoad(){setLoading(true);setError('');const [items,connections]=await Promise.allSettled([api.getPluginCatalog(),api.getPlugins()]);if(items.status==='fulfilled')setCatalog(items.value);if(connections.status==='fulfilled')setPlugins(connections.value);if(items.status==='rejected'||connections.status==='rejected')setError('The connection service is unavailable. Try again shortly.');setLoading(false);}
+  useEffect(()=>{
+    if(!syncing)return;let active=true;let timer:ReturnType<typeof setTimeout>;
+    async function poll(){
+      try{const [job,connections]=await Promise.all([api.pluginSyncStatus(),api.getPlugins()]);if(!active)return;setSync(job);setPlugins(connections);}
+      catch{if(active)setError('Could not refresh catalog progress. The cloud job keeps running; refresh connections to check again.');}
+      if(active)timer=setTimeout(poll,5000);
+    }
+    timer=setTimeout(poll,3000);return()=>{active=false;clearTimeout(timer);};
+  },[syncing]);
+  async function syncAll(){setBusy(true);setError('');try{const approval=await approveConnection('connect_plugin:catalog');setSync(await api.syncPlugins(approval));}catch(e){setError(e instanceof Error?e.message:'Could not start catalog sync.');}finally{setBusy(false);}}
   useEffect(()=>{
     if(!flow)return;let active=true;const started=Date.now();let timer:ReturnType<typeof setTimeout>;
     async function poll(){
@@ -105,12 +119,14 @@ export function PluginPanel({onClose}:{onClose:()=>void}){
       {notice?<div className="connector-notice" role="status">{notice}{flow?<div className="connector-login-actions"><button onClick={()=>{popup.current?.focus();}}>Open sign-in window</button><button onClick={()=>void cancelSignIn()}>Cancel sign-in</button></div>:null}</div>:null}
       {error?<div className="connector-error" role="alert">{error}<button type="button" className="connector-retry" disabled={loading||busy} onClick={()=>void retryLoad()}>Refresh connections</button></div>:null}
       {view==='browse'?<>
+        <section className="website-connect"><h3>Connect available plugins</h3><p>Check the full catalog and connect public tools and explicitly linked server keys. This runs in the cloud when you close the app. Account sign-ins stay with each provider.</p><button type="button" className="btn-secondary" disabled={busy||syncing} onClick={()=>void syncAll()}>{syncing?'Checking catalog…':sync?'Check catalog again':'Connect available plugins'}</button>{sync?<p role="status">{sync.checked} of {sync.total} checked · {sync.counts.connected||0} connected · {(sync.counts.sign_in_required||0)+(sync.counts.key_required||0)+(sync.counts.setup_required||0)} need setup · {sync.counts.unavailable||0} unavailable{syncing?' · Continues in the cloud.':''}</p>:null}</section>
         <form className="website-connect" onSubmit={event=>void connectWebsite(event)}><label htmlFor="company-website">Connect a company website</label><div><input id="company-website" value={website} onChange={event=>setWebsite(event.target.value)} placeholder="vercel.com, notion.so, linear.app…" required maxLength={1000} autoComplete="url"/><button className="btn-primary" disabled={busy||!website.trim()}>{busy?'Connecting…':'Connect'}</button></div><p>Paste a website. We find its published connector and open sign-in when supported.</p></form>
         <div className="catalog-heading"><h3>Explore plugins <span>{catalog.length}</span></h3><input type="search" aria-label="Search plugins" value={search} onChange={event=>setSearch(event.target.value)} placeholder="Search tools or companies"/></div>
         <div className="connector-categories" aria-label="Plugin categories">{categories.map(item=><button key={item} aria-pressed={category===item} onClick={()=>setCategory(item)}>{item}</button>)}</div>
         {!loading?<p className="catalog-results" role="status">{filtered.length} {filtered.length===1?'plugin':'plugins'}{query ? ` matching “${search}”` : category!=='All' ? ` in ${category}` : ' available'}</p>:null}{loading?<p className="connector-empty" role="status">Loading published connectors…</p>:<div className="connector-catalog">{filtered.slice(0,visibleCount).map(item=>{
           const connected=plugins.some(plugin=>plugin.url===item.url);
-          return <article className="connector-entry" key={item.id}><div className="connector-entry-title"><Logo item={item}/><div><h4>{item.name}</h4><span>{item.category}</span></div></div><p>{item.description}</p><div className="connector-entry-footer"><a href={item.source} target="_blank" rel="noreferrer">Source</a><button disabled={busy} className="connector-connect" aria-label={`${connected?'View':'Connect'} ${item.name}`} onClick={()=>void connectItem(item)}>{connected?'Connected':'Connect'}<svg viewBox="0 0 24 24"><path d="M5 12h14m-5-5 5 5-5 5"/></svg></button></div></article>;
+          const result=sync?.results[item.id];
+          return <article className="connector-entry" key={item.id}><div className="connector-entry-title"><Logo item={item}/><div><h4>{item.name}</h4><span>{item.category}</span></div></div><p>{item.description}</p>{result?<p>{result.message}</p>:null}<div className="connector-entry-footer"><a href={item.source} target="_blank" rel="noreferrer">Source</a><button disabled={busy} className="connector-connect" aria-label={`${connected?'View':'Connect'} ${item.name}`} onClick={()=>void connectItem(item)}>{connected?'Connected':result?.status==='sign_in_required'?'Sign in':result?.status==='key_required'?'Add key':'Connect'}<svg viewBox="0 0 24 24"><path d="M5 12h14m-5-5 5 5-5 5"/></svg></button></div></article>;
         })}</div>}
         {!loading && !filtered.length?<div className="connector-empty"><p>No matching plugins. Try another name or category.</p><button className="btn-secondary" onClick={()=>{setSearch('');setCategory('All');}}>Clear filters</button></div>:null}
         {filtered.length>visibleCount?<button className="btn-secondary" onClick={()=>setVisibleCount(n=>n+60)}>Show more plugins ({filtered.length-visibleCount} remaining)</button>:null}<p className="catalog-note">Published endpoints from the MCP registry and provider documentation. Listings are not execution tests. Connect your account, then use Test tools to check a supported read-only operation. Provider fees and account restrictions may apply.</p>
