@@ -218,3 +218,22 @@ async def test_delete_used_agent_preserves_records_and_removes_private_access(wo
         assert (await db.get(Bot,bid)).status=='deleted'
     again=await client.post('/api/bots',headers=A,json={'name':'Workflow agent','role':'Assistant','system_prompt':'New agent','llm_provider':'openai','llm_model':'gpt-6-luna'})
     assert again.status_code==200,again.text
+
+@pytest.mark.asyncio
+async def test_orphan_routine_cannot_restart_or_interrupt_other_schedules(workspace):
+    client,sessions=workspace
+    from app.models.conversation import ConversationParticipant
+    from sqlalchemy import delete
+    cid=await room(client,A['x-grokbot-user-id'])
+    made=await client.post('/api/workspace/routines',headers=A,json={'conversation_id':cid,'name':'Orphan recovery test','instructions':'Controlled test','interval_minutes':1})
+    assert made.status_code==201,made.text
+    id=made.json()['id']
+    async with sessions() as db:
+        await db.execute(delete(ConversationParticipant).where(ConversationParticipant.conversation_id==cid))
+        routine=await db.get(Routine,id);routine.next_run_at=datetime.utcnow()-timedelta(minutes=1);await db.commit()
+    await service.tick_routines(sessions)
+    async with sessions() as db:
+        routine=await db.get(Routine,id);assert routine.enabled is False and routine.next_run_at is None
+    assert (await client.patch('/api/workspace/routines/'+id,headers=A,json={'enabled':True})).status_code==409
+    assert (await client.post('/api/workspace/routines/'+id+'/run',headers=A)).status_code==409
+    assert (await client.post('/api/workspace/routines',headers=A,json={'conversation_id':cid,'name':'Empty conversation','instructions':'No agent'})).status_code==409

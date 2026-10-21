@@ -10,7 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.session import get_db
 from app.models.bot import Bot
 from app.models.task import Task
-from app.models.conversation import Conversation
+from app.models.conversation import Conversation,ConversationParticipant
 from app.models.workspace import Knowledge,Routine,Notification,SharedTemplate
 from app.schemas.bot import BotCreate
 from app.services import workspace as service
@@ -91,6 +91,7 @@ async def routines(db:AsyncSession=Depends(get_db)):return [public_routine(r) fo
 @router.post('/routines',status_code=201)
 async def add_routine(body:RoutineInput,db:AsyncSession=Depends(get_db)):
     if not await db.get(Conversation,str(body.conversation_id)):raise HTTPException(404,'Workspace not found')
+    if not await db.scalar(select(ConversationParticipant.bot_id).where(ConversationParticipant.conversation_id==str(body.conversation_id)).limit(1)):raise HTTPException(409,'This conversation needs an agent before it can run a routine.')
     row=Routine(**{**body.model_dump(),'conversation_id':str(body.conversation_id)})
     row.next_run_at=service.next_run(row);db.add(row);await db.commit();await db.refresh(row);return public_routine(row)
 
@@ -99,6 +100,7 @@ class RoutineState(BaseModel):enabled:bool
 async def routine_state(id:UUID,body:RoutineState,db:AsyncSession=Depends(get_db)):
     row=await db.get(Routine,str(id))
     if not row:raise HTTPException(404,'Routine not found')
+    if body.enabled and not await db.scalar(select(ConversationParticipant.bot_id).where(ConversationParticipant.conversation_id==row.conversation_id).limit(1)):raise HTTPException(409,'This conversation needs an agent before the routine can resume.')
     row.enabled=body.enabled;row.next_run_at=service.next_run(row) if row.enabled else None
     await db.commit();return public_routine(row)
 
@@ -108,7 +110,9 @@ async def run_routine(id:UUID,db:AsyncSession=Depends(get_db)):
     if not row:raise HTTPException(404,'Routine not found')
     prior=await db.get(Task,row.last_task_id) if row.last_task_id else None
     if prior and prior.status in {'pending','running','cancel_requested','waiting_approval'}:return {'task_id':prior.id,'status':prior.status}
-    task=await service.queue_routine(db,row);await db.commit();return {'task_id':task.id,'status':'pending'}
+    try:task=await service.queue_routine(db,row)
+    except ValueError as error:raise HTTPException(409,str(error))
+    await db.commit();return {'task_id':task.id,'status':'pending'}
 
 @router.get('/runs')
 async def runs(db:AsyncSession=Depends(get_db)):

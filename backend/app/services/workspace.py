@@ -77,7 +77,11 @@ async def tick_routines(sessions):
             try:
                 previous=await db.get(Task,routine.last_task_id) if routine.last_task_id else None
                 if previous and previous.status in {'pending','running','cancel_requested','waiting_approval'}:continue
-                await queue_routine(db,routine)
+                try:await queue_routine(db,routine)
+                except ValueError:
+                    # An owner may remove the last agent from a conversation.
+                    # One orphan routine must not interrupt other cloud work.
+                    routine.enabled=False;routine.next_run_at=None
             finally:current_tenant_id.reset(token)
         await db.commit()
 
