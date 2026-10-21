@@ -88,9 +88,10 @@ async def refresh_tools(id:UUID,db:AsyncSession=Depends(get_db)):
     from app.services.plugins import reveal
     plugin=await db.get(Plugin,str(id))
     if not plugin:raise HTTPException(404,'Plugin not found')
-    from app.services.plugin_auth import provider_for_plugin
-    auth=await provider_for_plugin(db,str(id))
-    try:tools=await discover(plugin.url,reveal(plugin.credential),auth=auth)
+    from app.services.plugins import connection_auth
+    try:
+        token,auth=await connection_auth(db,plugin)
+        tools=await discover(plugin.url,token,auth=auth)
     except Exception:raise HTTPException(502,'Could not refresh tools. The saved connection was preserved.')
     previous={t['name']:t.get('enabled',True) for t in plugin.tools}
     plugin.tools=[{**t,'enabled':previous.get(t['name'],True)} for t in tools]
@@ -145,15 +146,17 @@ async def test_connection(id:UUID,db:AsyncSession=Depends(get_db)):
         'learn.microsoft.com': [('microsoft_docs_search',{'query':'Azure Functions overview'})],
         'docs.mcp.cloudflare.com': [('search_cloudflare_documentation',{'query':'Workers overview'})],
         'mcp.linear.app': [('list_teams',{}),('list_projects',{})],
+        'mcp.vercel.com': [('list_teams',{})],
+        'api.githubcopilot.com': [('search_repositories',{'query':'repo:HIveAppDeveloper/open-grokbot','perPage':1})],
     }
     names={t['name'] for t in plugin.tools if t.get('enabled',True)}
     example=next(((name,args) for name,args in examples.get(host,[]) if name in names),None)
     if not example:
         # Protocol discovery alone is explicitly labelled, not a tool-call pass.
-        from app.services.plugin_auth import provider_for_plugin
-        from app.services.plugins import reveal
+        from app.services.plugins import connection_auth
         try:
-            tools=await discover(plugin.url,reveal(plugin.credential),await provider_for_plugin(db,plugin.id))
+            token,auth=await connection_auth(db,plugin)
+            tools=await discover(plugin.url,token,auth)
         except Exception:raise HTTPException(502,'The connection did not respond. Reconnect and check provider access.')
         return {'status':'discovered','tool_count':len(tools),'message':'Connection responded. No known read-only smoke operation is available; execution is not verified.'}
     started=time.monotonic()

@@ -35,7 +35,18 @@ class Website(BaseModel):
 
 @router.get('/catalog')
 async def list_catalog():
-    return catalog()
+    from app.services.managed_connections import public_connections
+    items=catalog();urls={item['url'].rstrip('/') for item in items}
+    for c in public_connections():
+        if c['url'].rstrip('/') not in urls:
+            items.append({'id':'managed-'+c['id'],'name':c['name'].split(' · ')[0],'url':c['url'],'description':'Connect your account with managed sign-in. Existing authorized connections are reused.','category':'Development','domains':c['domains'],'auth':'auto','source':'https://vercel.com/docs/connect'})
+            urls.add(c['url'].rstrip('/'))
+    return items
+
+@router.get('/available-connections')
+async def available_connections():
+    from app.services.managed_connections import public_connections
+    return public_connections()
 
 class SyncInput(BaseModel):
     approval_id:str|None=Field(default=None,max_length=36)
@@ -49,24 +60,32 @@ async def sync_catalog(body:SyncInput,db:AsyncSession=Depends(get_db)):
     job=(await db.execute(select(PluginSync).where(PluginSync.status.in_(('pending','running'))))).scalars().first()
     if not job:
         job=PluginSync();db.add(job);await db.commit();await db.refresh(job)
-    return public(job,len(catalog()))
+    return public(job,len(await list_catalog()))
 
 @router.get('/catalog/sync')
 async def sync_status(db:AsyncSession=Depends(get_db)):
     from app.models.plugin_sync import PluginSync
     from app.services.plugin_sync import public
     job=(await db.execute(select(PluginSync).order_by(PluginSync.created_at.desc()).limit(1))).scalar_one_or_none()
-    return public(job,len(catalog())) if job else None
+    return public(job,len(await list_catalog())) if job else None
 
 @router.post('/resolve')
 async def resolve(body:Website):
     host=hostname(body.website.strip())
-    matches=[item for item in catalog() if host in item.get('domains',[]) or host==urlsplit(item['url']).hostname]
+    matches=[item for item in await list_catalog() if host in item.get('domains',[]) or host==urlsplit(item['url']).hostname]
     if matches:
         return matches[0]
     parsed=urlsplit(body.website.strip())
     if parsed.scheme=='https' and any(part in {'mcp','sse'} for part in parsed.path.split('/')):
+        try:await validate_endpoint(body.website.strip())
+        except (ValueError,OSError):raise HTTPException(422,'Use a public HTTPS connector address without a token or query string.')
         return {'id':'custom','name':host,'url':body.website.strip(),'description':'Custom MCP server','category':'Custom','domains':[host]}
+    try:await validate_endpoint('https://'+host)
+    except ValueError:raise HTTPException(422,'Use a public company website. Private network addresses are not supported.')
+    except OSError:raise HTTPException(404,'This website could not be found. Check its address and try again.')
+    from app.services.website_connectors import published_connector
+    published=await published_connector(host,http_client)
+    if published:return published
     # Registry search is discovery only; accept exact publisher website/domain matches.
     try:
         async with http_client() as client:
@@ -77,7 +96,7 @@ async def resolve(body:Website):
                 website_host=(urlsplit(website).hostname or '').removeprefix('www.')
                 for remote in server.get('remotes',[]):
                     endpoint=remote.get('url',''); remote_host=urlsplit(endpoint).hostname or ''
-                    if remote.get('type')=='streamable-http' and endpoint.startswith('https://') and not any(character in endpoint for character in '{}?') and (website_host==host or remote_host==host or remote_host in {'mcp.'+host,'api.'+host}):
+                    if remote.get('type')=='streamable-http' and endpoint.startswith('https://') and not any(character in endpoint for character in '{}?') and (remote_host==host or remote_host.endswith('.'+host)):
                         return {'id':server.get('name',endpoint),'name':server.get('title') or host,'url':endpoint,'description':server.get('description','Published connector'),'category':'Custom','domains':[host],'source':'https://registry.modelcontextprotocol.io/'}
     except Exception:
         pass
@@ -88,6 +107,7 @@ class Begin(BaseModel):
     url:str=Field(min_length=8,max_length=1000)
     approval_id:str|None=Field(default=None,max_length=36)
     reconnect:bool=False
+    connection_id:str|None=Field(default=None,max_length=80)
 
 @router.post('/authorize')
 async def authorize(body:Begin,db:AsyncSession=Depends(get_db)):
@@ -98,6 +118,11 @@ async def authorize(body:Begin,db:AsyncSession=Depends(get_db)):
     await require_device(db,body.approval_id,'connect_plugin:'+url)
     existing=(await db.execute(select(Plugin).where(Plugin.url==url))).scalars().first()
     if existing and not body.reconnect: return {'status':'connected','plugin_id':existing.id,'name':existing.name}
+    await db.execute(delete(PluginAuthorization).where(PluginAuthorization.status!='connected',PluginAuthorization.created_at<time.time()-FLOW_TTL))
+    from app.services import managed_connections
+    config=managed_connections.configuration(url,body.connection_id)
+    if body.connection_id and not config:raise HTTPException(422,'Choose an available connection for this provider.')
+    if config:return await managed_connections.begin(db,body.name.strip(),url,config,existing)
     await db.execute(delete(PluginAuthorization).where(PluginAuthorization.status!='connected',PluginAuthorization.created_at<time.time()-FLOW_TTL))
     binding=secrets.token_urlsafe(32)
     row=PluginAuthorization(name=body.name.strip(),url=url,created_at=time.time(),binding_hash=hashlib.sha256(binding.encode()).hexdigest(),status='discovering',plugin_id=existing.id if existing else None)
@@ -131,6 +156,15 @@ class Callback(BaseModel):
     binding:str=Field(min_length=16,max_length=200)
     denied:bool=False
     issuer:str|None=Field(default=None,max_length=1000)
+
+class ManagedCallback(BaseModel):
+    state:str=Field(min_length=16,max_length=200)
+    binding:str=Field(min_length=16,max_length=200)
+
+@router.post('/managed/callback')
+async def managed_callback(body:ManagedCallback,db:AsyncSession=Depends(get_db)):
+    from app.services.managed_connections import finish
+    return await finish(db,body.state,body.binding)
 
 @router.post('/oauth/callback')
 async def callback(body:Callback,db:AsyncSession=Depends(get_db)):

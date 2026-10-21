@@ -18,7 +18,8 @@ from app.services.plugins import discover, seal, credential_headers, authenticat
 
 def mapped_credential(url, tenant_id):
     # Credentials imported into Vercel belong to the installation owner only.
-    if tenant_id != 'legacy-owner': return None
+    from app.services.managed_connections import installation_owner
+    if not installation_owner(tenant_id): return None
     mapping = json.loads(os.getenv('GROKBOT_PLUGIN_CREDENTIALS', '{}')).get(url)
     if not mapping: return None
     value = os.getenv(mapping['env'])
@@ -40,8 +41,17 @@ async def connect_entry(item, sessions=None):
         return {'status':'setup_required','message':item['setup_note']}
     if item.get('auth')=='api_key' and not token:
         return {'status':'key_required','message':'Add this service’s API key, or link its compatible server credential.'}
+    from app.services.managed_connections import configuration,reuse_authorized
+    config=configuration(item['url'])
+    if config:
+        async with sessions() as db:
+            result=await reuse_authorized(db,config)
+            if result:
+                plugin=await db.get(Plugin,result['plugin_id'])
+                return {'status':'connected','plugin_id':plugin.id,'tool_count':len(plugin.tools),'credential_source':'managed','message':'Existing provider access reused. Tools discovered; execution has not been tested.'}
+        return {'status':'sign_in_required','message':'Sign in once to link your provider account. Existing authorized access is reused.'}
     if item['url'].rstrip('/')=='https://mcp.vercel.com' and not token:
-        return {'status':'setup_required','message':'Vercel requires approval of this app’s OAuth callback before account access can connect. Existing Codex credentials are specific to Codex.'}
+        return {'status':'setup_required','message':'The Vercel sign-in connector is not configured for this deployment.'}
     try:
         tools=await discover(item['url'], token)
         if not tools:return {'status':'unavailable','message':'The server published no tools.'}
@@ -72,12 +82,15 @@ def public(job, total):
 
 async def tick(sessions=None):
     sessions=sessions or AsyncSessionLocal
-    from app.api.plugin_catalog import catalog
+    from app.api.plugin_catalog import list_catalog
     async with sessions() as db:
         job=(await db.execute(select(PluginSync).where(PluginSync.status.in_(('pending','running'))).order_by(PluginSync.created_at).limit(1))).scalar_one_or_none()
         if not job:return False
         tenant=job.tenant_id
-        remaining=[item for item in catalog() if item['id'] not in job.results]
+        context=current_tenant_id.set(tenant)
+        try:items=await list_catalog()
+        finally:current_tenant_id.reset(context)
+        remaining=[item for item in items if item['id'] not in job.results]
         job.status='running' if remaining else 'completed';await db.commit()
         job_id=job.id
     token=current_tenant_id.set(tenant)

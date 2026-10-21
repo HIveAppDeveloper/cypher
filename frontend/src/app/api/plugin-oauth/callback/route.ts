@@ -15,7 +15,9 @@ export async function GET(request:NextRequest){
   const backend=process.env.BACKEND_INTERNAL_URL||process.env.GROKBOT_BACKEND_URL;
   let status='failed';
   if(binding && backend)try{
-    const response=await fetch(new URL('/api/plugins/oauth/callback',backend),{method:'POST',headers:authHeaders(request),body:JSON.stringify({state,binding,code:request.nextUrl.searchParams.get('code')||'',denied:request.nextUrl.searchParams.has('error'),issuer:request.nextUrl.searchParams.get('iss')}),cache:'no-store',signal:AbortSignal.timeout(60000)});
+    const managed=request.nextUrl.searchParams.get('managed')==='1';
+    const body=managed?{state,binding}:{state,binding,code:request.nextUrl.searchParams.get('code')||'',denied:request.nextUrl.searchParams.has('error'),issuer:request.nextUrl.searchParams.get('iss')};
+    const response=await fetch(new URL(managed?'/api/plugins/managed/callback':'/api/plugins/oauth/callback',backend),{method:'POST',headers:authHeaders(request),body:JSON.stringify(body),cache:'no-store',signal:AbortSignal.timeout(60000)});
     const data=await response.json(); if(response.ok)status=data.status;
   }catch{}
   redirect.searchParams.set('plugins',status);

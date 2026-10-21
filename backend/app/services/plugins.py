@@ -36,6 +36,7 @@ def transient_failure(error):
 def authentication_failure(error):
     from app.services.plugin_auth import SignInRequired
     if isinstance(error, SignInRequired): return True
+    if type(error).__name__ in {'UserAuthorizationRequiredError','InvalidGrantError','NoValidTokenError','AuthorizationExpiredError'}:return True
     if getattr(getattr(error, 'response', None), 'status_code', None) in {401,403}: return True
     return any(authentication_failure(child) for child in getattr(error, 'exceptions', []))
 
@@ -143,9 +144,8 @@ async def invoke(plugin_id, tool_name, arguments):
         async with asyncio.timeout(90):
             for attempt in range(3 if is_read_only(plugin.url, tool) else 1):
                 try:
-                    from app.services.plugin_auth import provider_for_plugin
-                    auth = await provider_for_plugin(db, plugin_id)
-                    async with session(plugin.url, reveal(plugin.credential), auth) as client:
+                    token,auth=await connection_auth(db,plugin)
+                    async with session(plugin.url, token, auth) as client:
                         result = await client.call_tool(tool_name, arguments)
                         return tool_result(result, plugin.name)
                 except Exception as error:
@@ -156,3 +156,11 @@ async def invoke(plugin_id, tool_name, arguments):
                     if authentication_failure(error):
                         return {'success':False, 'error':'This plugin needs sign-in again. Reconnect it in Plugins.', 'code':'sign_in_required'}
                     return {'success':False, 'error':'The plugin call failed. Check its connection and service permissions; no successful result was returned.', 'code':'unavailable'}
+
+
+async def connection_auth(db,plugin):
+    from app.services import managed_connections
+    managed,token=await managed_connections.credentials(plugin)
+    if managed:return token,None
+    from app.services.plugin_auth import provider_for_plugin
+    return token,await provider_for_plugin(db,plugin.id)

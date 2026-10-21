@@ -2,7 +2,8 @@ import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { approveConnection, enrollDevice } from '../lib/device';
 import { api } from '../lib/api';
 export interface PluginConnection { id:string;name:string;url:string;enabled:boolean;authenticated:boolean;verification?:{status:string;checked_at?:string;detail?:{tool?:string;latency_ms?:number;message?:string}};tools:{name:string;description:string;enabled?:boolean}[]; }
-export interface CatalogEntry { id:string;name:string;url:string;description:string;category:string;domains:string[];icon?:string;source?:string;auth?:string;auth_header?:string;setup_note?:string; }
+export interface CatalogEntry { id:string;name:string;url:string;description:string;category:string;domains:string[];icon?:string;source?:string;auth?:string;auth_header?:string;setup_note?:string;connection_id?:string; }
+export interface AvailableConnection {id:string;name:string;url:string;domains:string[];reuse_available:boolean;method:string;}
 export interface PluginSync {id:string;status:string;checked:number;total:number;counts:Record<string,number>;results:Record<string,{status:string;message:string;tool_count?:number;credential_source?:string}>;}
 type View='browse'|'connected'|'custom'|'settings';
 const AUTH_POLL_MS=2000;
@@ -17,6 +18,7 @@ export function PluginPanel({onClose}:{onClose:()=>void}){
   const [view,setView]=useState<View>('browse');
   const [catalog,setCatalog]=useState<CatalogEntry[]>([]);
   const [plugins,setPlugins]=useState<PluginConnection[]>([]);
+  const [available,setAvailable]=useState<AvailableConnection[]>([]);
   const [sync,setSync]=useState<PluginSync|null>(null);
   const syncing=sync?.status==='pending'||sync?.status==='running';
   const [loading,setLoading]=useState(true);
@@ -36,6 +38,7 @@ export function PluginPanel({onClose}:{onClose:()=>void}){
     const previous=document.activeElement as HTMLElement;dialog.current?.showModal();let active=true;
     Promise.allSettled([api.getPluginCatalog(),api.getPlugins()]).then(([items,connections])=>{if(!active)return;if(items.status==='fulfilled')setCatalog(items.value);if(connections.status==='fulfilled')setPlugins(connections.value);if(items.status==='rejected'||connections.status==='rejected')setError('Some connections could not load. Retry to refresh the catalog and your connected services.');setLoading(false);});
     api.deviceStatus().then(s=>{if(active)setDevice(s.enrolled);}).catch(()=>{});
+    api.getAvailableConnections().then(s=>{if(active)setAvailable(s);}).catch(()=>{});
     api.pluginSyncStatus().then(s=>{if(active)setSync(s);}).catch(()=>{});
     api.accountStatus().then(s=>{if(active)setAccountState(s);}).catch(()=>{});
     fetch('/api/connections').then(r=>r.json()).then(data=>{if(active)setVariables(data.variables||[]);}).catch(()=>{});
@@ -84,7 +87,7 @@ export function PluginPanel({onClose}:{onClose:()=>void}){
     if(item.auth==='api_key'){popup.current?.close();setView('custom');setUrl(item.url);setName(item.name);setAuthHeader(item.auth_header||'Authorization');setNotice(`${item.name} uses an API key. Get it from the service, then paste it below.`);setBusy(false);return;}
     setNotice(`Checking ${item.name}…`);
     const approval_id=await approveConnection('connect_plugin:'+item.url);
-    const result=await api.authorizePlugin({name:item.name.slice(0,80),url:item.url,approval_id,reconnect});
+    const result=await api.authorizePlugin({name:item.name.slice(0,80),url:item.url,approval_id,reconnect,connection_id:item.connection_id});
     if(result.status==='connected'){
       setPlugins(await api.getPlugins());setView('connected');setNotice(`${result.name} connected. Your team can now use it.`);popup.current?.close();setBusy(false);
     }else if(result.authorization_url && result.flow_id){
@@ -119,8 +122,9 @@ export function PluginPanel({onClose}:{onClose:()=>void}){
       {notice?<div className="connector-notice" role="status">{notice}{flow?<div className="connector-login-actions"><button onClick={()=>{popup.current?.focus();}}>Open sign-in window</button><button onClick={()=>void cancelSignIn()}>Cancel sign-in</button></div>:null}</div>:null}
       {error?<div className="connector-error" role="alert">{error}<button type="button" className="connector-retry" disabled={loading||busy} onClick={()=>void retryLoad()}>Refresh connections</button></div>:null}
       {view==='browse'?<>
+        <form className="website-connect" onSubmit={event=>void connectWebsite(event)}><label htmlFor="company-website">Connect a website</label><div><input id="company-website" value={website} onChange={event=>setWebsite(event.target.value)} placeholder="vercel.com, github.com, notion.so…" required maxLength={1000} autoComplete="url"/><button className="btn-primary" disabled={busy||!website.trim()}>{busy?'Connecting…':'Connect'}</button></div><p>Find the provider, sign in, and choose the access to grant. Your connected accounts stay private to your workspace.</p></form>
+        {available.some(c=>c.reuse_available)?<section className="website-connect"><h3>Use existing connections</h3><p>Reuse access already linked to this workspace. No API keys to copy.</p><div className="connected-service-actions">{available.filter(c=>c.reuse_available).map(c=><button type="button" key={c.id} disabled={busy} onClick={()=>void connectItem({id:c.id,name:c.name,url:c.url,domains:c.domains,category:'Development',description:'',connection_id:c.id},true)}>Use {c.name}</button>)}</div></section>:null}
         <section className="website-connect"><h3>Connect available plugins</h3><p>Check the full catalog and connect public tools and explicitly linked server keys. This runs in the cloud when you close the app. Account sign-ins stay with each provider.</p><button type="button" className="btn-secondary" disabled={busy||syncing} onClick={()=>void syncAll()}>{syncing?'Checking catalog…':sync?'Check catalog again':'Connect available plugins'}</button>{sync?<p role="status">{sync.checked} of {sync.total} checked · {sync.counts.connected||0} connected · {(sync.counts.sign_in_required||0)+(sync.counts.key_required||0)+(sync.counts.setup_required||0)} need setup · {sync.counts.unavailable||0} unavailable{syncing?' · Continues in the cloud.':''}</p>:null}</section>
-        <form className="website-connect" onSubmit={event=>void connectWebsite(event)}><label htmlFor="company-website">Connect a company website</label><div><input id="company-website" value={website} onChange={event=>setWebsite(event.target.value)} placeholder="vercel.com, notion.so, linear.app…" required maxLength={1000} autoComplete="url"/><button className="btn-primary" disabled={busy||!website.trim()}>{busy?'Connecting…':'Connect'}</button></div><p>Paste a website. We find its published connector and open sign-in when supported.</p></form>
         <div className="catalog-heading"><h3>Explore plugins <span>{catalog.length}</span></h3><input type="search" aria-label="Search plugins" value={search} onChange={event=>setSearch(event.target.value)} placeholder="Search tools or companies"/></div>
         <div className="connector-categories" aria-label="Plugin categories">{categories.map(item=><button key={item} aria-pressed={category===item} onClick={()=>setCategory(item)}>{item}</button>)}</div>
         {!loading?<p className="catalog-results" role="status">{filtered.length} {filtered.length===1?'plugin':'plugins'}{query ? ` matching “${search}”` : category!=='All' ? ` in ${category}` : ' available'}</p>:null}{loading?<p className="connector-empty" role="status">Loading published connectors…</p>:<div className="connector-catalog">{filtered.slice(0,visibleCount).map(item=>{

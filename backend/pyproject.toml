@@ -21,6 +21,7 @@ dependencies = [
     "google-auth[requests]>=2.40.0",
     "ai[vercel]==0.8.0",
     "vercel-oidc==0.10.0",
+    "vercel-connect==0.2.2",
     "vercel-sandbox==0.8.0",
     "mcp==1.30.0",
     "jsonschema>=4.23.0",
