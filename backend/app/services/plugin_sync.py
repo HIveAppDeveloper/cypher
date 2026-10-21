@@ -33,7 +33,7 @@ async def connect_entry(item, sessions=None):
     sessions=sessions or AsyncSessionLocal
     async with sessions() as db:
         existing=(await db.execute(select(Plugin).where(Plugin.url==item['url']))).scalars().first()
-        if existing:
+        if existing and (item.get('auth')!='api_key' or existing.credential):
             return {'status':'connected' if existing.enabled else 'paused','plugin_id':existing.id,'tool_count':len(existing.tools),'message':'Existing connection preserved.'}
     token = mapped_credential(item['url'], current_tenant_id.get())
     if item.get('setup_note'):
@@ -55,7 +55,12 @@ async def connect_entry(item, sessions=None):
         if not plugin:
             plugin=Plugin(name=item['name'][:80],url=item['url'],tools=tools,credential=seal(token),enabled=True)
             db.add(plugin);await db.commit();await db.refresh(plugin)
-        return {'status':'connected','plugin_id':plugin.id,'tool_count':len(plugin.tools),'credential_source':'server' if token else 'public','message':'Tools discovered; execution has not been tested.'}
+        elif token and not plugin.credential:
+            plugin.credential=seal(token)
+            enabled={t['name']:t.get('enabled',True) for t in plugin.tools}
+            plugin.tools=[{**t,'enabled':enabled.get(t['name'],True)} for t in tools]
+            await db.commit()
+        return {'status':'connected' if plugin.enabled else 'paused','plugin_id':plugin.id,'tool_count':len(plugin.tools),'credential_source':'server' if token else 'public','message':'Tools discovered; execution has not been tested.'}
 
 
 def public(job, total):

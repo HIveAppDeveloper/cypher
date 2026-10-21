@@ -78,3 +78,23 @@ def test_server_credentials_are_explicitly_endpoint_and_owner_bound(monkeypatch)
     assert plugin_sync.mapped_credential('https://official.example/mcp','another-owner') is None
     assert plugin_sync.mapped_credential('https://untrusted.example/mcp','legacy-owner') is None
     assert json.loads(plugin_sync.mapped_credential('https://official.example/mcp','legacy-owner'))=={'x-api-key':'test-only-secret'}
+
+@pytest.mark.asyncio
+async def test_key_setup_updates_discovered_connection_without_duplicates(workspace,monkeypatch):
+    client,sessions=workspace
+    from app.api import plugins as api
+    calls=[]
+    async def discover(url,token=None):calls.append(token);return [{'name':'read','description':'Read','schema':{'type':'object'}}]
+    monkeypatch.setattr(api,'discover',discover)
+    monkeypatch.setattr(plugin_sync,'discover',discover)
+    token=current_tenant_id.set('key-owner')
+    try:
+        async with sessions() as db:
+            plugin=Plugin(name='Key service',url='https://key.example/mcp',enabled=False,tools=[{'name':'read','description':'Read','enabled':False}]);db.add(plugin);await db.commit();pid=plugin.id
+        result=await plugin_sync.connect_entry({'name':'Key service','url':'https://key.example/mcp','auth':'api_key'},sessions)
+        assert result['status']=='key_required' and not calls
+    finally:current_tenant_id.reset(token)
+    result=await client.post('/api/plugins',headers={'x-grokbot-user-id':'key-owner'},json={'name':'Key service','url':'https://key.example/mcp','token':'test-key'})
+    assert result.status_code==200 and result.json()['id']==pid and result.json()['authenticated']
+    entries=(await client.get('/api/plugins',headers={'x-grokbot-user-id':'key-owner'})).json()
+    assert len(entries)==1 and entries[0]['tools'][0]['enabled'] is False

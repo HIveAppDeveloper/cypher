@@ -53,8 +53,17 @@ async def connect(data: ConnectPlugin, db: AsyncSession = Depends(get_db)):
         raise HTTPException(status_code=502, detail='Could not connect to this MCP server. Check its HTTPS endpoint and bearer token.')
     if not tools:
         raise HTTPException(status_code=422, detail='This MCP server did not advertise any tools.')
-    plugin = Plugin(name=data.name.strip(), url=data.url.strip(), credential=credential, tools=tools, enabled=True)
-    db.add(plugin); await db.commit(); await db.refresh(plugin)
+    plugin=(await db.execute(select(Plugin).where(Plugin.url==data.url.strip()).with_for_update())).scalars().first()
+    if plugin:
+        from sqlalchemy import delete
+        enabled={t['name']:t.get('enabled',True) for t in plugin.tools}
+        plugin.name=data.name.strip();plugin.credential=credential;plugin.enabled=True
+        plugin.tools=[{**t,'enabled':enabled.get(t['name'],True)} for t in tools]
+        await db.execute(delete(PluginAuthorization).where(PluginAuthorization.plugin_id==plugin.id))
+    else:
+        plugin=Plugin(name=data.name.strip(),url=data.url.strip(),credential=credential,tools=tools,enabled=True)
+        db.add(plugin)
+    await db.commit();await db.refresh(plugin)
     return public(plugin)
 
 @router.patch('/{id}')
