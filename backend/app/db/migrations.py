@@ -23,7 +23,11 @@ def ensure_tenant_schema(connection):
         if connection.dialect.name == "postgresql":
             connection.exec_driver_sql(f"CREATE INDEX IF NOT EXISTS {quote('ix_' + name + '_tenant_id')} ON {formatted} ({quote('tenant_id')})")
     if "bots" in existing and connection.dialect.name == "postgresql":
-        table = Base.metadata.tables.get(f"{schema}.bots") or Base.metadata.tables.get("bots")
+        table = Base.metadata.tables.get(f"{schema}.bots")
+        if table is None:
+            table = Base.metadata.tables.get("bots")
+        if table is None:
+            return
         formatted = preparer.format_table(table, use_schema=bool(schema))
         for constraint in inspector.get_unique_constraints("bots", schema=schema):
             if constraint.get("column_names") == ["name"] and constraint.get("name"):

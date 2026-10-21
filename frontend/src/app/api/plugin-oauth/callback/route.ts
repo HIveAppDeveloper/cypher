@@ -2,7 +2,7 @@ import { NextRequest,NextResponse } from 'next/server';
 import { getSessionFromCookieHeader } from '../../../../lib/auth-server';
 function authHeaders(request:NextRequest):Record<string,string>{
   const session=getSessionFromCookieHeader(request.headers.get('cookie'));
-  if(process.env.AUTH_REQUIRE_AUTH==='true' && !session)throw new Error('Sign in to continue.');
+  if(process.env.REQUIRE_USER_AUTH==='true' && !session)throw new Error('Sign in to continue.');
   return {'Content-Type':'application/json','Authorization':`Bearer ${process.env.GROKBOT_BACKEND_API_TOKEN||''}`,...(session?{'x-grokbot-user-id':session.sub}:{})};
 }
 export const dynamic='force-dynamic';
