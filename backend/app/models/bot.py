@@ -1,14 +1,16 @@
-from sqlalchemy import Column, String, Text, Boolean, DateTime, JSON
+from sqlalchemy import Column, String, Text, Boolean, DateTime, JSON, UniqueConstraint
 
 import uuid
 import datetime
 from app.db.session import Base
+from app.db.tenancy import TenantScoped
 
-class Bot(Base):
+class Bot(Base, TenantScoped):
     __tablename__ = "bots"
+    __table_args__ = (UniqueConstraint("tenant_id", "name", name="uq_bot_tenant_name"),)
     
     id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
-    name = Column(String, unique=True, nullable=False)
+    name = Column(String, nullable=False)
     role = Column(String, nullable=False)
     description = Column(Text, nullable=True)
     avatar_url = Column(String, nullable=True)

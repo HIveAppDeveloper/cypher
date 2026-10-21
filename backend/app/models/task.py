@@ -3,8 +3,9 @@ from sqlalchemy import Column, String, Text, DateTime, ForeignKey, JSON
 import uuid
 import datetime
 from app.db.session import Base
+from app.db.tenancy import TenantScoped
 
-class Task(Base):
+class Task(Base, TenantScoped):
     __tablename__ = "tasks"
     
     id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))

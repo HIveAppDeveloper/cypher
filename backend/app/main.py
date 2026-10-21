@@ -6,6 +6,7 @@ from sqlalchemy import text, update, or_
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
 from app.db.session import engine, Base
+from app.db.tenancy import current_tenant_id
 from app.api import router as api_router
 from app.api.websocket import router as ws_router
 from contextlib import asynccontextmanager
@@ -23,6 +24,9 @@ async def lifespan(app: FastAPI):
         if engine.dialect.name == "postgresql":
             await conn.execute(text("SELECT pg_advisory_xact_lock(1763000272)"))
             await conn.execute(CreateSchema(settings.DATABASE_SCHEMA, if_not_exists=True))
+        import app.models  # register every table before migrations/create_all
+        from app.db.migrations import ensure_tenant_schema
+        await conn.run_sync(ensure_tenant_schema)
         await conn.run_sync(Base.metadata.create_all)
         from app.models.bot import Bot
         await conn.execute(update(Bot).where(or_(Bot.llm_provider != 'openai', Bot.llm_model.notin_(['gpt-6.1-sol', 'gpt-6-luna']))).values(llm_provider='openai', llm_model='gpt-6.1-sol'))
@@ -71,13 +75,23 @@ app = FastAPI(
 
 @app.middleware("http")
 async def authenticate_backend(request: Request, call_next):
-    if settings.BACKEND_API_TOKEN and request.url.path.startswith("/api/"):
+    api_request = request.url.path.startswith("/api/")
+    public_auth_path = request.url.path in {"/api/auth/email/request", "/api/auth/email/verify"}
+    if settings.BACKEND_API_TOKEN and api_request:
         expected = "Bearer " + settings.BACKEND_API_TOKEN
         if not secrets.compare_digest(request.headers.get("authorization", ""), expected):
             return JSONResponse({"detail": "Unauthorized"}, status_code=401)
+    user_id = request.headers.get("x-grokbot-user-id") if api_request else None
+    if settings.REQUIRE_USER_AUTH and api_request and not user_id and not public_auth_path:
+        return JSONResponse({"detail": "Sign in to continue."}, status_code=401)
+    request.state.user_id = user_id
+    tenant_token = current_tenant_id.set(user_id)
     from vercel.headers import HeadersContext
-    with HeadersContext(dict(request.headers)).use():
-        return await call_next(request)
+    try:
+        with HeadersContext(dict(request.headers)).use():
+            return await call_next(request)
+    finally:
+        current_tenant_id.reset(tenant_token)
 
 app.add_middleware(
     CORSMiddleware,

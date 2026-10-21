@@ -26,6 +26,12 @@ class Settings(BaseSettings):
     SANDBOX_BACKEND: Literal["docker", "vercel"] = "docker"
     SANDBOX_IMAGE: str = "open-grokbot-sandbox:latest"
     BACKEND_API_TOKEN: str = ""
+    AUTH_SESSION_SECRET: str = ""
+    REQUIRE_USER_AUTH: bool = False
+    GROKBOT_PUBLIC_URL: str = "http://localhost:3000"
+    GROKBOT_AUTH_FROM: str = "no-reply@send.hivesales.info"
+    AUTH_MAGIC_LINK_TTL_MINUTES: int = 15
+    LEGACY_OWNER_EMAIL: str = ""
     SECRET_KEY: str = "local-only-change-before-exposure"
     CORS_ORIGINS: Annotated[list[str], NoDecode] = ["http://localhost:3000"]
 

@@ -4,8 +4,9 @@ import uuid
 import datetime
 from app.db.session import Base
 from sqlalchemy.orm import relationship
+from app.db.tenancy import TenantScoped
 
-class Message(Base):
+class Message(Base, TenantScoped):
     __tablename__ = "messages"
     
     id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))

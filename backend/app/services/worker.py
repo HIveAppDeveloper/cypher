@@ -7,6 +7,7 @@ from contextlib import suppress
 from datetime import datetime
 from sqlalchemy import select, update, text
 from app.db.session import AsyncSessionLocal, engine
+from app.db.tenancy import current_tenant_id
 from app.models.task import Task
 from app.models.runtime import RuntimeCheck
 from app.services.orchestrator import AgentOrchestrator
@@ -111,6 +112,7 @@ async def _run_worker_loop(lock_connection=None, owner_pid=None):
             task.status = "running"
             task.started_at = datetime.utcnow()
             await db.commit()
+            tenant_token = current_tenant_id.set(getattr(task, "tenant_id", "legacy-owner"))
             try:
                 request = (task.result or {}).get("request", {})
                 execution = asyncio.create_task(AgentOrchestrator().process_message(task.conversation_id, task.description, attachments=request.get("attachments", []), options=request.get("options", {}), goal_id=request.get("goal_id"), task_id=task.id, incoming_message_id=request.get("incoming_message_id")))
@@ -154,6 +156,7 @@ async def _run_worker_loop(lock_connection=None, owner_pid=None):
             from app.services.automation import enqueue_delivery
             await enqueue_delivery(task.id, request.get("channel_id"),AsyncSessionLocal,db)
             await db.commit()
+            current_tenant_id.reset(tenant_token)
 
 
 def response_status(responses):

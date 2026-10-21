@@ -4,8 +4,9 @@ import uuid
 import datetime
 from app.db.session import Base
 from sqlalchemy.orm import relationship
+from app.db.tenancy import TenantScoped
 
-class Conversation(Base):
+class Conversation(Base, TenantScoped):
     __tablename__ = "conversations"
     
     id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
@@ -17,7 +18,7 @@ class Conversation(Base):
     participants = relationship("ConversationParticipant", back_populates="conversation")
     messages = relationship("Message", back_populates="conversation")
 
-class ConversationParticipant(Base):
+class ConversationParticipant(Base, TenantScoped):
     __tablename__ = "conversation_participants"
     
     conversation_id = Column(String(36), ForeignKey("conversations.id"), primary_key=True)

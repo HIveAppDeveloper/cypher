@@ -2,8 +2,9 @@ import uuid
 from datetime import datetime
 from sqlalchemy import Column,String,Text,Integer,Boolean,DateTime,ForeignKey,UniqueConstraint
 from app.db.session import Base
+from app.db.tenancy import TenantScoped
 
-class Goal(Base):
+class Goal(Base, TenantScoped):
     __tablename__='goals'
     id=Column(String(36),primary_key=True,default=lambda:str(uuid.uuid4()))
     conversation_id=Column(String(36),ForeignKey('conversations.id'),nullable=False)
@@ -21,7 +22,7 @@ class Goal(Base):
     last_summary=Column(Text,nullable=True)
     created_at=Column(DateTime,nullable=False,default=datetime.utcnow)
 
-class Channel(Base):
+class Channel(Base, TenantScoped):
     __tablename__='channels'
     id=Column(String(36),primary_key=True,default=lambda:str(uuid.uuid4()))
     name=Column(String(80),nullable=False)
@@ -33,7 +34,7 @@ class Channel(Base):
     webhook_url=Column(Text,nullable=True)
     created_at=Column(DateTime,nullable=False,default=datetime.utcnow)
 
-class ChannelEvent(Base):
+class ChannelEvent(Base, TenantScoped):
     __tablename__='channel_events'
     __table_args__=(UniqueConstraint('channel_id','event_id'),)
     id=Column(String(36),primary_key=True,default=lambda:str(uuid.uuid4()))
@@ -42,7 +43,7 @@ class ChannelEvent(Base):
     task_id=Column(String(36),nullable=False)
     created_at=Column(DateTime,nullable=False,default=datetime.utcnow)
 
-class Delivery(Base):
+class Delivery(Base, TenantScoped):
     __tablename__='channel_deliveries'
     __table_args__=(UniqueConstraint('channel_id','task_id'),)
     id=Column(String(36),primary_key=True,default=lambda:str(uuid.uuid4()))

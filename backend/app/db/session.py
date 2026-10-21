@@ -8,6 +8,8 @@ url, options = engine_options(settings.DATABASE_URL)
 engine = create_async_engine(url, echo=False, **options)
 AsyncSessionLocal = async_sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
 Base = declarative_base(metadata=MetaData(schema=settings.DATABASE_SCHEMA if engine.dialect.name == "postgresql" else None))
+from app.db.tenancy import install_tenant_events
+install_tenant_events()
 
 async def get_db():
     async with AsyncSessionLocal() as session:

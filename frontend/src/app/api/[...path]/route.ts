@@ -1,12 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getSessionFromCookieHeader } from '../../../lib/auth-server';
 export const dynamic = 'force-dynamic';
 async function proxy(request: NextRequest, { params }: { params: { path: string[] } }) {
+  const path = params.path.join('/');
+  const publicAuthPath = path === 'auth/email/request' || path === 'auth/email/verify';
+  const session = getSessionFromCookieHeader(request.headers.get('cookie'));
+  if (process.env.REQUIRE_USER_AUTH === 'true' && !session && !publicAuthPath) return NextResponse.json({ detail: 'Sign in to continue.' }, { status: 401 });
   const backend = process.env.BACKEND_INTERNAL_URL || process.env.GROKBOT_BACKEND_URL;
   if (!backend) return NextResponse.json({ detail: 'Your cloud runtime is not connected. Open Workspace setup to connect it.' }, { status: 503 });
   const url = new URL('/api/' + params.path.map(encodeURIComponent).join('/'), backend);
   url.search = request.nextUrl.search;
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
   if (process.env.GROKBOT_BACKEND_API_TOKEN) headers.Authorization = `Bearer ${process.env.GROKBOT_BACKEND_API_TOKEN}`;
+  if (session) headers['x-grokbot-user-id'] = session.sub;
   const channelKey=request.headers.get('x-grokbot-channel-key');
   if(channelKey) headers['x-grokbot-channel-key']=channelKey;
   let response: Response;

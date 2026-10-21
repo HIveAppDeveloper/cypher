@@ -1,8 +1,9 @@
 import uuid
 from sqlalchemy import Column, String, Text, Boolean, JSON, Float
 from app.db.session import Base
+from app.db.tenancy import TenantScoped
 
-class Plugin(Base):
+class Plugin(Base, TenantScoped):
     __tablename__ = 'plugins'
     id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     name = Column(String(80), nullable=False)
@@ -11,7 +12,7 @@ class Plugin(Base):
     enabled = Column(Boolean, nullable=False, default=True)
     tools = Column(JSON, nullable=False, default=list)
 
-class PluginAuthorization(Base):
+class PluginAuthorization(Base, TenantScoped):
     __tablename__ = 'plugin_authorizations'
     id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     name = Column(String(80), nullable=False)

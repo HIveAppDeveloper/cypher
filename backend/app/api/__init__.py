@@ -16,9 +16,11 @@ from .context import router as context_router
 from .device import router as device_router
 
 from .accounts import router as accounts_router
+from .auth import router as auth_router
 
 router = APIRouter()
 router.include_router(accounts_router,prefix="/accounts",tags=["accounts"])
+router.include_router(auth_router,prefix="/auth",tags=["auth"])
 router.include_router(device_router,prefix="/device",tags=["device"])
 router.include_router(context_router,prefix="/conversations",tags=["context"])
 router.include_router(automation_router,tags=["automation"])
