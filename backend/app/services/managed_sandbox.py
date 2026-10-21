@@ -32,8 +32,8 @@ def stop(bot_id):
     finally:
         client.close()
 
-def execute(bot_id, command):
+def execute(bot_id, command, max_output=50000):
     argv = command if isinstance(command, list) else ['bash', '-lc', command]
     with computer(bot_id) as box:
         result = box.run_process(argv[0], argv[1:], cwd='/workspace', capture_output=True, kill_after=300)
-        return {'exit_code': result.returncode, 'output': ((result.stdout or '') + (result.stderr or ''))[:50000]}
+        return {'exit_code': result.returncode, 'output': ((result.stdout or '') + (result.stderr or ''))[:max_output]}

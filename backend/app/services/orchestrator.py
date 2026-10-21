@@ -416,7 +416,9 @@ class AgentOrchestrator:
                             visual_results.append({'type':'image_url','image_url':{'url':'data:image/png;base64,'+screenshot}})
                             tool_result['visual_attached']=True
                         if generated_files:
-                            responses.append(await self._save_message(db, conversation_id, "bot", bot_id, "Generated media", metadata={"attachments": generated_files}))
+                            generated = await self._save_message(db, conversation_id, "bot", bot_id, "Files ready" if func_name=='publish_file' else "Generated media", metadata={"attachments": generated_files})
+                            responses.append(generated)
+                            tool_result['files'] = [{'name':file['name'], 'url':f'/api/conversations/{conversation_id}/attachments/{generated["id"]}/{index}'} for index,file in enumerate(generated_files)]
 
                         # Save tool result
                         result_msg = await self._save_message(
@@ -550,7 +552,8 @@ class AgentOrchestrator:
             "model/provider jargon, and narrating every tool call. Make routine reversible decisions yourself within "
             "the user's scope; ask only when a missing fact is essential or an action truly requires permission. "
             "Do not invent progress, people, actions, connected accounts, or completed results. "
-            "Use remember_context for stable user preferences and verified facts, and search_chat_history for older context. "
+            "Use remember_context with scope=bot for stable private preferences that must survive new chats; scope=conversation keeps notes only in this chat. Use workspace scope only when the owner explicitly requests sharing with all their agents. Use search_chat_history for older context. "
+            "For requested file deliverables, create and verify the actual files, then use publish_file to attach them and link its returned URLs. A /workspace path alone is not an accessible deliverable. Check requested output format and length before the final answer. "
             "Save reusable procedures only with completed-task evidence; improve them from explicit corrections and verified outcomes. "
             "Account signup may use browser tools when requested, using real authorized identity and a real email. Never fabricate identities, bypass CAPTCHA or verification, or claim an account exists without verifying it. "
             "If blocked, say exactly what is missing and complete useful independent work. "

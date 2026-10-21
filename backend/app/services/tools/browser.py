@@ -165,7 +165,7 @@ class BrowserTool:
             except Exception:
                 await page.get_by_text(selector).click(timeout=timeout)
 
-            await page.wait_for_load_state("networkidle", timeout=5000)
+            await page.wait_for_load_state("domcontentloaded", timeout=5000)
             await self._save_state(session_id)
             return {"success": True, "selector": selector}
         except Exception as e:
@@ -279,10 +279,19 @@ class BrowserTool:
 
             # Extract links
             links = await page.evaluate("""
-                () => Array.from(document.querySelectorAll('a[href]')).slice(0, 50).map(a => ({
-                    text: a.textContent.trim(),
-                    href: a.href
-                }))
+                () => {
+                    const visible = a => !!a.getClientRects().length && getComputedStyle(a).visibility !== 'hidden';
+                    const all = [...document.querySelectorAll('a[href]')].filter(visible);
+                    // Content links precede large menus; retain navigation too.
+                    // title/aria-label often contain the full untruncated label.
+                    const content = all.filter(a => a.closest('main, article, [role="main"], .content, .page_inner') && !a.closest('nav, aside, header, footer, .side_categories'));
+                    const ordered = [...new Set([...content, ...all])];
+                    return ordered.slice(0, 100).map(a => ({
+                        text: a.textContent.trim().slice(0, 300),
+                        title: (a.getAttribute('title') || a.getAttribute('aria-label') || '').slice(0, 500),
+                        href: a.href
+                    }));
+                }
             """)
 
             # Extract form fields

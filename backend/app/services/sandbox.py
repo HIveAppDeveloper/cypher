@@ -75,6 +75,14 @@ class SandboxManager:
             return {"exit_code": -1, "output": str(e)}
 
     @classmethod
+    def read_artifact(cls, bot_id, script, path, max_bytes):
+        command = ['python3', '-c', script, path, str(max_bytes)]
+        if settings.SANDBOX_BACKEND == 'vercel':
+            from app.services.managed_sandbox import execute
+            return execute(bot_id, command, max_output=(max_bytes * 4 // 3) + 4096)
+        return cls.exec_in_sandbox(bot_id, command)
+
+    @classmethod
     def get_sandbox_status(cls, bot_id: str):
         client = cls.get_client()
         container_name = f"grokbot_sandbox_{bot_id}"

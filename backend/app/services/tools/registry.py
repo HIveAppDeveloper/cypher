@@ -14,6 +14,37 @@ from app.services.tools.filesystem import FileSystemTool
 
 logger = logging.getLogger(__name__)
 
+
+def rank_plugin_tools(manifest, query, service=None):
+    """Keep a named service in scope and rank operation names before prose."""
+    import re
+    words = lambda value: set(re.findall(r'[a-z0-9]+', value.casefold()))
+    query_words = words(query)
+    services = {item['service'] for item in manifest}
+    normalized = lambda value: re.sub(r'[^a-z0-9]+', ' ', value.casefold()).strip()
+    selected = None
+    if service:
+        selected = {name for name in services if normalized(name)==normalized(service)}
+    else:
+        # A query such as "Vercel get deployment" must not return Linear tools
+        # just because their long descriptions contain more generic words.
+        matches = [name for name in services if normalized(name) and re.search(r'\b'+re.escape(normalized(name))+r'\b',normalized(query))]
+        if matches:
+            longest = max(len(normalized(name)) for name in matches)
+            selected = {name for name in matches if len(normalized(name))==longest}
+    action_words = query_words - set().union(*(words(s) for s in selected)) if selected else query_words
+    ranked=[]
+    for item in manifest:
+        if selected is not None and item['service'] not in selected:continue
+        name_words=words(item['name'])
+        description_words=words(item.get('description',''))
+        exact=normalized(query)==normalized(item['name']) or normalized(' '.join(sorted(action_words)))==normalized(' '.join(sorted(name_words)))
+        score=(100 if exact else 0)+10*len(action_words & name_words)+len(action_words & description_words)
+        if score or selected or not query_words:
+            ranked.append((score,item))
+    ranked.sort(key=lambda pair:pair[0],reverse=True)
+    return [item for _,item in ranked]
+
 # Singleton tool instances
 _browser_tool = BrowserTool()
 _shell_tool = ShellTool()
@@ -76,21 +107,13 @@ class ToolRegistry:
         if not manifest:
             return
         async def search(arguments, bot_id):
-            import re
-            words = set(re.findall(r"[a-z0-9]+", arguments.get('query', '').lower()))
-            ranked = []
-            for item in manifest:
-                haystack = (item['service']+' '+item['name']+' '+item.get('description', '')).lower()
-                score = sum(1 for word in words if word in haystack)
-                if score or not words:
-                    ranked.append((score, item))
-            ranked.sort(key=lambda pair: pair[0], reverse=True)
-            return {'tools': [{'plugin_id':t['plugin_id'], 'service':t['service'], 'name':t['name'], 'description':t.get('description',''), 'parameters':t['schema']} for _,t in ranked[:12]], 'total_matches':len(ranked), 'instruction':'Call plugin_call with the exact plugin_id, tool_name and arguments matching its parameters. Search again with a more specific service or action if needed.'}
+            ranked=rank_plugin_tools(manifest,arguments.get('query',''),arguments.get('service'))
+            return {'tools': [{'plugin_id':t['plugin_id'], 'service':t['service'], 'name':t['name'], 'description':t.get('description',''), 'parameters':t['schema']} for t in ranked[:12]], 'total_matches':len(ranked), 'instruction':'Call plugin_call with the exact plugin_id, tool_name and arguments matching its parameters. Include service in follow-up searches to keep the correct connection in scope. Search is discovery, not evidence that an action ran.'}
         async def call(arguments, bot_id):
             if not any(t['plugin_id']==arguments.get('plugin_id') and t['name']==arguments.get('tool_name') for t in manifest):
                 return {'error':'Search enabled plugin tools first and use an exact returned service/tool.'}
             return await invoke(arguments['plugin_id'], arguments['tool_name'], arguments.get('arguments', {}))
-        self.register('plugin_search', 'Find tools in connected services. Search by service name and action before calling plugin_call. Only enabled, connected tools are returned.', {'type':'object','properties':{'query':{'type':'string'}},'required':['query']}, search)
+        self.register('plugin_search', 'Find tools in connected services. Always set service to the known connection name (for example Vercel) and query to its operation (for example list_deployments). Exact tool names rank first. Only enabled connected tools are returned. Then call plugin_call with the exact schema.', {'type':'object','properties':{'query':{'type':'string'},'service':{'type':'string','description':'Connection name, such as Vercel or GitHub. Omit only to discover which service has a capability.'}},'required':['query']}, search)
         self.register('plugin_call', 'Run a connected service tool returned by plugin_search. Match its exact parameters. Verify the returned result before claiming success.', {'type':'object','properties':{'plugin_id':{'type':'string'},'tool_name':{'type':'string'},'arguments':{'type':'object','additionalProperties':True}},'required':['plugin_id','tool_name','arguments']}, call)
 
     def replay_safe(self, name, arguments):
@@ -100,11 +123,13 @@ class ToolRegistry:
             return any(t['plugin_id'] == arguments.get('plugin_id') and t['name'] == arguments.get('tool_name') and t.get('read_only') for t in getattr(self, '_plugin_manifest', []))
         return name in {'read_file', 'list_directory', 'search_files', 'search_web',
                         'analyze_video',
-                        'search_chat_history', 'consult_specialist', 'plugin_search',
+                        'search_chat_history', 'consult_specialist', 'plugin_search', 'publish_file',
                         'complete_goal', 'remember_context'}
 
     def register_default_tools(self):
         """Register all built-in tools."""
+        from app.services.tools.artifacts import publish_file
+        self.register('publish_file', 'Attach an actual completed file from /workspace to this chat as a durable download (up to 5 MB). Use for requested code, CSV, JSON, reports and other deliverables after checking them. A sandbox path alone is not a download. Only publish files the user requested or needs for this task; never credentials or browser profiles. Returns the authenticated download URL.', {'type':'object','properties':{'path':{'type':'string','maxLength':1000}},'required':['path']}, publish_file)
         from app.services.local_device import local_device_tool
         self.register('local_device','List owner-paired local devices, request a file read/write or shell action, and inspect a request status. The companion requires explicit local approval for every action. Never claim an action ran before its job status is completed.',{'type':'object','properties':{'action':{'type':'string','enum':['list','status','read_file','write_file','shell']},'device_id':{'type':'string'},'job_id':{'type':'string'},'path':{'type':'string'},'content':{'type':'string'},'command':{'type':'string'}},'required':['action']},local_device_tool)
         from app.services.computer import shared_files_tool
@@ -373,7 +398,7 @@ class ToolRegistry:
             "media": ["generate_image", "generate_video"],
             "browser": ["search_web", "analyze_video", "browse_url", "browser_click", "browser_type", "browser_screenshot", "browser_extract", "browser_fill_form"],
             "shell": "shell",
-            "filesystem": ["local_device", "workspace_files","read_file", "write_file", "list_directory", "search_files"],
+            "filesystem": ["local_device", "workspace_files", "publish_file", "read_file", "write_file", "list_directory", "search_files"],
         }
 
         enabled_tool_names = {"consult_specialist", "set_goal", "complete_goal", "remember_context", "search_chat_history"}
@@ -419,7 +444,7 @@ class ToolRegistry:
             from app.services.computer import approve_tool,agent_access
             if not await approve_tool(name,arguments,bot_id,self.replay_safe(name,arguments)):
                 return {'error':'The owner did not approve this tool action. No action was performed.'}
-            computer_tools={'browse_url','browser_click','browser_type','browser_screenshot','browser_extract','browser_fill_form','shell_exec','read_file','write_file','list_directory'}
+            computer_tools={'browse_url','browser_click','browser_type','browser_screenshot','browser_extract','browser_fill_form','shell_exec','read_file','write_file','list_directory','publish_file'}
             from app.services.usage import active
             current=active.get()
             if name in computer_tools and current:

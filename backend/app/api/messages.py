@@ -100,7 +100,8 @@ async def get_attachment(id: UUID, message_id: UUID, index: int, db: AsyncSessio
     if message is None or message.conversation_id != str(id) or index < 0 or index >= len(files):
         raise HTTPException(status_code=404, detail='Attachment not found')
     file = files[index]
-    return Response(base64.b64decode(file['data']), media_type=file['mime'], headers={'Content-Disposition': "inline; filename*=UTF-8''" + quote(file['name'], safe=''), 'X-Content-Type-Options': 'nosniff', 'Cache-Control': 'private, no-store'})
+    disposition = 'attachment' if file.get('disposition') == 'attachment' or file['mime'] not in {'image/png','image/jpeg','image/webp','audio/wav','audio/mpeg','video/mp4','application/pdf','text/plain'} else 'inline'
+    return Response(base64.b64decode(file['data']), media_type=file['mime'], headers={'Content-Disposition': disposition+"; filename*=UTF-8''" + quote(file['name'], safe=''), 'X-Content-Type-Options': 'nosniff', 'Cache-Control': 'private, no-store'})
 
 
 @router.post("/{id}/tasks/{task_id}/cancel", status_code=202)
