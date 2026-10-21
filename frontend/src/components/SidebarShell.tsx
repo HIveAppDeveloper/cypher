@@ -39,8 +39,10 @@ export function SidebarShell({ children }: { children: ReactNode }) {
         event.preventDefault(); if (media.matches) setMobileOpen(value => !value); else setLayout(current => ({ ...current, collapsed: !current.collapsed }));
       }
     };
+    const closeNavigation=()=>setMobileOpen(false);
+    window.addEventListener('grokbot:navigate',closeNavigation);
     window.addEventListener('keydown', shortcut);
-    return () => { window.removeEventListener('keydown', shortcut); media.removeEventListener('change', resizeViewport); };
+    return () => { window.removeEventListener('grokbot:navigate',closeNavigation); window.removeEventListener('keydown', shortcut); media.removeEventListener('change', resizeViewport); };
   }, []);
   useEffect(() => { if (loaded) try { localStorage.setItem(STORAGE_KEY, JSON.stringify(layout)); } catch {} }, [layout, loaded]);
   useEffect(() => { if (mobileOpen) mobileDialog.current?.showModal(); else mobileDialog.current?.close(); }, [mobileOpen, mobile]);
@@ -67,7 +69,7 @@ export function SidebarShell({ children }: { children: ReactNode }) {
     <button className="mobile-menu-button" aria-label="Open navigation" aria-haspopup="dialog" aria-expanded={mobileOpen} onClick={() => setMobileOpen(true)}>{panelIcon}</button>
     <dialog ref={mobileDialog} className="mobile-navigation" aria-label="Workspace navigation" onCancel={() => setMobileOpen(false)} onClose={() => setMobileOpen(false)} onClick={event => { if (event.target === event.currentTarget) setMobileOpen(false); }}>
       <div className="mobile-nav-header"><strong>Workspace</strong><button aria-label="Close navigation" onClick={() => setMobileOpen(false)}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M6 18 18 6"/></svg></button></div>
-      <div className="mobile-nav-content" onClickCapture={event => { if ((event.target as HTMLElement).closest('.bot-row,.workspace-name,.new-task-button,.preferences-nav,.plugins-nav,.workspace-label,.roster-toolbar button[aria-label="Create bot"],.rooms-label button')) { mobileDialog.current?.close(); setMobileOpen(false); } }}>{children}</div>
+      <div className="mobile-nav-content" onClickCapture={event => { if ((event.target as HTMLElement).closest('.command-launcher,.bot-row,.workspace-name,.new-task-button,.preferences-nav,.plugins-nav,.workspace-label,.roster-toolbar button[aria-label="Create bot"],.rooms-label button')) { mobileDialog.current?.close(); setMobileOpen(false); } }}>{children}</div>
     </dialog>
   </>;
   return <section className="sidebar-shell" aria-label="Workspace sidebar" data-side={layout.side} data-collapsed={layout.collapsed} data-resizing={resizing} style={{ '--sidebar-width': `${layout.width}px` } as CSSProperties}>
