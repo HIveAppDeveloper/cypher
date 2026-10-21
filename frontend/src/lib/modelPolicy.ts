@@ -1,8 +1,8 @@
 import { RunOptions } from './types';
+import { MODEL_CHOICES } from './presets';
 export function modelPolicy(options: Partial<RunOptions>): Partial<RunOptions> {
-  const clean = { ...options };
-  if (clean.model && !['gpt-6.1-sol', 'gpt-6-luna'].includes(clean.model)) clean.model = 'gpt-6.1-sol';
-  if (clean.provider) clean.provider = 'openai';
-  if (clean.reasoning_effort && !['low', 'medium', 'high', 'xhigh', 'max'].includes(clean.reasoning_effort)) clean.reasoning_effort = 'medium';
-  return clean;
+ const clean={...options};
+ if(clean.model && !MODEL_CHOICES.some(m=>m.model===clean.model && (!clean.provider || m.provider===clean.provider))){clean.model='gpt-6.1-sol';clean.provider='openai';}
+ clean.routing=clean.routing==='manual'?'manual':'auto';
+ return clean;
 }

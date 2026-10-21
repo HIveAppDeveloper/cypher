@@ -10,6 +10,7 @@ AsyncSessionLocal = async_sessionmaker(engine, expire_on_commit=False, class_=As
 Base = declarative_base(metadata=MetaData(schema=settings.DATABASE_SCHEMA if engine.dialect.name == "postgresql" else None))
 from app.db.tenancy import install_tenant_events
 install_tenant_events()
+from app.db import wakeup  # Register commit-bound work notifications.
 
 async def get_db():
     async with AsyncSessionLocal() as session:

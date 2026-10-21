@@ -281,8 +281,8 @@ async def test_media_generation_returns_real_file_parts(monkeypatch):
 
 def test_disallowed_models_rejected_before_network():
     from app.services.llm_gateway import completion_options
-    for provider, model in [('gemini', 'gemini-3.5-flash'), ('openai', 'gpt-6-astra'), ('openai', 'openai/gpt-6.1-sol')]:
-        with pytest.raises(ValueError, match='Model policy'):
+    for provider, model in [('gemini', 'invented-model'), ('openai', 'unknown-model'), ('openai', 'openai/gpt-6.1-sol')]:
+        with pytest.raises(ValueError, match='configured task model'):
             completion_options(model, provider)
 
 

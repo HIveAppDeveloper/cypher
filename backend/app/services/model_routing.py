@@ -49,13 +49,16 @@ def required_modalities(messages):
                 required.add("pdf")
             elif kind in {"input_audio", "audio"}:
                 required.add("audio")
+            elif kind in {'video_url','input_video'}:
+                required.add('video')
     return required
 
 
 async def validate_capabilities(messages, tools, provider, model):
     required = required_modalities(messages)
     if settings.LLM_USE_GATEWAY:
-        item = (await gateway_catalog()).get(f"{provider}/{model}")
+        from app.services.model_profiles import gateway_id
+        item = (await gateway_catalog()).get(gateway_id(provider,model))
         if item is None or item.get("type") != "language":
             raise ModelCapabilityError("The selected model is unavailable in the gateway catalog. Choose an available chat model in conversation settings.")
         supported = set(item.get("modalities", {}).get("input", []))

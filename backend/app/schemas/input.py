@@ -19,6 +19,7 @@ class Attachment(BaseModel):
         return value
 
 class RunOptions(BaseModel):
+    routing: Literal['auto', 'manual'] = 'auto'
     allow_tools: bool = True
     steering: str = Field(default='', max_length=6000)
     output: Literal['text', 'image', 'video'] = 'text'
@@ -29,7 +30,7 @@ class RunOptions(BaseModel):
     max_iterations: int = Field(default=10, ge=1, le=25)
     team_rounds: int = Field(default=1, ge=1, le=4)
     model: str | None = Field(default=None, min_length=1, max_length=160)
-    provider: Literal['openai', 'gemini', 'anthropic', 'ollama', 'deepseek'] | None = None
+    provider: Literal['openai', 'gemini', 'anthropic', 'ollama', 'deepseek', 'spacexai'] | None = None
     reasoning_effort: Literal['none', 'low', 'medium', 'high', 'xhigh', 'max'] | None = None
     service_tier: Literal['default', 'priority', 'flex'] | None = None
 

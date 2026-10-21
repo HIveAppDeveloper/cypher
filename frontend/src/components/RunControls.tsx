@@ -1,11 +1,11 @@
 import { GlassSelect } from './GlassSelect';
 import { ModelControls } from './ModelControls';
 import { RunOptions } from '../lib/types';
-export const DEFAULT_OPTIONS: RunOptions = { temperature: 0.5, max_tokens: 4096, max_iterations: 10, team_rounds: 1 };
+export const DEFAULT_OPTIONS: RunOptions = { routing:'auto', temperature: 0.5, max_tokens: 4096, max_iterations: 10, team_rounds: 1 };
 export function RunControls({ options, onChange, font, onFont, group, model }: { options: RunOptions; onChange: (options: RunOptions) => void; font: string; onFont: (font: string) => void; group: boolean; model?: { provider: string; model: string } }) {
   const reasoningActive = (options.provider || model?.provider) === 'openai' && (options.model || model?.model || '').match(/^gpt-[56]/) && (options.reasoning_effort || 'medium') !== 'none';
   return <details className="run-controls"><summary>Controls</summary><div className="controls-popover">
-    <h3>Make it your own</h3><ModelControls value={{ provider: model?.provider || 'openai', model: model?.model || 'gpt-6.1-sol', ...options }} onChange={next => onChange({ ...options, ...next })}/>
+    <h3>Make it your own</h3><label>Model selection<GlassSelect value={options.routing||'auto'} onChange={e=>onChange({...options,routing:e.target.value as 'auto'|'manual'})}><option value="auto">Automatic · task specialists</option><option value="manual">Choose a model</option></GlassSelect></label>{options.routing!=='manual'?<p>Automatically selects models for coding, research, writing, analysis, planning, review and visual inputs. Each answer records the model used.</p>:<ModelControls value={{ provider: model?.provider || 'openai', model: model?.model || 'gpt-6.1-sol', ...options }} onChange={next => onChange({ ...options, ...next })}/>}
     {!reasoningActive ? <>    <label>Response style<GlassSelect value={options.temperature < .3 ? 'precise' : options.temperature > .8 ? 'creative' : 'balanced'} onChange={e => onChange({ ...options, temperature: {precise:.1,balanced:.5,creative:1.1}[e.target.value] || .5 })}><option value="precise">Precise</option><option value="balanced">Balanced</option><option value="creative">Exploratory</option></GlassSelect></label>
     <label>Creativity <output>{options.temperature.toFixed(1)}</output><input aria-label="Creativity" type="range" min="0" max="1.5" step=".1" value={options.temperature} onChange={e => onChange({ ...options, temperature: +e.target.value })}/></label>
 </> : <p>Creativity is managed by this model while thinking is enabled.</p>}

@@ -19,9 +19,9 @@ logger = logging.getLogger(__name__)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Initialize DB tables
-    from app.db.bootstrap import initialize_database
-    await initialize_database(engine)
-    logger.info("Database tables created")
+    from app.services.database_health import initialize, recover
+    await initialize(app, engine)
+    recovery = asyncio.create_task(recover(app, engine))
 
     # Redis is optional in hosted mode: tasks, history, and saved context use SQL.
     app.state.redis = None
@@ -50,6 +50,9 @@ async def lifespan(app: FastAPI):
     try:
         yield
     finally:
+        recovery.cancel()
+        with suppress(asyncio.CancelledError):
+            await recovery
         if worker:
             worker.cancel()
             with suppress(asyncio.CancelledError):
@@ -80,6 +83,9 @@ async def authenticate_backend(request: Request, call_next):
     if settings.REQUIRE_USER_AUTH and api_request and not user_id and not public_auth_path and not channel_ingress:
         return JSONResponse({"detail": "Sign in to continue."}, status_code=401)
     request.state.user_id = user_id
+    if api_request and getattr(app.state, 'database_ready', True) is False:
+        detail = app.state.database_failure
+        return JSONResponse(detail, status_code=503, headers={'Retry-After':str(detail['retry_after'])})
     tenant_token = current_tenant_id.set(user_id)
     from vercel.headers import HeadersContext
     try:
@@ -95,6 +101,17 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+from sqlalchemy.exc import SQLAlchemyError
+
+@app.exception_handler(SQLAlchemyError)
+async def database_error(request: Request, error):
+    from app.services.database_health import failure_detail
+    detail = failure_detail(error)
+    app.state.database_ready = False
+    app.state.database_failure = detail
+    logger.error('Database request failed code=%s type=%s', detail['code'], type(error).__name__)
+    return JSONResponse(detail, status_code=503, headers={'Retry-After':str(detail['retry_after'])})
 
 app.include_router(api_router, prefix="/api")
 app.include_router(ws_router)

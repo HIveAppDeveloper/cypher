@@ -1,9 +1,10 @@
+import { MODEL_CHOICES } from '../lib/presets';
 import { ContextPanel } from './ContextPanel';
 import { WorkPanel } from './WorkPanel';
 import { GlassSelect } from './GlassSelect';
 import React, { useEffect, useState, useRef } from 'react';
 import { Bot, Message, MessageType, Attachment, Conversation, Job, RunOptions } from '../lib/types';
-import { api } from '../lib/api';
+import { api, ApiError } from '../lib/api';
 import { BotAvatar } from './BotAvatar';
 import { MessageBubble } from './MessageBubble';
 import { QuickStart } from './QuickStart';
@@ -69,17 +70,23 @@ export function ChatPanel({ bot, room, bots, onCreateBot, onCreateRoom, onQuickS
   const title = room?.title === 'Agent lounge' ? 'Your team' : room?.title || bot?.name || 'Workspace';
   useEffect(() => { const el = stream.current; if (!el) return; if (prependOffset.current !== null) { el.scrollTop = el.scrollHeight - prependOffset.current; prependOffset.current = null; } else if (followLatest.current) el.scrollTop = el.scrollHeight; }, [messages.length, messages[messages.length - 1]?.id]);
   useEffect(() => {
-    let active = true; let timer: ReturnType<typeof setTimeout>;
+    let active = true; let timer: ReturnType<typeof setTimeout>; let failures=0; let pending=false;
+    const controller=new AbortController();
     followLatest.current = true; setConversationId(''); setMessages([]); setJobs([]); setAttachments([]); setError(''); setLoading(!!bot || !!room); setSyncError(''); firstPage.current = true;
     if (!bot && !room) return;
-    const poll = async (id: string) => {
-      try { const [data, tasks] = await Promise.all([api.getMessages(id), api.getJobs(id)]); if (active) { if (firstPage.current) { setHasEarlier(data.length === 50); firstPage.current = false; } setMessages(previous => mergeMessages(previous, data)); setJobs(tasks); setLoading(false); setSyncError(''); } }
-      catch (e) { if (active) { setLoading(false); setSyncError('Couldn’t refresh this conversation. Reconnecting automatically…'); } }
-      if (active) timer = setTimeout(() => poll(id), POLL_MS);
+    let currentId='';let latestMessageId:string|undefined;
+    const poll = async () => {
+      if(!active || pending || !currentId)return;
+      pending=true; clearTimeout(timer); let delay=10000;
+      try { const {messages:data,tasks}=await api.syncConversation(currentId,latestMessageId,controller.signal); if(active){failures=0;if(data.length)latestMessageId=data[data.length-1].id;if(firstPage.current){setHasEarlier(data.length===50);firstPage.current=false;}setMessages(previous=>mergeMessages(previous,data));setJobs(tasks);setLoading(false);setSyncError('');delay=tasks.some(t=>['pending','running','cancel_requested'].includes(t.status))?POLL_MS:10000;} }
+      catch(e){if(active){failures++;setLoading(false);setSyncError(e instanceof ApiError && e.code==='database_quota'?e.message:e instanceof ApiError && e.status===401?'Your session expired. Sign in again to reconnect.':'Couldn’t refresh this conversation. Your messages are saved; reconnecting automatically…');delay=Math.max(e instanceof ApiError?e.retryAfter*1000:0,Math.min(60000,2000*2**Math.min(failures,5)));}}
+      finally{pending=false;if(active)timer=setTimeout(poll,document.hidden?Math.max(delay,60000):delay);}
     };
+    const refresh=()=>{if(!document.hidden && !failures)void poll();};
+    document.addEventListener('visibilitychange',refresh);window.addEventListener('grokbot:refresh',refresh);window.addEventListener('online',refresh);
     const load = room ? Promise.resolve(room.id) : api.conversationForBot(bot!);
-    load.then(id => { if (active) { setConversationId(id); void poll(id); } }).catch(e => { if (active) { setLoading(false); setError('Couldn’t open this conversation. Try selecting it again.'); } });
-    return () => { active = false; clearTimeout(timer); };
+    load.then(id=>{if(active){currentId=id;setConversationId(id);void poll();}}).catch(e=>{if(active){setLoading(false);setError(e instanceof ApiError?e.message:'Couldn’t open this conversation. Try selecting it again.');}});
+    return()=>{active=false;controller.abort();clearTimeout(timer);document.removeEventListener('visibilitychange',refresh);window.removeEventListener('grokbot:refresh',refresh);window.removeEventListener('online',refresh);};
   }, [bot?.id, room?.id]);
   function mergeMessages(previous: Message[], incoming: Message[]) {
     const map = new Map(previous.map(message => [message.id, message])); incoming.forEach(message => map.set(message.id, {...message,delivery:message.delivery || 'sent'}));
@@ -139,6 +146,7 @@ export function ChatPanel({ bot, room, bots, onCreateBot, onCreateRoom, onQuickS
     try {
       const accepted = await api.sendMessage(conversationId, text, files, options, messageId);
       unconfirmedDraft.current=null;
+      window.dispatchEvent(new Event('grokbot:refresh'));
       setMessages(previous=>previous.map(message=>message.id===messageId?{...message,delivery:'sent'}:message));
       setJobs(previous=>previous.some(job=>job.id===accepted.task_id)?previous:[{id:accepted.task_id,title:text.slice(0,100),status:'pending',created_at:new Date().toISOString()},...previous]);
     } catch (e) {
@@ -156,7 +164,7 @@ export function ChatPanel({ bot, room, bots, onCreateBot, onCreateRoom, onQuickS
     <header className="workspace-toolbar"><div className="toolbar-location"><strong>{title}</strong></div><div className="toolbar-actions">{conversationId?<><button ref={searchTrigger} className="toolbar-button" aria-label="Search this conversation" aria-pressed={searchOpen} onClick={()=>{if(searchOpen)closeSearch();else setSearchOpen(true);}}><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4 4"/></svg><span>Search</span></button><button className="toolbar-button" aria-expanded={workOpen} onClick={()=>setWorkOpen(true)}>Work <span className="work-count">{activeJobs.length||jobs.length}</span></button></>:null}<details ref={settings} className="thread-settings"><summary>Conversation settings</summary><div className="thread-settings-sheet"><h2>Conversation settings</h2><RunControls options={options} onChange={setOptions} font={font} onFont={setFont} group={!!room} model={bot ? { provider: bot.llmProvider, model: bot.llmModel } : undefined}/>    {jobs.length ? <details className="job-tray"><summary>{activeJobs.length ? `${activeJobs.length} job${activeJobs.length === 1 ? '' : 's'} in progress` : 'Recent work'}</summary>{jobs.slice(0,6).map(job => <div key={job.id}><span>{job.title}</span><strong data-status={job.status}>{job.status === 'cancel_requested' ? 'Stopping…' : job.status}</strong>{['pending','running'].includes(job.status) ? <button aria-label={`Cancel ${job.title}`} onClick={() => api.cancelJob(conversationId, job.id).catch(e => setError(e.message))}>Cancel</button> : null}</div>)}</details> : null}
     {conversationId ? <ContextPanel key={'context-'+conversationId} conversationId={conversationId}/> : null}
 
-    <details className="thread-options"><summary>Message options <span>{options.output === 'video' ? 'Video' : options.output === 'image' ? 'Image' : 'Automatic'} · {options.model === 'gpt-6-luna' ? 'Luna' : 'Sol'}</span></summary><div className="output-controls"><label>Manager<GlassSelect aria-label="Manager model" value={options.model || bot?.llmModel || 'gpt-6.1-sol'} onChange={e => { setOptions({...options,provider:'openai',model:e.target.value}); try { localStorage.setItem('grokbot-manager',e.target.value); } catch {} }}><option value="gpt-6.1-sol">GPT-6.1 Sol</option><option value="gpt-6-luna">GPT-6 Luna</option></GlassSelect></label><label>Output<GlassSelect aria-label="Output type" value={options.output || 'text'} onChange={e => setOptions({ ...options, output: e.target.value as 'text' | 'image' | 'video', aspect_ratio: '16:9' })}><option value="text">Automatic</option><option value="image">Create an image</option><option value="video">Create a video</option></GlassSelect></label>{options.output && options.output !== 'text' ? <><label>Shape<GlassSelect aria-label="Media shape" value={options.aspect_ratio || '16:9'} onChange={e => setOptions({ ...options, aspect_ratio: e.target.value })}><option value="16:9">Landscape</option><option value="9:16">Portrait</option>{options.output === 'image' ? <option value="1:1">Square</option> : null}</GlassSelect></label>{options.output === 'video' ? <label>Length<GlassSelect aria-label="Video length" value={options.duration || 4} onChange={e => setOptions({ ...options, duration: +e.target.value })}><option value="4">4 seconds</option><option value="6">6 seconds</option><option value="8">8 seconds</option></GlassSelect></label> : null}<span className="media-cost-note">Uses generation credits</span></> : null}</div></details>
+    <details className="thread-options"><summary>Message options <span>{options.output === 'video' ? 'Video' : options.output === 'image' ? 'Image' : 'Automatic'} · {options.routing!=='manual'?'Auto specialists':options.model}</span></summary><div className="output-controls"><label>Manager<GlassSelect aria-label="Manager model" value={options.routing!=='manual'?'auto':options.model || bot?.llmModel || 'gpt-6.1-sol'} onChange={e => { setOptions({...options,routing:e.target.value==='auto'?'auto':'manual',provider:MODEL_CHOICES.find(m=>m.model===e.target.value)?.provider||'openai',model:e.target.value==='auto'?'gpt-6.1-sol':e.target.value}); try { localStorage.setItem('grokbot-manager',e.target.value); } catch {} }}><option value="auto">Auto · task specialists</option>{MODEL_CHOICES.map(m=><option key={m.id} value={m.model}>{m.label}</option>)}</GlassSelect></label><label>Output<GlassSelect aria-label="Output type" value={options.output || 'text'} onChange={e => setOptions({ ...options, output: e.target.value as 'text' | 'image' | 'video', aspect_ratio: '16:9' })}><option value="text">Automatic</option><option value="image">Create an image</option><option value="video">Create a video</option></GlassSelect></label>{options.output && options.output !== 'text' ? <><label>Shape<GlassSelect aria-label="Media shape" value={options.aspect_ratio || '16:9'} onChange={e => setOptions({ ...options, aspect_ratio: e.target.value })}><option value="16:9">Landscape</option><option value="9:16">Portrait</option>{options.output === 'image' ? <option value="1:1">Square</option> : null}</GlassSelect></label>{options.output === 'video' ? <label>Length<GlassSelect aria-label="Video length" value={options.duration || 4} onChange={e => setOptions({ ...options, duration: +e.target.value })}><option value="4">4 seconds</option><option value="6">6 seconds</option><option value="8">8 seconds</option></GlassSelect></label> : null}<span className="media-cost-note">Uses generation credits</span></> : null}</div></details>
 </div></details></div></header>
     {searchOpen?<div className="conversation-search"><input autoFocus type="search" aria-label="Search loaded messages" placeholder="Search loaded messages…" value={messageQuery} onChange={event=>setMessageQuery(event.target.value)} onKeyDown={event=>{if(event.key==='Escape')closeSearch();}}/><span role="status">{visibleMessages.length} results</span><button onClick={closeSearch}>Close</button></div>:null}
     {conversationId?<WorkPanel open={workOpen} onClose={()=>setWorkOpen(false)} conversationId={conversationId} jobs={jobs} options={options} onChange={setOptions} onRefresh={async()=>setJobs(await api.getJobs(conversationId))}/>:null}

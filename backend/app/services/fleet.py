@@ -3,11 +3,8 @@ import asyncio
 from app.services.llm_gateway import completion_options
 import litellm
 
-SPECIALISTS = {
-    'research': ('gemini', 'gemini-3.5-flash'),
-    'writing': ('anthropic', 'claude-sonnet-4.6'),
-    'analysis': ('deepseek', 'deepseek-v3.2'),
-}
+from app.services.model_profiles import PROFILES
+SPECIALISTS = {name:(profile.provider,profile.model) for name,profile in PROFILES.items() if name not in {'general','vision'}}
 MAX_CONSULTATIONS = 3
 
 class ModelFleet:
@@ -19,7 +16,7 @@ class ModelFleet:
         role = args.get('specialty', '')
         task = args.get('task', '').strip()
         if role not in SPECIALISTS or not task or len(task) > 12000:
-            return {'error': 'Choose research, writing, or analysis and supply a task of 1–12000 characters.'}
+            return {'error': 'Choose a configured specialty and supply a task of 1–12000 characters.'}
         key = (role, task)
         if key in self.results:
             return self.results[key]
@@ -43,5 +40,5 @@ class ModelFleet:
 
     def register(self, registry):
         registry.register('consult_specialist',
-            'Ask a tool-free specialist to analyze evidence you supply: research uses Google Gemini, writing uses Anthropic Claude, analysis uses DeepSeek. Specialists cannot search the web, browse, or take actions. Use search_web yourself first when current sources are needed. Optional; at most three calls per task. Include evidence/context, never credentials. You own verification and the final answer.',
+            'Ask an independent, tool-free specialist to check evidence: Gemini for research, Claude for coding and writing, DeepSeek for analysis, Grok for review, Astra for planning and Luna for focused execution advice. These consultations cannot browse or act. Search current sources yourself first. At most three consultations per task. Include evidence, never credentials. Verify the result.',
             {'type':'object','properties':{'specialty':{'type':'string','enum':list(SPECIALISTS)},'task':{'type':'string','maxLength':12000}},'required':['specialty','task']}, self.consult)

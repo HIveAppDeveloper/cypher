@@ -14,9 +14,9 @@ def model_selection(model=None, provider=None, *, specialist=False):
     if not isinstance(model, str) or not model.strip() or not isinstance(provider, str) or not provider.strip():
         raise ModelConfigurationError("Set a provider and a non-empty model ID before sending a message.")
     provider, model = provider.strip(), model.strip()
-    allowed_specialist = specialist and settings.LLM_USE_GATEWAY and (provider, model) in {("gemini", "gemini-3.5-flash"), ("anthropic", "claude-sonnet-4.6"), ("deepseek", "deepseek-v3.2")}
-    if not allowed_specialist and (provider != "openai" or model not in {"gpt-6.1-sol", "gpt-6-luna"}):
-        raise ModelConfigurationError("Model policy allows only OpenAI GPT-6.1 Sol and GPT-6 Luna for chat. Choose one in conversation settings.")
+    from app.services.model_profiles import ALLOWED_MODELS
+    if (provider, model) not in ALLOWED_MODELS:
+        raise ModelConfigurationError("Choose a configured task model in conversation settings. Model IDs are checked against the live catalog before use.")
     return provider, model
 
 def completion_options(model=None, provider=None, *, specialist=False):
@@ -74,9 +74,11 @@ def generation_options(options, provider, model):
 
 class LLMGateway:
     @staticmethod
-    async def complete(messages, tools=None, model=None, provider=None, options=None, **run_options):
+    async def complete(messages, tools=None, model=None, provider=None, options=None, fallback=None, **run_options):
         provider, model = model_selection(model, provider)
         routes = [(provider, model)]
+        if fallback and fallback not in routes:
+            routes.append(model_selection(fallback[1], fallback[0]))
         if settings.LLM_FALLBACK_MODEL is not None:
             backup = model_selection(settings.LLM_FALLBACK_MODEL, settings.LLM_FALLBACK_PROVIDER or provider)
             if backup not in routes:
@@ -96,6 +98,25 @@ class LLMGateway:
                 raise
             generation = generation_options(options, route_provider, route_model) if options is not None else run_options
             try:
+                # Avoid forwarding sampling controls to models that only accept
+                # reasoning. Preserve the provider's supported effort levels.
+                if settings.LLM_USE_GATEWAY:
+                    from app.services.model_routing import gateway_catalog
+                    from app.services.model_profiles import gateway_id
+                    meta = (await gateway_catalog())[gateway_id(route_provider,route_model)]
+                    supported = meta.get('supported_parameters', [])
+                    if 'temperature' not in supported:
+                        generation.pop('temperature',None)
+                    efforts = next((r['values'] for r in meta.get('reasoning_options',[]) if r['type']=='effort'), [])
+                    if options is not None and efforts:
+                        requested = options.reasoning_effort or 'low'
+                        # Reasoning levels are provider-specific; never send an
+                        # unsupported level or let "medium" become maximum.
+                        effort = requested if requested in efforts else ('low' if requested in {'none','low','medium'} and 'low' in efforts else 'high' if 'high' in efforts else efforts[0])
+                        if route_provider == 'openai':generation['reasoning_effort']=effort
+                        else:
+                            generation.pop('reasoning_effort',None)
+                            generation['extra_body']={**generation.get('extra_body',{}),'reasoning':{'effort':effort}}
                 response = await litellm.acompletion(messages=messages, tools=tools, **generation, **connection, num_retries=0)
                 # Keep routing observable without changing the provider's result shape.
                 if isinstance(getattr(response, "_hidden_params", None), dict):

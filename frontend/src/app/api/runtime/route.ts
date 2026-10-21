@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
     const headers: Record<string, string> = { Authorization: 'Bearer ' + (process.env.GROKBOT_BACKEND_API_TOKEN || '') };
     if (session) headers['x-grokbot-user-id'] = session.sub;
     const response = await fetch(new URL('/api/runtime', backend), { headers, cache: 'no-store', signal: AbortSignal.timeout(25000) });
-    const detail = response.ok ? await response.json() : {};
+    const detail = await response.json().catch(()=>({}));
     return NextResponse.json({ ...detail, connected: response.ok, state: response.ok ? 'connected' : 'unavailable' }, { headers: { 'Cache-Control': 'no-store' } });
   } catch { return NextResponse.json({ connected: false, state: 'unavailable' }, { headers: { 'Cache-Control': 'no-store' } }); }
 }

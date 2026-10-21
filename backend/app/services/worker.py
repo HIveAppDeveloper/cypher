@@ -26,28 +26,44 @@ async def run_worker(stop_event=None):
     # claim the same pending task or interrupt another live worker's work.
     if engine.dialect.name == "postgresql":
         async with engine.connect() as lock_connection:
-            while True:
-                if stop_event.is_set(): return
-                acquired = await lock_connection.scalar(text("SELECT pg_try_advisory_lock(1763000274)"))
+            # PostgreSQL waits for the active owner to release the lock. The
+            # standby no longer sends a query every two seconds, all day.
+            acquired = asyncio.create_task(lock_connection.scalar(text('SELECT pg_advisory_lock(1763000274)')))
+            stopped = asyncio.create_task(stop_event.wait())
+            try:
+                await asyncio.wait({acquired,stopped},return_when=asyncio.FIRST_COMPLETED)
+                if stop_event.is_set():
+                    acquired.cancel()
+                    with suppress(asyncio.CancelledError):await acquired
+                    return
+                await acquired
                 await lock_connection.commit()
-                if acquired: break
-                await asyncio.sleep(POLL_SECONDS)
+            finally:
+                stopped.cancel()
+                with suppress(asyncio.CancelledError):await stopped
             owner_pid = await lock_connection.scalar(text("SELECT pg_backend_pid()"))
             await lock_connection.commit()
+            from app.db.wakeup import CHANNEL
+            wake = asyncio.Event()
+            raw = await lock_connection.get_raw_connection()
+            driver = raw.driver_connection
+            def notify(*args):wake.set()
+            await driver.add_listener(CHANNEL,notify)
             try:
-                await _run_with_catalog(lock_connection, owner_pid, stop_event)
+                await _run_with_catalog(lock_connection, owner_pid, stop_event, wake)
             finally:
                 with suppress(Exception):
+                    await driver.remove_listener(CHANNEL,notify)
                     await lock_connection.execute(text("SELECT pg_advisory_unlock(1763000274)"))
                     await lock_connection.commit()
     else:
         await _run_with_catalog(stop_event=stop_event)
 
-async def _run_with_catalog(lock_connection=None, owner_pid=None, stop_event=None):
+async def _run_with_catalog(lock_connection=None, owner_pid=None, stop_event=None, wake=None):
     from app.services.plugin_sync import run
     catalog_task=asyncio.create_task(run(stop_event, AsyncSessionLocal))
     try:
-        await _run_worker_loop(lock_connection, owner_pid, stop_event)
+        await _run_worker_loop(lock_connection, owner_pid, stop_event, wake)
     finally:
         catalog_task.cancel()
         with suppress(asyncio.CancelledError):await catalog_task
@@ -56,9 +72,21 @@ async def heartbeat():
     from app.models.runtime import RuntimeHeartbeat
     from app.services.verification import record
     from app.services.runtime_identity import runtime_identity
-    if os.getenv("AI_GATEWAY_API_KEY") or os.getenv("VERCEL_OIDC_TOKEN") or os.getenv("VERCEL_OIDC_TOKEN_FILE"):
-        await record("gateway_configured")
     async with AsyncSessionLocal() as db:
+        if db.bind.dialect.name == 'postgresql':
+            from sqlalchemy.dialects.postgresql import insert
+            now = datetime.utcnow()
+            values = [{'name':'worker','updated_at':now}]
+            if os.getenv('AI_GATEWAY_API_KEY') or os.getenv('VERCEL_OIDC_TOKEN') or os.getenv('VERCEL_OIDC_TOKEN_FILE'):
+                values.append({'name':'gateway_configured','updated_at':now})
+            statement = insert(RuntimeHeartbeat).values(values)
+            await db.execute(statement.on_conflict_do_update(index_elements=['name'],set_={'updated_at':statement.excluded.updated_at}))
+            statement = insert(RuntimeCheck).values(name='worker_release',status='running',detail={**runtime_identity(),'boot_id':PROCESS_BOOT_ID,'boot_started_at':PROCESS_STARTED_AT},updated_at=now)
+            await db.execute(statement.on_conflict_do_update(index_elements=['name'],set_={'detail':statement.excluded.detail,'updated_at':now}))
+            await db.commit()
+            return
+        if os.getenv('AI_GATEWAY_API_KEY') or os.getenv('VERCEL_OIDC_TOKEN'):
+            await record('gateway_configured')
         item = await db.get(RuntimeHeartbeat, "worker")
         if item is None:
             item = RuntimeHeartbeat(name="worker", updated_at=datetime.utcnow())
@@ -72,13 +100,13 @@ async def heartbeat():
             release.updated_at = datetime.utcnow()
         await db.commit()
 
-async def _run_worker_loop(lock_connection=None, owner_pid=None, stop_event=None):
+async def _run_worker_loop(lock_connection=None, owner_pid=None, stop_event=None, wake=None):
     stop_event = stop_event or asyncio.Event()
     if stop_event.is_set(): return
     last_heartbeat = 0
     async def pulse():
         nonlocal last_heartbeat
-        if time.monotonic() - last_heartbeat < 5: return
+        if time.monotonic() - last_heartbeat < (30 if lock_connection is not None else 5): return
         if lock_connection is not None:
             pid = await lock_connection.scalar(text("SELECT pg_backend_pid()"))
             await lock_connection.commit()
@@ -114,14 +142,20 @@ async def _run_worker_loop(lock_connection=None, owner_pid=None, stop_event=None
             await db.commit()
     if os.getenv("GROKBOT_VERIFY_CLOUD") == "true":
         await run_checks()
+    from app.db.wakeup import wait_for_work
+    last_maintenance = 0
     while not stop_event.is_set():
         await pulse()
-        async with AsyncSessionLocal() as commands:
-            request_check = await commands.get(RuntimeCheck, 'check_request')
-            requested = request_check is not None and request_check.status == 'pending'
-            if requested:
-                request_check.status = 'running'
-                await commands.commit()
+        maintenance_due = lock_connection is None or time.monotonic()-last_maintenance >= 60 or (wake is not None and wake.is_set())
+        requested = False
+        if maintenance_due:
+          last_maintenance = time.monotonic()
+          async with AsyncSessionLocal() as commands:
+              request_check = await commands.get(RuntimeCheck, 'check_request')
+              requested = request_check is not None and request_check.status == 'pending'
+              if requested:
+                  request_check.status = 'running'
+                  await commands.commit()
         if requested:
             from app.services.verification import save_check, safe_error
             try:
@@ -131,8 +165,9 @@ async def _run_worker_loop(lock_connection=None, owner_pid=None, stop_event=None
                 await save_check('check_request','failed',safe_error(error))
             continue
         from app.services.automation import tick_goals,tick_deliveries
-        await tick_goals(AsyncSessionLocal)
-        await tick_deliveries(AsyncSessionLocal)
+        if maintenance_due:
+            await tick_goals(AsyncSessionLocal)
+            await tick_deliveries(AsyncSessionLocal)
         if stop_event.is_set(): break
         async with AsyncSessionLocal() as db:
             task = (await db.execute(select(Task).outerjoin(TaskExecution, TaskExecution.task_id == Task.id).where(
@@ -144,7 +179,8 @@ async def _run_worker_loop(lock_connection=None, owner_pid=None, stop_event=None
                 break
             if task is None:
                 await db.commit()
-                await asyncio.sleep(POLL_SECONDS)
+                signaled = await wait_for_work(wake,stop_event,30 if lock_connection is not None else POLL_SECONDS)
+                if signaled:last_maintenance = 0
                 continue
             tenant_token = current_tenant_id.set(getattr(task, "tenant_id", "legacy-owner"))
             try:
@@ -164,7 +200,7 @@ async def _run_worker_loop(lock_connection=None, owner_pid=None, stop_event=None
                 try:
                     cancelled = False
                     while not execution.done():
-                        await asyncio.wait({execution}, timeout=.5)
+                        await asyncio.wait({execution}, timeout=2)
                         if execution.done(): break
                         await pulse()
                         async with AsyncSessionLocal() as monitor:

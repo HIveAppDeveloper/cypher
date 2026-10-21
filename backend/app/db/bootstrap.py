@@ -1,5 +1,5 @@
 """One database upgrade path for both the API and the dedicated worker."""
-from sqlalchemy import text, update, or_
+from sqlalchemy import text
 from sqlalchemy.schema import CreateSchema
 
 from app.config import settings
@@ -9,12 +9,16 @@ from app.db.migrations import ensure_tenant_schema
 
 async def initialize_database(database_engine=None):
     import app.models  # Register every table before inspecting legacy schemas.
-    from app.models.bot import Bot
     database_engine = database_engine or engine
     async with database_engine.begin() as connection:
         if database_engine.dialect.name == "postgresql":
             await connection.execute(text("SELECT pg_advisory_xact_lock(1763000272)"))
             await connection.execute(CreateSchema(settings.DATABASE_SCHEMA, if_not_exists=True))
+            schema = settings.DATABASE_SCHEMA
+            await connection.execute(text(f'CREATE TABLE IF NOT EXISTS "{schema}".schema_revision (id INTEGER PRIMARY KEY, version VARCHAR(40) NOT NULL)'))
+            if await connection.scalar(text(f'SELECT version FROM "{schema}".schema_revision WHERE id=1')) == '2026-10-21-model-routing':
+                return
         await connection.run_sync(ensure_tenant_schema)
         await connection.run_sync(Base.metadata.create_all)
-        await connection.execute(update(Bot).where(or_(Bot.llm_provider != 'openai', Bot.llm_model.notin_(['gpt-6.1-sol', 'gpt-6-luna']))).values(llm_provider='openai', llm_model='gpt-6.1-sol'))
+        if database_engine.dialect.name == 'postgresql':
+            await connection.execute(text(f'INSERT INTO "{schema}".schema_revision (id,version) VALUES (1,\'2026-10-21-model-routing\') ON CONFLICT (id) DO UPDATE SET version=EXCLUDED.version'))

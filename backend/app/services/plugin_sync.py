@@ -115,5 +115,5 @@ async def run(stop_event, sessions=None):
         except Exception:
             logging.getLogger(__name__).exception('Catalog sync will retry from saved progress')
             active=False
-        try:await asyncio.wait_for(stop_event.wait(),timeout=.1 if active else 5)
+        try:await asyncio.wait_for(stop_event.wait(),timeout=.1 if active else 60)
         except asyncio.TimeoutError:pass

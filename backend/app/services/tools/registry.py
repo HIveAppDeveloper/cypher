@@ -97,11 +97,21 @@ class ToolRegistry:
         if name == 'plugin_call':
             return any(t['plugin_id'] == arguments.get('plugin_id') and t['name'] == arguments.get('tool_name') and t.get('read_only') for t in getattr(self, '_plugin_manifest', []))
         return name in {'read_file', 'list_directory', 'search_files', 'search_web',
+                        'analyze_video',
                         'search_chat_history', 'consult_specialist', 'plugin_search',
                         'complete_goal', 'remember_context'}
 
     def register_default_tools(self):
         """Register all built-in tools."""
+        from app.services.tools.video import analyze_video
+        video_results={}
+        async def inspect_video(args,bot_id):
+            key=(args.get('url'),args.get('question'))
+            if key in video_results:return video_results[key]
+            if len(video_results)>=2:return {'success':False,'error':'Video analysis limit reached for this task. Use the evidence already collected.'}
+            video_results[key]=await analyze_video(args,bot_id)
+            return video_results[key]
+        self.register('analyze_video','Understand the actual frames and speech of a public YouTube video. Use when asked what a YouTube video shows, explains or demonstrates. Returns timestamped analysis only when the provider confirms processing video frames. A website caption is insufficient. At most two analyses per task.',{'type':'object','properties':{'url':{'type':'string','maxLength':1000},'question':{'type':'string','maxLength':4000}},'required':['url']},inspect_video)
         for kind in ("image", "video"):
             self.register(
                 name=f"generate_{kind}",
@@ -355,12 +365,12 @@ class ToolRegistry:
         category_map = {
             "plugins": "plugin_",
             "media": ["generate_image", "generate_video"],
-            "browser": ["search_web", "browse_url", "browser_click", "browser_type", "browser_screenshot", "browser_extract", "browser_fill_form"],
+            "browser": ["search_web", "analyze_video", "browse_url", "browser_click", "browser_type", "browser_screenshot", "browser_extract", "browser_fill_form"],
             "shell": "shell",
             "filesystem": ["read_file", "write_file", "list_directory", "search_files"],
         }
 
-        enabled_tool_names = {"consult_specialist", "set_goal", "complete_goal", "remember_context", "search_chat_history"} if getattr(bot, "llm_provider", "") == "openai" and getattr(bot, "llm_model", "") in {"gpt-6.1-sol", "gpt-6-luna"} else set()
+        enabled_tool_names = {"consult_specialist", "set_goal", "complete_goal", "remember_context", "search_chat_history"}
         for category in bot.tools_enabled:
             category_lower = category.lower()
             if category_lower in category_map:

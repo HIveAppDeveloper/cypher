@@ -16,17 +16,20 @@ async def runtime(db=Depends(get_db)):
     worker_release = await db.get(RuntimeCheck, 'worker_release')
     worker_deployment = worker_release.detail if worker_release else {}
     version_matches = same_release(deployment, worker_deployment)
-    worker_fresh = age is not None and 0 <= age < 30
+    worker_fresh = age is not None and 0 <= age < 90
     version_ready = version_matches is True or not (deployment['deployment_id'] or deployment['commit'])
     checks = {}
+    from sqlalchemy import select
+    heartbeats = {item.name:item for item in (await db.execute(select(RuntimeHeartbeat))).scalars().all()}
     for name in ('gateway_verified', 'mcp_verified', 'mcp_tool_verified', 'gateway_verification_failed', 'mcp_verification_failed'):
-        item = await db.get(RuntimeHeartbeat, name)
+        item = heartbeats.get(name)
         checks[name] = item.updated_at.isoformat() + 'Z' if item else None
     details = {}
+    recorded_checks = {item.name:item for item in (await db.execute(select(RuntimeCheck))).scalars().all()}
     for name in ('gateway','fallback','fleet','starter_plugins','media_openai','media_google','media_video','mcp','browser','computer','check_request'):
-        result = await db.get(RuntimeCheck,name)
+        result = recorded_checks.get(name)
         if result: details[name] = {'status':result.status,'detail':result.detail,'checked_at':result.updated_at.isoformat()+'Z'}
-    configured = await db.get(RuntimeHeartbeat, 'gateway_configured')
+    configured = heartbeats.get('gateway_configured')
     return {'checks':details, **checks, 'database':True,'worker':worker_fresh and version_ready,'worker_last_seen_seconds':int(age) if age is not None else None,'worker_version_matches':version_matches,'deployment':deployment,'worker_deployment':worker_deployment,'gateway_configured':bool(configured or os.getenv('AI_GATEWAY_API_KEY') or os.getenv('VERCEL_OIDC_TOKEN') or os.getenv('VERCEL_OIDC_TOKEN_FILE')),'sandbox_backend':settings.SANDBOX_BACKEND}
 
 @router.post('/checks', status_code=202)
