@@ -61,13 +61,23 @@ async def execute_command(command,arguments):
         result=await _browser_tool.navigate_to(arguments['url'],session_id=bot_id)
         if not result.get('success'):return result
     page=await _browser_tool._get_page(bot_id)
+    interaction=None
+    if command.action in {'click','type'}:
+        interaction=await page.evaluate('''({action,x,y})=>{
+          const node=action==='click'?document.elementFromPoint(x,y):document.activeElement;
+          const e=node?.closest('button,a,input,textarea,select,label')||node;
+          if(!e)return null;
+          const label=(e.getAttribute('aria-label')||e.getAttribute('placeholder')||e.innerText||e.getAttribute('name')||e.tagName).slice(0,180);
+          const selector=e.id?'#'+CSS.escape(e.id):e.getAttribute('name')?e.tagName.toLowerCase()+'[name="'+CSS.escape(e.getAttribute('name'))+'"]':null;
+          return {label,selector,requires_human:e.type==='password'||/password|secret|token|api.?key|one.time|verification|otp/i.test(label+' '+(e.getAttribute('name')||''))};
+        }''',{'action':command.action,'x':arguments.get('x',0),'y':arguments.get('y',0)})
     if command.action=='click':await page.mouse.click(arguments['x'],arguments['y'])
     if command.action=='type':await page.keyboard.insert_text(arguments['text'])
     if command.action=='key':await page.keyboard.press(arguments['key'])
     if command.action=='scroll':await page.mouse.wheel(0,arguments['delta'])
     await _browser_tool._save_state(bot_id)
     import base64
-    return {'success':True,'url':page.url,'title':await page.title(),'width':1280,'height':720,'image':base64.b64encode(await page.screenshot(type='jpeg',quality=65)).decode()}
+    return {'success':True,'url':page.url,'title':await page.title(),'interaction':interaction,'width':1280,'height':720,'image':base64.b64encode(await page.screenshot(type='jpeg',quality=65)).decode()}
 
 async def tick_commands(sessions):
     async with sessions() as db:

@@ -165,3 +165,34 @@ async def test_compaction_keeps_original_history_and_reuses_its_checkpoint(works
             assert again==text and len(calls)==1
             assert await db.get(ContextCheckpoint,cid)
     finally:current_tenant_id.reset(tenant)
+
+@pytest.mark.asyncio
+async def test_browser_screenshot_is_sent_as_image_evidence_not_encoded_tool_text(workspace,monkeypatch):
+    import base64,litellm
+    from app.services.tools.registry import _browser_tool
+    client,sessions=workspace
+    cid=await room(client,A['x-grokbot-user-id'])
+    queued=(await client.post('/api/conversations/'+cid+'/messages',headers=A,json={'sender_type':'user','content':'Inspect the current browser screenshot.'})).json()
+    image=base64.b64encode(b'controlled image evidence').decode()
+    async def screenshot(**kwargs):return {'success':True,'screenshot_base64':image,'title':'Controlled screen','url':'https://example.com'}
+    monkeypatch.setattr(_browser_tool,'screenshot',screenshot)
+    calls=[]
+    async def complete(**kwargs):
+        calls.append(kwargs)
+        if len(calls)==1:
+            message={'role':'assistant','content':None,'tool_calls':[{'id':'screen-call','type':'function','function':{'name':'browser_screenshot','arguments':'{}'}}]}
+        else:
+            history=kwargs['messages']
+            assert history[-1]['role']=='user' and history[-1]['content'][1]['image_url']['url']=='data:image/png;base64,'+image
+            assert history[-2]['role']=='tool' and image not in history[-2]['content']
+            message={'role':'assistant','content':'Verified screen evidence.'}
+        return litellm.ModelResponse(choices=[{'message':message}])
+    monkeypatch.setattr(orchestrator.LLMGateway,'complete',complete)
+    token=current_tenant_id.set(A['x-grokbot-user-id'])
+    try:
+        result=await orchestrator.AgentOrchestrator().process_message(cid,'Inspect the current browser screenshot.',incoming_message_id=queued['message_id'],task_id=queued['task_id'])
+        assert result[-1]['content']=='Verified screen evidence.' and len(calls)==2
+        async with sessions() as db:
+            rows=(await db.execute(select(Message).where(Message.message_type=='tool_result'))).scalars().all()
+            assert all('screenshot_base64' not in row.content for row in rows)
+    finally:current_tenant_id.reset(token)

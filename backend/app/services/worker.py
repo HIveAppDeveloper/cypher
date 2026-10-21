@@ -120,7 +120,14 @@ async def _run_worker_loop(lock_connection=None, owner_pid=None, stop_event=None
         await db.execute(update(Bot).where(Bot.status=='working').values(status='idle'))
         abandoned = (await db.execute(select(Task).where(Task.status == 'running'))).scalars().all()
         for task in abandoned:
-            await retry_or_interrupt(db, task, immediate=True)
+            owner=current_tenant_id.set(task.tenant_id)
+            try:
+                await retry_or_interrupt(db, task, immediate=True)
+                if task.status in {'failed','interrupted'}:
+                    from app.services.workspace import notify_finished
+                    await notify_finished(db,task)
+                await db.flush()
+            finally:current_tenant_id.reset(owner)
         await db.execute(update(Task).where(Task.status == "cancel_requested").values(status="cancelled", completed_at=datetime.utcnow(), result={"note":"Worker restarted after cancellation. Review any in-flight external actions."}))
         await db.commit()
     async def run_checks(force=False):
@@ -239,6 +246,9 @@ async def _run_worker_loop(lock_connection=None, owner_pid=None, stop_event=None
                 await db.rollback()
                 await db.refresh(task)
                 await retry_or_interrupt(db, task)
+                if task.status in {'failed','interrupted'}:
+                    from app.services.workspace import notify_finished
+                    await notify_finished(db,task)
                 await db.commit()
                 current_tenant_id.reset(tenant_token)
                 continue
