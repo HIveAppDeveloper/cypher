@@ -52,7 +52,7 @@ export function PluginPanel({onClose}:{onClose:()=>void}){
     void poll();return()=>{active=false;clearTimeout(timer);};
   },[flow]);
   async function cancelSignIn(){try{await api.cancelPluginAuth(flow);popup.current?.close();setFlow('');setBusy(false);setNotice('Sign-in cancelled. You can choose another service or try again.');setError('');}catch(e){setError(e instanceof Error?e.message:'Could not cancel sign-in.');}}
-  function chooseView(next:View){setView(next);setError('');setNotice('');}
+  function chooseView(next:View){setView(next);setError('');if(!flow)setNotice('');}
   function preparePopup(){
     const opened=window.open('about:blank','grokbot-service-login','popup,width=620,height=760');
     if(opened){opened.opener=null;opened.document.title='Connect a service';const p=opened.document.createElement('p');p.textContent='Finding the secure sign-in page…';p.style.cssText='font:16px system-ui;padding:32px;color:#45434c';opened.document.body.appendChild(p);}
