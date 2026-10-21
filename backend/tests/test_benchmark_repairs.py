@@ -13,6 +13,7 @@ from app.models.message import Message
 from app.services import context, orchestrator, worker
 from app.services.tools import artifacts
 from app.services.tools.registry import ToolRegistry, rank_plugin_tools
+from app.services.response_constraints import word_limit,word_count,steer_limit
 from .test_workspace_workflows import workspace, room
 
 A={'x-grokbot-user-id':'benchmark-owner'}
@@ -159,3 +160,42 @@ async def test_browser_extraction_preserves_full_titles_after_long_menu(monkeypa
         assert result['links'][0]['href']=='https://example.test/book'
         assert len(result['links'])<=100
     finally:await browser.close()
+
+
+def test_explicit_word_budgets_count_visible_prose_and_follow_owner_steering():
+    assert word_limit('Keep it under 180 words.')==179
+    assert word_limit('At most 20 words')==20
+    assert word_limit('Please analyze this') is None
+    assert word_count('See [official Python sources](https://example.test/a-long-link).')==4
+    assert steer_limit(179,'Make it longer and more detailed') is None
+    assert steer_limit(179,'Use at most 40 words instead')==40
+    assert steer_limit(179,'Also include the date')==179
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize('always_long,iterations,expected',[(False,4,'completed'),(True,4,'failed'),(True,1,'failed')])
+async def test_word_limit_revisions_are_bounded_and_only_publish_checked_reply(workspace,monkeypatch,always_long,iterations,expected):
+    client,sessions=workspace;cid=await room(client,'benchmark-owner');calls=[]
+    async def complete(**kw):
+        calls.append(kw)
+        if len(calls)>1:
+            assert not kw.get('tools')
+            assert 'Final-answer format check' in kw['messages'][-1]['content']
+        text='one two three four five six seven eight nine ten eleven twelve' if always_long or len(calls)==1 else 'Verified [source](https://example.test/verified).'
+        return ModelResponse(choices=[{'message':{'role':'assistant','content':text}}])
+    monkeypatch.setattr(orchestrator.LLMGateway,'complete',complete)
+    await client.post('/api/conversations/'+cid+'/messages',headers=A,json={'sender_type':'user','content':'Answer in at most 10 words.','options':{'max_iterations':iterations}})
+    runner=asyncio.create_task(worker.run_worker())
+    try:
+        for _ in range(200):
+            jobs=(await client.get('/api/conversations/'+cid+'/tasks',headers=A)).json()
+            if jobs[0]['status'] in {'completed','failed'}:break
+            await asyncio.sleep(.02)
+        assert jobs[0]['status']==expected
+        assert len(calls)<=(3 if iterations>1 else 1)
+        messages=(await client.get('/api/conversations/'+cid+'/messages',headers=A)).json()
+        assert not any('eleven twelve' in m['content'] for m in messages)
+        if expected=='completed':assert any('https://example.test/verified' in m['content'] for m in messages)
+    finally:
+        runner.cancel()
+        with suppress(asyncio.CancelledError):await runner
