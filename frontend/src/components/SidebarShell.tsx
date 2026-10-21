@@ -42,8 +42,10 @@ export function SidebarShell({ children }: { children: ReactNode }) {
   useEffect(() => { if (loaded) try { localStorage.setItem(STORAGE_KEY, JSON.stringify(layout)); } catch {} }, [layout, loaded]);
   function resize(event: PointerEvent<HTMLDivElement>) {
     if (!resizeStart.current) return;
-    const delta = (event.clientX - resizeStart.current.x) * (layout.side === 'left' ? 1 : -1);
-    setLayout(current => ({ ...current, width: clampWidth(resizeStart.current!.width + delta) }));
+    const start = resizeStart.current;
+    const delta = (event.clientX - start.x) * (layout.side === 'left' ? 1 : -1);
+    const width = clampWidth(start.width + delta);
+    setLayout(current => ({ ...current, width }));
   }
   function endResize() { resizeStart.current = null; setResizing(false); }
   function endDock(event: PointerEvent<HTMLButtonElement>) {
