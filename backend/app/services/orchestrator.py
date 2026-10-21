@@ -34,6 +34,7 @@ logger = logging.getLogger(__name__)
 
 # Maximum iterations in the agent loop to prevent runaway execution
 MAX_AGENT_ITERATIONS = 25
+from app.services.usage import track_task
 
 
 class AgentOrchestrator:
@@ -53,6 +54,7 @@ class AgentOrchestrator:
         self.fleet = ModelFleet()
         self.fleet.register(self.registry)
 
+    @track_task
     async def process_message(
         self,
         conversation_id: str,
@@ -90,6 +92,7 @@ class AgentOrchestrator:
                 if existing is None or existing.conversation_id != conversation_id:
                     raise ValueError("Queued message is missing from its conversation")
                 self.history_cutoff = existing.created_at
+                self.thread_root_id=(existing.metadata_json or {}).get('thread_root_id')
             else:
                 # Non-HTTP jobs still persist their incoming message here.
                 incoming_id = str(uuid.uuid5(uuid.NAMESPACE_URL, 'grokbot:incoming:'+task_id)) if task_id else str(uuid.uuid4())
@@ -108,8 +111,9 @@ class AgentOrchestrator:
                     db.add(incoming_msg)
                     await db.commit()
                 self.history_cutoff = (prior or incoming_msg).created_at
+                self.thread_root_id=None
 
-            await register_context_tools(self.registry, conversation_id, AsyncSessionLocal, history_cutoff=self.history_cutoff)
+            await register_context_tools(self.registry, conversation_id, AsyncSessionLocal, history_cutoff=self.history_cutoff,thread_root_id=self.thread_root_id)
 
             # Load conversation with participants
             result = await db.execute(
@@ -161,6 +165,13 @@ class AgentOrchestrator:
         bots = (await db.execute(select(Bot).where(Bot.id.in_(bot_ids)).order_by(Bot.created_at))).scalars().all()
         bot_map = {str(bot.id): bot for bot in bots}
         self.team_roster = "\n".join(f"{bot.name}: {bot.role}" for bot in bots)
+        # An explicit mention is a user instruction, not an LLM routing guess.
+        mentioned=[b for b in bots if re.search(r'(?<!\w)@'+re.escape(b.name)+r'(?!\w)',message,re.IGNORECASE)]
+        if mentioned:
+            responses=[]
+            for bot in mentioned[:4]:
+                responses.extend(await self._run_agent_loop(db,str(conversation.id),bot.id,message))
+            return responses
         coordinator = next((b for b in bots if b.role.casefold() == "coordinator" and b.llm_provider == "openai"), None)
         if coordinator:
             return await self._coordinate_team(db, conversation, bots, coordinator, message)
@@ -234,7 +245,8 @@ class AgentOrchestrator:
         try:
             # Build system prompt
             from app.services.context import context_prompt
-            system_prompt = self._build_system_prompt(bot) + await context_prompt(db,conversation_id)
+            from app.services.workspace import knowledge_prompt
+            system_prompt = self._build_system_prompt(bot) + (await context_prompt(db,conversation_id) if not self.thread_root_id else '') + await knowledge_prompt(db,bot_id)
             system_prompt += "\nUse the available tools to complete the task. You are running on a model selected for this task. Consult another specialist only for a useful independent check. Tool-free consultations only advise; they cannot perform actions. You own execution, verification and the final response. Do not ask the user to manage model handoffs. Never share credentials with specialists. Use media generation only when requested. If a specialist fails, continue with the evidence and report only blockers affecting the result."
             if getattr(self, "phase_instructions", ""):
                 system_prompt += "\nCurrent team phase: " + self.phase_instructions
@@ -242,6 +254,11 @@ class AgentOrchestrator:
                 system_prompt += "\nYou are in a team conversation. Read teammates’ messages, challenge errors, and build on prior work. Do not invent actions. To hand off use HANDOFF[exact teammate name: task].\nTeam:\n" + self.team_roster
 
             history_query = select(Message).where(Message.conversation_id == conversation_id, Message.message_type.in_(["text", "handoff"]))
+            if getattr(self,'thread_root_id',None):
+                history_query=history_query.where(or_(Message.id==self.thread_root_id,Message.metadata_json['thread_root_id'].as_string()==self.thread_root_id))
+                system_prompt+='\nThis is an isolated reply thread. Answer the thread using its parent and replies; other room messages are not included.'
+            else:
+                history_query=history_query.where(Message.metadata_json['thread_root_id'].as_string().is_(None))
             if getattr(self, 'task_id', None):
                 history_query = history_query.where(or_(
                     Message.sender_type == 'user',
@@ -254,6 +271,9 @@ class AgentOrchestrator:
                 # stay visible; live directions are loaded at execution boundaries.
                 history_query = history_query.where(or_(Message.sender_type != 'user', Message.created_at <= self.history_cutoff))
             history = (await db.execute(history_query.order_by(Message.created_at.desc(), Message.id.desc()).limit(40))).scalars().all()
+            if history and not getattr(self,'thread_root_id',None):
+                from app.services.compaction import compact_context
+                system_prompt+=await compact_context(db,conversation_id,history[-1],self.journal)
             names = dict((await db.execute(select(Bot.id, Bot.name))).all())
             if self.options.steering:
                 system_prompt += "\nUser working brief (within this task): " + self.options.steering
@@ -297,7 +317,7 @@ class AgentOrchestrator:
             from app.services.model_routing import required_modalities
             specialty = 'general'
             if self.options.routing == 'auto':
-                specialty = 'general' if getattr(self,'team_roster',None) and bot.role.casefold()=='coordinator' else task_specialty(trigger_message,bot.role,required_modalities(messages))
+                specialty = 'planning' if getattr(self,'planning',False) else task_specialty(trigger_message,bot.role,required_modalities(messages))
             profile = PROFILES[specialty]
             model_routes = []
 
@@ -560,6 +580,8 @@ class AgentOrchestrator:
             metadata = {**(metadata or {}), 'task_id':self.task_id, 'task_scope':getattr(self,'task_scope',-1)}
             event = getattr(self, 'event_key', 'status')
             message_id = str(uuid.uuid5(uuid.NAMESPACE_URL, f'grokbot:{self.task_id}:{event}:{sender_type}:{sender_bot_id}:{message_type}'))
+        if getattr(self,'thread_root_id',None):
+            metadata={**(metadata or {}),'thread_root_id':self.thread_root_id}
         existing = await db.get(Message, message_id)
         msg = Message(
             id=message_id,

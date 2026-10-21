@@ -116,12 +116,12 @@ async def authorize(body:Begin,db:AsyncSession=Depends(get_db)):
     try: await validate_endpoint(url)
     except (ValueError,OSError): raise HTTPException(422,'Use a public HTTPS connector URL. A company website belongs in the website lookup field.')
     await require_device(db,body.approval_id,'connect_plugin:'+url)
-    existing=(await db.execute(select(Plugin).where(Plugin.url==url))).scalars().first()
-    if existing and not body.reconnect: return {'status':'connected','plugin_id':existing.id,'name':existing.name}
-    await db.execute(delete(PluginAuthorization).where(PluginAuthorization.status!='connected',PluginAuthorization.created_at<time.time()-FLOW_TTL))
     from app.services import managed_connections
     config=managed_connections.configuration(url,body.connection_id)
     if body.connection_id and not config:raise HTTPException(422,'Choose an available connection for this provider.')
+    existing=await managed_connections.matching_connection(db,url,config) if config else (await db.execute(select(Plugin).where(Plugin.url==url))).scalars().first()
+    if existing and not body.reconnect: return {'status':'connected','plugin_id':existing.id,'name':existing.name}
+    await db.execute(delete(PluginAuthorization).where(PluginAuthorization.status!='connected',PluginAuthorization.created_at<time.time()-FLOW_TTL))
     if config:return await managed_connections.begin(db,body.name.strip(),url,config,existing)
     await db.execute(delete(PluginAuthorization).where(PluginAuthorization.status!='connected',PluginAuthorization.created_at<time.time()-FLOW_TTL))
     binding=secrets.token_urlsafe(32)

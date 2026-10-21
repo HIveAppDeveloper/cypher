@@ -14,6 +14,7 @@ class MessageBase(BaseModel):
 
 class MessageCreate(MessageBase):
     client_message_id: UUID | None = None
+    reply_to_id: UUID | None = None
     attachments: list[Attachment] = Field(default_factory=list, max_length=4)
     options: RunOptions = Field(default_factory=RunOptions)
 

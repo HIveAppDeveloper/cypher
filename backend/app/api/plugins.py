@@ -18,7 +18,12 @@ class TogglePlugin(BaseModel):
     enabled: bool
 
 def public(plugin):
-    return {'id': plugin.id, 'name': plugin.name, 'url': plugin.url, 'enabled': plugin.enabled, 'authenticated': bool(plugin.credential), 'tools': [{'name': t['name'], 'description': t['description'], 'enabled':t.get('enabled',True)} for t in plugin.tools]}
+    from app.services.plugins import reveal
+    from app.services.managed_connections import REFERENCE_PREFIX
+    try:saved=reveal(plugin.credential) if plugin.credential else ''
+    except ValueError:saved=''
+    connection_id=saved.removeprefix(REFERENCE_PREFIX) if saved and saved.startswith(REFERENCE_PREFIX) else None
+    return {'id': plugin.id, 'connection_id':connection_id, 'name': plugin.name, 'url': plugin.url, 'enabled': plugin.enabled, 'authenticated': bool(plugin.credential), 'tools': [{'name': t['name'], 'description': t['description'], 'enabled':t.get('enabled',True)} for t in plugin.tools]}
 
 @router.get('')
 async def list_plugins(db: AsyncSession = Depends(get_db)):

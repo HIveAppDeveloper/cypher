@@ -56,6 +56,9 @@ class BrowserTool:
         """
         await self._ensure_browser()
 
+        if session_id in self._pages and self._pages[session_id].is_closed():
+            pages=[p for p in self._contexts[session_id].pages if not p.is_closed()]
+            self._pages[session_id]=pages[-1] if pages else await self._contexts[session_id].new_page()
         if session_id not in self._pages:
             storage_state = await self._load_state(session_id)
             context = await self._browser.new_context(
@@ -69,6 +72,9 @@ class BrowserTool:
             page = await context.new_page()
             self._contexts[session_id] = context
             self._pages[session_id] = page
+            # Human sign-in and agent clicks can open an OAuth popup. Keep the
+            # visible browser view on the current page in the same private context.
+            context.on('page',lambda opened:self._pages.__setitem__(session_id,opened))
             logger.info(f"Created new browser session: {session_id}")
 
         return self._pages[session_id]

@@ -75,6 +75,8 @@ def generation_options(options, provider, model):
 class LLMGateway:
     @staticmethod
     async def complete(messages, tools=None, model=None, provider=None, options=None, fallback=None, **run_options):
+        from app.services.usage import check_allowance,record
+        await check_allowance()
         provider, model = model_selection(model, provider)
         routes = [(provider, model)]
         if fallback and fallback not in routes:
@@ -122,6 +124,7 @@ class LLMGateway:
                 if isinstance(getattr(response, "_hidden_params", None), dict):
                     response._hidden_params["grokbot_route"] = {"provider": route_provider, "model": route_model, "fallback": bool(index)}
                 logger.info("Model route succeeded provider=%s model=%s fallback=%s", route_provider, route_model, bool(index))
+                await record(route_provider,route_model,getattr(response,'usage',None))
                 return response
             except Exception as error:
                 last_error = error

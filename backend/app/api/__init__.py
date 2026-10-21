@@ -32,3 +32,11 @@ router.include_router(plugins_router, prefix="/plugins", tags=["plugins"])
 router.include_router(bots_router, prefix="/bots", tags=["bots"])
 router.include_router(conversations_router, prefix="/conversations", tags=["conversations"])
 router.include_router(messages_router, prefix="/conversations", tags=["messages"])
+from .workspace import router as workspace_router
+router.include_router(workspace_router,prefix='/workspace',tags=['workspace'])
+
+from .computer import router as computer_router
+router.include_router(computer_router,prefix='/computer',tags=['computer'])
+
+from .local_device import router as local_device_router
+router.include_router(local_device_router,prefix='/local-device',tags=['local-device'])

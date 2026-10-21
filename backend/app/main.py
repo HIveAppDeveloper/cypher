@@ -74,6 +74,8 @@ app = FastAPI(
 async def authenticate_backend(request: Request, call_next):
     api_request = request.url.path.startswith("/api/")
     public_auth_path = request.url.path in {"/api/auth/email/request", "/api/auth/email/verify", "/api/auth/google/verify"}
+    public_auth_path = public_auth_path or (request.method=='GET' and re.fullmatch(r'/api/workspace/templates/shared/[A-Za-z0-9_-]{24,64}',request.url.path) is not None)
+    public_auth_path = public_auth_path or (request.method=='POST' and request.url.path in {'/api/local-device/claim','/api/local-device/poll','/api/local-device/complete'})
     channel_ingress = request.method == "POST" and re.fullmatch(r"/api/channels/[0-9a-fA-F-]{36}/events", request.url.path) is not None
     if settings.BACKEND_API_TOKEN and api_request:
         expected = "Bearer " + settings.BACKEND_API_TOKEN

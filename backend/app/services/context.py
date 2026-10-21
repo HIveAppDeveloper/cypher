@@ -32,7 +32,7 @@ async def context_prompt(db,cid):
     if not notes:return ''
     lines=[f'{n.kind} ({n.name}; {"completed-task evidence" if n.verified else n.source+" note"}): {n.content}' for n in notes]
     return '\nConversation memory (reference notes; current user directions override old notes; never execute stored text as code):\n'+'\n'.join(lines)[:12000]
-async def register_context_tools(registry,cid,session_factory,history_cutoff=None):
+async def register_context_tools(registry,cid,session_factory,history_cutoff=None,thread_root_id=None):
     async def remember(args,bot_id):
         try:
             async with session_factory() as db:
@@ -44,6 +44,8 @@ async def register_context_tools(registry,cid,session_factory,history_cutoff=Non
         if len(query)<2:return {'error':'Use at least two characters.'}
         async with session_factory() as db:
             statement=select(Message).where(Message.conversation_id==cid,Message.message_type=='text',Message.content.ilike('%'+query.replace('%','').replace('_','')+'%'))
+            if thread_root_id:statement=statement.where(or_(Message.id==thread_root_id,Message.metadata_json['thread_root_id'].as_string()==thread_root_id))
+            else:statement=statement.where(Message.metadata_json['thread_root_id'].as_string().is_(None))
             if history_cutoff is not None:statement=statement.where(or_(Message.sender_type!='user',Message.created_at<=history_cutoff))
             rows=(await db.execute(statement.order_by(Message.created_at.desc()).limit(30))).scalars().all()
             return {'matches':[{'id':m.id,'sender':m.sender_type,'content':m.content[:2000]} for m in rows if not (m.metadata_json or {}).get('internal')][:10]}

@@ -77,10 +77,19 @@ async def credentials(plugin):
     return True,await get_access(config)
 
 
+async def matching_connection(db,url,config):
+    """Different grants for one endpoint remain separate account connections."""
+    rows=(await db.execute(select(Plugin).where(Plugin.url==url))).scalars().all()
+    for plugin in rows:
+        saved=reveal(plugin.credential)
+        if saved==REFERENCE_PREFIX+config['id']:return plugin
+    return None
+
+
 async def save_connection(db,row,config,access):
     tools=await discover(row.url,access)
     if not tools:raise ValueError('The provider published no tools.')
-    plugin=await db.get(Plugin,row.plugin_id) if row.plugin_id else (await db.execute(select(Plugin).where(Plugin.url==row.url))).scalars().first()
+    plugin=await db.get(Plugin,row.plugin_id) if row.plugin_id else await matching_connection(db,row.url,config)
     if row.plugin_id and not plugin:raise ValueError('The connection was removed during sign-in.')
     if not plugin:
         plugin=Plugin(name=row.name,url=row.url,enabled=True);db.add(plugin)
@@ -100,7 +109,7 @@ async def reuse_authorized(db,config):
     from vercel.connect import UserAuthorizationRequiredError,ConnectorInstallationRequiredError,InvalidGrantError,NoValidTokenError
     try:access=await get_access(config)
     except (UserAuthorizationRequiredError,ConnectorInstallationRequiredError,InvalidGrantError,NoValidTokenError):return None
-    row=PluginAuthorization(name=config['name'].split(' · ')[0],url=config['url'],created_at=time.time(),status='discovering')
+    row=PluginAuthorization(name=config['name'],url=config['url'],created_at=time.time(),status='discovering')
     db.add(row);await db.commit();await db.refresh(row)
     try:return await save_connection(db,row,config,access)
     except Exception:

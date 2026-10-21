@@ -143,9 +143,15 @@ async def _run_worker_loop(lock_connection=None, owner_pid=None, stop_event=None
     if os.getenv("GROKBOT_VERIFY_CLOUD") == "true":
         await run_checks()
     from app.db.wakeup import wait_for_work
+    from app.services.computer import tick_commands
+    from app.models.workspace import ComputerCommand
+    async with AsyncSessionLocal() as db:
+        await db.execute(update(ComputerCommand).where(ComputerCommand.status=='running').values(status='interrupted',payload='',result=None))
+        await db.commit()
     last_maintenance = 0
     while not stop_event.is_set():
         await pulse()
+        await tick_commands(AsyncSessionLocal)
         maintenance_due = lock_connection is None or time.monotonic()-last_maintenance >= 60 or (wake is not None and wake.is_set())
         requested = False
         if maintenance_due:
@@ -168,6 +174,8 @@ async def _run_worker_loop(lock_connection=None, owner_pid=None, stop_event=None
         if maintenance_due:
             await tick_goals(AsyncSessionLocal)
             await tick_deliveries(AsyncSessionLocal)
+            from app.services.workspace import tick_routines
+            await tick_routines(AsyncSessionLocal)
         if stop_event.is_set(): break
         async with AsyncSessionLocal() as db:
             task = (await db.execute(select(Task).outerjoin(TaskExecution, TaskExecution.task_id == Task.id).where(
@@ -203,6 +211,7 @@ async def _run_worker_loop(lock_connection=None, owner_pid=None, stop_event=None
                         await asyncio.wait({execution}, timeout=2)
                         if execution.done(): break
                         await pulse()
+                        await tick_commands(AsyncSessionLocal)
                         async with AsyncSessionLocal() as monitor:
                             current = await monitor.get(Task, task.id)
                             if current and current.status == "cancel_requested":
@@ -245,6 +254,8 @@ async def _run_worker_loop(lock_connection=None, owner_pid=None, stop_event=None
                     if public:goal.last_summary=public[-1].get('content','')[:2000]
             from app.services.automation import enqueue_delivery
             await enqueue_delivery(task.id, request.get("channel_id"),AsyncSessionLocal,db)
+            from app.services.workspace import notify_finished
+            await notify_finished(db,task)
             await db.commit()
             current_tenant_id.reset(tenant_token)
 

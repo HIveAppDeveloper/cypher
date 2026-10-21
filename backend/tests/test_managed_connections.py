@@ -124,3 +124,24 @@ async def test_new_website_uses_its_published_connector_and_rejects_registry_imp
     assert found['url']=='https://mcp.new-provider.example/mcp' and found['source']=='https://new-provider.example'
     with pytest.raises(Exception) as error:await plugin_catalog.resolve(plugin_catalog.Website(website='unlisted.example'))
     assert error.value.status_code==404
+
+@pytest.mark.asyncio
+async def test_two_managed_accounts_on_one_endpoint_remain_distinct(workspace,monkeypatch):
+    client,sessions=workspace
+    config=[{**CONFIG[0],'id':'account-one'},{**CONFIG[0],'id':'account-two','name':'Provider second account','connector':'oauth/second'}]
+    monkeypatch.setenv('GROKBOT_MANAGED_CONNECTORS',json.dumps(config))
+    async def valid(_):pass
+    async def access(config,force_refresh=False):return 'token-'+config['id']
+    async def discover(*args):return [{'name':'read','description':'Read','schema':{},'read_only':True}]
+    monkeypatch.setattr(plugin_catalog,'validate_endpoint',valid)
+    monkeypatch.setattr(managed,'get_access',access);monkeypatch.setattr(managed,'discover',discover)
+    headers={'x-grokbot-user-id':'multi-account-owner'}
+    ids=[]
+    for item in config:
+        r=await client.post('/api/plugins/authorize',headers=headers,json={'name':item['name'],'url':item['url'],'connection_id':item['id']})
+        assert r.status_code==200,r.text
+        ids.append(r.json()['plugin_id'])
+    assert ids[0]!=ids[1]
+    assert len((await client.get('/api/plugins',headers=headers)).json())==2
+    again=await client.post('/api/plugins/authorize',headers=headers,json={'name':'First','url':config[0]['url'],'connection_id':'account-one'})
+    assert again.json()['plugin_id']==ids[0]

@@ -3,10 +3,11 @@ import { getSessionFromCookieHeader } from '../../../lib/auth-server';
 export const dynamic = 'force-dynamic';
 async function proxy(request: NextRequest, { params }: { params: { path: string[] } }) {
   const path = params.path.join('/');
-  const publicAuthPath = path === 'auth/email/request' || path === 'auth/email/verify';
+  const publicAuthPath = path === 'auth/email/request' || path === 'auth/email/verify' || (request.method==='GET' && /^workspace\/templates\/shared\/[A-Za-z0-9_-]{24,64}$/.test(path));
+  const deviceIngress=request.method==='POST'&&['local-device/claim','local-device/poll','local-device/complete'].includes(path);
   const channelIngress = request.method === 'POST' && params.path.length === 3 && params.path[0] === 'channels' && params.path[2] === 'events';
   const session = getSessionFromCookieHeader(request.headers.get('cookie'));
-  if (process.env.REQUIRE_USER_AUTH === 'true' && !session && !publicAuthPath && !channelIngress) return NextResponse.json({ detail: 'Sign in to continue.' }, { status: 401 });
+  if (process.env.REQUIRE_USER_AUTH === 'true' && !session && !publicAuthPath && !channelIngress && !deviceIngress) return NextResponse.json({ detail: 'Sign in to continue.' }, { status: 401 });
   const backend = process.env.BACKEND_INTERNAL_URL || process.env.GROKBOT_BACKEND_URL;
   if (!backend) return NextResponse.json({ detail: 'Your cloud runtime is not connected. Open Workspace setup to connect it.' }, { status: 503 });
   const url = new URL('/api/' + params.path.map(encodeURIComponent).join('/'), backend);
@@ -26,6 +27,8 @@ async function proxy(request: NextRequest, { params }: { params: { path: string[
     return result;
   }
   const responseHeaders: Record<string, string> = { 'Content-Type': response.headers.get('content-type') || 'application/json', 'Cache-Control': 'private, no-store', 'X-Content-Type-Options': 'nosniff' };
+  const retryAfter=response.headers.get('retry-after');
+  if(retryAfter)responseHeaders['Retry-After']=retryAfter;
   const disposition = response.headers.get('content-disposition');
   if (disposition) responseHeaders['Content-Disposition'] = disposition;
   return new NextResponse(response.body, { status: response.status, headers: responseHeaders });

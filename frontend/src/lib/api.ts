@@ -1,7 +1,7 @@
 import { Bot, BotStatus, Message, MessageType, Attachment, RunOptions, Conversation, Job } from './types';
 const API_URL = (process.env.NEXT_PUBLIC_API_URL || '').replace(/\/$/, '');
 export class ApiError extends Error { constructor(message:string,public status:number,public code?:string,public retryAfter=0){super(message);} }
-async function request(path: string, init?: RequestInit, timeout=35000) {
+export async function request(path: string, init?: RequestInit, timeout=35000) {
   const response = await fetch(`${API_URL}/api${path}`, { ...init, signal: init?.signal ? AbortSignal.any([init.signal,AbortSignal.timeout(timeout)]) : AbortSignal.timeout(timeout), headers: { 'Content-Type': 'application/json', ...init?.headers } });
   if (!response.ok) { const error = await response.json().catch(() => null); const detail = error?.detail; throw new ApiError(typeof detail === 'string' ? detail : Array.isArray(detail) ? detail.map((item: { msg?: string }) => item.msg || 'Invalid input').join('. ') : `Request failed (${response.status}). Try again.`,response.status,error?.code,Number(response.headers.get('Retry-After')||0)); }
   return response.json();
@@ -9,8 +9,8 @@ async function request(path: string, init?: RequestInit, timeout=35000) {
 interface BotResponse { id: string; name: string; role: string; description?: string; status: BotStatus; llm_provider: string; llm_model: string; tools_enabled: string[]; system_prompt: string; }
 function botFromWire(b: BotResponse): Bot { return { ...b, llmProvider: b.llm_provider, llmModel: b.llm_model, toolsEnabled: b.tools_enabled, systemPrompt: b.system_prompt }; }
 function botToWire(b: Partial<Bot>) { return { name: b.name, role: b.role, description: b.description, system_prompt: b.systemPrompt, llm_provider: b.llmProvider || 'openai', llm_model: b.llmModel || 'gpt-6.1-sol', tools_enabled: b.toolsEnabled || [] }; }
-interface MessageResponse { id: string; conversation_id: string; sender_type: string; sender_bot_id?: string; content: string; message_type: MessageType; created_at: string; metadata_json?: { internal?: boolean; model_routes?: Message['modelRoutes']; attachments?: Attachment[] }; }
-function messageFromWire(m:MessageResponse):Message { return {id:m.id,conversationId:m.conversation_id,senderType:m.sender_type,senderBotId:m.sender_bot_id,content:m.content,messageType:m.message_type,createdAt:m.created_at,internal:m.metadata_json?.internal,modelRoutes:m.metadata_json?.model_routes,attachments:(m.metadata_json?.attachments||[]).map(a=>({...a,url:a.url?API_URL+a.url:undefined}))}; }
+interface MessageResponse { id: string; conversation_id: string; sender_type: string; sender_bot_id?: string; content: string; message_type: MessageType; created_at: string; metadata_json?: { internal?: boolean; thread_root_id?:string; reply_to_id?:string; model_routes?: Message['modelRoutes']; attachments?: Attachment[] }; }
+function messageFromWire(m:MessageResponse):Message { return {id:m.id,conversationId:m.conversation_id,senderType:m.sender_type,senderBotId:m.sender_bot_id,content:m.content,messageType:m.message_type,createdAt:m.created_at,internal:m.metadata_json?.internal,threadRootId:m.metadata_json?.thread_root_id,replyToId:m.metadata_json?.reply_to_id,modelRoutes:m.metadata_json?.model_routes,attachments:(m.metadata_json?.attachments||[]).map(a=>({...a,url:a.url?API_URL+a.url:undefined}))}; }
 export const api = {
   accountStatus: () => request('/accounts/status'),
   deviceStatus: () => request('/device/status'),
@@ -61,7 +61,7 @@ export const api = {
   },
   syncConversation: async (id:string,after?:string,signal?:AbortSignal): Promise<{messages:Message[];tasks:Job[]}> => { const data=await request(`/conversations/${id}/sync${after?'?after_id='+encodeURIComponent(after):''}`,{signal});return {messages:data.messages.reverse().map(messageFromWire),tasks:data.tasks}; },
   getMessages: async (id:string,before?:string): Promise<Message[]> => (await request(`/conversations/${id}/messages${before ? `?before_id=${encodeURIComponent(before)}` : ''}`)).reverse().map(messageFromWire),
-  sendMessage: (id: string, content: string, attachments: Attachment[], options: RunOptions, client_message_id?: string) => request(`/conversations/${id}/messages`, { method: 'POST', body: JSON.stringify({ sender_type: 'user', content, attachments, options, client_message_id }) }),
+  sendMessage: (id: string, content: string, attachments: Attachment[], options: RunOptions, client_message_id?: string,reply_to_id?:string) => request(`/conversations/${id}/messages`, { method: 'POST', body: JSON.stringify({ sender_type: 'user', content, attachments, options, client_message_id,reply_to_id }) }),
   getConversations: (): Promise<Conversation[]> => request('/conversations'),
   createRoom: (title: string, bot_ids: string[]): Promise<Conversation> => request('/conversations', { method: 'POST', body: JSON.stringify({ title, bot_ids, is_group: true }) }),
   getJobs: (id: string): Promise<Job[]> => request(`/conversations/${id}/tasks`),

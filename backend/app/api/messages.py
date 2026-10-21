@@ -26,15 +26,25 @@ async def send_message(id: UUID, msg: MessageCreate, db: AsyncSession = Depends(
     files = [a.model_dump() for a in msg.attachments]
     existing = await db.get(Message, incoming_id)
     if existing:
-        if existing.conversation_id != str(id) or existing.sender_type != 'user' or existing.content != msg.content or (existing.metadata_json or {}).get('attachments', []) != files:
+        if existing.conversation_id != str(id) or existing.sender_type != 'user' or existing.content != msg.content or (existing.metadata_json or {}).get('attachments', []) != files or (existing.metadata_json or {}).get('reply_to_id') != (str(msg.reply_to_id) if msg.reply_to_id else None):
             raise HTTPException(status_code=409, detail="Message identifier already used. Send a new message.")
         previous_task = (existing.metadata_json or {}).get('task_id')
         if previous_task:
             return {'status':'queued','task_id':previous_task,'message_id':incoming_id}
         raise HTTPException(status_code=409, detail="Message identifier already used.")
-    task = Task(id=str(uuid4()),conversation_id=str(id), bot_id=participant.bot_id, title=msg.content[:100], description=msg.content or "Review the attached files.", status="pending", result={"request": {"incoming_message_id":incoming_id,"attachments": files, "options": msg.options.model_dump()}})
+    thread_root=None
+    if msg.reply_to_id:
+        parent=await db.get(Message,str(msg.reply_to_id))
+        if not parent or parent.conversation_id!=str(id) or (parent.metadata_json or {}).get('internal') or parent.message_type not in {'text','handoff'}:
+            raise HTTPException(404,'Reply target not found in this conversation')
+        thread_root=(parent.metadata_json or {}).get('thread_root_id') or parent.id
+    from app.services.workspace import expand_skill
+    try:description=await expand_skill(db,msg.content,participant.bot_id)
+    except ValueError as error:raise HTTPException(422,str(error))
+    reply_meta={'reply_to_id':str(msg.reply_to_id),'thread_root_id':thread_root} if msg.reply_to_id else {}
+    task = Task(id=str(uuid4()),conversation_id=str(id), bot_id=participant.bot_id, title=msg.content[:100], description=description or "Review the attached files.", status="pending", result={"request": {"incoming_message_id":incoming_id,"attachments": files, "options": msg.options.model_dump(),**reply_meta}})
     db.add(task)
-    db.add(Message(id=incoming_id,conversation_id=str(id),sender_type='user',content=msg.content,message_type='text',metadata_json={'attachments':files,'task_id':task.id}))
+    db.add(Message(id=incoming_id,conversation_id=str(id),sender_type='user',content=msg.content,message_type='text',metadata_json={'attachments':files,'task_id':task.id,**reply_meta}))
     await db.commit()
     await db.refresh(task)
     return {"status": "queued", "task_id": task.id, "message_id": incoming_id}

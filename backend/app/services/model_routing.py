@@ -93,7 +93,7 @@ def retryable(error):
 
 def public_model_error(error):
     """Actionable messages contain no raw provider body, credential or endpoint."""
-    if isinstance(error, (ModelConfigurationError, ModelCapabilityError)):
+    if isinstance(error, (ModelConfigurationError, ModelCapabilityError)) or type(error).__name__=='UsageLimitError':
         return str(error)
     status = getattr(error, "status_code", None)
     kind, reason = type(error).__name__.lower(), str(error).lower()

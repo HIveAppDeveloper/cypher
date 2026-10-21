@@ -55,6 +55,8 @@ async def search_web(args, bot_id):
         return {"success": False, "error": "Supply a search query of 1–1000 characters."}
     query = query.strip()
     try:
+        from app.services.usage import check_allowance,record
+        await check_allowance()
         # Reuse the existing connection and fresh rotating deployment credentials.
         connection = completion_options("gpt-6-luna", "openai")
         model = "openai/gpt-6-luna" if settings.LLM_USE_GATEWAY else "gpt-6-luna"
@@ -74,7 +76,9 @@ async def search_web(args, bot_id):
                 },
             )
             response.raise_for_status()
-        return search_evidence(response.json(), query)
+        payload=response.json()
+        await record('openai','gpt-6-luna',payload.get('usage'))
+        return search_evidence(payload, query)
     except Exception as error:
         # Never persist raw upstream bodies, headers, or credentials in chat.
         logger.warning("Web search failed type=%s status=%s", type(error).__name__, getattr(getattr(error, "response", None), "status_code", None))
