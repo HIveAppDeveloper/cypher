@@ -186,3 +186,51 @@ async def test_participant_changes_cannot_attach_another_owners_room_or_agent(wo
         assert response.status_code == 404, response.text
     response = await client.post(f'/api/conversations/{own_room}/participants', params={'bot_id': own_bot}, headers=headers)
     assert response.status_code == 409, response.text
+
+
+@pytest.mark.asyncio
+async def test_queued_document_does_not_read_future_audio_and_transcript_is_cached(workspace, monkeypatch):
+    import base64
+    import ai
+    from app.models.message import Message
+    from app.services.model_routing import required_modalities
+    client, sessions = workspace
+    headers = {'x-grokbot-user-id': 'attachment-owner'}
+    rid = await room(client, 'attachment-owner')
+    audio = {'name': 'recording.wav', 'mime': 'audio/wav', 'data': base64.b64encode(b'controlled-audio-bytes').decode()}
+    first = (await client.post(f'/api/conversations/{rid}/messages', headers=headers, json={'sender_type': 'user', 'content': 'Read the PDF only.', 'attachments': [{'name': 'document.pdf', 'mime': 'application/pdf', 'data': base64.b64encode(b'%PDF-controlled').decode()}]})).json()
+    second = (await client.post(f'/api/conversations/{rid}/messages', headers=headers, json={'sender_type': 'user', 'content': 'Listen to FUTURE-AUDIO-REQUEST.', 'attachments': [audio]})).json()
+    monkeypatch.setattr(settings, 'LLM_USE_GATEWAY', True)
+    from app.services import attachments
+    async def catalog():return {settings.AUDIO_TRANSCRIPTION_MODEL: {'type': 'transcription'}}
+    monkeypatch.setattr(attachments, 'gateway_catalog', catalog)
+    transcribed = []
+    async def transcribe(model, file):
+        assert file.data == b'controlled-audio-bytes' and file.media_type == 'audio/wav'
+        transcribed.append(model.id)
+        return SimpleNamespace(value=SimpleNamespace(text='The verification code is 729416.'))
+    monkeypatch.setattr(ai.ops, 'transcribe', transcribe)
+    calls = []
+    async def complete(**kwargs):
+        messages = kwargs['messages']
+        serialized = json.dumps(messages)
+        assert 'input_audio' not in serialized
+        if not calls:
+            assert required_modalities(messages) == {'text', 'pdf'}
+            assert 'FUTURE-AUDIO-REQUEST' not in serialized
+            assert transcribed == []
+        else:
+            assert '729416' in serialized
+        calls.append(messages)
+        return litellm.ModelResponse(choices=[{'index': 0, 'message': {'role': 'assistant', 'content': 'Checked.'}, 'finish_reason': 'stop'}])
+    monkeypatch.setattr(orchestrator.LLMGateway, 'complete', complete)
+    tenant = current_tenant_id.set('attachment-owner')
+    try:
+        for incoming, prompt in [(first, 'Read the PDF only.'), (second, 'Listen to FUTURE-AUDIO-REQUEST.'), (second, 'Listen again.')]:
+            await orchestrator.AgentOrchestrator().process_message(rid, prompt, incoming_message_id=incoming['message_id'])
+    finally:current_tenant_id.reset(tenant)
+    assert len(calls) == 3 and len(transcribed) == 1
+    async with sessions() as db:
+        saved = await db.get(Message, second['message_id'])
+        assert saved.metadata_json['attachments'][0] == audio
+        assert saved.metadata_json['audio_transcripts']['0']['text'].endswith('729416.')

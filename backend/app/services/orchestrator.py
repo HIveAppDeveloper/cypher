@@ -14,7 +14,7 @@ import asyncio
 from datetime import datetime, timezone
 from typing import Optional
 
-from sqlalchemy import select
+from sqlalchemy import select, or_
 from sqlalchemy.orm import selectinload
 
 from app.config import settings
@@ -78,7 +78,6 @@ class AgentOrchestrator:
         from app.services.automation import register_goal_tools
         await register_goal_tools(self.registry, conversation_id, goal_id, AsyncSessionLocal)
         from app.services.context import register_context_tools
-        await register_context_tools(self.registry,conversation_id,AsyncSessionLocal)
         self.task_id = task_id
         self.options = RunOptions(**(options or {}))
         async with AsyncSessionLocal() as db:
@@ -86,6 +85,7 @@ class AgentOrchestrator:
                 existing = await db.get(Message, incoming_message_id)
                 if existing is None or existing.conversation_id != conversation_id:
                     raise ValueError("Queued message is missing from its conversation")
+                self.history_cutoff = existing.created_at
             else:
                 # Non-HTTP jobs still persist their incoming message here.
                 incoming_msg = Message(
@@ -100,6 +100,9 @@ class AgentOrchestrator:
                 )
                 db.add(incoming_msg)
                 await db.commit()
+                self.history_cutoff = incoming_msg.created_at
+
+            await register_context_tools(self.registry, conversation_id, AsyncSessionLocal, history_cutoff=self.history_cutoff)
 
             # Load conversation with participants
             result = await db.execute(
@@ -226,7 +229,12 @@ class AgentOrchestrator:
             if getattr(self, "team_roster", None):
                 system_prompt += "\nYou are in a team conversation. Read teammates’ messages, challenge errors, and build on prior work. Do not invent actions. To hand off use HANDOFF[exact teammate name: task].\nTeam:\n" + self.team_roster
 
-            history = (await db.execute(select(Message).where(Message.conversation_id == conversation_id, Message.message_type.in_(["text", "handoff"])).order_by(Message.created_at.desc()).limit(40))).scalars().all()
+            history_query = select(Message).where(Message.conversation_id == conversation_id, Message.message_type.in_(["text", "handoff"]))
+            if getattr(self, 'history_cutoff', None):
+                # Later queued requests are separate work. Current team replies
+                # stay visible; live directions are loaded at execution boundaries.
+                history_query = history_query.where(or_(Message.sender_type != 'user', Message.created_at <= self.history_cutoff))
+            history = (await db.execute(history_query.order_by(Message.created_at.desc(), Message.id.desc()).limit(40))).scalars().all()
             names = dict((await db.execute(select(Bot.id, Bot.name))).all())
             if self.options.steering:
                 system_prompt += "\nUser working brief (within this task): " + self.options.steering
@@ -237,7 +245,9 @@ class AgentOrchestrator:
             for item in reversed(history):
                 if item.sender_type == "user":
                     files = (item.metadata_json or {}).get("attachments", [])
-                    content = content_parts(item.content, files if item.id in attachment_ids else [])
+                    from app.services.attachments import prepare_audio
+                    prepared = await prepare_audio(db, item, files) if item.id in attachment_ids else []
+                    content = content_parts(item.content, prepared)
                     if files and item.id not in attachment_ids:
                         content += "\nEarlier attachment reference (not resent): " + ", ".join(a["name"] for a in files)
                     messages.append({"role": "user", "content": content})
