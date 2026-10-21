@@ -1,4 +1,5 @@
 import { Bot, BotStatus, Message, MessageType, Attachment, RunOptions, Conversation, Job } from './types';
+import { directConversation } from './conversations';
 const API_URL = (process.env.NEXT_PUBLIC_API_URL || '').replace(/\/$/, '');
 export class ApiError extends Error { constructor(message:string,public status:number,public code?:string,public retryAfter=0){super(message);} }
 export async function request(path: string, init?: RequestInit, timeout=35000) {
@@ -53,9 +54,9 @@ export const api = {
   steerJob: (id: string, taskId: string, instruction: string) => request(`/conversations/${id}/tasks/${taskId}/steer`, { method:'POST', body:JSON.stringify({instruction}) }),
   stopBot: (id: string) => request(`/bots/${id}/stop`, { method: 'POST' }),
   conversationForBot: async (bot: Bot): Promise<string> => {
-    const conversations: { id: string; title: string }[] = await request('/conversations');
+    const conversations: Conversation[] = await request('/conversations');
     const title = `Bot ${bot.id}`;
-    const existing = conversations.find(c => c.title === title);
+    const existing = directConversation(conversations,bot.id);
     if (existing) return existing.id;
     return (await request('/conversations', { method: 'POST', body: JSON.stringify({ title, bot_ids: [bot.id] }) })).id;
   },
