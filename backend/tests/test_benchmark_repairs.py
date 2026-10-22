@@ -446,6 +446,45 @@ def test_explicit_word_budgets_count_visible_prose_and_follow_owner_steering():
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize('requests_extra_tool',[False,True])
+async def test_last_action_has_bounded_response_turn_without_extending_tool_budget(workspace,monkeypatch,requests_extra_tool):
+    client,sessions=workspace;cid=await room(client,'benchmark-owner');calls=[];actions=[]
+    bid=(await client.get('/api/bots',headers=A)).json()[0]['id']
+    await client.put('/api/bots/'+bid,headers=A,json={'tools_enabled':['browser']})
+    async def execute(self,name,args,bot_id):
+        actions.append(name);return {'success':True,'verified_total':'$43.18','remaining':'Do not press Finish'}
+    monkeypatch.setattr(ToolRegistry,'execute_tool',execute)
+    async def complete(**kw):
+        calls.append(kw)
+        if len(calls)==1 or requests_extra_tool:
+            if len(calls)>1:
+                assert not kw.get('tools')
+                assert 'execution budget is exhausted' in kw['messages'][-1]['content']
+            message={'role':'assistant','tool_calls':[{'id':'read'+str(len(calls)),'type':'function','function':{'name':'browser_extract','arguments':'{"instruction":"Read checkout"}'}}]}
+        else:
+            assert not kw.get('tools')
+            assert 'State precisely what remains incomplete' in kw['messages'][-1]['content']
+            assert any('$43.18' in str(m.get('content')) for m in kw['messages'] if m['role']=='tool')
+            message={'role':'assistant','content':'Verified total: $43.18. Finish was not pressed.'}
+        return ModelResponse(choices=[{'message':message}])
+    monkeypatch.setattr(orchestrator.LLMGateway,'complete',complete)
+    await client.post('/api/conversations/'+cid+'/messages',headers=A,json={'sender_type':'user','content':'Verify the checkout total and stop before Finish.','options':{'max_iterations':1}})
+    runner=asyncio.create_task(worker.run_worker())
+    try:
+        for _ in range(200):
+            jobs=(await client.get('/api/conversations/'+cid+'/tasks',headers=A)).json()
+            if jobs[0]['status'] in {'completed','failed'}:break
+            await asyncio.sleep(.02)
+        assert jobs[0]['status']==('failed' if requests_extra_tool else 'completed')
+        assert len(calls)==2 and actions==['browser_extract']
+        messages=(await client.get('/api/conversations/'+cid+'/messages',headers=A)).json()
+        assert any(m['sender_type']=='bot' and m['message_type']=='text' and '$43.18' in m['content'] for m in messages)==(not requests_extra_tool)
+    finally:
+        runner.cancel()
+        with suppress(asyncio.CancelledError):await runner
+
+
+@pytest.mark.asyncio
 @pytest.mark.parametrize('always_long,iterations,expected',[(False,4,'completed'),(True,4,'failed'),(True,1,'failed')])
 async def test_word_limit_revisions_are_bounded_and_only_publish_checked_reply(workspace,monkeypatch,always_long,iterations,expected):
     client,sessions=workspace;cid=await room(client,'benchmark-owner');calls=[]

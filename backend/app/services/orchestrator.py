@@ -326,7 +326,9 @@ class AgentOrchestrator:
             execution_tools=tools
 
             # Agent loop
-            for iteration in range(getattr(self, "options", RunOptions()).max_iterations):
+            # The final permitted action still needs a response turn. This
+            # bounded extra turn cannot execute tools or extend the action cap.
+            for iteration in range(getattr(self, "options", RunOptions()).max_iterations + 1):
                 logger.info(
                     f"Agent loop iteration {iteration + 1} for bot '{bot.name}'"
                 )
@@ -336,6 +338,10 @@ class AgentOrchestrator:
                     max_words=steer_limit(max_words,direction.content)
                     format_revisions=0;tools=execution_tools
                 run = getattr(self, "options", RunOptions())
+                final_response_only = iteration == run.max_iterations
+                if final_response_only:
+                    tools = []
+                    messages.append({'role':'user','content':"The execution budget is exhausted. No more tools or actions are available in this run. Return a final answer using only verified tool receipts and supplied evidence. Link any completed artifacts. State precisely what remains incomplete; never claim success merely because the budget ended. Do not request or invent additional tool calls."})
                 provider = bot.llm_provider if getattr(self, "team_roster", None) and bot.role.casefold() != "coordinator" else run.provider or bot.llm_provider
                 model = bot.llm_model if getattr(self, "team_roster", None) and bot.role.casefold() != "coordinator" else run.model or bot.llm_model
                 if run.routing == 'auto':
@@ -370,6 +376,9 @@ class AgentOrchestrator:
 
                 # Handle tool calls
                 if reply.tool_calls:
+                    if final_response_only:
+                        responses.append(await self._save_message(db, conversation_id, "system", None, "The action limit was reached and the model did not return a final answer. No extra tools were run; saved results and files remain in Activity.", message_type="status_update"))
+                        break
                     # Append assistant message with tool calls
                     messages.append(reply.model_dump())
 
@@ -480,7 +489,7 @@ class AgentOrchestrator:
                     metadata = (
                         self._parse_handoff(reply.content) if is_handoff else None
                     )
-                    metadata = {**(metadata or {}),'model_routes':model_routes,**({'answer_checks':{'max_words':max_words,'words':count,'revisions':format_revisions}} if max_words is not None else {})}
+                    metadata = {**(metadata or {}),'model_routes':model_routes,**({'execution_budget_exhausted':True} if final_response_only else {}),**({'answer_checks':{'max_words':max_words,'words':count,'revisions':format_revisions}} if max_words is not None else {})}
 
                     bot_msg = await self._save_message(
                         db, conversation_id, "bot", bot_id,
