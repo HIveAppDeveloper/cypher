@@ -98,6 +98,9 @@ async def save_connection(db,row,config,access):
     plugin.tools=[{**tool,'enabled':enabled.get(tool['name'],True)} for tool in tools]
     plugin.credential=seal(REFERENCE_PREFIX+config['id'])
     await db.flush()
+    from app.models.runtime import RuntimeCheck
+    stale=await db.get(RuntimeCheck,'plugin:'+plugin.id)
+    if stale:await db.delete(stale)
     await db.execute(delete(PluginAuthorization).where(PluginAuthorization.plugin_id==plugin.id,PluginAuthorization.id!=row.id))
     row.plugin_id=plugin.id;row.status='connected';row.state_hash=None;row.binding_hash=None
     row.payload=seal(json.dumps({'managed_id':config['id']}));await db.commit()
