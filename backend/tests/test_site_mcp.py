@@ -1,5 +1,6 @@
 import json
 import httpx,pytest
+import pytest_asyncio
 from sqlalchemy import select
 from app.api import plugin_catalog
 from app.models.plugin import Plugin
@@ -125,3 +126,113 @@ async def test_featured_one_click_connectors_are_in_the_catalog(workspace):
     assert featured['Lovable']['url']=='https://mcp.lovable.dev' and featured['Instagram']['url']=='site-mcp://instagram.com'
     resolved=(await client.post('/api/plugins/resolve',headers={'x-grokbot-user-id':'person-a'},json={'website':'readdy.ai'})).json()
     assert resolved['url']=='https://mcp.readdy.ai/mcp'
+
+@pytest_asyncio.fixture
+async def browser(monkeypatch):
+    from types import SimpleNamespace
+    from app.services.tools import registry
+    fake=SimpleNamespace(url='https://example.com/',calls=[],after={})
+    async def get_page(sid):return fake
+    def operation(name):
+        async def call(*args,**kwargs):
+            fake.calls.append((name,kwargs['session_id']))
+            fake.url=fake.after.get(name,fake.url)
+            return {'success':True,'text_content':'SECRET','screenshot_base64':'c2VjcmV0','title':'SECRET','url':fake.url}
+        return call
+    fake._get_page=get_page
+    for name in ('navigate_to','extract_content','click','fill_form','screenshot'):setattr(fake,name,operation(name))
+    async def no_spec(host):return None
+    async def no_bot():return None
+    monkeypatch.setattr(registry,'_browser_tool',fake)
+    monkeypatch.setattr(site_mcp,'openapi_spec',no_spec)
+    monkeypatch.setattr(site_mcp,'browser_session',no_bot)
+    fake.server=await site_mcp.build('example.com')
+    return fake
+
+BROWSER_ACTIONS=[('read_page',{},'extract_content'),('click',{'target':'a'},'click'),('fill_form',{'fields':{},'submit':'button'},'fill_form'),('screenshot',{},'screenshot')]
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize('name,args,operation',BROWSER_ACTIONS)
+async def test_offsite_page_refused_before_action(browser,name,args,operation):
+    browser.url='https://attacker.example/'
+    result=await browser.server.handlers[name](args)
+    assert json.loads(result[0].text)=={'success':False,'error':'The page left example.com. Only example.com pages can be read or used with this connection.'}
+    assert browser.calls==[]
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize('name,args,operation',BROWSER_ACTIONS+[('open_page',{},'navigate_to'),('fill_form',{'fields':{},'submit':'button'},'click')])
+async def test_navigation_offsite_discards_content(browser,name,args,operation):
+    browser.after[operation]='https://attacker.example/'
+    result=await browser.server.handlers[name](args)
+    assert len(result)==1 and result[0].type=='text'
+    assert not json.loads(result[0].text)['success'] and 'SECRET' not in result[0].text
+    assert [c[0] for c in browser.calls]==(['fill_form','click'] if name=='fill_form' and operation=='click' else [operation])
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize('url',['http://example.com/','https://example.com:443/','https://example.com:8443/'])
+async def test_navigation_rejects_http_and_ports(browser,url):
+    result=await browser.server.handlers['open_page']({'path':url})
+    assert not json.loads(result[0].text)['success'] and browser.calls==[]
+
+@pytest.mark.asyncio
+async def test_private_host_rejected_before_navigation_and_after_redirect(browser,monkeypatch):
+    checked=[]
+    async def validate(url):
+        checked.append(url)
+        if url=='https://private.example.com':raise ValueError('Private address')
+    monkeypatch.setattr(site_mcp,'validate_endpoint',validate)
+    result=await browser.server.handlers['open_page']({'path':'https://private.example.com/'})
+    assert not json.loads(result[0].text)['success'] and browser.calls==[]
+    browser.after['navigate_to']='https://private.example.com/'
+    result=await browser.server.handlers['open_page']({})
+    assert not json.loads(result[0].text)['success'] and 'SECRET' not in result[0].text
+    assert checked==['https://private.example.com','https://example.com','https://private.example.com']
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize('schema',[True,False])
+async def test_boolean_schema_keeps_api_tools(monkeypatch,schema):
+    async def spec(host):return {'paths':{'/items':{'get':{'operationId':'items','parameters':[{'name':'q','in':'query','schema':schema,'description':'Query'}]}}}}
+    monkeypatch.setattr(site_mcp,'openapi_spec',spec)
+    server=await site_mcp.build('example.com')
+    assert {'items','open_page','read_page'}<=set(server.handlers)
+    assert next(t for t in server.tools if t.name=='items').inputSchema['properties']['q']=={'description':'Query'}
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize('failure',['fetch','parse'])
+async def test_bad_spec_keeps_browser_tools(monkeypatch,failure):
+    async def spec(host):
+        if failure=='fetch':raise ValueError('Bad spec')
+        return {'paths':{'/items':{'get':{'parameters':True}}}}
+    monkeypatch.setattr(site_mcp,'openapi_spec',spec)
+    assert set((await site_mcp.build('example.com')).handlers)=={'open_page','read_page','click','fill_form','screenshot','search_site'}
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize('name,args',[(n,a) for n,a,_ in BROWSER_ACTIONS]+[('open_page',{}),('search_site',{'query':'items'})])
+async def test_all_tools_hold_owner_control_lock(browser,monkeypatch,name,args):
+    from contextlib import asynccontextmanager
+    from app.services import computer
+    from app.services.usage import active
+    from app.services.tools import web_search
+    events=[]
+    sessions=object()
+    async def bot():return 'bot-id'
+    @asynccontextmanager
+    async def access(bot_id,factory):
+        assert bot_id=='bot-id' and factory is sessions
+        events.append('enter')
+        try:yield
+        finally:events.append('exit')
+    async def search(*args):
+        assert events==['enter']
+        return {'success':True}
+    async def get_page(sid):
+        assert sid=='bot-id' and events==['enter']
+        return browser
+    browser._get_page=get_page
+    monkeypatch.setattr(site_mcp,'browser_session',bot)
+    monkeypatch.setattr(computer,'agent_access',access)
+    monkeypatch.setattr(web_search,'search_web',search)
+    token=active.set(('task-id',sessions))
+    try:result=await browser.server.handlers[name](args)
+    finally:active.reset(token)
+    assert result and events==['enter','exit']

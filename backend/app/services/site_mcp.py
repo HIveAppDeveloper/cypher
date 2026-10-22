@@ -93,7 +93,7 @@ def operations(spec):
             while name in taken: name += '_'
             taken.add(name)
             params = [p for p in [*shared, *op.get('parameters', [])] if isinstance(p, dict) and p.get('in') in ('path', 'query') and p.get('name')]
-            properties = {p['name']: {**(p.get('schema') or {'type': p.get('type', 'string')}), 'description': p.get('description', '')[:300]} for p in params}
+            properties = {p['name']: {**(p['schema'] if isinstance(p.get('schema'), dict) else {}), 'description': p.get('description', '')[:300]} for p in params}
             required = [p['name'] for p in params if p.get('required') or p.get('in') == 'path']
             if method in ('post', 'put', 'patch'):
                 body = ((op.get('requestBody') or {}).get('content') or {}).get('application/json', {}).get('schema')
@@ -171,11 +171,14 @@ async def read_instagram(url):
 
 async def build(host, token=None):
     server = SiteServer(host)
-    spec = await openapi_spec(host)
-    if spec:
-        base = api_base(spec, host)
+    try:
+        spec = await openapi_spec(host)
+        base, ops = (api_base(spec, host), list(operations(spec))) if spec else (None, [])
+    except Exception:
+        ops = []
+    if ops:
         headers = credential_headers(token)
-        for op in operations(spec):
+        for op in ops:
             async def call(arguments, op=op):
                 path = op['path']
                 for p in op['params']:
@@ -190,38 +193,75 @@ async def build(host, token=None):
                 return text({'success': response.is_success, 'status': response.status_code, 'data': data})
             server.add(op['name'], op['description'], op['schema'], call, op['method'] == 'GET')
     from app.services.tools.registry import _browser_tool
-    async def session(): return await browser_session() or 'site:' + host
-    async def open_page(arguments):
+    @asynccontextmanager
+    async def session():
+        from app.services.computer import agent_access
+        from app.services.usage import active
+        bot_id, current = await browser_session(), active.get()
+        if bot_id and current:
+            async with agent_access(bot_id, current[1]): yield bot_id
+        else: yield bot_id or 'site:' + host
+    def scoped(handler):
+        async def call(arguments):
+            async with session() as sid: return await handler(arguments, sid)
+        return call
+    async def address(url):
+        try:
+            parsed = urlsplit(url)
+            if not on_site(url, host) or parsed.scheme != 'https' or parsed.netloc != parsed.hostname: return False
+            await validate_endpoint('https://' + parsed.hostname)
+            return True
+        except (ValueError, OSError):
+            return False
+    async def page_allowed(sid):
+        page = await _browser_tool._get_page(sid)
+        return await address(page.url)
+    def refused():
+        return text({'success': False, 'error': f'The page left {host}. Only {host} pages can be read or used with this connection.'})
+    async def open_page(arguments, sid):
         target = urljoin('https://' + host + '/', arguments.get('path') or '/')
-        if not on_site(target, host): return text({'success': False, 'error': f'Only {host} pages can be opened with this connection.'})
-        return text(await _browser_tool.navigate_to(target, session_id=await session()))
-    async def read_page(arguments):
-        return text(await _browser_tool.extract_content(arguments.get('focus') or 'Read the page', session_id=await session()))
-    async def click(arguments):
-        return text(await _browser_tool.click(arguments['target'], session_id=await session()))
-    async def fill(arguments):
-        sid = await session()
-        result = await _browser_tool.fill_form(arguments['fields'], session_id=sid)
-        if result.get('success') and arguments.get('submit'): result['submit'] = await _browser_tool.click(arguments['submit'], session_id=sid)
+        if not await address(target): return text({'success': False, 'error': f'Only {host} pages can be opened with this connection. Use HTTPS without an explicit port and a public address.'})
+        result = await _browser_tool.navigate_to(target, session_id=sid)
+        if not await page_allowed(sid): return refused()
         return text(result)
-    async def screenshot(arguments):
-        shot = await _browser_tool.screenshot(session_id=await session())
+    async def read_page(arguments, sid):
+        if not await page_allowed(sid): return refused()
+        result = await _browser_tool.extract_content(arguments.get('focus') or 'Read the page', session_id=sid)
+        if not await page_allowed(sid): return refused()
+        return text(result)
+    async def click(arguments, sid):
+        if not await page_allowed(sid): return refused()
+        result = await _browser_tool.click(arguments['target'], session_id=sid)
+        if not await page_allowed(sid): return refused()
+        return text(result)
+    async def fill(arguments, sid):
+        if not await page_allowed(sid): return refused()
+        result = await _browser_tool.fill_form(arguments['fields'], session_id=sid)
+        if not await page_allowed(sid): return refused()
+        if result.get('success') and arguments.get('submit'):
+            result['submit'] = await _browser_tool.click(arguments['submit'], session_id=sid)
+            if not await page_allowed(sid): return refused()
+        return text(result)
+    async def screenshot(arguments, sid):
+        if not await page_allowed(sid): return refused()
+        shot = await _browser_tool.screenshot(session_id=sid)
+        if not await page_allowed(sid): return refused()
         if not shot.get('success'): return text(shot)
         return [ImageContent(type='image', data=shot['screenshot_base64'], mimeType='image/png'), *text({'title': shot['title'], 'url': shot['url']})]
-    async def search(arguments):
+    async def search(arguments, sid):
         from app.services.tools.web_search import search_web
         return text(await search_web({'query': f"site:{host} {arguments['query']}"}, None))
     server.add('open_page', f'Open a page on {host} in the cloud browser and return its text. Pass a path such as /pricing or a full {host} URL.',
-             {'type': 'object', 'properties': {'path': {'type': 'string', 'maxLength': 2000}}, 'required': []}, open_page, True)
+             {'type': 'object', 'properties': {'path': {'type': 'string', 'maxLength': 2000}}, 'required': []}, scoped(open_page), True)
     server.add('read_page', f'Read the text, links and form fields of the current {host} page.',
-             {'type': 'object', 'properties': {'focus': {'type': 'string', 'maxLength': 500}}, 'required': []}, read_page, True)
+             {'type': 'object', 'properties': {'focus': {'type': 'string', 'maxLength': 500}}, 'required': []}, scoped(read_page), True)
     server.add('search_site', f'Search the public web for pages on {host}.',
-             {'type': 'object', 'properties': {'query': {'type': 'string', 'minLength': 1, 'maxLength': 500}}, 'required': ['query']}, search, True)
-    server.add('screenshot', f'Capture the current {host} page.', {'type': 'object', 'properties': {}}, screenshot, True)
+             {'type': 'object', 'properties': {'query': {'type': 'string', 'minLength': 1, 'maxLength': 500}}, 'required': ['query']}, scoped(search), True)
+    server.add('screenshot', f'Capture the current {host} page.', {'type': 'object', 'properties': {}}, scoped(screenshot), True)
     server.add('click', f'Click a button or link on the current {host} page by CSS selector or visible text.',
-             {'type': 'object', 'properties': {'target': {'type': 'string', 'minLength': 1, 'maxLength': 500}}, 'required': ['target']}, click, False)
+             {'type': 'object', 'properties': {'target': {'type': 'string', 'minLength': 1, 'maxLength': 500}}, 'required': ['target']}, scoped(click), False)
     server.add('fill_form', f'Fill fields on the current {host} page (CSS selector to value), optionally clicking a submit button.',
-             {'type': 'object', 'properties': {'fields': {'type': 'object', 'additionalProperties': {'type': 'string'}}, 'submit': {'type': 'string'}}, 'required': ['fields']}, fill, False)
+             {'type': 'object', 'properties': {'fields': {'type': 'object', 'additionalProperties': {'type': 'string'}}, 'submit': {'type': 'string'}}, 'required': ['fields']}, scoped(fill), False)
     if host == 'instagram.com':
         async def instagram(arguments): return text(await read_instagram(arguments['url']))
         server.add('read_instagram_link', 'Read a public Instagram post, reel or profile link: caption, author, likes, comments, followers and image.',
