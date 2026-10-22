@@ -34,7 +34,8 @@ async def analyze_video(args,bot_id):
     try:
         url=youtube_url(args.get('url',''))
         question=str(args.get('question','Describe the video, spoken content and important timestamps.'))[:4000]
-        if not settings.LLM_USE_GATEWAY:raise ValueError('Video understanding requires the configured AI Gateway connection.')
+        if settings.OMNIROUTE_API_BASE:raise ValueError('This OmniRoute connection does not expose video understanding.')
+        if not settings.LLM_USE_GATEWAY:raise ValueError('Video understanding requires a configured video model connection.')
         metadata=(await gateway_catalog()).get(model,{})
         if 'video' not in metadata.get('modalities',{}).get('input',[]):raise ValueError('The configured video-understanding model is unavailable.')
         from app.services.usage import check_allowance,record

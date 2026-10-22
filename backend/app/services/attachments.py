@@ -7,7 +7,9 @@ from app.services.model_routing import ModelCapabilityError, gateway_catalog
 
 async def transcribe_audio(file):
     data = base64.b64decode(file['data'], validate=True)
-    if settings.LLM_USE_GATEWAY:
+    if settings.OMNIROUTE_API_BASE:
+        raise ModelCapabilityError('This OmniRoute connection does not expose audio transcription. Your original file is saved.')
+    if settings.LLM_USE_GATEWAY and not settings.OMNIROUTE_API_BASE:
         import ai
         from ai.types.messages import FilePart
         model = settings.AUDIO_TRANSCRIPTION_MODEL
@@ -20,7 +22,7 @@ async def transcribe_audio(file):
         from openai import AsyncOpenAI
         from app.services.llm_gateway import completion_options
         connection = completion_options('gpt-6.1-sol', 'openai')
-        async with AsyncOpenAI(api_key=connection['api_key'], base_url=settings.LLM_API_BASE or 'https://api.openai.com/v1', max_retries=0) as client:
+        async with AsyncOpenAI(api_key=connection['api_key'], base_url=connection.get('api_base', 'https://api.openai.com/v1'), default_headers=connection.get('extra_headers'), max_retries=0) as client:
             result = await client.audio.transcriptions.create(model=settings.AUDIO_TRANSCRIPTION_MODEL.removeprefix('openai/'), file=(file['name'], data, file['mime']), timeout=90)
         text = result.text
     if not text.strip():

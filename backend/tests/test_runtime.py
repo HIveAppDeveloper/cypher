@@ -242,6 +242,26 @@ def test_gateway_model_mapping_and_credentials(monkeypatch):
         llm_gateway.completion_options()
 
 
+def test_omniroute_takes_precedence_without_gateway_credentials(monkeypatch):
+    from app.services import llm_gateway
+    from app.services.model_routing import ModelConfigurationError
+    settings = llm_gateway.settings
+    monkeypatch.setattr(settings, 'LLM_USE_GATEWAY', True)
+    monkeypatch.setattr(settings, 'OMNIROUTE_API_BASE', 'https://omniroute.example/v1')
+    monkeypatch.setattr(settings, 'OMNIROUTE_API_KEY', 'test-grokbot-key')
+    monkeypatch.setattr(settings, 'OMNIROUTE_MODEL', 'cx/verified-sol')
+    monkeypatch.setattr(settings, 'OMNIROUTE_FALLBACK_MODEL', 'cx/verified-luna')
+    monkeypatch.setattr(settings, 'OMNIROUTE_PROTECTION_BYPASS', 'test-bypass')
+    monkeypatch.delenv('AI_GATEWAY_API_KEY', raising=False)
+    assert llm_gateway.completion_options('gpt-6.1-sol', 'openai') == {
+        'model': 'openai/cx/verified-sol', 'api_base': 'https://omniroute.example/v1',
+        'api_key': 'test-grokbot-key', 'extra_headers': {'x-vercel-protection-bypass': 'test-bypass'},
+    }
+    assert llm_gateway.completion_options('gpt-6-luna', 'openai')['model'] == 'openai/cx/verified-luna'
+    with pytest.raises(ModelConfigurationError, match='GPT-6.1 Sol and GPT-6 Luna only'):
+        llm_gateway.completion_options('gemini-3.8-flash', 'gemini')
+
+
 def test_supported_generation_settings(monkeypatch):
     from app.services import llm_gateway
     from app.schemas.input import RunOptions

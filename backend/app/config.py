@@ -14,6 +14,11 @@ class Settings(BaseSettings):
     LLM_PROVIDER: str = "openai"
     LLM_API_KEY: str = ""
     LLM_API_BASE: str | None = None
+    OMNIROUTE_API_BASE: str | None = None
+    OMNIROUTE_API_KEY: str = Field(default="", repr=False)
+    OMNIROUTE_MODEL: str = ""
+    OMNIROUTE_FALLBACK_MODEL: str = ""
+    OMNIROUTE_PROTECTION_BYPASS: str = Field(default="", repr=False)
     LLM_MODEL: str = "gpt-6.1-sol"
     # Optional, explicitly configured backup. Never discard unsupported inputs.
     LLM_FALLBACK_MODEL: str | None = None

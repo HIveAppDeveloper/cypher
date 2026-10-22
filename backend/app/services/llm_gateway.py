@@ -22,6 +22,20 @@ def model_selection(model=None, provider=None, *, specialist=False):
 
 def completion_options(model=None, provider=None, *, specialist=False, direct=False):
     provider, model = model_selection(model, provider, specialist=specialist)
+    if settings.OMNIROUTE_API_BASE and not direct:
+        if provider != "openai" or model not in {"gpt-6.1-sol", "gpt-6-luna"}:
+            raise ModelConfigurationError("OmniRoute is configured for GPT-6.1 Sol and GPT-6 Luna only.")
+        key = settings.OMNIROUTE_API_KEY
+        alias = settings.OMNIROUTE_MODEL if model == "gpt-6.1-sol" else settings.OMNIROUTE_FALLBACK_MODEL
+        if not key or not alias:
+            raise ModelConfigurationError("OmniRoute needs its server-side API key and a model alias for the selected GPT model.")
+        base = settings.OMNIROUTE_API_BASE.rstrip("/")
+        if not base.startswith("https://") or not base.endswith("/v1"):
+            raise ModelConfigurationError("OmniRoute needs an HTTPS API base ending in /v1.")
+        connection = {"model": "openai/" + alias, "api_base": base, "api_key": key}
+        if settings.OMNIROUTE_PROTECTION_BYPASS:
+            connection["extra_headers"] = {"x-vercel-protection-bypass": settings.OMNIROUTE_PROTECTION_BYPASS}
+        return connection
     if settings.LLM_USE_GATEWAY and not direct:
         gateway_provider = {"gemini": "google"}.get(provider, provider)
         model = {"claude-sonnet-4-5": "claude-sonnet-4.5"}.get(model, model)
@@ -76,7 +90,9 @@ def generation_options(options, provider, model):
     if not is_gpt5 or reasoning == "none":
         kwargs["temperature"] = options.temperature
     if provider == "openai" and options.service_tier:
-        if settings.LLM_USE_GATEWAY and options.service_tier != "default":
+        if settings.OMNIROUTE_API_BASE:
+            pass  # The router owns provider-specific service tiers.
+        elif settings.LLM_USE_GATEWAY and options.service_tier != "default":
             kwargs["extra_body"] = {"providerOptions": {"gateway": {"serviceTier": options.service_tier}}}
         elif not settings.LLM_USE_GATEWAY:
             kwargs["service_tier"] = options.service_tier
@@ -112,7 +128,7 @@ class LLMGateway:
             try:
                 # Avoid forwarding sampling controls to models that only accept
                 # reasoning. Preserve the provider's supported effort levels.
-                if settings.LLM_USE_GATEWAY:
+                if settings.LLM_USE_GATEWAY and not settings.OMNIROUTE_API_BASE:
                     from app.services.model_routing import gateway_catalog
                     from app.services.model_profiles import gateway_id
                     meta = (await gateway_catalog())[gateway_id(route_provider,route_model)]

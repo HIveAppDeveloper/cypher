@@ -56,7 +56,7 @@ def required_modalities(messages):
 
 async def validate_capabilities(messages, tools, provider, model):
     required = required_modalities(messages)
-    if settings.LLM_USE_GATEWAY:
+    if settings.LLM_USE_GATEWAY and not settings.OMNIROUTE_API_BASE:
         from app.services.model_profiles import gateway_id
         item = (await gateway_catalog()).get(gateway_id(provider,model))
         if item is None or item.get("type") != "language":
@@ -98,7 +98,7 @@ def public_model_error(error):
     status = getattr(error, "status_code", None)
     kind, reason = type(error).__name__.lower(), str(error).lower()
     if status == 401 or "authentication" in kind or "authentication" in reason:
-        return "The model connection could not authenticate. Check the backend and worker's gateway key or rotating Vercel OIDC token. Your message and files are saved; no model result was produced."
+        return "The model connection could not authenticate. Check the backend and worker's model provider credentials. Your message and files are saved; no model result was produced."
     if status == 402 or any(word in reason for word in ("credit", "quota", "budget", "restrictedmodelserror", "free tier users")):
         return "The model provider reports a credit, quota, or budget limit. Review the provider account before retrying. Your message and files are saved."
     if status == 403:

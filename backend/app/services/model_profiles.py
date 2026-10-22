@@ -12,16 +12,16 @@ class Profile:
 
 PROFILES = {
     'general': Profile('openai', 'gpt-6.1-sol', ('openai', 'gpt-6-luna')),
-    'planning': Profile('openai', 'gpt-6-astra', ('openai', 'gpt-6.1-sol')),
-    'coding': Profile('anthropic', 'claude-sonnet-5.5', ('openai', 'gpt-6.1-sol')),
-    'research': Profile('gemini', 'gemini-3.8-flash', ('openai', 'gpt-6.1-sol')),
-    'writing': Profile('anthropic', 'claude-sonnet-5.5', ('openai', 'gpt-6.1-sol')),
-    'analysis': Profile('deepseek', 'deepseek-v4.1-flash', ('openai', 'gpt-6.1-sol')),
-    'review': Profile('spacexai', 'grok-4.7', ('openai', 'gpt-6.1-sol')),
+    'planning': Profile('openai', 'gpt-6.1-sol', ('openai', 'gpt-6-luna')),
+    'coding': Profile('openai', 'gpt-6.1-sol', ('openai', 'gpt-6-luna')),
+    'research': Profile('openai', 'gpt-6.1-sol', ('openai', 'gpt-6-luna')),
+    'writing': Profile('openai', 'gpt-6.1-sol', ('openai', 'gpt-6-luna')),
+    'analysis': Profile('openai', 'gpt-6.1-sol', ('openai', 'gpt-6-luna')),
+    'review': Profile('openai', 'gpt-6.1-sol', ('openai', 'gpt-6-luna')),
     'execution': Profile('openai', 'gpt-6-luna', ('openai', 'gpt-6.1-sol')),
-    'vision': Profile('gemini', 'gemini-3.8-flash', ('openai', 'gpt-6.1-sol')),
+    'vision': Profile('openai', 'gpt-6.1-sol', ('openai', 'gpt-6-luna')),
 }
-LEGACY_SPECIALISTS = {('gemini','gemini-3.5-flash'), ('anthropic','claude-sonnet-4.6'), ('deepseek','deepseek-v3.2')}
+LEGACY_SPECIALISTS = {('gemini','gemini-3.5-flash'), ('anthropic','claude-sonnet-4.6'), ('deepseek','deepseek-v3.2'), ('openai','gpt-6-astra'), ('anthropic','claude-sonnet-5.5'), ('gemini','gemini-3.8-flash'), ('deepseek','deepseek-v4.1-flash'), ('spacexai','grok-4.7')}
 ALLOWED_MODELS = {(p.provider,p.model) for p in PROFILES.values()} | {p.fallback for p in PROFILES.values()} | LEGACY_SPECIALISTS
 
 

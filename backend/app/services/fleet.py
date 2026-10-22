@@ -43,5 +43,5 @@ class ModelFleet:
 
     def register(self, registry):
         registry.register('consult_specialist',
-            'Ask an independent, tool-free specialist to check evidence: Gemini for research, Claude for coding and writing, DeepSeek for analysis, Grok for review, Astra for planning and Luna for focused execution advice. These consultations cannot browse or act. Search current sources yourself first. At most three consultations per task. Include evidence, never credentials. Verify the result.',
+            'Ask an independent, tool-free GPT specialist to check evidence. These consultations cannot browse or act. Search current sources yourself first. At most three consultations per task. Include evidence, never credentials. Verify the result.',
             {'type':'object','properties':{'specialty':{'type':'string','enum':list(SPECIALISTS)},'task':{'type':'string','maxLength':12000}},'required':['specialty','task']}, self.consult)

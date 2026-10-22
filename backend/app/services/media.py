@@ -6,6 +6,8 @@ from app.config import settings
 MAX_ASSET_BYTES = 32 * 1024 * 1024
 
 async def generate_media(kind: str, prompt: str, aspect_ratio='16:9', duration=4, image_provider=None):
+    if settings.OMNIROUTE_API_BASE:
+        raise ValueError('This OmniRoute connection does not expose image or video generation.')
     import ai
     if not prompt.strip():
         raise ValueError('Describe the media you want to generate.')

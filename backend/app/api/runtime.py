@@ -30,7 +30,8 @@ async def runtime(db=Depends(get_db)):
         result = recorded_checks.get(name)
         if result: details[name] = {'status':result.status,'detail':result.detail,'checked_at':result.updated_at.isoformat()+'Z'}
     configured = heartbeats.get('gateway_configured')
-    return {'checks':details, **checks, 'database':True,'worker':worker_fresh and version_ready,'worker_last_seen_seconds':int(age) if age is not None else None,'worker_version_matches':version_matches,'deployment':deployment,'worker_deployment':worker_deployment,'gateway_configured':bool(configured or os.getenv('AI_GATEWAY_API_KEY') or os.getenv('VERCEL_OIDC_TOKEN') or os.getenv('VERCEL_OIDC_TOKEN_FILE')),'sandbox_backend':settings.SANDBOX_BACKEND}
+    model_configured = bool(settings.OMNIROUTE_API_BASE and settings.OMNIROUTE_API_KEY and settings.OMNIROUTE_MODEL and settings.OMNIROUTE_FALLBACK_MODEL) if settings.OMNIROUTE_API_BASE else bool(configured or os.getenv('AI_GATEWAY_API_KEY') or os.getenv('VERCEL_OIDC_TOKEN') or os.getenv('VERCEL_OIDC_TOKEN_FILE'))
+    return {'checks':details, **checks, 'database':True,'worker':worker_fresh and version_ready,'worker_last_seen_seconds':int(age) if age is not None else None,'worker_version_matches':version_matches,'deployment':deployment,'worker_deployment':worker_deployment,'gateway_configured':model_configured,'model_route':'OmniRoute' if settings.OMNIROUTE_API_BASE else 'Vercel AI Gateway' if settings.LLM_USE_GATEWAY else 'Direct provider','sandbox_backend':settings.SANDBOX_BACKEND}
 
 @router.post('/checks', status_code=202)
 async def request_checks(db=Depends(get_db)):
