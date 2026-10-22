@@ -225,7 +225,7 @@ class ToolRegistry:
 
         self.register(
             name="browser_type",
-            description="Type text into an input field on the current web page.",
+            description="Type into an input field, or select a native dropdown option by its exact value or visible label. Use the selector and available options returned by browser_extract. Selection does not submit a form.",
             parameters={
                 "type": "object",
                 "properties": {
@@ -235,7 +235,7 @@ class ToolRegistry:
                     },
                     "text": {
                         "type": "string",
-                        "description": "The text to type into the field.",
+                        "description": "Text to type, or the exact dropdown option value or label to select.",
                     },
                 },
                 "required": ["selector", "text"],
@@ -276,7 +276,7 @@ class ToolRegistry:
         self.register(
             name="browser_fill_form",
             description=(
-                "Fill multiple form fields on the current web page at once. "
+                "Fill multiple input fields or select native dropdown options on the current web page at once. "
                 "Provide a mapping of CSS selectors to values."
             ),
             parameters={

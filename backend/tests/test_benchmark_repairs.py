@@ -417,6 +417,34 @@ def test_auto_routes_booking_workflows_to_planning_without_hijacking_writing_or_
 
 
 @pytest.mark.asyncio
+async def test_agent_native_dropdown_selection_uses_observed_values_and_fires_change_without_submission(monkeypatch):
+    from app.services.tools import registry as registry_module
+    from app.services.tools.browser import BrowserTool
+    browser=BrowserTool()
+    async def save(*a):pass
+    monkeypatch.setattr(browser,'_save_state',save)
+    monkeypatch.setattr(browser,'_load_state',lambda *a: asyncio.sleep(0,result=None))
+    monkeypatch.setattr(registry_module,'_browser_tool',browser)
+    try:
+        page=await browser._get_page('dropdown-test')
+        await page.set_content('<form onsubmit="document.body.dataset.submitted=\'yes\';return false"><label>Rooms<select id="rooms" onchange="document.body.dataset.rooms=this.value"><option value="0">No rooms</option><option value="1">One room, $438</option><option disabled value="2">Two rooms</option><option value="3">Duplicate</option><option value="4">Duplicate</option></select></label><button>Reserve</button></form>')
+        tools=ToolRegistry();tools.register_default_tools()
+        controls=(await browser.extract_content('Show form fields','dropdown-test'))['controls']
+        field=next(c for c in controls if c['tag']=='select')
+        assert field['label'].startswith('Rooms') and field['options'][1]['value']=='1'
+        assert not field['options_truncated']
+        handler=tools._tools['browser_type']['handler']
+        result=await handler({'selector':field['selector'],'text':'One room, $438'},'dropdown-test')
+        assert result['success'] and result['selected_options']==['One room, $438']
+        assert await page.evaluate('document.body.dataset.rooms')=='1'
+        for text in ['Two rooms','Duplicate','invented']:
+            assert not (await handler({'selector':field['selector'],'text':text},'dropdown-test'))['success']
+        assert await page.locator('#rooms').input_value()=='1'
+        assert await page.evaluate('document.body.dataset.submitted') is None
+    finally:await browser.close()
+
+
+@pytest.mark.asyncio
 async def test_agent_screenshot_tool_can_capture_totals_below_viewport(monkeypatch):
     from app.services.tools import registry as registry_module
     from app.services.tools.browser import BrowserTool

@@ -213,13 +213,16 @@ class BrowserTool:
             // Results must not disappear behind a long list of filter checkboxes.
             // An explicit extraction request for fields brings those back first.
             nodes.sort((a,b)=>rank(a)-rank(b));
+            let optionBudget=100;
             return nodes.slice(0,100).map((el,index)=>{
                 const id=prefix+'-'+index;el.setAttribute('data-grokbot-control',id);
+                const options=el.tagName==='SELECT'?[...el.options].slice(0,Math.min(20,optionBudget)).map(o=>({value:o.value.slice(0,80),label:o.text.trim().slice(0,120),disabled:o.disabled})):null;
+                if(options)optionBudget-=options.length;
                 return {selector:'[data-grokbot-control="'+id+'"]',tag:el.tagName.toLowerCase(),
                     type:el.getAttribute('type')||'',name:el.getAttribute('name')||'',
                     label:(el.getAttribute('aria-label')||el.getAttribute('title')||[...(el.labels||[])].map(l=>l.innerText).join(' ')||el.innerText||el.getAttribute('placeholder')||(['submit','button','reset'].includes(el.type)?el.value:'')||'').trim().slice(0,200),
                     ...(['checkbox','radio'].includes(el.type)?{checked:el.checked}:{}),
-                    ...(el.tagName==='SELECT'?{selected_options:[...el.selectedOptions].map(o=>o.text.trim()).slice(0,20)}:{}),
+                    ...(options?{options,options_truncated:options.length<el.options.length,selected_options:[...el.selectedOptions].map(o=>o.text.trim()).slice(0,20)}:{}),
                     ...(el.tagName==='A'?{href:el.href}:{}),disabled:!!el.disabled};
             });
         }""",{'prefix':uuid4().hex[:12],'fieldsFirst':bool(re.search(r'\b(filters?|forms?|fields?|inputs?|checkboxes)\b',instruction,re.I))})
@@ -260,6 +263,16 @@ class BrowserTool:
         """
         page = await self._get_page(session_id)
         try:
+            target=page.locator(selector)
+            if await target.evaluate('(el)=>el.tagName')=='SELECT':
+                options=await target.locator('option').evaluate_all('(nodes)=>nodes.map(o=>({value:o.value,label:o.text.trim(),disabled:o.disabled||!!o.closest("optgroup[disabled]")}))')
+                matches=[o for o in options if o['value']==text]
+                if not matches:matches=[o for o in options if o['label']==text.strip()]
+                if len(matches)!=1 or matches[0]['disabled']:
+                    return {'success':False,'selector':selector,'error':'Choose one exact enabled option value or label from the current control. No option was selected.'}
+                await target.select_option(value=matches[0]['value'],timeout=5000)
+                await self._save_state(session_id)
+                return {'success':True,'selector':selector,'selected_options':await target.locator('option:checked').all_text_contents()}
             if clear_first:
                 await page.fill(selector, text, timeout=5000)
             else:
