@@ -220,10 +220,11 @@ class ToolRegistry:
         self.register(
             name="browser_screenshot",
             description=(
-                "Take a screenshot of the current web page. Returns a base64-"
-                "encoded PNG image along with the page title and URL."
+                "Capture the current web page as a real image attachment. Small pages are captured in full by default. "
+                "Use full_page=true when relevant totals or other requested evidence are below the viewport. "
+                "Check that the image contains the evidence before delivering it."
             ),
-            parameters={"type": "object", "properties": {}},
+            parameters={"type": "object", "properties": {'full_page':{'type':'boolean','description':'Capture the entire page. Omit for automatic full-page capture up to 2400px, otherwise the current viewport.'}}},
             handler=self._handle_browser_screenshot,
         )
 
@@ -473,7 +474,7 @@ class ToolRegistry:
         )
 
     async def _handle_browser_screenshot(self, args: dict, bot_id: str) -> dict:
-        return await _browser_tool.screenshot(session_id=bot_id)
+        return await _browser_tool.screenshot(session_id=bot_id,full_page=args.get('full_page'))
 
     async def _handle_browser_extract(self, args: dict, bot_id: str) -> dict:
         return await _browser_tool.extract_content(

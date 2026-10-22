@@ -362,6 +362,31 @@ def test_auto_routes_booking_workflows_to_planning_without_hijacking_writing_or_
     assert task_specialty('What does a hotel reservation mean?')=='general'
 
 
+@pytest.mark.asyncio
+async def test_agent_screenshot_tool_can_capture_totals_below_viewport(monkeypatch):
+    from app.services.tools import registry as registry_module
+    from app.services.tools.browser import BrowserTool
+    browser=BrowserTool()
+    async def save(*a):pass
+    monkeypatch.setattr(browser,'_save_state',save)
+    monkeypatch.setattr(browser,'_load_state',lambda *a: asyncio.sleep(0,result=None))
+    monkeypatch.setattr(registry_module,'_browser_tool',browser)
+    try:
+        page=await browser._get_page('screenshot-test')
+        await page.set_content('<body style="margin:0;height:1200px"><h1>Checkout review</h1><p style="position:absolute;top:1000px">Total: $43.18</p></body>')
+        tools=ToolRegistry();tools.register_default_tools()
+        capture=tools._tools['browser_screenshot']['handler']
+        result=await capture({},'screenshot-test')
+        png=base64.b64decode(result['screenshot_base64'])
+        assert result['success'] and result['full_page']
+        assert int.from_bytes(png[20:24],'big')==1200
+        result=await capture({'full_page':False},'screenshot-test')
+        assert int.from_bytes(base64.b64decode(result['screenshot_base64'])[20:24],'big')==720
+        result=await capture({'full_page':True},'screenshot-test')
+        assert result['full_page']
+    finally:await browser.close()
+
+
 def test_explicit_word_budgets_count_visible_prose_and_follow_owner_steering():
     assert word_limit('Keep it under 180 words.')==179
     assert word_limit('At most 20 words')==20

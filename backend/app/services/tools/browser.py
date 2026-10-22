@@ -269,19 +269,21 @@ class BrowserTool:
             return {"success": False, "error": str(e), "selector": selector}
 
     async def screenshot(
-        self, session_id: str = "default", full_page: bool = False
+        self, session_id: str = "default", full_page: bool | None = None
     ) -> dict:
         """Capture a screenshot of the current page.
 
         Args:
             session_id: Browser session identifier.
-            full_page: Whether to capture the entire scrollable page.
+            full_page: Capture the entire page, or automatically do so for small pages.
 
         Returns:
             Dict with base64-encoded screenshot and page info.
         """
         page = await self._get_page(session_id)
         try:
+            if full_page is None:
+                full_page=await page.evaluate('Math.max(document.documentElement.scrollHeight,document.body?.scrollHeight||0)<=2400')
             screenshot_bytes = await page.screenshot(
                 full_page=full_page, type="png"
             )
@@ -294,6 +296,7 @@ class BrowserTool:
                 "title": title,
                 "url": page.url,
                 "size_bytes": len(screenshot_bytes),
+                "full_page": full_page,
             }
         except Exception as e:
             logger.error(f"Screenshot failed: {e}")
