@@ -19,6 +19,8 @@ dependencies = [
     "python-multipart>=0.0.12",
     "httpx>=0.28.0",
     "Pillow>=12.0.0",
+    "pypdfium2==5.0.0",
+    "yt-dlp[default]==2026.10.21",
     "google-auth[requests]>=2.40.0",
     "ai[vercel]==0.8.0",
     "vercel-oidc==0.10.0",
