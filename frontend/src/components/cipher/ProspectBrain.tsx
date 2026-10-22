@@ -3,9 +3,9 @@ import { useEffect, useRef, useState } from 'react';
 import type { Lead, SignalKind } from '../../lib/cipher/engine';
 import { SIGNAL_MAX } from '../../lib/cipher/engine';
 
-// Prospect Brain: every account is a node in a rotating 3D field.
-// Distance from the core = how many buying signals are firing (hot accounts sit at the centre).
-// Direction = which signals drive it; each signal is a hub on the outer shell.
+// Prospect Brain: a rotating 3D graph of every account in the territory.
+// Distance from the centre = how many buying signals are firing (hot accounts sit in the middle).
+// Each account links to the signal hubs (hiring, raising, spending, momentum) that drive it.
 type V3 = [number, number, number];
 type Node = { id: string; lead: Lead; pos: V3; born: number };
 type Projected = { x: number; y: number; z: number; f: number };
@@ -16,20 +16,9 @@ const HUBS: { kind: SignalKind; label: string; dir: V3 }[] = [
   { kind: 'spending', label: 'SPENDING', dir: norm([1, -.62, -.7]) },
   { kind: 'news', label: 'MOMENTUM', dir: norm([-1, -.62, .7]) },
 ];
-const SHELL = buildShell(340);
 
 function norm(v: V3): V3 { const l = Math.hypot(...v) || 1; return [v[0] / l, v[1] / l, v[2] / l]; }
 function hash(s: string) { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return (h >>> 0) / 4294967295; }
-function buildShell(n: number): { p: V3; d: string }[] {
-  const out: { p: V3; d: string }[] = []; const golden = Math.PI * (3 - Math.sqrt(5));
-  for (let i = 0; i < n; i++) {
-    const y = 1 - (i / (n - 1)) * 2, r = Math.sqrt(1 - y * y), th = golden * i;
-    let x = Math.cos(th) * r; const z = Math.sin(th) * r;
-    x += Math.sign(x) * .07; // a shallow fissure between two hemispheres
-    out.push({ p: [x * 1.32, y * .86, z * 1.02], d: i % 3 ? (i % 2 ? '1' : '0') : '·' });
-  }
-  return out;
-}
 function placeLead(lead: Lead): V3 {
   let v: V3 = [0, 0, 0];
   for (const s of lead.signals) { const hub = HUBS.find(h => h.kind === s.kind); if (!hub) continue; const w = s.strength / SIGNAL_MAX[s.kind]; v = [v[0] + hub.dir[0] * w, v[1] + hub.dir[1] * w, v[2] + hub.dir[2] * w]; }
@@ -42,7 +31,7 @@ function placeLead(lead: Lead): V3 {
 
 export default function ProspectBrain({ leads, running, selected, filter, onSelect }: { leads: Lead[]; running: boolean; selected: string | null; filter: 'All' | Lead['tier']; onSelect: (id: string) => void }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const state = useRef({ yaw: .6, pitch: -.32, zoom: 1, hover: null as string | null, drag: null as null | { x: number; y: number; moved: number }, nodes: new Map<string, Node>(), running, selected, filter, onSelect, links: [] as [string, string][] });
+  const state = useRef({ yaw: .6, pitch: -.32, zoom: 1, hover: null as string | null, drag: null as null | { x: number; y: number; moved: number }, nodes: new Map<string, Node>(), running, selected, filter, onSelect });
   const [hoverLead, setHoverLead] = useState<Lead | null>(null);
   state.current.running = running; state.current.selected = selected; state.current.filter = filter; state.current.onSelect = onSelect;
 
@@ -54,98 +43,96 @@ export default function ProspectBrain({ leads, running, selected, filter, onSele
       if (existing) existing.lead = lead;
       else st.nodes.set(lead.id, { id: lead.id, lead, pos: placeLead(lead), born: leads.length > 6 && !running ? now - 2000 + i * 40 : now });
     });
-    const list = Array.from(st.nodes.values()); const links: [string, string][] = [];
-    for (const n of list) {
-      const near = list.filter(m => m !== n).map(m => ({ m, d: Math.hypot(m.pos[0] - n.pos[0], m.pos[1] - n.pos[1], m.pos[2] - n.pos[2]) })).sort((a, b) => a.d - b.d).slice(0, 2);
-      for (const { m } of near) if (!links.some(([a, b]) => (a === m.id && b === n.id))) links.push([n.id, m.id]);
-    }
-    st.links = links;
   }, [leads, running]);
 
   useEffect(() => {
     const canvas = canvasRef.current; if (!canvas) return;
     const ctx = canvas.getContext('2d'); if (!ctx) return;
     const st = state.current; const reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
-    let w = 0, h = 0, raf = 0, colors = { ink: '#000', ink2: '#666', card: '#fff' };
+    let w = 0, h = 0, raf = 0, colors = { ink: '#000', ink2: '#8e8e93', ink3: '#c7c7cc', card: '#fff' };
     let projected = new Map<string, Projected & { r: number }>();
 
-    const readColors = () => { const cs = getComputedStyle(canvas); colors = { ink: cs.getPropertyValue('--cx-label').trim() || '#000', ink2: cs.getPropertyValue('--cx-label-2').trim() || '#666', card: cs.getPropertyValue('--cx-card').trim() || '#fff' }; };
+    const readColors = () => { const cs = getComputedStyle(canvas); const dark = cs.getPropertyValue('--cx-card').trim() !== '#ffffff'; colors = { ink: cs.getPropertyValue('--cx-label').trim() || '#000', ink2: dark ? '#8e8e93' : '#8e8e93', ink3: dark ? '#48484a' : '#c7c7cc', card: cs.getPropertyValue('--cx-card').trim() || '#fff' }; };
     const resize = () => { const r = canvas.getBoundingClientRect(); const dpr = Math.min(window.devicePixelRatio || 1, 2); w = r.width; h = r.height; canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); readColors(); };
     const project = (p: V3): Projected => {
       const cy = Math.cos(st.yaw), sy = Math.sin(st.yaw), cp = Math.cos(st.pitch), sp = Math.sin(st.pitch);
       const x1 = p[0] * cy - p[2] * sy, z1 = p[0] * sy + p[2] * cy;
       const y2 = p[1] * cp - z1 * sp, z2 = p[1] * sp + z1 * cp;
-      const f = 3.2 / (3.2 + z2); const scale = Math.min(w / 2.9, h / 2.05) * st.zoom;
-      return { x: w / 2 + x1 * f * scale, y: h / 2 + y2 * f * scale, z: z2, f };
+      const f = 3.2 / (3.2 + z2); const scale = Math.min(w / 3.2, h / 2.5) * st.zoom;
+      return { x: w / 2 + x1 * f * scale, y: h / 2 + 24 + y2 * f * scale, z: z2, f };
     };
     const matches = (l: Lead) => st.filter === 'All' || l.tier === st.filter;
 
+    const FONT = "-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Inter Variable', sans-serif";
+    const hubPos = (hub: typeof HUBS[number]): V3 => [hub.dir[0] * 1.3, hub.dir[1] * .9, hub.dir[2] * 1.05];
+    const tierColor = (tier: Lead['tier']) => (tier === 'Hot' ? colors.ink : tier === 'Warm' ? colors.ink2 : colors.ink3);
+
     const draw = (t: number) => {
-      if (!st.drag && !reduce.matches) st.yaw += st.running ? .0042 : .0016;
+      if (!st.drag && !st.hover && !reduce.matches) st.yaw += st.running ? .004 : .0015;
       ctx.clearRect(0, 0, w, h);
-      // shell
-      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      for (let i = 0; i < SHELL.length; i++) {
-        const s = SHELL[i]; const q = project(s.p); const depth = (1 - q.z) / 2;
-        let a = .05 + depth * .2; if (st.running) a *= .75 + .5 * Math.max(0, Math.sin(t / 220 + i * .7));
-        ctx.globalAlpha = a; ctx.fillStyle = colors.ink;
-        ctx.font = `${(7 + depth * 5) * q.f * st.zoom}px -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Inter Variable', sans-serif`;
-        ctx.fillText(s.d, q.x, q.y);
-      }
-      // hubs
-      for (const hub of HUBS) {
-        const q = project([hub.dir[0] * 1.42, hub.dir[1] * .98, hub.dir[2] * 1.15]); const depth = (1 - q.z) / 2;
-        ctx.globalAlpha = .35 + depth * .55; ctx.strokeStyle = colors.ink; ctx.lineWidth = 1;
-        ctx.beginPath(); ctx.arc(q.x, q.y, 4 * q.f, 0, Math.PI * 2); ctx.stroke();
-        ctx.fillStyle = colors.ink2; ctx.font = `600 ${10.5 * Math.max(.85, q.f)}px -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Inter Variable', sans-serif`;
-        ctx.fillText(hub.label, q.x, q.y - 14 * q.f);
-      }
-      // core
-      const core = project([0, 0, 0]);
-      ctx.globalAlpha = st.running ? .14 + .1 * Math.sin(t / 260) : .1; ctx.fillStyle = colors.ink;
-      ctx.beginPath(); ctx.arc(core.x, core.y, 26 * core.f * st.zoom, 0, Math.PI * 2); ctx.fill();
-      // nodes
+      ctx.textBaseline = 'middle';
+      const zs = Math.sqrt(st.zoom);
+      const hubs = HUBS.map(hub => ({ hub, q: project(hubPos(hub)) }));
       projected = new Map();
       const nodes = Array.from(st.nodes.values());
-      for (const n of nodes) { const q = project(n.pos); const grow = Math.min(1, (t - n.born) / 650); const e = 1 - Math.pow(1 - Math.max(0, grow), 3); projected.set(n.id, { ...q, r: (3 + n.lead.score / 100 * 7.5) * q.f * Math.sqrt(st.zoom) * e }); }
+      for (const n of nodes) {
+        const q = project(n.pos); const grow = Math.min(1, Math.max(0, (t - n.born) / 600)); const e = 1 - Math.pow(1 - grow, 3);
+        projected.set(n.id, { ...q, r: (3.5 + n.lead.score / 100 * 6) * q.f * zs * e });
+      }
       const focus = st.hover || st.selected;
-      // synapses
-      ctx.lineWidth = .8;
-      for (const [a, b] of st.links) {
-        const p = projected.get(a), q = projected.get(b); if (!p || !q || !p.r || !q.r) continue;
-        const lit = focus === a || focus === b;
-        ctx.globalAlpha = lit ? .55 : .1 + ((2 - p.z - q.z) / 4) * .12; ctx.strokeStyle = colors.ink;
-        ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(q.x, q.y); ctx.stroke();
+      const focusLead = focus ? st.nodes.get(focus)?.lead : undefined;
+
+      // edges: each prospect to the signal hubs that drive it
+      ctx.lineWidth = 1;
+      for (const n of nodes) {
+        const p = projected.get(n.id)!; if (p.r <= .2) continue;
+        const on = matches(n.lead);
+        for (const sig of n.lead.signals) {
+          const hq = hubs.find(x => x.hub.kind === sig.kind)!.q;
+          const lit = n.id === focus;
+          ctx.globalAlpha = lit ? .9 : on ? .1 + (1 - (p.z + hq.z) / 2) * .08 : .04;
+          ctx.strokeStyle = lit ? colors.ink : colors.ink2;
+          ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(hq.x, hq.y); ctx.stroke();
+        }
       }
-      // focus wires to hubs
-      if (focus && st.nodes.get(focus)) {
-        const n = st.nodes.get(focus)!; const p = projected.get(focus)!;
-        ctx.setLineDash([3, 4]);
-        for (const s of n.lead.signals) { const hub = HUBS.find(x => x.kind === s.kind)!; const q = project([hub.dir[0] * 1.42, hub.dir[1] * .98, hub.dir[2] * 1.15]); ctx.globalAlpha = .45; ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(q.x, q.y); ctx.stroke(); }
-        ctx.setLineDash([]);
+
+      // hubs
+      for (const { hub, q } of hubs) {
+        const lit = !!focusLead?.signals.some(s => s.kind === hub.kind);
+        ctx.globalAlpha = 1; ctx.fillStyle = colors.card; ctx.strokeStyle = lit ? colors.ink : colors.ink2; ctx.lineWidth = lit ? 2 : 1.25;
+        ctx.beginPath(); ctx.arc(q.x, q.y, 9 * q.f * zs, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = lit ? colors.ink : colors.ink2; ctx.textAlign = 'center';
+        ctx.font = `600 11px ${FONT}`;
+        ctx.fillText(hub.label, q.x, q.y + 9 * q.f * zs + 12);
       }
+
+      // prospects, back to front
       const order = nodes.slice().sort((a, b) => projected.get(b.id)!.z - projected.get(a.id)!.z);
-      const labelled = new Set(nodes.filter(n => n.lead.tier === 'Hot').sort((a, b) => b.lead.score - a.lead.score).slice(0, 6).map(n => n.id));
       for (const n of order) {
         const q = projected.get(n.id)!; if (q.r <= .2) continue;
-        const depth = (1 - q.z) / 2; const on = matches(n.lead); const isFocus = n.id === focus;
-        const base = on ? .45 + depth * .55 : .12;
-        ctx.globalAlpha = base;
-        if (n.lead.tier === 'Hot') {
-          ctx.globalAlpha = base * .16; ctx.fillStyle = colors.ink; ctx.beginPath(); ctx.arc(q.x, q.y, q.r * 2.3, 0, Math.PI * 2); ctx.fill();
-          ctx.globalAlpha = base; ctx.beginPath(); ctx.arc(q.x, q.y, q.r, 0, Math.PI * 2); ctx.fill();
-        } else if (n.lead.tier === 'Warm') {
-          ctx.globalAlpha = base * .7; ctx.fillStyle = colors.ink; ctx.beginPath(); ctx.arc(q.x, q.y, q.r * .85, 0, Math.PI * 2); ctx.fill();
-        } else {
-          ctx.strokeStyle = colors.ink; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.arc(q.x, q.y, q.r * .7, 0, Math.PI * 2); ctx.stroke();
-        }
-        if (n.lead.stage !== 'drafted') { ctx.globalAlpha = base; ctx.strokeStyle = colors.ink; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.arc(q.x, q.y, q.r + 4, 0, Math.PI * 2); ctx.stroke(); }
-        if (isFocus) { ctx.globalAlpha = 1; ctx.strokeStyle = colors.ink; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(q.x, q.y, q.r + 7, 0, Math.PI * 2); ctx.stroke(); }
-        if ((labelled.has(n.id) && on) || isFocus) {
-          ctx.globalAlpha = isFocus ? 1 : .55 + depth * .45; ctx.fillStyle = colors.ink; ctx.textAlign = 'left';
-          ctx.font = `${isFocus ? 600 : 500} 12.5px -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Inter Variable', sans-serif`;
-          ctx.fillText(n.lead.company.name, q.x + q.r + 8, q.y); ctx.textAlign = 'center';
-        }
+        const on = matches(n.lead), isFocus = n.id === focus;
+        ctx.globalAlpha = on ? 1 : .18;
+        ctx.fillStyle = tierColor(n.lead.tier);
+        ctx.beginPath(); ctx.arc(q.x, q.y, q.r, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = colors.card; ctx.lineWidth = 1.5; ctx.stroke();
+        if (isFocus) { ctx.strokeStyle = colors.ink; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(q.x, q.y, q.r + 4, 0, Math.PI * 2); ctx.stroke(); }
+      }
+
+      // labels, front-most and highest-scoring first, skipping collisions
+      const placed: { x: number; y: number; w: number }[] = [];
+      const fits = (x: number, y: number, tw: number) => placed.every(r => x + tw / 2 + 4 < r.x - r.w / 2 || x - tw / 2 - 4 > r.x + r.w / 2 || Math.abs(y - r.y) > 14);
+      const labelOrder = nodes.slice().sort((a, b) => (b.id === focus ? 1 : 0) - (a.id === focus ? 1 : 0) || b.lead.score - a.lead.score);
+      ctx.textAlign = 'center';
+      for (const n of labelOrder) {
+        const q = projected.get(n.id)!; if (q.r <= .2 || (!matches(n.lead) && n.id !== focus)) continue;
+        const isFocus = n.id === focus;
+        ctx.font = `${isFocus ? 600 : n.lead.tier === 'Hot' ? 600 : 400} ${isFocus ? 13 : 11.5}px ${FONT}`;
+        const tw = ctx.measureText(n.lead.company.name).width, ly = q.y + q.r + 10;
+        if (!isFocus && !fits(q.x, ly, tw)) continue;
+        placed.push({ x: q.x, y: ly, w: tw });
+        ctx.globalAlpha = isFocus ? 1 : n.lead.tier === 'Hot' ? .95 : .7;
+        ctx.fillStyle = isFocus || n.lead.tier === 'Hot' ? colors.ink : colors.ink2;
+        ctx.fillText(n.lead.company.name, q.x, ly);
       }
       ctx.globalAlpha = 1;
       raf = requestAnimationFrame(draw);
@@ -153,7 +140,7 @@ export default function ProspectBrain({ leads, running, selected, filter, onSele
 
     const pick = (x: number, y: number) => {
       let best: string | null = null, bestD = Infinity;
-      for (const [id, q] of Array.from(projected)) { const d = Math.hypot(q.x - x, q.y - y); if (d < Math.max(10, q.r + 6) && d < bestD) { best = id; bestD = d; } }
+      for (const [id, q] of Array.from(projected)) { const d = Math.hypot(q.x - x, q.y - y); if (d < Math.max(14, q.r + 8) && d < bestD) { best = id; bestD = d; } }
       return best;
     };
     const local = (e: PointerEvent) => { const r = canvas.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; };
@@ -188,10 +175,10 @@ export default function ProspectBrain({ leads, running, selected, filter, onSele
 
   return (
     <div className="cx-brain">
-      <canvas ref={canvasRef} role="img" aria-label={`Prospect brain with ${leads.length} accounts. ${tiers('Hot')} hot accounts sit at the core. Use the Accounts tab for a list.`} />
+      <canvas ref={canvasRef} role="img" aria-label={`Prospect brain with ${leads.length} accounts. ${tiers('Hot')} hot accounts sit at the centre. Use the Accounts tab for a list.`} />
       <div className="cx-brain-title">
         <h2>Prospect Brain</h2>
-        <p>The closer to the core, the more buying signals are firing. Drag to rotate, click a prospect to open it.</p>
+        <p>The closer to the centre, the more buying signals are firing. Lines show which signals drive each account. Drag to rotate, click to open.</p>
       </div>
       <div className="cx-brain-zoom" role="group" aria-label="Zoom">
         <button type="button" aria-label="Zoom out" onClick={() => zoom(1 / 1.2)}>−</button>
@@ -202,7 +189,6 @@ export default function ProspectBrain({ leads, running, selected, filter, onSele
         <li><i className="hot" />Hot <b>{tiers('Hot')}</b></li>
         <li><i className="warm" />Warm <b>{tiers('Warm')}</b></li>
         <li><i className="watch" />Watch <b>{tiers('Watch')}</b></li>
-        <li><i className="ring" />In sequence</li>
       </ul>
       {hoverLead ? (
         <div className="cx-brain-tip" aria-hidden="true">
