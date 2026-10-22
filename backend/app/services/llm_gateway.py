@@ -19,11 +19,17 @@ def model_selection(model=None, provider=None, *, specialist=False):
     from app.services.model_profiles import ALLOWED_MODELS
     if (provider, model) not in ALLOWED_MODELS:
         raise ModelConfigurationError("Choose a configured task model in conversation settings. Model IDs are checked against the live catalog before use.")
+    if provider == 'auto':
+        from app.services import omniroute
+        if not omniroute.enabled():
+            raise ModelConfigurationError("OmniRoute cloud models require the cloud OmniRoute connection. Choose a direct provider model or connect OmniRoute.")
     return provider, model
 
 def completion_options(model=None, provider=None, *, specialist=False, direct=False):
     provider, model = model_selection(model, provider, specialist=specialist)
     from app.services import omniroute
+    if provider == 'auto' and direct:
+        raise ModelConfigurationError("OmniRoute cloud models cannot be used for a direct provider check. Select a direct provider model.")
     if omniroute.enabled() and not direct:
         return {'model': 'openai/' + omniroute.model_id(provider, model), 'api_base': omniroute.endpoint(), 'api_key': settings.OMNIROUTE_API_KEY,
                 'extra_headers': {k:v for k,v in omniroute.headers().items() if k != 'Authorization'}}

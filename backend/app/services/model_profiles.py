@@ -22,7 +22,8 @@ PROFILES = {
     'vision': Profile('gemini', 'gemini-3.8-flash', ('openai', 'gpt-6.1-sol')),
 }
 LEGACY_SPECIALISTS = {('gemini','gemini-3.5-flash'), ('anthropic','claude-sonnet-4.6'), ('deepseek','deepseek-v3.2')}
-ALLOWED_MODELS = {(p.provider,p.model) for p in PROFILES.values()} | {p.fallback for p in PROFILES.values()} | LEGACY_SPECIALISTS
+OMNIROUTE_AUTO_MODELS = {'best-coding', 'best-reasoning', 'best-vision', 'best-fast', 'best-chat'}
+ALLOWED_MODELS = {(p.provider,p.model) for p in PROFILES.values()} | {p.fallback for p in PROFILES.values()} | LEGACY_SPECIALISTS | {('auto', model) for model in OMNIROUTE_AUTO_MODELS}
 
 
 def task_specialty(prompt, role='', modalities=None):

@@ -30,7 +30,7 @@ class RunOptions(BaseModel):
     max_iterations: int = Field(default=10, ge=1, le=25)
     team_rounds: int = Field(default=1, ge=1, le=4)
     model: str | None = Field(default=None, min_length=1, max_length=160)
-    provider: Literal['openai', 'gemini', 'anthropic', 'ollama', 'deepseek', 'xai', 'spacexai'] | None = None
+    provider: Literal['openai', 'gemini', 'anthropic', 'ollama', 'deepseek', 'xai', 'spacexai', 'auto'] | None = None
     reasoning_effort: Literal['none', 'low', 'medium', 'high', 'xhigh', 'max'] | None = None
 
     @field_validator('model', mode='before')

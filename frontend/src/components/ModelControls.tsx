@@ -14,7 +14,7 @@ export function ModelControls({ value, onChange }: { value: ModelValue; onChange
   const reasoning = provider === 'openai' && (value.model?.startsWith('gpt-5') || newest);
   function changeProvider(next: string) { const first = MODEL_CHOICES.find(m => m.provider === next)!; onChange({ provider: next, model: first.model, reasoning_effort: next === 'openai' ? 'medium' : undefined }); }
   return <div className="model-controls">
-    <label htmlFor={`${id}-provider`}>Provider</label><GlassSelect id={`${id}-provider`} value={provider==='spacexai'?'xai':provider} onChange={e => changeProvider(e.target.value)}><option value="openai">OpenAI</option><option value="anthropic">Anthropic</option><option value="gemini">Google</option><option value="deepseek">DeepSeek</option><option value="xai">xAI</option></GlassSelect>
+    <label htmlFor={`${id}-provider`}>Provider</label><GlassSelect id={`${id}-provider`} value={provider==='spacexai'?'xai':provider} onChange={e => changeProvider(e.target.value)}><option value="openai">OpenAI</option><option value="anthropic">Anthropic</option><option value="gemini">Google</option><option value="deepseek">DeepSeek</option><option value="xai">xAI</option><option value="auto">OmniRoute cloud</option></GlassSelect>
     <label htmlFor={`${id}-model`}>Model</label><GlassSelect id={`${id}-model`} value={value.model || selected?.model} onChange={e => onChange({ ...value, model: e.target.value, reasoning_effort: e.target.value.startsWith('gpt-6') ? 'medium' : undefined })}>{models.map(m => <option key={m.id} value={m.model}>{m.label}</option>)}</GlassSelect>
     <p className="field-help">{selected?.detail}. Model access depends on your connection.</p>
     {provider === 'openai' ? <>
