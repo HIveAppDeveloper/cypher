@@ -24,7 +24,7 @@ Curated connectors and the live MCP Registry can be searched from one panel. Reg
 
 The Connections panel also lists Hive/Atlas Vercel variable names and configuration states, never secret values. The current deployment preparation imported 43 available values (35 retrieved individually plus eight earlier) and inventories 177 names; protected variables that could not be exported remain Needs link. Inventory is not proof of service integration or credential validity.
 
-Model setup is reachable from the home composer and conversation settings. It opens the configured OmniRoute dashboard when available and includes a one-request Gemini model test. Gemini consumer subscriptions are not API credentials; the supported route uses a Gemini API key from AI Studio, with separate API quota and billing. The test never reads browser cookies or claims subscription OAuth access.
+Model setup is reachable from the home composer and conversation settings. In OmniRoute mode, the installation owner can check the saved OpenAI, Gemini and Claude connections, open a fresh official Google verification link when required, and retest after completing the provider check. Checks are queued in PostgreSQL, continue after the dialog closes and recover for at most three worker attempts. Only a real model response enables a managed route; opening a verification link never marks access verified. Google account checks remain human steps. New Gemini or Claude API keys are encrypted and checked before replacing a saved API account; a rejected key preserves the existing connection. Other tenants cannot operate shared installation credentials or read verification challenges. Direct mode retains the one-request Gemini test and provider setup links.
 
 ## Deployment and verification
 

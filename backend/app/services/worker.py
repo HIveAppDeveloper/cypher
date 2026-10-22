@@ -143,6 +143,8 @@ async def _run_worker_loop(lock_connection=None, owner_pid=None, stop_event=None
         if previous and previous.status == 'running':
             previous.status = 'pending'
             await db.commit()
+    from app.services.model_connections import recover_checks
+    await recover_checks(AsyncSessionLocal)
     if os.getenv("GROKBOT_VERIFY_CLOUD") == "true":
         await run_checks()
     from app.db.wakeup import wait_for_work
@@ -165,6 +167,10 @@ async def _run_worker_loop(lock_connection=None, owner_pid=None, stop_event=None
               if requested:
                   request_check.status = 'running'
                   await commands.commit()
+          from app.services.model_connections import run_requested_check
+          if not requested and await run_requested_check(AsyncSessionLocal, pulse):
+              last_maintenance = 0
+              continue
         if requested:
             from app.services.verification import save_check, safe_error
             try:

@@ -10,6 +10,23 @@ from app.config import settings
 _cache = {}
 _cache_key = None
 _cache_at = 0.0
+_managed_records = []
+
+async def refresh_model_routes():
+    global _managed_records
+    if not settings.OMNIROUTE_CONTROL_KEY:
+        _managed_records = []
+        return
+    from app.db.session import AsyncSessionLocal
+    from app.models.runtime import RuntimeCheck
+    from sqlalchemy import select
+    from app.services.model_connections import PREFIX
+    async with AsyncSessionLocal() as db:
+        _managed_records = list((await db.execute(select(RuntimeCheck).where(RuntimeCheck.name.startswith(PREFIX)))).scalars())
+
+def configured_model_map():
+    from app.services.model_connections import model_map
+    return model_map(_managed_records) if settings.OMNIROUTE_CONTROL_KEY else settings.OMNIROUTE_MODEL_MAP
 
 
 def enabled():
@@ -37,7 +54,11 @@ def headers():
 
 def model_id(provider, model):
     from app.services.model_profiles import model_route_id
-    target = settings.OMNIROUTE_MODEL_MAP.get(model_route_id(provider, model)) or model_route_id(provider, model)
+    from app.services.model_routing import ModelNotConfiguredError, ModelCapabilityError
+    public_id = model_route_id(provider, model)
+    if any(public_id in (row.detail or {}).get('blocked_models', []) for row in _managed_records):
+        raise ModelNotConfiguredError('This provider needs account verification. Open Workspace setup → Model access to check the connection.')
+    target = configured_model_map().get(public_id) or public_id
     if not isinstance(target, str) or not target or len(target) > 200 or any(c in target for c in ('?', '#', ':', '\\')):
         raise ModelCapabilityError('This task model has no verified OmniRoute connection. Use a connected model or its configured automatic fallback.')
     return target
@@ -74,20 +95,22 @@ async def request(path, payload=None):
 
 async def catalog():
     global _cache, _cache_key, _cache_at
-    key = (endpoint(), hashlib.sha256(settings.OMNIROUTE_API_KEY.encode()).hexdigest(), json.dumps(settings.OMNIROUTE_MODEL_MAP, sort_keys=True))
+    await refresh_model_routes()
+    routes = configured_model_map()
+    key = (endpoint(), hashlib.sha256(settings.OMNIROUTE_API_KEY.encode()).hexdigest(), json.dumps(routes, sort_keys=True))
     if key == _cache_key and _cache and time.monotonic() - _cache_at < 300:
         return _cache
     payload = await request('/models')
     raw = {m['id']: m for m in payload.get('data', []) if isinstance(m, dict) and isinstance(m.get('id'), str)}
     result = {}
     from app.services.model_profiles import ALLOWED_MODELS, model_route_id
-    routes = dict(settings.OMNIROUTE_MODEL_MAP)
     # Exact provider/model IDs may be used without a second alias when the
     # authenticated OmniRoute catalog actually exposes them. Different native
     # IDs remain an explicit deployment mapping.
     for provider, model in ALLOWED_MODELS:
         public_id = model_route_id(provider, model)
-        routes.setdefault(public_id, public_id)
+        if not any(public_id in (row.detail or {}).get('blocked_models', []) for row in _managed_records):
+            routes.setdefault(public_id, public_id)
     for public_id, target in routes.items():
         item = raw.get(target)
         if not item:

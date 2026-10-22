@@ -8,6 +8,22 @@ from app.models.runtime import RuntimeHeartbeat, RuntimeCheck
 from app.config import settings
 from app.services.runtime_identity import runtime_identity, same_release
 router=APIRouter()
+from typing import Literal
+from pydantic import SecretStr
+Provider = Literal['openai', 'gemini', 'claude']
+
+@router.post('/model-connections/{provider}/verify', status_code=202)
+async def queue_model_verification(provider: Provider, db=Depends(get_db)):
+    from app.services.model_connections import queue_check
+    return await queue_check(db, provider)
+
+class ProviderKey(BaseModel):
+    api_key: SecretStr
+
+@router.post('/model-connections/{provider}/api-key', status_code=202)
+async def connect_model_key(provider: Provider, body: ProviderKey, db=Depends(get_db)):
+    from app.services.model_connections import queue_check
+    return await queue_check(db, provider, body.api_key.get_secret_value().strip())
 
 class ModelCheckRequest(BaseModel):
     provider: str
@@ -59,13 +75,17 @@ async def runtime(db=Depends(get_db)):
     details = {}
     transport = 'omniroute' if settings.OMNIROUTE_URL else 'direct'
     recorded_checks = {item.name:item for item in (await db.execute(select(RuntimeCheck))).scalars().all()}
+    from app.services.model_connections import can_manage, public_connections, model_map
+    managed = can_manage()
+    model_records = [item for name, item in recorded_checks.items() if name.startswith('model_connection:')]
+    connections = {'can_manage_model_connections':managed,'model_connections':public_connections(model_records) if managed else []}
     for name in ('model','fallback','fleet','starter_plugins','media_openai','mcp','browser','computer','check_request'):
         result = recorded_checks.get(name)
         if result:
             stale_transport = name in {'model','fallback','fleet','media_openai'} and (result.detail or {}).get('transport', 'direct') != transport
             details[name] = {'status':'not_checked' if stale_transport else result.status,'detail':{} if stale_transport else result.detail,'checked_at':result.updated_at.isoformat()+'Z'}
     model_configured = bool(settings.OMNIROUTE_URL and settings.OMNIROUTE_API_KEY) or bool(settings.LLM_API_KEY)
-    return {'checks':details, **checks, 'database':True,'worker':worker_fresh and version_ready,'worker_last_seen_seconds':int(age) if age is not None else None,'worker_version_matches':version_matches,'deployment':deployment,'worker_deployment':worker_deployment,'model_transport':transport,'model_configured':model_configured,'configured_models':list(settings.OMNIROUTE_MODEL_MAP) if settings.OMNIROUTE_URL else [],'sandbox_backend':settings.SANDBOX_BACKEND}
+    return {'checks':details, **checks, **connections, 'database':True,'worker':worker_fresh and version_ready,'worker_last_seen_seconds':int(age) if age is not None else None,'worker_version_matches':version_matches,'deployment':deployment,'worker_deployment':worker_deployment,'model_transport':transport,'model_configured':model_configured,'configured_models':list(model_map(model_records)) if settings.OMNIROUTE_URL else [],'sandbox_backend':settings.SANDBOX_BACKEND}
 
 @router.post('/checks', status_code=202)
 async def request_checks(db=Depends(get_db)):

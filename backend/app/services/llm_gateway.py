@@ -74,6 +74,7 @@ class LLMGateway:
         from app.services import omniroute
         from app.services.usage import check_allowance,record
         await check_allowance()
+        if omniroute.enabled(): await omniroute.refresh_model_routes()
         provider, model = model_selection(model, provider)
         routes = [(provider, model)]
         if allow_fallback and fallback and fallback not in routes:
@@ -140,6 +141,7 @@ class LLMGateway:
         if omniroute.enabled() and not direct:
             from app.services.usage import check_allowance, record
             await check_allowance()
+            await omniroute.refresh_model_routes()
             provider, model = model_selection(model, provider)
             await validate_capabilities(messages, tools, provider, model)
             if deadline is not None and asyncio.get_running_loop().time() >= deadline:
