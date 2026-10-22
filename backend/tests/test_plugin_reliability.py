@@ -136,6 +136,29 @@ async def test_catalog_reports_saved_connection_failure_and_keeps_credentials_an
         assert saved.credential=='encrypted-existing' and saved.tools==[{'name':'read'}] and saved.enabled
 
 @pytest.mark.asyncio
+async def test_catalog_checks_every_saved_account_for_one_provider(workspace,monkeypatch):
+    _,sessions=workspace;calls=[]
+    async def auth(db,plugin):return plugin.name,None
+    async def discover(url,token=None,auth=None):
+        calls.append(token)
+        if token=='Atlas account':
+            raise httpx.HTTPStatusError('sign in',request=httpx.Request('GET',url),response=httpx.Response(401))
+        return [{'name':'read','description':'Read','schema':{'type':'object'}}]
+    monkeypatch.setattr(plugins,'connection_auth',auth)
+    monkeypatch.setattr(plugin_sync,'discover',discover)
+    async with sessions() as db:
+        for name in ('Hive account','Atlas account'):
+            db.add(Plugin(name=name,url='https://accounts.example/mcp/',credential='encrypted-'+name,tools=[{'name':'read'}],enabled=True))
+        await db.commit()
+    result=await plugin_sync.connect_entry({'name':'Accounts','url':'https://accounts.example/mcp','auth':'auto'},sessions)
+    assert sorted(calls)==['Atlas account','Hive account']
+    assert result['status']=='sign_in_required'
+    assert sorted(r['status'] for r in result['connections'])==['connected','sign_in_required']
+    async with sessions() as db:
+        saved=(await db.execute(select(Plugin).where(Plugin.url=='https://accounts.example/mcp/'))).scalars().all()
+        assert len(saved)==2 and all(p.credential=='encrypted-'+p.name and p.enabled for p in saved)
+
+@pytest.mark.asyncio
 async def test_key_setup_updates_discovered_connection_without_duplicates(workspace,monkeypatch):
     client,sessions=workspace
     from app.api import plugins as api
