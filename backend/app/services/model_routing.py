@@ -74,15 +74,18 @@ async def validate_capabilities(messages, tools, provider, model, *, direct=Fals
 
 
 def retryable(error):
-    # Authentication, billing, policy and malformed input are never repaired by
-    # another model behind the same connection. Retry only a bounded outage.
+    # Quota exhaustion is account-specific: hand the task to another configured
+    # provider. Authentication and policy failures remain hard stops.
     status = getattr(error, "status_code", None)
-    if status in {401, 402, 403}:
-        return False
     reason = str(error).lower()
-    if any(term in reason for term in ("quota", "credit", "budget", "authentication", "permission")):
+    quota = any(term in reason for term in ("quota", "credit", "budget", "exhausted", "insufficient_quota"))
+    if quota:
+        return True
+    if status in {401, 403}:
         return False
-    return status in {404, 408, 429, 500, 502, 503, 504} or type(error).__name__ in {"Timeout", "APITimeoutError", "APIConnectionError", "ServiceUnavailableError", "NotFoundError", "RateLimitError"}
+    if any(term in reason for term in ("authentication", "permission", "unauthorized", "forbidden")):
+        return False
+    return status in {402, 404, 408, 429, 500, 502, 503, 504} or type(error).__name__ in {"Timeout", "APITimeoutError", "APIConnectionError", "ServiceUnavailableError", "NotFoundError", "RateLimitError"}
 
 
 def public_model_error(error):
