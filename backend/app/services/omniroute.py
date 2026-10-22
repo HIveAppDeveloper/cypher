@@ -55,8 +55,13 @@ class OmniRouteError(RuntimeError):
 async def request(path, payload=None):
     if path not in {'/models', '/chat/completions', '/responses'}:
         raise ValueError('Unsupported OmniRoute inference endpoint.')
-    async with httpx.AsyncClient(timeout=110, follow_redirects=False) as client:
-        response = await client.request('GET' if payload is None else 'POST', endpoint() + path, headers=headers(), json=payload)
+    try:
+        async with httpx.AsyncClient(timeout=110, follow_redirects=False) as client:
+            response = await client.request('GET' if payload is None else 'POST', endpoint() + path, headers=headers(), json=payload)
+    except httpx.TimeoutException as error:
+        raise OmniRouteError(504) from error
+    except httpx.NetworkError as error:
+        raise OmniRouteError(503) from error
     if not 200 <= response.status_code < 300:
         raise OmniRouteError(response.status_code)
     try:

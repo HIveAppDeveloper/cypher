@@ -104,6 +104,8 @@ def public_model_error(error):
         return str(error)
     status = getattr(error, "status_code", None)
     kind, reason = type(error).__name__.lower(), str(error).lower()
+    if status == 413:
+        return "This request exceeds the model connection's size limit. Your original message and files are saved. Send fewer or smaller files, or start a new conversation to reduce attachment history."
     if status == 401 or "authentication" in kind or "authentication" in reason:
         if settings.OMNIROUTE_URL:
             return "The OmniRoute connection could not authenticate. Check its inference key and deployment access. Your message and files are saved."

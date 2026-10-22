@@ -82,7 +82,7 @@ async def test_unsupported_input_is_preserved_and_never_sent(router):
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize('status', [302,401,403,429])
+@pytest.mark.parametrize('status', [302,401,403,413,429])
 async def test_redirects_and_provider_errors_do_not_leak_keys_or_retry_elsewhere(router, status):
     seen, install = router
     install(lambda request: httpx.Response(status, headers={'location':'https://untrusted.example/'}, text='private-inference-key private-access-key private account details'))
@@ -90,6 +90,20 @@ async def test_redirects_and_provider_errors_do_not_leak_keys_or_retry_elsewhere
         await omniroute.request('/responses', {'model':'cx/gpt-6.1-sol'})
     assert len(seen) == 1 and failure.value.status_code == status
     assert 'private' not in str(failure.value)
+
+
+@pytest.mark.asyncio
+async def test_transport_timeout_uses_bounded_connected_fallback(router):
+    seen, install = router
+    def respond(request):
+        if json.loads(request.content)['model'] == 'cx/gpt-6.1-sol':
+            raise httpx.ReadTimeout('private upstream diagnostics',request=request)
+        return httpx.Response(200,json={'choices':[{'message':{'role':'assistant','content':'Recovered'}}]})
+    install(respond)
+    result = await llm_gateway.LLMGateway.complete([{'role':'user','content':'Hello'}],provider='openai',model='gpt-6.1-sol',fallback=('openai','gpt-6-luna'))
+    assert result.choices[0].message.content == 'Recovered'
+    assert result._hidden_params['grokbot_route']['fallback']
+    assert len([r for r in seen if r.method=='POST']) == 2
 
 
 @pytest.mark.parametrize('url', ['http://public.example', 'https://user:pass@router.example', 'https://router.example/?key=secret', 'https://router.example/unexpected'])
@@ -145,3 +159,4 @@ async def test_native_web_search_retains_real_search_receipts(router):
     result = await search_web({'query':'Python official docs'},'test-bot')
     assert result['success'] and result['sources'][0]['url'] == 'https://docs.python.org/3/'
     assert json.loads(seen[0].content)['model'] == 'cx/gpt-6-luna-low'
+    assert 'max_tool_calls' not in json.loads(seen[0].content)

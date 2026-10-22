@@ -109,7 +109,7 @@ async def channel_event(id:str,data:ChannelMessage,x_grokbot_channel_key:str=Hea
         if count>=10:raise HTTPException(429,'Channel event limit reached. Try again in a minute.')
         if await db.scalar(select(func.count()).select_from(Task).where(Task.status.in_(['pending','running'])))>=20:raise HTTPException(429,'The workspace queue is full.')
         p=await participant(db,c.conversation_id)
-        task=Task(id=str(uuid.uuid4()),conversation_id=c.conversation_id,bot_id=p.bot_id,title=data.text[:100],description=data.text,status='pending',result={'request':{'channel_id':id,'options':{'provider':'openai','model':c.manager_model,'max_tokens':2048,'reasoning_effort':'low','max_iterations':8,'team_rounds':1}}})
+        task=Task(id=str(uuid.uuid4()),conversation_id=c.conversation_id,bot_id=p.bot_id,title=data.text[:100],description=data.text,status='pending',result={'request':{'channel_id':id,'options':{'routing':'manual','provider':'openai','model':c.manager_model,'max_tokens':2048,'reasoning_effort':'low','max_iterations':8,'team_rounds':1}}})
         db.add(task);db.add(ChannelEvent(channel_id=id,event_id=data.event_id,task_id=task.id));await db.commit()
         return {'status':'queued','task_id':task.id}
     finally:

@@ -45,6 +45,8 @@ async def test_goal_claim_completion_and_no_duplicate(workspace):
     async with sessions() as db:
         g=await db.get(Goal,gid);assert g.runs==1
         task=await db.get(Task,g.last_task_id);assert task.result['request']['goal_id']==gid
+        assert task.result['request']['options']['routing']=='manual'
+        assert task.result['request']['options']['model']=='gpt-6.1-sol'
         task.status='completed';g.completion_requested=True;g.last_summary='Verified';await db.commit()
     await automation.tick_goals()
     async with sessions() as db:assert (await db.get(Goal,gid)).status=='completed'
@@ -83,6 +85,10 @@ async def test_channel_auth_dedup_disable_and_secret_not_listed(workspace):
     headers={'X-Grokbot-Channel-Key':token}
     first=await client.post(path,json=data,headers=headers);assert first.status_code==202
     second=(await client.post(path,json=data,headers=headers)).json();assert second['status']=='duplicate' and second['task_id']==first.json()['task_id']
+    async with sessions() as db:
+        queued=await db.get(Task,first.json()['task_id'])
+        assert queued.result['request']['options']['routing']=='manual'
+        assert queued.result['request']['options']['model']=='gpt-6.1-sol'
     listed=(await client.get('/api/channels')).json();assert 'token' not in listed[0] and 'signing_secret' not in listed[0]
     await client.patch('/api/channels/'+c['id'],json={'enabled':False})
     assert (await client.post(path,json={'event_id':'event-2','text':'No'},headers=headers)).status_code==401
