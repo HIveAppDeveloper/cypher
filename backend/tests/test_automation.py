@@ -37,6 +37,55 @@ async def workspace(tmp_path,monkeypatch):
 def goal_payload(room,**extra):return {'conversation_id':room,'title':'Verify','objective':'Return a checked result','success_criteria':'A verified result is returned','max_runs':2,**extra}
 
 @pytest.mark.asyncio
+async def test_waiting_goals_do_not_starve_due_work_or_completion(workspace):
+    _,sessions,room=workspace
+    from app.db.tenancy import current_tenant_id
+    # Ten goals are permitted per workspace, so the worker's global batch must
+    # make progress beyond those belonging to the first workspace.
+    async with sessions() as db:
+        bot=(await db.execute(select(Bot))).scalar_one()
+        for i in range(10):
+            pending=Task(conversation_id=room,bot_id=bot.id,title='Waiting',description='Waiting',status='pending')
+            db.add(pending);await db.flush()
+            db.add(Goal(**goal_payload(room,title=f'Waiting {i}'),last_task_id=pending.id,runs=1,next_run_at=datetime.utcnow()-timedelta(hours=1)))
+        await db.commit()
+    owner=current_tenant_id.set('another-workspace')
+    try:
+        async with sessions() as db:
+            bot=Bot(name='Another manager',role='Coordinator',system_prompt='Manage',llm_provider='openai',llm_model='gpt-6-luna',tools_enabled=[])
+            other_room=Conversation(title='Another workspace',is_group=False)
+            db.add_all([bot,other_room]);await db.flush()
+            db.add(ConversationParticipant(conversation_id=other_room.id,bot_id=bot.id))
+            due=Goal(**goal_payload(other_room.id,title='Due now'))
+            finished=Task(conversation_id=other_room.id,bot_id=bot.id,title='Finished',description='Finished',status='completed')
+            db.add_all([due,finished]);await db.flush()
+            complete=Goal(**goal_payload(other_room.id,title='Record completion'),runs=1,last_task_id=finished.id,completion_requested=True,next_run_at=datetime.utcnow()+timedelta(days=1))
+            db.add(complete);await db.commit();due_id=due.id;complete_id=complete.id
+    finally:current_tenant_id.reset(owner)
+    await automation.tick_goals(sessions)
+    async with sessions() as db:
+        due=await db.get(Goal,due_id)
+        assert due.runs==1 and due.last_task_id
+        assert (await db.get(Task,due.last_task_id)).tenant_id=='another-workspace'
+        assert (await db.get(Goal,complete_id)).status=='completed'
+        waiting=(await db.execute(select(Goal).where(Goal.title.startswith('Waiting')))).scalars().all()
+        assert len(waiting)==10 and all(g.runs==1 for g in waiting)
+
+@pytest.mark.asyncio
+async def test_future_goals_do_not_consume_the_due_batch(workspace):
+    _,sessions,room=workspace
+    async with sessions() as db:
+        for i in range(10):
+            db.add(Goal(**goal_payload(room,title=f'Future {i}'),next_run_at=datetime.utcnow()+timedelta(days=1)))
+        due=Goal(**goal_payload(room,title='Due after future goals'))
+        db.add(due);await db.commit();gid=due.id
+    await automation.tick_goals(sessions)
+    async with sessions() as db:
+        assert (await db.get(Goal,gid)).runs==1
+        future=(await db.execute(select(Goal).where(Goal.title.startswith('Future')))).scalars().all()
+        assert all(g.runs==0 for g in future)
+
+@pytest.mark.asyncio
 async def test_goal_claim_completion_and_no_duplicate(workspace):
     client,sessions,room=workspace
     response=await client.post('/api/goals',json=goal_payload(room));assert response.status_code==201
