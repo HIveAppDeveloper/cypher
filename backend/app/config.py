@@ -20,6 +20,16 @@ class Settings(BaseSettings):
     LLM_FALLBACK_PROVIDER: str | None = None
     RUN_EMBEDDED_WORKER: bool = True
     LLM_USE_GATEWAY: bool = False
+    OMNIROUTE_URL: str | None = None
+    OMNIROUTE_API_KEY: str = Field(default="", repr=False)
+    OMNIROUTE_PROTECTION_BYPASS: str = Field(default="", repr=False)
+    # Only verified, connected routes belong here; a catalog listing alone does
+    # not establish that a provider account can actually serve requests.
+    OMNIROUTE_MODEL_MAP: dict[str, str] = {
+        "openai/gpt-6.1-sol": "cx/gpt-6.1-sol",
+        "openai/gpt-6-astra": "cx/gpt-6-astra",
+        "openai/gpt-6-luna": "cx/gpt-6-luna-low",
+    }
     AUDIO_TRANSCRIPTION_MODEL: str = "openai/gpt-4o-mini-transcribe"
     IMAGE_MODEL: str = "openai/gpt-image-2"
     GOOGLE_IMAGE_MODEL: str = "google/gemini-3.1-flash-image-preview"
@@ -29,6 +39,14 @@ class Settings(BaseSettings):
     BACKEND_API_TOKEN: str = ""
     AUTH_SESSION_SECRET: str = ""
     REQUIRE_USER_AUTH: bool = False
+    # A separate, opt-in inference boundary. No existing backend/browser key
+    # grants access, and configuring a key alone does not activate sharing.
+    GROKBOT_ATLAS_ENGINE_ENABLED: bool = False
+    ATLAS_ENGINE_SIGNING_KEY: str = Field(default="", repr=False)
+    GROKBOT_ATLAS_ENGINE_PROVIDER: str = ""
+    GROKBOT_ATLAS_ENGINE_MODEL: str = ""
+    GROKBOT_ATLAS_ENGINE_ADMISSION: Literal["postgres", "local-memory"] = "postgres"
+    GROKBOT_ATLAS_ENGINE_ALLOW_LOCAL_ADMISSION: bool = False
     GROKBOT_PUBLIC_URL: str = "http://localhost:3000"
     GROKBOT_AUTH_FROM: str = "no-reply@send.hivesales.info"
     AUTH_MAGIC_LINK_TTL_MINUTES: int = 15

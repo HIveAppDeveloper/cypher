@@ -17,8 +17,11 @@ Configure secret values through the project's Vercel environment settings, keepi
 | `RUN_EMBEDDED_WORKER=false` | Keep the API container from starting a second runner when the daemon owns execution. |
 | `BACKEND_API_TOKEN` | Backend bearer authentication and encryption-key source for stored MCP credentials. Keep stable while those credentials exist. |
 | `GROKBOT_BACKEND_API_TOKEN` | Matching server-only frontend proxy token. |
-| `LLM_USE_GATEWAY=true` | Route configured models through Vercel AI Gateway. |
-| `AI_GATEWAY_API_KEY` or Vercel OIDC | Server-side gateway authentication. Configuration alone does not establish model access or credit. |
+| `OMNIROUTE_URL` | Existing cloud OmniRoute origin. It takes priority over legacy Gateway configuration. |
+| `OMNIROUTE_API_KEY` | Server-only inference key reused from the authorized OmniRoute connection. |
+| `OMNIROUTE_PROTECTION_BYPASS` | Server-only deployment access secret, when the OmniRoute deployment is protected. Redirects never receive it. |
+| `OMNIROUTE_MODEL_MAP` | JSON map of GrokBot model IDs to verified native OmniRoute model IDs. Defaults to Sol, Astra and Luna. |
+| `LLM_USE_GATEWAY=false` | Production uses OmniRoute without Vercel AI Gateway credits. Direct provider credentials remain an alternative when OmniRoute is unset. |
 | `GROKBOT_VERIFY_CLOUD=true` | Opt-in one-time GPT-6.1 Sol response and public DeepWiki MCP discovery checks; stores timestamps, never secrets. |
 | `SANDBOX_BACKEND=vercel` | Managed Vercel Sandbox shell/file adapter; Docker is the default alternative. |
 | `REQUIRE_USER_AUTH=true` | Require a verified account for private workspace APIs. |
@@ -44,11 +47,11 @@ On shutdown, the worker stops claiming jobs and lets the current execution finis
 
 ## Models, teams, and files
 
-The main default is OpenAI GPT-6.1 Sol using the Responses API path. Agent lounge provisions Coordinator, Builder, Researcher, Writer, Reviewer, and Runner. The coordinator chooses up to three specialists, or two by default, then synthesizes their shared-history findings. Other team rooms support 2–6 agents with bounded rounds. Provider availability depends on the configured gateway/account; named model menus are not an access guarantee.
+The main default is OpenAI GPT-6.1 Sol, served through the existing OmniRoute cloud connection. Astra handles planning and Luna handles focused execution/search. Other task specialists use their explicit connected fallback when their named provider is not configured; recorded routes and specialist receipts identify the model that actually ran. Agent lounge provisions Coordinator, Builder, Researcher, Writer, Reviewer, and Runner. The coordinator chooses up to three specialists, or two by default, then synthesizes their shared-history findings. Other team rooms support 2–6 agents with bounded rounds. Provider availability depends on the configured gateway/account; named model menus are not an access guarantee.
 
 The composer accepts PNG/JPEG/WebP, PDF, UTF-8 text, MP3, and WAV, up to four files and 3 MB combined. Attachments persist in the database and are retrieved through authenticated routes; raw payloads are excluded from message-list responses. Recent attachment sets are resent with history. Files go to the selected provider. Media output uses the implemented image/video tools and provider credits. Video input, microphone recording, and transcription fallback are not provided.
 
-Chat checks the live Gateway catalog (cached for five minutes) or the installed direct-provider capability metadata before inference. Unsupported files produce an explicit error; files are never removed to make a text-only model run. Both current OpenAI managers accept images and PDFs; audio is rejected unless a configured model supports it. Catalog metadata establishes capabilities, not account permissions or paid model access. A catalog outage stops the request with a recovery message.
+Chat checks the active transport’s live catalog (cached for five minutes) or direct-provider capability metadata before inference. Unsupported files produce an explicit error; files are never removed to make a text-only model run. The verified OmniRoute models support images and tools. PDF and audio input require an explicitly supported route; they are currently rejected with the original file retained. OpenAI image generation uses OmniRoute Responses and returns verified image bytes. Google image/video routes still require provider account verification; they do not fall through to Vercel AI Gateway. Catalog metadata establishes capabilities, not account permissions or paid model access. A catalog outage stops the request with a recovery message.
 
 `LLM_FALLBACK_MODEL` and optional `LLM_FALLBACK_PROVIDER` enable one explicit backup within the chat model policy. No backup is enabled by default. A backup must support the complete request, including tools and every included file modality. Bounded failover handles temporary provider outages or model unavailability; authentication, billing, permission, and invalid-request errors stop immediately. Route selections are recorded in private logs. Generation settings are rebuilt for the selected route.
 
@@ -86,7 +89,7 @@ MCP connections now expose per-tool enable switches and Refresh tools. A failed 
 
 ## Opt-in cloud smoke checks
 
-Set `GROKBOT_VERIFY_CLOUD=true` to run the worker's cloud smoke checks once per check-version marker (`cloud_check_finished_v4` currently). Checks request a small GPT-6.1 Sol reply, probe a DeepSeek V3.2 fallback, discover DeepWiki tools, and invoke `read_wiki_structure` for `vercel/ai`. Results are persisted in `RuntimeCheck` with status, timestamp, and safe diagnostic detail, and exposed through the protected runtime response. The diagnostic sanitizer redacts credentials and endpoint strings. Checks use provider access and may incur usage; they are not a substitute for a complete agent/tool workflow. Retaining the finished marker prevents repeated checks on ordinary worker restarts.
+Set `GROKBOT_VERIFY_CLOUD=true` to run the worker's cloud smoke checks once per transport-specific version marker. Checks request small Sol and Luna replies, consult a specialist and synthesize its answer, invoke a DeepWiki tool, open a hosted browser page, and execute a cloud computer command. Workspace setup → Verify models and tools queues a fresh run in the worker, including media checks when enabled. Old transport results are never displayed as proof for a new connection. Results are persisted in `RuntimeCheck` with status, timestamp, and safe diagnostic detail, and exposed through the protected runtime response. The diagnostic sanitizer redacts credentials and endpoint strings. Checks use provider access and may incur usage; they are not a substitute for a complete agent/tool workflow. Retaining the finished marker prevents repeated checks on ordinary worker restarts.
 
 ## Evidence and limits
 

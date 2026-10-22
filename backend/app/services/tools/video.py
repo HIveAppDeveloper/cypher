@@ -33,6 +33,8 @@ async def analyze_video(args,bot_id):
     model='google/gemini-3.8-flash'
     try:
         url=youtube_url(args.get('url',''))
+        if settings.OMNIROUTE_URL:
+            raise ValueError('This OmniRoute connection has no verified video-understanding route. Its connected models cannot verify YouTube frames and speech. No caption-only substitute or Vercel AI Gateway request was used.')
         question=str(args.get('question','Describe the video, spoken content and important timestamps.'))[:4000]
         if not settings.LLM_USE_GATEWAY:raise ValueError('Video understanding requires the configured AI Gateway connection.')
         metadata=(await gateway_catalog()).get(model,{})

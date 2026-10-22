@@ -26,7 +26,7 @@ async def tick_goals(session_factory=None):
                 p=(await db.execute(select(ConversationParticipant).where(ConversationParticipant.conversation_id==g.conversation_id).limit(1))).scalar_one_or_none()
                 if not p:g.status='blocked';continue
                 prompt=f'Continue goal: {g.title}\nObjective: {g.objective}\nSuccess criteria: {g.success_criteria}\nRun {g.runs+1} of {g.max_runs}. Use existing shared history to avoid repeating completed actions. Work autonomously within this goal and connected tool permissions. Call complete_goal only when evidence shows the success criteria are met. Otherwise report progress and the next useful step. Do not create nested goals.'
-                task=Task(id=str(uuid.uuid4()),conversation_id=g.conversation_id,bot_id=p.bot_id,title=f'Goal: {g.title}'[:100],description=prompt,status='pending',result={'request':{'goal_id':g.id,'options':{'provider':'openai','model':g.manager_model,'max_tokens':2048,'reasoning_effort':'low','max_iterations':8,'team_rounds':1}}})
+                task=Task(id=str(uuid.uuid4()),conversation_id=g.conversation_id,bot_id=p.bot_id,title=f'Goal: {g.title}'[:100],description=prompt,status='pending',result={'request':{'goal_id':g.id,'options':{'routing':'manual','provider':'openai','model':g.manager_model,'max_tokens':2048,'reasoning_effort':'low','max_iterations':8,'team_rounds':1}}})
                 db.add(task);g.last_task_id=task.id;g.runs+=1;g.next_run_at=datetime.utcnow()+timedelta(minutes=g.interval_minutes)
                 await db.flush()
             finally:

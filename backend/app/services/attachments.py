@@ -6,6 +6,8 @@ from app.services.model_routing import ModelCapabilityError, gateway_catalog
 
 
 async def transcribe_audio(file):
+    if settings.OMNIROUTE_URL:
+        raise ModelCapabilityError('Audio transcription is not exposed by this OmniRoute connection. Your original audio is saved; no other model service was contacted.')
     data = base64.b64decode(file['data'], validate=True)
     if settings.LLM_USE_GATEWAY:
         import ai

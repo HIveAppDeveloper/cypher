@@ -47,9 +47,15 @@ async def lifespan(app: FastAPI):
 
     from app.services.worker import run_worker
     worker = asyncio.create_task(run_worker()) if settings.RUN_EMBEDDED_WORKER else None
+    from app.services.atlas_admission import run_admission_janitor
+    admission_janitor = asyncio.create_task(run_admission_janitor()) if settings.GROKBOT_ATLAS_ENGINE_ENABLED and settings.GROKBOT_ATLAS_ENGINE_ADMISSION == "postgres" else None
     try:
         yield
     finally:
+        if admission_janitor:
+            admission_janitor.cancel()
+            with suppress(asyncio.CancelledError):
+                await admission_janitor
         recovery.cancel()
         with suppress(asyncio.CancelledError):
             await recovery
@@ -72,6 +78,11 @@ app = FastAPI(
 
 @app.middleware("http")
 async def authenticate_backend(request: Request, call_next):
+    # This exact, stateless endpoint authenticates its raw body with a scoped
+    # Atlas HMAC. It ignores browser identity and only uses hash admission
+    # metadata, never workspace conversation/user data. Other gates are intact.
+    if request.method == "POST" and request.url.path == "/api/integrations/atlas/v1/chat":
+        return await call_next(request)
     api_request = request.url.path.startswith("/api/")
     public_auth_path = request.url.path in {"/api/auth/email/request", "/api/auth/email/verify", "/api/auth/google/verify"}
     public_auth_path = public_auth_path or (request.method=='GET' and re.fullmatch(r'/api/workspace/templates/shared/[A-Za-z0-9_-]{24,64}',request.url.path) is not None)

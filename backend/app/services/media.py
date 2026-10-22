@@ -1,4 +1,4 @@
-"""Generate actual media in the persistent worker using Vercel's Python SDK."""
+"""Generate actual media in the persistent worker through its configured transport."""
 import asyncio
 import base64
 from app.config import settings
@@ -6,9 +6,37 @@ from app.config import settings
 MAX_ASSET_BYTES = 32 * 1024 * 1024
 
 async def generate_media(kind: str, prompt: str, aspect_ratio='16:9', duration=4, image_provider=None):
-    import ai
     if not prompt.strip():
         raise ValueError('Describe the media you want to generate.')
+    if settings.OMNIROUTE_URL:
+        if kind != 'image' or image_provider == 'google':
+            raise ValueError('The Google image/video connection needs provider account verification in OmniRoute. Choose OpenAI images for the verified image connection.')
+        from app.services import omniroute
+        from app.services.usage import check_allowance, record
+        await check_allowance()
+        response = await omniroute.request('/responses', {
+            'model': omniroute.model_id('openai', 'gpt-6.1-sol'),
+            'input': f'Generate exactly one image, aspect ratio {aspect_ratio}. {prompt}',
+            'tools': [{'type': 'image_generation'}],
+            'tool_choice': {'type': 'image_generation'},
+            'max_output_tokens': 1024, 'reasoning': {'effort': 'low'},
+        })
+        images = [item for item in response.get('output', []) if item.get('type') == 'image_generation_call' and item.get('result')]
+        if not images:
+            raise RuntimeError('The OmniRoute model returned no generated image.')
+        data = base64.b64decode(images[0]['result'], validate=True)
+        # Verify the returned bytes before offering an image download.
+        from PIL import Image
+        from io import BytesIO
+        with Image.open(BytesIO(data)) as image:
+            mime = Image.MIME.get(image.format)
+            image.verify()
+        if mime not in {'image/png', 'image/jpeg', 'image/webp'} or len(data) > MAX_ASSET_BYTES:
+            raise ValueError('Generated image has an unsupported format or exceeds 32 MB.')
+        await record('openai', 'gpt-6.1-sol', response.get('usage'))
+        extension = {'image/png': 'png', 'image/jpeg': 'jpg', 'image/webp': 'webp'}[mime]
+        return [{'name': f'generated-image-1.{extension}', 'mime': mime, 'data': base64.b64encode(data).decode()}]
+    import ai
     if kind == 'image' and image_provider == 'google':
         # Gemini image output uses Chat Completions, not the image-only endpoint.
         from openai import AsyncOpenAI

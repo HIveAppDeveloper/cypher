@@ -17,8 +17,10 @@ async def record(name):
 
 async def verify_cloud(force=False):
     await ensure_starter_plugins()
+    from app.config import settings
+    finished_key = 'cloud_check_finished_omniroute_v1' if settings.OMNIROUTE_URL else 'cloud_check_finished_v7'
     async with AsyncSessionLocal() as db:
-        finished = not force and await db.get(RuntimeHeartbeat, 'cloud_check_finished_v7')
+        finished = not force and await db.get(RuntimeHeartbeat, finished_key)
     if finished:
         await verify_media_cloud()
         return
@@ -68,24 +70,24 @@ async def verify_cloud(force=False):
         await asyncio.to_thread(execute)
     async def run_one(name, check):
         try:
-            await save_check(name,'running',{})
+            await save_check(name,'running',{'transport':'omniroute' if settings.OMNIROUTE_URL else 'vercel' if settings.LLM_USE_GATEWAY else 'direct'})
             async with asyncio.timeout(90): await check()
             await record(name+'_verified')
-            await save_check(name,'passed',{})
+            await save_check(name,'passed',{'transport':'omniroute' if settings.OMNIROUTE_URL else 'vercel' if settings.LLM_USE_GATEWAY else 'direct'} if name in {'gateway','fallback','fleet'} else {})
             logger.info('Cloud self-check passed: %s', name)
         except Exception as error:
             await record(name+'_verification_failed')
-            await save_check(name,'failed',safe_error(error))
+            await save_check(name,'failed',{'transport':'omniroute' if settings.OMNIROUTE_URL else 'vercel' if settings.LLM_USE_GATEWAY else 'direct',**safe_error(error)})
             logger.warning('Cloud self-check failed: %s (%s)',name,type(error).__name__)
     await asyncio.gather(*(run_one(name, check) for name, check in [('gateway',gateway),('fallback',fallback),('fleet',fleet),('mcp',mcp),('browser',browser),('computer',computer)]))
-    await record('cloud_check_finished_v7')
-    await verify_media_cloud()
+    await record(finished_key)
+    await verify_media_cloud(force=force)
 
 
 def safe_error(error):
     import os,re
     message=str(error)
-    secrets=[os.getenv('AI_GATEWAY_API_KEY',''),os.getenv('BACKEND_API_TOKEN','')]
+    secrets=[os.getenv('AI_GATEWAY_API_KEY',''),os.getenv('BACKEND_API_TOKEN',''),os.getenv('OMNIROUTE_API_KEY',''),os.getenv('OMNIROUTE_PROTECTION_BYPASS','')]
     try:
         from vercel.oidc import get_vercel_oidc_token
         secrets.append(get_vercel_oidc_token())
@@ -105,20 +107,23 @@ async def save_check(name,status,detail):
         await db.commit()
 
 
-async def verify_media_cloud():
+async def verify_media_cloud(force=False):
     import os
+    from app.config import settings
     if os.getenv('GROKBOT_VERIFY_MEDIA') != 'true': return
+    finished_key = 'media_check_finished_omniroute_v1' if settings.OMNIROUTE_URL else 'media_check_finished_v1'
+    transport = 'omniroute' if settings.OMNIROUTE_URL else 'vercel' if settings.LLM_USE_GATEWAY else 'direct'
     async with AsyncSessionLocal() as db:
-        if await db.get(RuntimeHeartbeat, 'media_check_finished_v1'): return
+        if not force and await db.get(RuntimeHeartbeat, finished_key): return
     from app.services.media import generate_media
     for name,kind,provider in [('media_openai','image','openai'),('media_google','image','google'),('media_video','video',None)]:
-        await save_check(name,'running',{})
+        await save_check(name,'running',{'transport':transport})
         try:
             files = await generate_media(kind, 'A single red paper boat on still water, simple studio composition, no text.', '16:9', 4, image_provider=provider)
-            await save_check(name,'passed',{'format':files[0]['mime'],'bytes':len(files[0]['data'])*3//4})
+            await save_check(name,'passed',{'transport':transport,'format':files[0]['mime'],'bytes':len(files[0]['data'])*3//4})
         except Exception as error:
-            await save_check(name,'failed',safe_error(error))
-    await record('media_check_finished_v1')
+            await save_check(name,'failed',{'transport':transport,**safe_error(error)})
+    await record(finished_key)
 
 
 async def ensure_starter_plugins():

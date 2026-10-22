@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-10-21T20:39:29.057779+00:00",
+  "generatedAt": "2026-10-22T01:06:29.837944+00:00",
   "title": "Design System: Open GrokBot",
   "extensions": {
     "shadows": [
@@ -18,11 +18,6 @@
         "name": "glass-dialog",
         "value": "0 24px 80px #24152426",
         "purpose": "Native glass dialog."
-      },
-      {
-        "name": "composer-focus",
-        "value": "0 4px 16px #30283b08",
-        "purpose": "Subtle focus depth on the composer."
       },
       {
         "name": "command-dialog",
@@ -79,114 +74,114 @@
       },
       "conversation": {
         "role": "neutral",
-        "displayName": "Conversation",
+        "displayName": "Warm off-white conversation",
         "tonalRamp": [
-          "oklch(15% 0 350)",
-          "oklch(26% 0 350)",
-          "oklch(38% 0 350)",
-          "oklch(49% 0 350)",
-          "oklch(61% 0 350)",
-          "oklch(72% 0 350)",
-          "oklch(84% 0 350)",
-          "oklch(95% 0 350)"
+          "oklch(15% 0.004 80)",
+          "oklch(26% 0.004 80)",
+          "oklch(38% 0.004 80)",
+          "oklch(49% 0.004 80)",
+          "oklch(61% 0.004 80)",
+          "oklch(72% 0.004 80)",
+          "oklch(84% 0.004 80)",
+          "oklch(95% 0.004 80)"
         ]
       },
       "sidebar": {
         "role": "neutral",
         "displayName": "Sidebar",
         "tonalRamp": [
-          "oklch(15% 0 350)",
-          "oklch(26% 0 350)",
-          "oklch(38% 0 350)",
-          "oklch(49% 0 350)",
-          "oklch(61% 0 350)",
-          "oklch(72% 0 350)",
-          "oklch(84% 0 350)",
-          "oklch(95% 0 350)"
+          "oklch(15% 0.004 80)",
+          "oklch(26% 0.004 80)",
+          "oklch(38% 0.004 80)",
+          "oklch(49% 0.004 80)",
+          "oklch(61% 0.004 80)",
+          "oklch(72% 0.004 80)",
+          "oklch(84% 0.004 80)",
+          "oklch(95% 0.004 80)"
         ]
       },
       "card": {
         "role": "neutral",
         "displayName": "Card",
         "tonalRamp": [
-          "oklch(15% 0 350)",
-          "oklch(26% 0 350)",
-          "oklch(38% 0 350)",
-          "oklch(49% 0 350)",
-          "oklch(61% 0 350)",
-          "oklch(72% 0 350)",
-          "oklch(84% 0 350)",
-          "oklch(95% 0 350)"
+          "oklch(15% 0.004 80)",
+          "oklch(26% 0.004 80)",
+          "oklch(38% 0.004 80)",
+          "oklch(49% 0.004 80)",
+          "oklch(61% 0.004 80)",
+          "oklch(72% 0.004 80)",
+          "oklch(84% 0.004 80)",
+          "oklch(95% 0.004 80)"
         ]
       },
       "card-hover": {
         "role": "neutral",
         "displayName": "Card Hover",
         "tonalRamp": [
-          "oklch(15% 0 350)",
-          "oklch(26% 0 350)",
-          "oklch(38% 0 350)",
-          "oklch(49% 0 350)",
-          "oklch(61% 0 350)",
-          "oklch(72% 0 350)",
-          "oklch(84% 0 350)",
-          "oklch(95% 0 350)"
+          "oklch(15% 0.004 80)",
+          "oklch(26% 0.004 80)",
+          "oklch(38% 0.004 80)",
+          "oklch(49% 0.004 80)",
+          "oklch(61% 0.004 80)",
+          "oklch(72% 0.004 80)",
+          "oklch(84% 0.004 80)",
+          "oklch(95% 0.004 80)"
         ]
       },
       "selected": {
         "role": "neutral",
         "displayName": "Selected",
         "tonalRamp": [
-          "oklch(15% 0 350)",
-          "oklch(26% 0 350)",
-          "oklch(38% 0 350)",
-          "oklch(49% 0 350)",
-          "oklch(61% 0 350)",
-          "oklch(72% 0 350)",
-          "oklch(84% 0 350)",
-          "oklch(95% 0 350)"
+          "oklch(15% 0.004 80)",
+          "oklch(26% 0.004 80)",
+          "oklch(38% 0.004 80)",
+          "oklch(49% 0.004 80)",
+          "oklch(61% 0.004 80)",
+          "oklch(72% 0.004 80)",
+          "oklch(84% 0.004 80)",
+          "oklch(95% 0.004 80)"
         ]
       },
       "border-light": {
         "role": "neutral",
         "displayName": "Border Light",
         "tonalRamp": [
-          "oklch(15% 0 350)",
-          "oklch(26% 0 350)",
-          "oklch(38% 0 350)",
-          "oklch(49% 0 350)",
-          "oklch(61% 0 350)",
-          "oklch(72% 0 350)",
-          "oklch(84% 0 350)",
-          "oklch(95% 0 350)"
+          "oklch(15% 0.004 80)",
+          "oklch(26% 0.004 80)",
+          "oklch(38% 0.004 80)",
+          "oklch(49% 0.004 80)",
+          "oklch(61% 0.004 80)",
+          "oklch(72% 0.004 80)",
+          "oklch(84% 0.004 80)",
+          "oklch(95% 0.004 80)"
         ]
       },
       "text": {
         "role": "neutral",
         "displayName": "Text",
         "tonalRamp": [
-          "oklch(15% 0 350)",
-          "oklch(26% 0 350)",
-          "oklch(38% 0 350)",
-          "oklch(49% 0 350)",
-          "oklch(61% 0 350)",
-          "oklch(72% 0 350)",
-          "oklch(84% 0 350)",
-          "oklch(95% 0 350)"
+          "oklch(15% 0.004 80)",
+          "oklch(26% 0.004 80)",
+          "oklch(38% 0.004 80)",
+          "oklch(49% 0.004 80)",
+          "oklch(61% 0.004 80)",
+          "oklch(72% 0.004 80)",
+          "oklch(84% 0.004 80)",
+          "oklch(95% 0.004 80)"
         ]
       },
       "text-muted": {
         "role": "neutral",
         "displayName": "Text Muted",
         "tonalRamp": [
-          "oklch(15% 0 350)",
-          "oklch(26% 0 350)",
-          "oklch(38% 0 350)",
-          "oklch(49% 0 350)",
-          "oklch(61% 0 350)",
-          "oklch(72% 0 350)",
-          "oklch(84% 0 350)",
-          "oklch(95% 0 350)"
+          "oklch(15% 0.004 80)",
+          "oklch(26% 0.004 80)",
+          "oklch(38% 0.004 80)",
+          "oklch(49% 0.004 80)",
+          "oklch(61% 0.004 80)",
+          "oklch(72% 0.004 80)",
+          "oklch(84% 0.004 80)",
+          "oklch(95% 0.004 80)"
         ]
       },
       "accent-blue": {
@@ -204,17 +199,17 @@
         ]
       },
       "outgoing": {
-        "role": "primary",
-        "displayName": "Outgoing Graphite",
+        "role": "neutral",
+        "displayName": "Neutral outgoing bubble",
         "tonalRamp": [
-          "oklch(15% 0.01 285)",
-          "oklch(26% 0.01 285)",
-          "oklch(38% 0.01 285)",
-          "oklch(49% 0.01 285)",
-          "oklch(61% 0.01 285)",
-          "oklch(72% 0.01 285)",
-          "oklch(84% 0.01 285)",
-          "oklch(95% 0.01 285)"
+          "oklch(15% 0.004 80)",
+          "oklch(26% 0.004 80)",
+          "oklch(38% 0.004 80)",
+          "oklch(49% 0.004 80)",
+          "oklch(61% 0.004 80)",
+          "oklch(72% 0.004 80)",
+          "oklch(84% 0.004 80)",
+          "oklch(95% 0.004 80)"
         ]
       },
       "send": {
@@ -235,14 +230,14 @@
         "role": "primary",
         "displayName": "Appearance focus",
         "tonalRamp": [
-          "oklch(15% 0.01 285)",
-          "oklch(26% 0.01 285)",
-          "oklch(38% 0.01 285)",
-          "oklch(49% 0.01 285)",
-          "oklch(61% 0.01 285)",
-          "oklch(72% 0.01 285)",
-          "oklch(84% 0.01 285)",
-          "oklch(95% 0.01 285)"
+          "oklch(15% 0.004 80)",
+          "oklch(26% 0.004 80)",
+          "oklch(38% 0.004 80)",
+          "oklch(49% 0.004 80)",
+          "oklch(61% 0.004 80)",
+          "oklch(72% 0.004 80)",
+          "oklch(84% 0.004 80)",
+          "oklch(95% 0.004 80)"
         ]
       },
       "status-green": {
@@ -324,8 +319,8 @@
       },
       {
         "name": "composer",
-        "value": "border-color:#b2a6bd;box-shadow:0 4px 16px #30283b08",
-        "purpose": "Enclosing composer focus-within; textarea outline suppressed inside it."
+        "value": "border-color:#b1ada4;box-shadow:none",
+        "purpose": "The enclosing composer darkens its border without elevation."
       }
     ],
     "typographyMeta": {
@@ -335,12 +330,12 @@
       },
       "display": {
         "displayName": "Welcome heading",
-        "purpose": "QuickStart heading: Inter Variable, clamp(28px,3.2vw,42px), 550, -.035em tracking."
+        "purpose": "QuickStart heading: Inter Variable, 26px desktop/24px mobile, 550, -.03em tracking, line-height 1.3."
       }
     },
     "glass": {
       "blurDefault": "24px",
-      "blurRange": "0\u201340px",
+      "blurRange": "0–40px",
       "triggerSaturate": "140%",
       "menuSaturate": "160%",
       "dialogSaturate": "145%",
@@ -354,15 +349,23 @@
         "#e3e7ee",
         "#eae3e7"
       ],
-      "rule": "Name-derived first two word initials; deterministic muted tone; visible adjacent names carry identity."
+      "rule": "Name-derived first two word initials and deterministic muted tone; compact roster uses circular 26px desktop/28px mobile avatars. Visible adjacent names carry identity."
     },
     "workspaceInteraction": {
       "commandPalette": "Native dialog in body portal; Cmd/Ctrl+K; arrow selection, Enter, Escape; destination/action search limited to 20 matches.",
       "conversationSearch": "Case-insensitive loaded noninternal message content only; close clears query and restores trigger focus.",
       "workPanel": "Native drawer: active-first real jobs, latest first, up to 30; recent work and direction pages; inline cancellation errors.",
-      "composer": "Response format and tools toggle share run options with Conversation settings.",
-      "responsive": "Desktop framed workspace; <=1000px compact toolbar; <=760px full-width conversation and modal navigation.",
-      "verification": "Six source-review issues resolved; four mocked interaction smoke checks, four existing attachment tests, production build, and type checks passed. Source-only evidence; no visual approval or screenshot comparison claimed."
+      "composer": "White two-row 752px composer with input above attachments, response format, tools toggle and send. Appearance action accent and density remain effective; neutral bubbles do not use accent fills.",
+      "responsive": "Full-bleed workspace, 256px adjustable rail and 56px headers; <=1000px hides model metadata; <=760px modal navigation, full-width thread, and 44px composer actions.",
+      "verification": "October 22: UI owner reports production build plus 20 focused tests and actual desktop/mobile browser checks. Independent review inspected supplied screenshots and control handlers; detector findings []. Synthetic fixtures only; no production deployment, live provider execution, pixel fidelity or superiority claim."
+    },
+    "workspaceRefresh": {
+      "date": "2026-10-22",
+      "mode": "Operate",
+      "source": "frontend/src/app/grok-workspace.css",
+      "layout": "Full-bleed warm off-white thread; 256px rail; 56px headers; 752px two-row composer.",
+      "supersedes": "Earlier framed-layout, purple-gray roster, asymmetric accent-bubble and oversized heading descriptions.",
+      "evidence": "verification/ui-README.md; task-workspace verification/grokbot-ui screenshots; synthetic fixtures."
     }
   },
   "components": [
@@ -380,7 +383,7 @@
       "refersTo": "button-round",
       "description": "Circular create control used in the roster toolbar.",
       "html": "<button class=\"ds-round\" aria-label=\"Create bot\"><svg viewBox=\"0 0 24 24\"><path d=\"M12 4v16M4 12h16\"/></svg></button>",
-      "css": ".ds-round{width:43px;height:43px;display:grid;place-items:center;border:1px solid #e7e7e7;border-radius:50%;background:white;color:#202020;cursor:pointer}.ds-round svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.6}.ds-round:hover{background:#ededed}.ds-round:focus-visible{outline:2px solid var(--focus-color,#404047);outline-offset:3px}"
+      "css": ".ds-round{width:30px;height:32px;display:grid;place-items:center;border:0;border-radius:50%;background:transparent;color:#68665f;cursor:pointer}.ds-round svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.6}.ds-round:hover{background:#e6e4df}.ds-round:focus-visible{outline:2px solid #55534e;outline-offset:3px}"
     },
     {
       "name": "Search field",
@@ -394,24 +397,24 @@
       "name": "Outgoing message",
       "kind": "card",
       "refersTo": "message-outgoing",
-      "description": "Right-aligned message bubble; snippet shows shape without implying real sent data.",
+      "description": "Right-aligned neutral bubble; synthetic static preview.",
       "html": "<article class=\"ds-outgoing\">A message preview</article>",
-      "css": ".ds-outgoing{font:var(--chat-font-size,16px)/1.65 \"Inter Variable\",-apple-system,BlinkMacSystemFont,\"Segoe UI\",sans-serif;width:fit-content;max-width:var(--message-width,88%);padding:13px 18px;border-radius:18px 18px 5px 18px;background:var(--accent-blue,#404047);color:white;white-space:pre-wrap;overflow-wrap:anywhere}"
+      "css": ".ds-outgoing{font:16px/1.65 \"Inter Variable\",sans-serif;width:fit-content;max-width:88%;padding:10px 16px;border-radius:18px;background:#e8e6e1;color:#242320;white-space:pre-wrap;overflow-wrap:anywhere}"
     },
     {
       "name": "Incoming message",
       "kind": "card",
       "refersTo": "message-incoming",
-      "description": "Plain incoming reply on the white conversation surface.",
+      "description": "Neutral incoming reply bubble on the off-white thread.",
       "html": "<article class=\"ds-incoming\">A reply preview</article>",
-      "css": ".ds-incoming{font:var(--chat-font-size,16px)/1.65 \"Inter Variable\",-apple-system,BlinkMacSystemFont,\"Segoe UI\",sans-serif;width:fit-content;max-width:var(--message-width,88%);padding:0;border-radius:0;background:transparent;color:#202020;white-space:pre-wrap;overflow-wrap:anywhere}"
+      "css": ".ds-incoming{font:16px/1.65 \"Inter Variable\",sans-serif;width:fit-content;max-width:88%;padding:10px 16px;border-radius:18px;background:#eeede9;color:#242320;white-space:pre-wrap;overflow-wrap:anywhere}"
     },
     {
       "name": "Roster navigation",
       "kind": "nav",
-      "description": "Quiet selected roster row with initials avatar.",
-      "html": "<nav aria-label=\"Agents\"><button class=\"ds-row\"><span class=\"ds-avatar\" aria-hidden=\"true\">AN</span><span><strong>Agent name</strong><small>Description preview</small></span></button></nav>",
-      "css": ".ds-row{font-family:\"Inter Variable\",sans-serif;display:flex;align-items:center;gap:12px;width:100%;min-height:56px;padding:10px;text-align:left;border:0;border-radius:12px;background:#e7e5ec;color:#242329;cursor:pointer}.ds-avatar{display:grid;place-items:center;width:36px;height:36px;border-radius:11px;background:#e3e7ee;color:#4a4553;font-size:11px;font-weight:650}.ds-row strong{display:block;font-size:13px;font-weight:550}.ds-row small{display:block;font-size:11px;color:#736d7a;margin-top:1px}.ds-row:hover{background:#e7e5ec}.ds-row:focus-visible{outline:2px solid var(--focus-color,#404047);outline-offset:3px}"
+      "description": "Compact selected row with circular muted initials; name carries identity.",
+      "html": "<nav aria-label=\"Agents\"><button class=\"ds-row\"><span class=\"ds-avatar\" aria-hidden=\"true\">AN</span><strong>Agent name</strong></button></nav>",
+      "css": ".ds-row{font:13px \"Inter Variable\",sans-serif;display:flex;align-items:center;gap:9px;width:100%;min-height:42px;padding:7px 8px;text-align:left;border:0;border-radius:11px;background:#e6e4e0;color:#202020;cursor:pointer}.ds-avatar{display:grid;place-items:center;width:26px;height:26px;border-radius:50%;background:#e3e7ee;color:#4a4553;font-size:9px}.ds-row strong{font-size:13px;font-weight:450}.ds-row:focus-visible{outline:2px solid #55534e;outline-offset:3px}"
     },
     {
       "name": "Team member chip",
@@ -424,34 +427,33 @@
     {
       "name": "Task-first composer",
       "kind": "custom",
-      "description": "QuickStart task/output/start composition; static preview only, production output uses GlassSelect.",
-      "html": "<form class=\"ds-task\" onsubmit=\"return false\"><textarea aria-label=\"Your task\" rows=\"3\" placeholder=\"Research something, make something, solve something\u2026\"></textarea><div><select aria-label=\"Task output\"><option>Ask anything</option><option>Create an image</option><option>Create a video</option></select><button type=\"button\">Start task \u2192</button></div></form>",
-      "css": ".ds-task{width:min(700px,100%);border:1px solid #dedede;border-radius:20px;background:#faf9fb;box-shadow:none;padding:16px;font-family:\"Inter Variable\",sans-serif}.ds-task:focus-within{border-color:var(--focus-color,#404047)}.ds-task textarea{width:100%;resize:none;border:0;background:none;font:16px/1.6 \"Inter Variable\",sans-serif;outline:none;padding:3px 2px 16px;color:#292929}.ds-task>div{display:flex;align-items:center;justify-content:space-between;gap:12px}.ds-task select{border:0;background:#f4f4f4;padding:9px 12px;border-radius:9px;font-size:12px;color:#555}.ds-task button{border:1px solid #c5237b;background:var(--accent-blue,#404047);color:white;border-radius:12px;padding:11px 15px;font-size:13px;cursor:pointer}.ds-task button:focus-visible,.ds-task select:focus-visible{outline:2px solid var(--focus-color,#404047);outline-offset:3px}.ds-task select{width:auto;max-width:calc(100% - 125px)}.ds-task button{white-space:nowrap;flex-shrink:0}"
+      "description": "Two-row task input with compact selectors and a named arrow action; production uses GlassSelect.",
+      "html": "<form class=\"ds-task\" onsubmit=\"return false\"><textarea aria-label=\"Your task\" rows=\"2\" placeholder=\"Ask anything, or describe a task…\"></textarea><div><select aria-label=\"Manager model\"><option>Auto · task specialists</option></select><select aria-label=\"Task output\"><option>Ask anything</option></select><button type=\"button\" aria-label=\"Start task\"><svg aria-hidden=\"true\" viewBox=\"0 0 24 24\"><path d=\"M12 19V5m-6 6 6-6 6 6\"/></svg></button></div></form>",
+      "css": ".ds-task{box-sizing:border-box;width:min(752px,100%);border:1px solid #e1dfd9;border-radius:24px;background:#fff;padding:12px 14px 10px;font-family:\"Inter Variable\",sans-serif}.ds-task:focus-within{border-color:#b1ada4}.ds-task textarea{box-sizing:border-box;width:100%;resize:none;border:0;background:none;font:15px/24px \"Inter Variable\",sans-serif;outline:none;padding:2px 3px 10px;color:#202020;min-height:48px}.ds-task>div{display:flex;align-items:center;gap:2px}.ds-task select{max-width:45%;min-height:36px;border:0;background:transparent;padding:4px 8px;font-size:11px;color:#5e5a52}.ds-task button{margin-left:auto;width:40px;height:40px;flex-shrink:0;border:0;border-radius:50%;background:#404047;color:#fff;font-size:20px;cursor:pointer}.ds-task button:focus-visible,.ds-task select:focus-visible{outline:2px solid #55534e;outline-offset:3px}.ds-task button svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.6}"
     },
     {
       "name": "Glass select states",
       "kind": "custom",
       "refersTo": "glass-select-trigger",
       "description": "Visual preview of the large glass trigger and menu; production uses Radix keyboard/typeahead semantics.",
-      "html": "<button class=\"ds-glass-trigger\" aria-haspopup=\"listbox\">GPT-6.1 Sol <span aria-hidden=\"true\">\u2304</span></button><div class=\"ds-glass-menu\" role=\"listbox\" aria-label=\"Model\"><div class=\"ds-glass-option\" role=\"option\" aria-selected=\"true\" tabindex=\"0\">\u2713 GPT-6.1 Sol</div><div class=\"ds-glass-option\" role=\"option\" aria-selected=\"false\" tabindex=\"0\">GPT-6 Luna</div></div>",
+      "html": "<button class=\"ds-glass-trigger\" aria-haspopup=\"listbox\">GPT-6.1 Sol <span aria-hidden=\"true\">⌄</span></button><div class=\"ds-glass-menu\" role=\"listbox\" aria-label=\"Model\"><div class=\"ds-glass-option\" role=\"option\" aria-selected=\"true\" tabindex=\"0\">✓ GPT-6.1 Sol</div><div class=\"ds-glass-option\" role=\"option\" aria-selected=\"false\" tabindex=\"0\">GPT-6 Luna</div></div>",
       "css": ".ds-glass-trigger{font:15px \"Inter Variable\",sans-serif;display:inline-flex;align-items:center;justify-content:space-between;gap:16px;min-height:48px;max-width:100%;padding:12px 16px;border-radius:12px;background:rgba(255,255,255,.83);border:1px solid rgba(98,85,99,.16);box-shadow:none;backdrop-filter:blur(var(--glass-blur,24px)) saturate(140%);color:#29262c;cursor:pointer;transition:background 150ms ease,box-shadow 150ms ease}.ds-glass-trigger:hover{background:rgba(255,255,255,.95)}.ds-glass-trigger:focus-visible{outline:2px solid var(--focus-color,#404047);outline-offset:3px}.ds-glass-menu{font-family:\"Inter Variable\",sans-serif;margin-top:8px;max-width:400px;padding:7px;border-radius:16px;background:rgba(252,251,253,.91);backdrop-filter:blur(var(--glass-blur,24px)) saturate(160%);border:1px solid #ffffffd9;box-shadow:0 18px 48px #24152425,inset 0 1px 0 #fff;color:#28242a}.ds-glass-option{display:flex;align-items:center;gap:14px;min-height:50px;padding:13px 17px;border-radius:13px;font-size:15px;line-height:1.45}.ds-glass-option:hover,.ds-glass-option:focus-visible{background:color-mix(in srgb,var(--focus-color,#404047) 11%,white);outline:none}.ds-glass-option[aria-selected=true]{font-weight:550}"
     },
     {
       "name": "Goal progress row",
       "kind": "card",
       "description": "Bounded goal progress with workspace and pause actions; preview does not invoke a scheduler.",
-      "html": "<section class=\"ds-goal\"><div><strong>Goal title</strong><span>Paused</span></div><p>1 of 3 runs \u00b7 every 60 minutes</p><p>Latest progress appears here.</p><button>Open workspace</button><button>Resume</button></section>",
+      "html": "<section class=\"ds-goal\"><div><strong>Goal title</strong><span>Paused</span></div><p>1 of 3 runs · every 60 minutes</p><p>Latest progress appears here.</p><button>Open workspace</button><button>Resume</button></section>",
       "css": ".ds-goal{font-family:\"Inter Variable\",sans-serif;padding:0 0 18px;border-bottom:1px solid #e2dce5}.ds-goal>div{display:flex;justify-content:space-between;gap:12px}.ds-goal strong{font-size:15px}.ds-goal span{font-size:11px;color:#625b66}.ds-goal p{font-size:13px;line-height:1.6;color:#665e6b}.ds-goal button{font:12px \"Inter Variable\",sans-serif;padding:8px 14px;margin:8px 6px 0 0;min-height:44px;border:1px solid #ddd;border-radius:12px;background:white;color:#202020;cursor:pointer}.ds-goal button:focus-visible{outline:2px solid var(--focus-color,#404047);outline-offset:3px}"
     }
   ],
   "narrative": {
-    "overview": "The light Grok workspace uses a quiet neutral roster, white conversation, subdued initials avatars, and an adjustable Graphite default accent. A framed desktop workspace and a single conversation toolbar establish hierarchy. Glass remains available for menus and dialogs; conversation text stays the primary visual anchor.\n\nProduction revision b473 previously verified database/worker operation, generated OpenAI PNG, Gemini JPEG, and Veo MP4 media, and a real GPT-6 Luna \u2192 Gemini group job. DeepWiki tool invocation was also verified. The former free-credit restriction is historical and no longer describes the current verified capability. The new glass controls, appearance preferences, goals, channels, and per-plugin tool controls have passed source checks (31 backend tests and the frontend production build), but have not yet been verified live. Prior live results do not prove the new workflows or every model, provider, sandbox, or connected service.",
+    "overview": "The October 22 workspace uses a full-bleed warm off-white conversation, a quiet neutral navigation rail, subdued initials avatars, and an adjustable Graphite default action accent. A single conversation toolbar and a centered two-row composer establish hierarchy. Open GrokBot keeps its own name and mark. Glass remains available for menus and dialogs; conversation text stays the primary visual anchor.\n\nThe frontmatter and the October 22 refresh below describe the current composition. Earlier dated sections are preserved as implementation history; the October 22 values supersede conflicting frame, palette, bubble, sidebar, and composer descriptions. Existing product capability and verification limits remain separate from visual evidence.",
     "keyCharacteristics": [
-      "Light neutral messaging workspace with browser-local accent customization.",
-      "Muted initials identities, plain incoming text, and rounded outgoing messages.",
-      "Large translucent select menus with keyboard navigation.",
-      "Bounded scrolling dialogs with persistent actions.",
-      "Explicit progress, connection, goal, and delivery states."
+      "Full-bleed off-white thread and compact neutral rail with Open GrokBot branding.",
+      "Neutral message bubbles, a two-row white composer, and a restrained heading.",
+      "Adjustable action accent, roster density, type size and motion preferences.",
+      "Keyboard-operable selects and dialogs with persistent actions and visible recovery states."
     ],
     "rules": [],
     "dos": [

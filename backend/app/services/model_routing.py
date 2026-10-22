@@ -17,6 +17,9 @@ _catalog_at = 0.0
 
 
 async def gateway_catalog():
+    from app.services import omniroute
+    if omniroute.enabled():
+        return await omniroute.catalog()
     global _catalog, _catalog_at
     if _catalog and time.monotonic() - _catalog_at < 300:
         return _catalog
@@ -54,13 +57,17 @@ def required_modalities(messages):
     return required
 
 
-async def validate_capabilities(messages, tools, provider, model):
+async def validate_direct_capabilities(messages, tools, provider, model):
+    await validate_capabilities(messages, tools, provider, model, direct=True)
+
+
+async def validate_capabilities(messages, tools, provider, model, *, direct=False):
     required = required_modalities(messages)
-    if settings.LLM_USE_GATEWAY:
+    if not direct and (settings.OMNIROUTE_URL or settings.LLM_USE_GATEWAY):
         from app.services.model_profiles import gateway_id
         item = (await gateway_catalog()).get(gateway_id(provider,model))
         if item is None or item.get("type") != "language":
-            raise ModelCapabilityError("The selected model is unavailable in the gateway catalog. Choose an available chat model in conversation settings.")
+            raise ModelCapabilityError("The selected model is unavailable on the configured model connection. Choose an available chat model in conversation settings.")
         supported = set(item.get("modalities", {}).get("input", []))
         supports_tools = "tools" in item.get("supported_parameters", [])
     else:
@@ -97,7 +104,11 @@ def public_model_error(error):
         return str(error)
     status = getattr(error, "status_code", None)
     kind, reason = type(error).__name__.lower(), str(error).lower()
+    if status == 413:
+        return "This request exceeds the model connection's size limit. Your original message and files are saved. Send fewer or smaller files, or start a new conversation to reduce attachment history."
     if status == 401 or "authentication" in kind or "authentication" in reason:
+        if settings.OMNIROUTE_URL:
+            return "The OmniRoute connection could not authenticate. Check its inference key and deployment access. Your message and files are saved."
         return "The model connection could not authenticate. Check the backend and worker's gateway key or rotating Vercel OIDC token. Your message and files are saved; no model result was produced."
     if status == 402 or any(word in reason for word in ("credit", "quota", "budget", "restrictedmodelserror", "free tier users")):
         return "The model provider reports a credit, quota, or budget limit. Review the provider account before retrying. Your message and files are saved."

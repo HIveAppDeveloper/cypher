@@ -87,8 +87,22 @@ async def unsafe_inflight(db, task_id):
 async def retry_or_interrupt(db, task, *, immediate=False):
     """The same task resumes; a crash never consumes another goal run."""
     state = (await db.execute(select(TaskExecution).where(TaskExecution.task_id==task.id).with_for_update())).scalar_one_or_none()
+    # Stop may have committed while the provider was failing. Reload under a
+    # task lock so recovery cannot overwrite the owner's cancellation request.
+    await db.refresh(task, attribute_names=['status'], with_for_update=True)
     unsafe = await unsafe_inflight(db, task.id)
-    if state is None or unsafe:
+    if task.status in ('cancel_requested', 'cancelled'):
+        task.status = 'cancelled'
+        task.completed_at = task.completed_at or datetime.utcnow()
+        detail = 'Stopped future steps. An in-flight external action may already have completed.'
+        if unsafe:
+            detail += f' The outcome of {unsafe} is unknown; review before retrying.'
+        # Retain receipts and checkpoints; cancellation never grants permission
+        # to retry an uncertain action or automatically start another attempt.
+        task.result = {**(task.result or {}), 'note': detail}
+        if state:
+            state.next_attempt_at = None
+    elif state is None or unsafe:
         task.status = 'interrupted'
         task.completed_at = datetime.utcnow()
         detail = f'The outcome of {unsafe} is unknown; review before resuming.' if unsafe else 'This older task has no recovery checkpoints; review before resuming.'

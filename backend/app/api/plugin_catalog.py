@@ -166,7 +166,11 @@ async def authorize(body:Begin,db:AsyncSession=Depends(get_db),request:Request=N
         plugin.tools=[{**tool,'enabled':old.get(tool['name'],True)} for tool in tools]
         await db.execute(delete(PluginAuthorization).where(PluginAuthorization.plugin_id==plugin.id,PluginAuthorization.id!=row.id))
     else:db.add(plugin)
-    await db.flush();row.plugin_id=plugin.id;row.status='connected';await db.commit()
+    await db.flush();row.plugin_id=plugin.id;row.status='connected'
+    from app.models.runtime import RuntimeCheck
+    stale=await db.get(RuntimeCheck,'plugin:'+plugin.id)
+    if stale:await db.delete(stale)
+    await db.commit()
     return {'status':'connected','flow_id':row.id,'plugin_id':plugin.id,'name':row.name}
 
 class Callback(BaseModel):
@@ -216,6 +220,9 @@ async def callback(body:Callback,db:AsyncSession=Depends(get_db)):
             plugin=Plugin(name=row.name,url=row.url,enabled=True,tools=tools);db.add(plugin)
         await db.flush()
         row.plugin_id=plugin.id;row.status='connected';row.state_hash=None;row.binding_hash=None
+        from app.models.runtime import RuntimeCheck
+        stale=await db.get(RuntimeCheck,'plugin:'+plugin.id)
+        if stale:await db.delete(stale)
         clean=storage.read();clean.pop('verifier',None);clean.pop('authorization_url',None)
         from app.services.plugins import seal
         row.payload=seal(json.dumps(clean));await db.commit()

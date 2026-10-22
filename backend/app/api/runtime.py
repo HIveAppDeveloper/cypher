@@ -25,12 +25,16 @@ async def runtime(db=Depends(get_db)):
         item = heartbeats.get(name)
         checks[name] = item.updated_at.isoformat() + 'Z' if item else None
     details = {}
+    transport = 'omniroute' if settings.OMNIROUTE_URL else 'vercel' if settings.LLM_USE_GATEWAY else 'direct'
     recorded_checks = {item.name:item for item in (await db.execute(select(RuntimeCheck))).scalars().all()}
     for name in ('gateway','fallback','fleet','starter_plugins','media_openai','media_google','media_video','mcp','browser','computer','check_request'):
         result = recorded_checks.get(name)
-        if result: details[name] = {'status':result.status,'detail':result.detail,'checked_at':result.updated_at.isoformat()+'Z'}
+        if result:
+            stale_transport = name in {'gateway','fallback','fleet','media_openai','media_google','media_video'} and (result.detail or {}).get('transport', 'vercel') != transport
+            details[name] = {'status':'not_checked' if stale_transport else result.status,'detail':{} if stale_transport else result.detail,'checked_at':result.updated_at.isoformat()+'Z'}
     configured = heartbeats.get('gateway_configured')
-    return {'checks':details, **checks, 'database':True,'worker':worker_fresh and version_ready,'worker_last_seen_seconds':int(age) if age is not None else None,'worker_version_matches':version_matches,'deployment':deployment,'worker_deployment':worker_deployment,'gateway_configured':bool(configured or os.getenv('AI_GATEWAY_API_KEY') or os.getenv('VERCEL_OIDC_TOKEN') or os.getenv('VERCEL_OIDC_TOKEN_FILE')),'sandbox_backend':settings.SANDBOX_BACKEND}
+    gateway_configured = not settings.OMNIROUTE_URL and settings.LLM_USE_GATEWAY and bool(configured or os.getenv('AI_GATEWAY_API_KEY') or os.getenv('VERCEL_OIDC_TOKEN') or os.getenv('VERCEL_OIDC_TOKEN_FILE'))
+    return {'checks':details, **checks, 'database':True,'worker':worker_fresh and version_ready,'worker_last_seen_seconds':int(age) if age is not None else None,'worker_version_matches':version_matches,'deployment':deployment,'worker_deployment':worker_deployment,'gateway_configured':gateway_configured,'model_transport':transport,'model_configured':bool(settings.OMNIROUTE_URL and settings.OMNIROUTE_API_KEY) or gateway_configured or bool(settings.LLM_API_KEY),'configured_models':list(settings.OMNIROUTE_MODEL_MAP) if settings.OMNIROUTE_URL else [],'sandbox_backend':settings.SANDBOX_BACKEND}
 
 @router.post('/checks', status_code=202)
 async def request_checks(db=Depends(get_db)):
