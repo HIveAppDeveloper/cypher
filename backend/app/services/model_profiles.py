@@ -39,6 +39,7 @@ def task_specialty(prompt, role='', modalities=None):
         ('analysis', r'\b(calculate|equation|math|statistics|dataset|csv|analy[sz]e (?:these|this|the) (?:data|numbers|results))\b'),
         ('research', r'\b(research|search|look up|latest|current|sources|find out|news)\b'),
         ('writing', r'\b(write|draft|rewrite|edit|story|poem|copy|translate|translation)\b'),
+        ('planning', r'\b(?:book|reserve|reschedule|arrange)\b[^.!?\n]{0,100}\b(?:hotel|room|flight|table|trip|reservation|restaurant|appointment)\b|\bcheck me in\b'),
         ('planning', r'\b(plan|strategy|architect|reason through|think deeply|prove)\b'),
     )
     return next((kind for kind,pattern in rules if re.search(pattern,prompt,re.I)), 'general')

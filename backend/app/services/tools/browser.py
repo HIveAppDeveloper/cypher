@@ -11,6 +11,7 @@ import base64
 import json
 from datetime import datetime
 import logging
+import re
 from uuid import uuid4
 from typing import Optional
 from urllib.parse import urlsplit
@@ -144,12 +145,15 @@ class BrowserTool:
                     title=await page.title()
                 except Exception:
                     return {'success':False,'title':title,'url':page.url,'status':status,'render_pending':True,'error':'No readable page content rendered within the bounded wait. This is not evidence of no results or no availability. Retry the rendered page or use another source.'}
+            sections=await self._sections(page)
+            text_budget=max(2000,12000-sum(len(s['text']) for s in sections))
             return {
                 "success": True,
                 "title": title,
                 "url": page.url,
                 "status": status,
-                "text_content": text[:12000],
+                "text_content": text[:text_budget],
+                'content_sections':sections,
                 "controls": await self._controls(page),
             }
         except Exception as e:
@@ -193,11 +197,22 @@ class BrowserTool:
             logger.error(f"Click on '{selector}' failed: {e}")
             return {"success": False, "error": str(e), "selector": selector}
 
-    async def _controls(self,page):
+    async def _controls(self,page,instruction=''):
         """Return bounded, unambiguous selectors for currently visible controls."""
-        return await page.evaluate("""prefix => {
+        return await page.evaluate("""({prefix,fieldsFirst}) => {
             const nodes=[...document.querySelectorAll('a[href],button,input:not([type="hidden"]),textarea,select,[role="button"]')]
                 .filter(el=>el.getClientRects().length && getComputedStyle(el).visibility!=='hidden');
+            const card='article,[role="listitem"],[data-testid$="-card"],[itemtype$="/Product"]';
+            const rank=el=>{
+                if(el.closest('nav,aside,header,footer,[role="navigation"],[role="complementary"]'))return 4;
+                if(fieldsFirst && el.matches('input,textarea,select'))return 0;
+                if(el.closest(card))return fieldsFirst?1:0;
+                if(el.matches('button,a,[role="button"]'))return fieldsFirst?2:1;
+                return fieldsFirst?3:2;
+            };
+            // Results must not disappear behind a long list of filter checkboxes.
+            // An explicit extraction request for fields brings those back first.
+            nodes.sort((a,b)=>rank(a)-rank(b));
             return nodes.slice(0,100).map((el,index)=>{
                 const id=prefix+'-'+index;el.setAttribute('data-grokbot-control',id);
                 return {selector:'[data-grokbot-control="'+id+'"]',tag:el.tagName.toLowerCase(),
@@ -205,7 +220,23 @@ class BrowserTool:
                     label:(el.getAttribute('aria-label')||el.getAttribute('title')||el.innerText||el.getAttribute('placeholder')||'').trim().slice(0,200),
                     ...(el.tagName==='A'?{href:el.href}:{}),disabled:!!el.disabled};
             });
-        }""",uuid4().hex[:12])
+        }""",{'prefix':uuid4().hex[:12],'fieldsFirst':bool(re.search(r'\b(filters?|forms?|fields?|inputs?|checkboxes)\b',instruction,re.I))})
+
+    async def _sections(self,page):
+        """Keep bounded result cards together with their prices and conditions."""
+        return await page.evaluate("""() => {
+            const candidates=[...document.querySelectorAll('article,[role="listitem"],[data-testid$="-card"],[itemtype$="/Product"]')];
+            const seen=new Set();const result=[];
+            for(const el of candidates){
+                if(el.closest('nav,aside,header,footer')||!el.getClientRects().length)continue;
+                const heading=el.querySelector('h1,h2,h3,h4,[role="heading"]');
+                const text=el.innerText?.trim();
+                if(!heading||!text||seen.has(text))continue;
+                seen.add(text);result.push({heading:heading.innerText.trim().slice(0,180),text:text.slice(0,600)});
+                if(result.length>=20)break;
+            }
+            return result;
+        }""")
 
     async def type_text(
         self,
@@ -329,6 +360,8 @@ class BrowserTool:
                 }
             """)
 
+            sections=await self._sections(page)
+            text_budget=max(2000,12000-sum(len(s['text']) for s in sections))
             # Extract form fields
             forms = await page.evaluate("""
                 () => Array.from(document.querySelectorAll('input, textarea, select')).map(el => ({
@@ -346,10 +379,11 @@ class BrowserTool:
                 "instruction": instruction,
                 "title": title,
                 "url": page.url,
-                "text_content": text_content[:10000],  # Limit size
+                "text_content": text_content[:text_budget],
+                'content_sections':sections,
                 "links": links,
                 "forms": forms,
-                "controls": await self._controls(page),
+                "controls": await self._controls(page,instruction),
             }
         except Exception as e:
             logger.error(f"Content extraction failed: {e}")

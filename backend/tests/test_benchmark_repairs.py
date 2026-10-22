@@ -328,6 +328,40 @@ async def test_navigation_waits_for_render_and_never_calls_blank_202_an_empty_re
     finally:await browser.close()
 
 
+@pytest.mark.asyncio
+async def test_result_cards_and_booking_controls_survive_long_filter_sidebar(monkeypatch):
+    from app.services.tools.browser import BrowserTool
+    browser=BrowserTool()
+    async def save(*a):pass
+    monkeypatch.setattr(browser,'_save_state',save)
+    monkeypatch.setattr(browser,'_load_state',lambda *a: asyncio.sleep(0,result=None))
+    try:
+        page=await browser._get_page('cards-test')
+        filters=''.join(f'<label>Filter {i}<input type="checkbox" name="filter{i}"></label>' for i in range(150))
+        cards=''.join(f'<div data-testid="result-card"><h3>Hotel {i}</h3><p>${180+i} including fees; free cancellation</p><button>Choose room {i}</button></div>' for i in range(25))
+        await page.set_content('<nav><a href="https://example.test">Menu</a></nav><main><div>'+filters+'</div>'+cards+'</main>')
+        result=await browser.extract_content('Compare available hotel options','cards-test')
+        assert result['success']
+        assert len(result['content_sections'])==20
+        assert result['content_sections'][0]['heading']=='Hotel 0'
+        assert '$180 including fees; free cancellation' in result['content_sections'][0]['text']
+        assert result['controls'][0]['label']=='Choose room 0'
+        assert sum(c['label'].startswith('Choose room') for c in result['controls'])==25
+        fields=await browser.extract_content('Show filter fields','cards-test')
+        assert fields['controls'][0]['name']=='filter0'
+        assert len(fields['controls'])<=100
+    finally:await browser.close()
+
+
+def test_auto_routes_booking_workflows_to_planning_without_hijacking_writing_or_manual_models():
+    from app.services.model_profiles import task_specialty
+    assert task_specialty('Book me a hotel in Chicago for Friday, under $250 with free cancellation')=='planning'
+    assert task_specialty('Reserve a table for four at the restaurant')=='planning'
+    assert task_specialty('Check me in for my flight')=='planning'
+    assert task_specialty('Write a book about hotel reservations')=='writing'
+    assert task_specialty('What does a hotel reservation mean?')=='general'
+
+
 def test_explicit_word_budgets_count_visible_prose_and_follow_owner_steering():
     assert word_limit('Keep it under 180 words.')==179
     assert word_limit('At most 20 words')==20
