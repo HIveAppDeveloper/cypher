@@ -30,9 +30,15 @@
   with 503. The `open-grokbot-sandbox:latest` image is NOT built here, so starting
   an agent's computer container will fail until it is built
   (`docker build -t open-grokbot-sandbox:latest ./sandbox`).
-- Agent tasks need a model route: set `LLM_API_KEY` (or `OPENAI_API_KEY`) through
-  app secrets. In-app model connection management additionally needs OmniRoute
-  (`OMNIROUTE_URL`, `OMNIROUTE_CONTROL_KEY`).
+- OmniRoute is the intended transport for every model call. Setting
+  `OMNIROUTE_URL` makes it exclusive: agents, teams, audio transcription, image
+  generation, usage accounting and verification all take the OmniRoute branch, and
+  the direct OpenAI paths (attachments, media) are unreachable. Without
+  `OMNIROUTE_API_KEY` those calls fail with "The OmniRoute inference key is not
+  configured on this runtime." `GET /api/runtime` reports `model_transport` and
+  `model_configured`. In-app model connection management additionally needs
+  `OMNIROUTE_CONTROL_KEY`. A direct provider key (`LLM_API_KEY`) is only used when
+  `OMNIROUTE_URL` is unset.
 
 ## Verifying
 
