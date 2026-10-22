@@ -21,6 +21,7 @@ function hooks() {
       return [values[position], next => { values[position] = typeof next === 'function' ? next(values[position]) : next; }];
     },
     useRef: initial => values[slot({ current: initial })],
+    useEffect: () => {},
   };
   return { react, render: fn => { index = 0; return fn(); } };
 }

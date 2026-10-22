@@ -1,0 +1,18 @@
+{
+  "observedAt": "2026-10-22",
+  "environment": "Authorized Mac Chrome, read-only DOM inspection",
+  "pageOrigin": "https://open-grokbot.vercel.app",
+  "renderedGoogleCallback": "https://open-grokbot-hiveapp.vercel.app/api/auth/google/callback",
+  "legacyAliasDeployment": "dpl_ES9RP9b7Nh73Cw3mRqvey6JqN1Ho",
+  "approvedReleaseDeployment": "dpl_C3g6k69cWuakef5yRDPyCX74Qa2N",
+  "observation": "Current origin and rendered Google callback origin differ; legacy alias resolves older deployment.",
+  "limits": [
+    "No Google/email login or OAuth flow submitted.",
+    "Callback authorized-origin lists and email delivery destinations were not inspected or changed.",
+    "Origin mismatch may route a successful Google login to the old app; actual login result remains unverified.",
+    "No provider, security, credential or production configuration was changed."
+  ],
+  "recheckedProductionCommit": "912eb6df8fa0967f0412318a0e5cc4d29788b481",
+  "recheckedDeployment": "dpl_CuDy8xiHktsDSi96WSPG1ZSoieMe",
+  "mismatchStillPresentAfterReload": true
+}
