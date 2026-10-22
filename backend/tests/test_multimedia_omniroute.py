@@ -106,3 +106,19 @@ async def test_video_sends_real_sampled_frames_and_full_timestamped_speech_to_ro
     evidence=await multimedia.inspect_media(path,'Describe it')
     assert evidence['video_processed'] and evidence['audio_processed']
     assert evidence['sampled_frame_seconds']==[0.0,1.9] and evidence['transport']=='omniroute'
+
+
+@pytest.mark.asyncio
+async def test_youtube_uses_authenticated_native_video_route_and_requires_frame_usage(monkeypatch):
+    from app.services.tools.video import analyze_video
+    monkeypatch.setattr(settings,'OMNIROUTE_URL','https://router.example')
+    calls=[]
+    evidence={'success':True,'video_processed':True,'audio_processed':None,'analysis':'Actual frame at 00:10','provider_usage':{'video_tokens':90,'input_tokens':100,'output_tokens':10}}
+    async def request(path,body):
+        calls.append((path,body));return evidence
+    monkeypatch.setattr(omniroute,'request',request)
+    result=await analyze_video({'url':'https://youtu.be/NyfYxpXiw_0?t=12','question':'Describe it'},'qa')
+    assert result['success'] and calls==[('/video/analyses',{'model':'gemini/gemini-3.8-flash','url':'https://www.youtube.com/watch?v=NyfYxpXiw_0','question':'Describe it'})]
+    evidence['provider_usage']['video_tokens']=0
+    result=await analyze_video({'url':'https://youtu.be/NyfYxpXiw_0'},'qa')
+    assert not result['success'] and 'not confirmed' in result['error']

@@ -128,6 +128,26 @@ async def test_stream_is_real_deltas_and_forwards_generation_controls(router):
 
 
 @pytest.mark.asyncio
+async def test_gemini_complete_uses_signed_stream_path_and_collects_tool_calls(router,monkeypatch):
+    seen,install=router
+    monkeypatch.setattr(settings,'OMNIROUTE_MODEL_MAP',{'google/gemini-3.8-flash':'gemini/gemini-3.8-flash'})
+    def respond(request):
+        body=json.loads(request.content)
+        assert body['stream'] and body['stream_options']['include_usage'] and body['max_tokens']==1000
+        chunks=[
+          {'id':'gemini-call','object':'chat.completion.chunk','created':1,'model':'gemini-3.8-flash','choices':[{'index':0,'delta':{'role':'assistant','tool_calls':[{'index':0,'id':'signed-call','type':'function','function':{'name':'multiply','arguments':'{"a":13'}}]},'finish_reason':None}]},
+          {'id':'gemini-call','object':'chat.completion.chunk','created':1,'model':'gemini-3.8-flash','choices':[{'index':0,'delta':{'tool_calls':[{'index':0,'function':{'arguments':',"b":17}'}}]},'finish_reason':'tool_calls'}]},
+          {'id':'gemini-call','object':'chat.completion.chunk','created':1,'model':'gemini-3.8-flash','choices':[],'usage':{'prompt_tokens':10,'completion_tokens':7,'total_tokens':17}},
+        ]
+        return httpx.Response(200,text=''.join('data: '+json.dumps(x)+'\n\n' for x in chunks)+'data: [DONE]\n\n',headers={'content-type':'text/event-stream'})
+    install(respond)
+    result=await omniroute.complete([{'role':'user','content':'Multiply'}],None,'gemini','gemini-3.8-flash',{'max_tokens':1000})
+    call=result.choices[0].message.tool_calls[0]
+    assert call.id=='signed-call' and json.loads(call.function.arguments)=={'a':13,'b':17}
+    assert result.usage.total_tokens==17
+
+
+@pytest.mark.asyncio
 async def test_image_generation_returns_verified_bytes_and_other_media_never_uses_gateway(router):
     from app.services.media import generate_media
     from app.services.attachments import transcribe_audio
