@@ -8,7 +8,7 @@ import time
 from pathlib import Path
 from urllib.parse import urlsplit
 from uuid import UUID
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 from sqlalchemy import select, delete
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -42,6 +42,18 @@ async def list_catalog():
             items.append({'id':'managed-'+c['id'],'name':c['name'].split(' · ')[0],'url':c['url'],'description':'Connect your account with managed sign-in. Existing authorized connections are reused.','category':'Development','domains':c['domains'],'auth':'auto','source':'https://vercel.com/docs/connect'})
             urls.add(c['url'].rstrip('/'))
     return items
+
+@router.get('/registry/search')
+async def search_registry_catalog(q:str=Query(...,min_length=2,max_length=120),cursor:str|None=Query(default=None,max_length=2000)):
+    term=q.strip()
+    if len(term)<2:raise HTTPException(422,'Enter at least two characters to search MCP servers.')
+    try:
+        from app.services.mcp_registry import search_registry
+        return await search_registry(term,cursor)
+    except Exception as error:
+        import logging
+        logging.getLogger(__name__).warning('MCP Registry search failed (%s)',type(error).__name__)
+        raise HTTPException(503,'MCP Registry search is temporarily unavailable. The curated connector catalog is still available.') from error
 
 @router.get('/available-connections')
 async def available_connections():
@@ -86,18 +98,13 @@ async def resolve(body:Website):
     from app.services.website_connectors import published_connector
     published=await published_connector(host,http_client)
     if published:return published
-    # Registry search is discovery only; accept exact publisher website/domain matches.
+    # The registry is discovery only; accept exact publisher website/domain matches.
     try:
-        async with http_client() as client:
-            response=await client.get('https://registry.modelcontextprotocol.io/v0.1/servers',params={'search':host,'version':'latest','limit':50},timeout=6)
-        if response.status_code==200:
-            for entry in response.json().get('servers',[]):
-                server=entry.get('server',{}); website=server.get('websiteUrl','')
-                website_host=(urlsplit(website).hostname or '').removeprefix('www.')
-                for remote in server.get('remotes',[]):
-                    endpoint=remote.get('url',''); remote_host=urlsplit(endpoint).hostname or ''
-                    if remote.get('type')=='streamable-http' and endpoint.startswith('https://') and not any(character in endpoint for character in '{}?') and (remote_host==host or remote_host.endswith('.'+host)):
-                        return {'id':server.get('name',endpoint),'name':server.get('title') or host,'url':endpoint,'description':server.get('description','Published connector'),'category':'Custom','domains':[host],'source':'https://registry.modelcontextprotocol.io/'}
+        from app.services.mcp_registry import search_registry
+        page=await search_registry(host)
+        for item in page['items']:
+            if host in item.get('domains',[]):
+                return item
     except Exception:
         pass
     raise HTTPException(404,'We could not find a published connector for this website. Search the catalog, or use Advanced to add a server URL supplied by the company.')

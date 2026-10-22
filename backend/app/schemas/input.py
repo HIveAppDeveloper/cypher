@@ -22,7 +22,7 @@ class RunOptions(BaseModel):
     routing: Literal['auto', 'manual'] = 'auto'
     allow_tools: bool = True
     steering: str = Field(default='', max_length=6000)
-    output: Literal['text', 'image', 'video'] = 'text'
+    output: Literal['text', 'image'] = 'text'
     aspect_ratio: Literal['1:1', '16:9', '9:16'] = '16:9'
     duration: Literal[4, 6, 8] = 4
     temperature: float = Field(default=0.5, ge=0, le=1.5)
@@ -30,9 +30,8 @@ class RunOptions(BaseModel):
     max_iterations: int = Field(default=10, ge=1, le=25)
     team_rounds: int = Field(default=1, ge=1, le=4)
     model: str | None = Field(default=None, min_length=1, max_length=160)
-    provider: Literal['openai', 'gemini', 'anthropic', 'ollama', 'deepseek', 'spacexai'] | None = None
+    provider: Literal['openai', 'gemini', 'anthropic', 'ollama', 'deepseek', 'xai', 'spacexai'] | None = None
     reasoning_effort: Literal['none', 'low', 'medium', 'high', 'xhigh', 'max'] | None = None
-    service_tier: Literal['default', 'priority', 'flex'] | None = None
 
     @field_validator('model', mode='before')
     @classmethod

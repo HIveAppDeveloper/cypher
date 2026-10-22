@@ -3,7 +3,7 @@ export const MODEL_CHOICES = [
  {id:'claude55',label:'Claude Sonnet 5.5',detail:'Coding and polished writing',provider:'anthropic',model:'claude-sonnet-5.5'},
  {id:'gemini38',label:'Gemini 3.8 Flash',detail:'Research and visual understanding',provider:'gemini',model:'gemini-3.8-flash'},
  {id:'deepseek41',label:'DeepSeek V4.1 Flash',detail:'Mathematical and data analysis',provider:'deepseek',model:'deepseek-v4.1-flash'},
- {id:'grok47',label:'Grok 4.7',detail:'Independent review and verification',provider:'spacexai',model:'grok-4.7'},
+ {id:'grok47',label:'Grok 4.7',detail:'Independent review and verification',provider:'xai',model:'grok-4.7'},
  { id:'sol61',label:'GPT-6.1 Sol',detail:'OpenAI coordinator · reasoning and everyday work',provider:'openai',model:'gpt-6.1-sol' },
  { id:'luna6',label:'GPT-6 Luna',detail:'Quick, economical supporting work',provider:'openai',model:'gpt-6-luna' },
 ];

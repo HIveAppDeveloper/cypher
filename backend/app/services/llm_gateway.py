@@ -4,7 +4,7 @@ import asyncio
 import litellm
 from app.config import settings
 from app.services.model_routing import (
-    ModelConfigurationError, ModelCapabilityError, validate_capabilities, retryable,
+    ModelConfigurationError, ModelNotConfiguredError, ModelCapabilityError, validate_capabilities, retryable,
 )
 
 logger = logging.getLogger(__name__)
@@ -15,6 +15,7 @@ def model_selection(model=None, provider=None, *, specialist=False):
     if not isinstance(model, str) or not model.strip() or not isinstance(provider, str) or not provider.strip():
         raise ModelConfigurationError("Set a provider and a non-empty model ID before sending a message.")
     provider, model = provider.strip(), model.strip()
+    provider = 'xai' if provider == 'spacexai' else provider
     from app.services.model_profiles import ALLOWED_MODELS
     if (provider, model) not in ALLOWED_MODELS:
         raise ModelConfigurationError("Choose a configured task model in conversation settings. Model IDs are checked against the live catalog before use.")
@@ -26,35 +27,21 @@ def completion_options(model=None, provider=None, *, specialist=False, direct=Fa
     if omniroute.enabled() and not direct:
         return {'model': 'openai/' + omniroute.model_id(provider, model), 'api_base': omniroute.endpoint(), 'api_key': settings.OMNIROUTE_API_KEY,
                 'extra_headers': {k:v for k,v in omniroute.headers().items() if k != 'Authorization'}}
-    if settings.LLM_USE_GATEWAY and not direct:
-        gateway_provider = {"gemini": "google"}.get(provider, provider)
-        model = {"claude-sonnet-4-5": "claude-sonnet-4.5"}.get(model, model)
-        gateway_model = model if "/" in model else f"{gateway_provider}/{model}"
-        key = os.getenv("AI_GATEWAY_API_KEY")
-        if not key:
-            # The legacy *_sync alias reads ambient tokens without checking expiry.
-            # The expiry-aware accessor reads the daemon's rotating token file.
-            from vercel.oidc import get_vercel_oidc_token, VercelOidcTokenError
-            try:
-                key = get_vercel_oidc_token()
-            except VercelOidcTokenError:
-                key = None
-        if not key:
-            raise ModelConfigurationError("Vercel AI Gateway credentials unavailable. Configure a valid gateway key or enable deployment OIDC, including the worker's rotating token file.")
-        prefix = "openai/responses/" if provider == "openai" and model.startswith("gpt-6") else "openai/"
-        return {"model": prefix + gateway_model, "api_base": "https://ai-gateway.vercel.sh/v1", "api_key": key}
     if not model.startswith(provider + "/"):
         model = f"{provider}/{model}"
     key_name = {"gemini": "GEMINI_API_KEY", "anthropic": "ANTHROPIC_API_KEY", "openai": "OPENAI_API_KEY", "deepseek": "DEEPSEEK_API_KEY"}.get(provider, provider.upper() + "_API_KEY")
     key = (settings.LLM_API_KEY if not direct else "") or os.getenv("HIVE_" + key_name) or os.getenv("ATLAS_" + key_name) or os.getenv(key_name)
     if not key:
-        raise ModelConfigurationError("The model connection needs authentication. Configure the selected provider's API key on the backend and worker.")
+        raise ModelNotConfiguredError("The selected provider route is not configured. Its declared fallback can be used if available.")
     if provider == "openai" and model.removeprefix("openai/").startswith("gpt-6"):
         model = "openai/responses/" + model.removeprefix("openai/")
     options = {"model": model}
     if key:
         options["api_key"] = key
     if settings.LLM_API_BASE and not direct:
+        from urllib.parse import urlsplit
+        if urlsplit(settings.LLM_API_BASE).hostname == "ai-gateway.vercel.sh":
+            raise ModelConfigurationError("Vercel AI Gateway is disabled. Configure OmniRoute or a direct provider connection.")
         options["api_base"] = settings.LLM_API_BASE
     if direct:
         # Pin official endpoints as well as the model provider. Ambient SDK
@@ -79,11 +66,6 @@ def generation_options(options, provider, model):
         kwargs["reasoning_effort"] = reasoning
     if not is_gpt5 or reasoning == "none":
         kwargs["temperature"] = options.temperature
-    if provider == "openai" and options.service_tier:
-        if settings.LLM_USE_GATEWAY and options.service_tier != "default":
-            kwargs["extra_body"] = {"providerOptions": {"gateway": {"serviceTier": options.service_tier}}}
-        elif not settings.LLM_USE_GATEWAY:
-            kwargs["service_tier"] = options.service_tier
     return kwargs
 
 class LLMGateway:
@@ -106,8 +88,10 @@ class LLMGateway:
                 connection = completion_options(route_model, route_provider)
                 await validate_capabilities(messages, tools, route_provider, route_model)
             except (ModelConfigurationError, ModelCapabilityError) as error:
-                # Only capability mismatch can select an explicitly configured backup.
-                if isinstance(error, ModelCapabilityError) and index + 1 < len(routes):
+                # Missing route configuration or an unsupported capability may
+                # select a declared backup. Invalid selections and catalog
+                # outages still stop before any model request.
+                if isinstance(error, (ModelCapabilityError, ModelNotConfiguredError)) and index + 1 < len(routes):
                     last_error = error
                     continue
                 if index and last_error is not None:
@@ -117,10 +101,10 @@ class LLMGateway:
             try:
                 # Avoid forwarding sampling controls to models that only accept
                 # reasoning. Preserve the provider's supported effort levels.
-                if omniroute.enabled() or settings.LLM_USE_GATEWAY:
-                    from app.services.model_routing import gateway_catalog
-                    from app.services.model_profiles import gateway_id
-                    meta = (await gateway_catalog())[gateway_id(route_provider,route_model)]
+                if omniroute.enabled():
+                    from app.services.model_routing import route_catalog
+                    from app.services.model_profiles import model_route_id
+                    meta = (await route_catalog())[model_route_id(route_provider,route_model)]
                     supported = meta.get('supported_parameters', [])
                     if 'temperature' not in supported:
                         generation.pop('temperature',None)
@@ -130,12 +114,7 @@ class LLMGateway:
                         # Reasoning levels are provider-specific; never send an
                         # unsupported level or let "medium" become maximum.
                         effort = requested if requested in efforts else ('low' if requested in {'none','low','medium'} and 'low' in efforts else 'high' if 'high' in efforts else efforts[0])
-                        if route_provider == 'openai':generation['reasoning_effort']=effort
-                        elif omniroute.enabled():
-                            generation['reasoning_effort']=effort
-                        else:
-                            generation.pop('reasoning_effort',None)
-                            generation['extra_body']={**generation.get('extra_body',{}),'reasoning':{'effort':effort}}
+                        generation['reasoning_effort']=effort
                 if omniroute.enabled():
                     response = await omniroute.complete(messages, tools, route_provider, route_model, generation)
                 else:

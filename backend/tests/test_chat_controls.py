@@ -66,7 +66,7 @@ async def test_running_chat_cancel_cleans_up_and_next_turn_recovers(tmp_path, mo
     monkeypatch.setattr(workspace, "tick_routines", no_actions)
     monkeypatch.setattr(plugin_sync, "run", local_catalog)
     monkeypatch.setattr(verification, "verify_cloud", forbidden_cloud)
-    monkeypatch.setattr(model_routing, "gateway_catalog", forbidden_cloud)
+    monkeypatch.setattr(model_routing, "route_catalog", forbidden_cloud)
 
     connect = socket.socket.connect
     def local_only(sock, address):

@@ -3,7 +3,7 @@ import asyncio
 from types import SimpleNamespace
 import httpx
 import pytest
-from app.services.model_profiles import PROFILES, task_specialty, gateway_id
+from app.services.model_profiles import PROFILES, task_specialty, model_route_id
 from app.schemas.input import RunOptions
 
 
@@ -20,17 +20,20 @@ async def test_every_task_model_preserves_tools_and_uses_correct_provider(monkey
     from app.services import llm_gateway, model_routing
     from app.config import settings
     from litellm import ModelResponse
-    catalog={gateway_id(p.provider,p.model):{'type':'language','modalities':{'input':['text','image','pdf']},'supported_parameters':['tools','reasoning'],'reasoning_options':[{'type':'effort','values':['low','high']}]} for p in PROFILES.values()}
-    async def models():return catalog
-    monkeypatch.setattr(model_routing,'gateway_catalog',models)
-    monkeypatch.setattr(settings,'LLM_USE_GATEWAY',True)
+    catalog={model_route_id(p.provider,p.model):{'type':'language','modalities':{'input':['text','image','pdf']},'supported_parameters':['tools','reasoning'],'reasoning_options':[{'type':'effort','values':['low','high']}]} for p in PROFILES.values()}
+    route_map={key:'native/'+key for key in catalog}
+    monkeypatch.setattr(settings,'OMNIROUTE_URL','https://router.example')
+    monkeypatch.setattr(settings,'OMNIROUTE_API_KEY','test-route-key')
+    monkeypatch.setattr(settings,'OMNIROUTE_MODEL_MAP',route_map)
+    async def live_catalog():return catalog
+    monkeypatch.setattr(model_routing,'route_catalog',live_catalog)
     monkeypatch.setattr(settings,'LLM_FALLBACK_MODEL',None)
-    monkeypatch.setenv('AI_GATEWAY_API_KEY','test-credential')
     seen=[]
-    async def complete(**kw):
-        seen.append(kw)
+    async def complete(messages, tools, provider, model, generation):
+        seen.append({'messages':messages,'tools':tools,'provider':provider,'model':model,**generation})
         return ModelResponse(choices=[{'message':{'role':'assistant','content':'verified'}}])
-    monkeypatch.setattr(llm_gateway.litellm,'acompletion',complete)
+    from app.services import omniroute
+    monkeypatch.setattr(omniroute,'complete',complete)
     tools=[{'type':'function','function':{'name':'read_source','parameters':{'type':'object','properties':{}}}}]
     image={'type':'image_url','image_url':{'url':'data:image/png;base64,abc'}}
     for p in set(PROFILES.values()):
@@ -38,7 +41,7 @@ async def test_every_task_model_preserves_tools_and_uses_correct_provider(monkey
         assert seen[-1]['messages'][0]['content']==[image]
         assert seen[-1]['tools']==tools
         assert 'temperature' not in seen[-1]
-        assert seen[-1]['model'].endswith(gateway_id(p.provider,p.model))
+        assert seen[-1]['provider']==p.provider and seen[-1]['model']==p.model
         assert r._hidden_params['grokbot_route']['model']==p.model
 
 
@@ -47,24 +50,30 @@ async def test_provider_capacity_fallback_is_observable_and_preserves_request(mo
     from app.services import llm_gateway, model_routing
     from app.config import settings
     from litellm import ModelResponse
-    monkeypatch.setattr(settings,'LLM_USE_GATEWAY',True)
+    monkeypatch.setattr(settings,'OMNIROUTE_URL','https://router.example')
+    monkeypatch.setattr(settings,'OMNIROUTE_API_KEY','test-route-key')
+    route_map={'google/gemini-3.8-flash':'google/gemini-3.8-flash','openai/gpt-6.1-sol':'openai/gpt-6.1-sol'}
+    monkeypatch.setattr(settings,'OMNIROUTE_MODEL_MAP',route_map)
     monkeypatch.setattr(settings,'LLM_FALLBACK_MODEL',None)
-    monkeypatch.setenv('AI_GATEWAY_API_KEY','test-credential')
     async def check(*args):pass
-    async def models():return {gateway_id(p.provider,p.model):{'supported_parameters':['tools'],'reasoning_options':[]} for p in PROFILES.values()}
+    catalog={key:{'supported_parameters':['tools'],'reasoning_options':[]} for key in route_map}
     monkeypatch.setattr(llm_gateway,'validate_capabilities',check)
-    monkeypatch.setattr(model_routing,'gateway_catalog',models)
+    async def live_catalog():return catalog
+    monkeypatch.setattr(model_routing,'route_catalog',live_catalog)
     calls=[]
     class Busy(Exception):status_code=503
-    async def complete(**kw):
-        calls.append(kw)
+    from app.services import omniroute
+    async def complete(messages, tools, provider, model, generation):
+        calls.append({'messages':messages,'provider':provider,'model':model,**generation})
         if len(calls)==1:raise Busy()
         return ModelResponse(choices=[{'message':{'role':'assistant','content':'ready'}}])
-    monkeypatch.setattr(llm_gateway.litellm,'acompletion',complete)
+    monkeypatch.setattr(omniroute,'complete',complete)
     messages=[{'role':'user','content':'Find reliable sources'}]
     r=await llm_gateway.LLMGateway.complete(messages=messages,provider='gemini',model='gemini-3.8-flash',fallback=('openai','gpt-6.1-sol'),options=RunOptions())
     assert len(calls)==2 and all(c['messages']==messages for c in calls)
-    assert r._hidden_params['grokbot_route']=={'provider':'openai','model':'gpt-6.1-sol','fallback':True}
+    route = r._hidden_params['grokbot_route']
+    assert route['provider'] == 'openai' and route['model'] == 'gpt-6.1-sol' and route['fallback'] is True
+    assert route['transport'] == 'omniroute' and route['transport_model'] == 'openai/gpt-6.1-sol'
 
 
 @pytest.mark.asyncio

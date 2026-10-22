@@ -45,7 +45,6 @@ def test_overlong_or_invalid_pdf_fails_instead_of_silently_omitting_pages():
 async def test_audio_uses_only_authenticated_omniroute_and_cached_transcript_keeps_original(monkeypatch):
     monkeypatch.setattr(settings,'OMNIROUTE_URL','https://router.example')
     monkeypatch.setattr(settings,'OMNIROUTE_API_KEY','test-inference-key')
-    monkeypatch.setattr(settings,'LLM_USE_GATEWAY',True)
     seen=[]
     async def request(path,body):
         seen.append((path,body));return {'text':'A purple bicycle costs $47.','segments':[{'start':0,'end':4,'text':'A purple bicycle costs $47.'}]}

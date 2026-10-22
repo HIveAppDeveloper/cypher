@@ -199,21 +199,21 @@ async def test_team_handoff_shares_context_and_preserves_attachment(tmp_path,mon
             assert (await client.get(a['url'].replace(room['id'],str(uuid4())))).status_code==404
             from app.services import media
             async def fake_media(kind, prompt, aspect_ratio, duration):
-                assert kind == 'video' and duration == 4
-                return [{'name': 'result.mp4', 'mime': 'video/mp4', 'data': base64.b64encode(b'persisted-video').decode()}]
+                assert kind == 'image' and duration == 4
+                return [{'name': 'result.png', 'mime': 'image/png', 'data': base64.b64encode(b'persisted-image').decode()}]
             monkeypatch.setattr(media, 'generate_media', fake_media)
-            queued = (await client.post(f"/api/conversations/{room['id']}/messages", json={'sender_type': 'user', 'content': 'Make a video', 'options': {'output': 'video'}})).json()
+            queued = (await client.post(f"/api/conversations/{room['id']}/messages", json={'sender_type': 'user', 'content': 'Make an image', 'options': {'output': 'image'}})).json()
             for _ in range(100):
                 await asyncio.sleep(.03)
                 tasks = (await client.get(f"/api/conversations/{room['id']}/tasks")).json()
-                video_task = next(t for t in tasks if t['id'] == queued['task_id'])
-                if video_task['status'] in ('completed', 'failed'): break
-            assert video_task['status'] == 'completed'
+                image_task = next(t for t in tasks if t['id'] == queued['task_id'])
+                if image_task['status'] in ('completed', 'failed'): break
+            assert image_task['status'] == 'completed'
             output = (await client.get(f"/api/conversations/{room['id']}/messages")).json()
-            video_message = next(m for m in output if m['content'] == 'Your video is ready.')
-            file = video_message['metadata_json']['attachments'][0]
-            assert file['mime'] == 'video/mp4' and 'data' not in file
-            assert (await client.get(file['url'])).content == b'persisted-video'
+            image_message = next(m for m in output if m['content'] == 'Your image is ready.')
+            file = image_message['metadata_json']['attachments'][0]
+            assert file['mime'] == 'image/png' and 'data' not in file
+            assert (await client.get(file['url'])).content == b'persisted-image'
     finally:
         if task:
             task.cancel()
@@ -223,60 +223,65 @@ async def test_team_handoff_shares_context_and_preserves_attachment(tmp_path,mon
         await engine.dispose()
 
 
-def test_gateway_model_mapping_and_credentials(monkeypatch):
+def test_direct_model_mapping_ignores_deployment_oidc_and_gateway_keys(monkeypatch):
     from app.services import llm_gateway
-    import vercel.oidc
-    from app.services.model_routing import ModelConfigurationError
-    monkeypatch.setattr(vercel.oidc, 'get_vercel_oidc_token', lambda: __import__('os').getenv('VERCEL_OIDC_TOKEN'))
-    monkeypatch.setattr(llm_gateway.settings, "LLM_USE_GATEWAY", True)
+    from app.services.model_routing import ModelNotConfiguredError
+    monkeypatch.setattr(llm_gateway.settings, 'OMNIROUTE_URL', None)
+    monkeypatch.setattr(llm_gateway.settings, 'LLM_API_BASE', None)
+    monkeypatch.setattr(llm_gateway.settings, 'LLM_API_KEY', 'direct-provider-key')
     monkeypatch.setenv("VERCEL_OIDC_TOKEN", "test-oidc")
-    monkeypatch.delenv("AI_GATEWAY_API_KEY", raising=False)
+    monkeypatch.setenv("AI_GATEWAY_API_KEY", "must-not-be-used")
     options = llm_gateway.completion_options("gpt-6-luna", "openai")
-    assert options == {"model": "openai/responses/openai/gpt-6-luna", "api_base": "https://ai-gateway.vercel.sh/v1", "api_key": "test-oidc"}
-    monkeypatch.setenv("AI_GATEWAY_API_KEY", "test-explicit")
-    assert llm_gateway.completion_options("gpt-6.1-sol", "openai")["api_key"] == "test-explicit"
-    monkeypatch.delenv("AI_GATEWAY_API_KEY")
-    monkeypatch.delenv("VERCEL_OIDC_TOKEN")
-    import pytest
-    with pytest.raises(ModelConfigurationError, match="credentials unavailable"):
+    assert options == {"model": "openai/responses/gpt-6-luna", "api_key": "direct-provider-key"}
+    monkeypatch.setattr(llm_gateway.settings, 'LLM_API_KEY', '')
+    monkeypatch.delenv('OPENAI_API_KEY', raising=False)
+    monkeypatch.delenv('HIVE_OPENAI_API_KEY', raising=False)
+    monkeypatch.delenv('ATLAS_OPENAI_API_KEY', raising=False)
+    with pytest.raises(ModelNotConfiguredError):
         llm_gateway.completion_options()
 
 
 def test_supported_generation_settings(monkeypatch):
     from app.services import llm_gateway
     from app.schemas.input import RunOptions
-    opts = RunOptions(reasoning_effort='high', service_tier='priority', max_tokens=1024)
-    monkeypatch.setattr(llm_gateway.settings, 'LLM_USE_GATEWAY', True)
+    opts = RunOptions(reasoning_effort='high', max_tokens=1024)
     gpt = llm_gateway.generation_options(opts, 'openai', 'gpt-5.4')
     assert gpt['reasoning_effort'] == 'high'
     assert 'temperature' not in gpt
-    assert gpt['extra_body']['providerOptions']['gateway']['serviceTier'] == 'priority'
     gemini = llm_gateway.generation_options(opts, 'gemini', 'gemini-2.5-flash')
     assert 'reasoning_effort' not in gemini and 'extra_body' not in gemini
     assert gemini['temperature'] == .5
-    monkeypatch.setattr(llm_gateway.settings, 'LLM_USE_GATEWAY', False)
-    assert llm_gateway.generation_options(opts, 'openai', 'gpt-4.1-mini')['service_tier'] == 'priority'
 
 
 @pytest.mark.asyncio
 async def test_media_generation_returns_real_file_parts(monkeypatch):
-    import ai
     from types import SimpleNamespace
-    from ai.types.messages import FilePart
     from app.services.media import generate_media
-    seen = []
-    async def fake_image(model, prompt, params):
-        seen.append((prompt, params.aspect_ratio))
-        return SimpleNamespace(value=[FilePart(data=b'image-bytes', media_type='image/png')])
-    async def fake_video(model, prompt, params):
-        seen.append((prompt, params.duration))
-        return SimpleNamespace(value=[FilePart(data=b'video-bytes', media_type='video/mp4')])
-    monkeypatch.setattr(ai.ops, 'generate_image', fake_image)
-    monkeypatch.setattr(ai.ops, 'generate_video', fake_video)
-    image = (await generate_media('image', 'Scene', '1:1'))[0]
-    video = (await generate_media('video', 'Scene', '16:9', 6))[0]
-    assert image['mime'] == 'image/png' and video['mime'] == 'video/mp4'
-    assert seen == [('Scene',None),('Scene',6)]
+    import base64, io
+    from PIL import Image
+    import openai
+    from app.services import llm_gateway
+    buf=io.BytesIO();Image.new('RGB',(2,2),'red').save(buf,format='PNG')
+    encoded=base64.b64encode(buf.getvalue()).decode()
+    seen=[]
+    class Images:
+        async def generate(self, **kwargs):
+            seen.append(kwargs)
+            return SimpleNamespace(data=[SimpleNamespace(b64_json=encoded)],usage=None)
+    class Client:
+        def __init__(self, **kwargs):
+            assert kwargs['base_url']=='https://api.openai.com/v1'
+            self.images=Images()
+        async def __aenter__(self):return self
+        async def __aexit__(self,*args):return None
+    monkeypatch.setattr(openai,'AsyncOpenAI',Client)
+    monkeypatch.setattr(llm_gateway,'completion_options',lambda *args:{'api_key':'test-direct-key'})
+    monkeypatch.setattr(llm_gateway.settings,'OMNIROUTE_URL',None)
+    image=(await generate_media('image','Scene','1:1'))[0]
+    assert image['mime']=='image/png' and image['data']==encoded
+    assert seen[0]['model']=='gpt-image-2' and seen[0]['size']=='1024x1024'
+    with pytest.raises(ValueError,match='Video generation is not available'):
+        await generate_media('video','Scene','16:9',6)
 
 
 def test_disallowed_models_rejected_before_network():
@@ -350,10 +355,10 @@ async def test_mcp_rejects_private_and_insecure_endpoints(monkeypatch):
 
 def test_sol61_uses_responses_bridge(monkeypatch):
     from app.services import llm_gateway
-    monkeypatch.setattr(llm_gateway.settings,'LLM_USE_GATEWAY',True)
-    monkeypatch.setenv('AI_GATEWAY_API_KEY','test-only')
+    monkeypatch.setattr(llm_gateway.settings,'OMNIROUTE_URL',None)
+    monkeypatch.setattr(llm_gateway.settings,'LLM_API_KEY','test-direct-key')
     options=llm_gateway.completion_options('gpt-6.1-sol','openai')
-    assert options['model']=='openai/responses/openai/gpt-6.1-sol'
+    assert options['model']=='openai/responses/gpt-6.1-sol'
 
 
 @pytest.mark.asyncio
@@ -374,7 +379,7 @@ async def test_coordinator_delegates_and_synthesizes_shared_work(tmp_path, monke
         system = kwargs['messages'][0]['content']
         if 'Plan this task briefly' in system:
             content='HANDOFF[Researcher: check the source]'
-        elif 'The specialist turns have finished' in system:
+        elif 'The assigned specialist work has finished' in system:
             assert any('Verified source evidence' in str(m['content']) for m in kwargs['messages'])
             content='Final synthesis from verified evidence.'
         else: content='Verified source evidence.'
@@ -411,12 +416,12 @@ async def test_real_responses_bridge_with_mcp_dependency(monkeypatch):
     def respond(request):
         body=json.loads(request.content)
         assert request.url.path.endswith('/responses')
-        assert body['model']=='openai/gpt-6.1-sol'
-        return httpx.Response(200,json={'id':'resp_test','object':'response','created_at':1,'status':'completed','model':'openai/gpt-6.1-sol','output':[{'id':'msg_test','type':'message','status':'completed','role':'assistant','content':[{'type':'output_text','text':'Adapter ready','annotations':[]}]}], 'usage':{'input_tokens':4,'output_tokens':3,'total_tokens':7}})
+        assert body['model']=='gpt-6.1-sol'
+        return httpx.Response(200,json={'id':'resp_test','object':'response','created_at':1,'status':'completed','model':'gpt-6.1-sol','output':[{'id':'msg_test','type':'message','status':'completed','role':'assistant','content':[{'type':'output_text','text':'Adapter ready','annotations':[]}]}], 'usage':{'input_tokens':4,'output_tokens':3,'total_tokens':7}})
     handler=AsyncHTTPHandler(transport=httpx.MockTransport(respond))
     monkeypatch.setattr(llm_http_handler,'get_async_httpx_client',lambda **kwargs:handler)
     try:
-        response=await litellm.acompletion(model='openai/responses/openai/gpt-6.1-sol',messages=[{'role':'user','content':'Test'}],api_key='test-only',api_base='https://example.test/v1',max_tokens=2048,reasoning_effort='low')
+        response=await litellm.acompletion(model='openai/responses/gpt-6.1-sol',messages=[{'role':'user','content':'Test'}],api_key='test-only',api_base='https://example.test/v1',max_tokens=2048,reasoning_effort='low')
         assert response.choices[0].message.content=='Adapter ready'
     finally:
         await handler.client.aclose()
@@ -513,26 +518,10 @@ def test_recovered_internal_failure_does_not_fail_final_answer():
     assert response_status([answer,{'message_type':'status_update'}]) == 'failed'
 
 @pytest.mark.asyncio
-async def test_google_image_chat_output_is_attached(monkeypatch):
+async def test_unconfigured_google_image_route_fails_before_request(monkeypatch):
     from app.services.media import generate_media
-    from app.services import llm_gateway
-    from types import SimpleNamespace
-    import openai
-    seen=[]
-    class Client:
-        def __init__(self, **kwargs): self.chat=SimpleNamespace(completions=self)
-        async def __aenter__(self): return self
-        async def __aexit__(self,*args): pass
-        async def create(self, **kwargs):
-            seen.append(kwargs)
-            return SimpleNamespace(choices=[SimpleNamespace(message=SimpleNamespace(model_dump=lambda:{'images':[{'image_url':{'url':'data:image/png;base64,aW1hZ2U='}}]}))])
-    monkeypatch.setattr(openai,'AsyncOpenAI',Client)
-    monkeypatch.setattr(llm_gateway,'completion_options',lambda *args:{'api_key':'test','api_base':'https://test.invalid'})
-    monkeypatch.setattr(llm_gateway.settings,'LLM_USE_GATEWAY',True)
-    files=await generate_media('image','A scene',image_provider='google')
-    assert files[0]['mime']=='image/png' and files[0]['data']=='aW1hZ2U='
-    assert seen[0]['model']=='google/gemini-3.1-flash-image-preview'
-    assert seen[0]['extra_body']['modalities']==['text','image']
+    with pytest.raises(ValueError,match='Google image generation is not available'):
+        await generate_media('image','A scene',image_provider='google')
 
 @pytest.mark.asyncio
 async def test_starter_plugins_install_once_and_preserve_disabled(tmp_path,monkeypatch):

@@ -2,7 +2,6 @@
 import asyncio
 import base64
 import json
-import time
 from contextlib import suppress
 from types import SimpleNamespace
 from uuid import uuid4
@@ -31,16 +30,26 @@ async def provider(monkeypatch):
     from litellm.llms.custom_httpx.http_handler import AsyncHTTPHandler
     from litellm.llms.custom_httpx import llm_http_handler
     state = SimpleNamespace(requests=[], statuses=[], outputs=[], models=catalog())
-    async def get_catalog():
-        return state.models
-    monkeypatch.setattr(model_routing, 'gateway_catalog', get_catalog)
-    monkeypatch.setattr(settings, 'LLM_USE_GATEWAY', True)
+    monkeypatch.setattr(settings, 'OMNIROUTE_URL', None)
+    monkeypatch.setattr(settings, 'LLM_API_BASE', 'https://openai.example.test/v1')
+    monkeypatch.setattr(settings, 'LLM_API_KEY', 'test-direct-provider-key')
     monkeypatch.setattr(settings, 'LLM_FALLBACK_MODEL', None)
     monkeypatch.setattr(settings, 'LLM_FALLBACK_PROVIDER', None)
-    monkeypatch.setenv('AI_GATEWAY_API_KEY', 'test-only-not-a-credential')
+    async def validate(messages, tools, provider_name, model, *, direct=False):
+        item=state.models.get(f'{provider_name}/{model}')
+        if not item or item.get('type')!='language':
+            raise ModelCapabilityError('The selected model is unavailable in the test catalog.')
+        required=model_routing.required_modalities(messages)
+        supported=set(item.get('modalities',{}).get('input',[]))
+        missing=required-supported
+        if missing:raise ModelCapabilityError('The files were kept; unsupported input: '+','.join(sorted(missing)))
+        if tools and 'tools' not in item.get('supported_parameters',[]):raise ModelCapabilityError('Tool calls are unsupported.')
+    monkeypatch.setattr(llm_gateway, 'validate_capabilities', validate)
     def respond(request):
         body = json.loads(request.content)
         assert request.url.path == '/v1/responses'
+        assert request.url.host == 'openai.example.test'
+        assert request.headers['authorization'] == 'Bearer test-direct-provider-key'
         state.requests.append(body)
         status = state.statuses.pop(0) if state.statuses else 200
         if status != 200:
@@ -55,39 +64,12 @@ async def provider(monkeypatch):
         await handler.client.aclose()
 
 
-def jwt(exp):
-    encode = lambda obj: base64.urlsafe_b64encode(json.dumps(obj).encode()).decode().rstrip('=')
-    return encode({'alg': 'none'}) + '.' + encode({'exp': exp}) + '.test'
-
-
-def test_expired_startup_oidc_uses_rotating_daemon_file(tmp_path, monkeypatch):
-    import vercel.oidc.token as oidc
-    oidc._clear_cached_oidc_token()
-    now = time.time()
-    old, first, second = jwt(now - 60), jwt(now + 120), jwt(now + 3600)
-    path = tmp_path / 'rotating-token'
-    path.write_text(first)
-    monkeypatch.setattr(settings, 'LLM_USE_GATEWAY', True)
-    monkeypatch.delenv('AI_GATEWAY_API_KEY', raising=False)
-    monkeypatch.setenv('VERCEL_OIDC_TOKEN', old)
-    monkeypatch.setenv('VERCEL_OIDC_TOKEN_FILE', str(path))
-    try:
-        # Reproduce the old bug with the real SDK, then exercise our fix.
-        assert oidc.get_vercel_oidc_token_sync() == old
-        assert completion_options('gpt-6.1-sol', 'openai')['api_key'] == first
-        path.write_text(second)
-        monkeypatch.setattr(oidc, 'time', SimpleNamespace(time=lambda: now + 80, monotonic=time.monotonic))
-        assert completion_options('gpt-6.1-sol', 'openai')['api_key'] == second
-    finally:
-        oidc._clear_cached_oidc_token()
-
-
 def test_missing_direct_provider_key_fails_before_network(monkeypatch):
-    monkeypatch.setattr(settings, 'LLM_USE_GATEWAY', False)
+    monkeypatch.setattr(settings, 'OMNIROUTE_URL', None)
     monkeypatch.setattr(settings, 'LLM_API_KEY', '')
     for key in ('OPENAI_API_KEY', 'HIVE_OPENAI_API_KEY', 'ATLAS_OPENAI_API_KEY'):
         monkeypatch.delenv(key, raising=False)
-    with pytest.raises(ModelConfigurationError, match='needs authentication'):
+    with pytest.raises(ModelConfigurationError, match='route is not configured'):
         completion_options('gpt-6.1-sol', 'openai')
 
 
@@ -97,7 +79,7 @@ async def test_text_and_image_real_responses_serialization(provider, files):
     response = await LLMGateway.complete(messages=[{'role': 'user', 'content': content_parts('test can you read this', files)}], provider='openai', model='gpt-6.1-sol', options=RunOptions())
     assert response.choices[0].message.content == 'Provider test response.'
     body = provider.requests[0]
-    assert body['model'] == 'openai/gpt-6.1-sol'
+    assert body['model'] == 'gpt-6.1-sol'
     assert 'test can you read this' in json.dumps(body['input'])
     if files:
         assert 'input_image' in json.dumps(body['input'])
@@ -111,7 +93,7 @@ async def test_capability_fallback_preserves_image(provider, monkeypatch):
     monkeypatch.setattr(settings, 'LLM_FALLBACK_MODEL', 'gpt-6-luna')
     result = await LLMGateway.complete(messages=[{'role': 'user', 'content': content_parts('Read image', [IMAGE])}], options=RunOptions(), model='gpt-6.1-sol', provider='openai')
     assert len(provider.requests) == 1
-    assert provider.requests[0]['model'] == 'openai/gpt-6-luna'
+    assert provider.requests[0]['model'] == 'gpt-6-luna'
     assert PNG in json.dumps(provider.requests[0]['input'])
     assert result._hidden_params['grokbot_route']['fallback'] is True
 
@@ -124,7 +106,7 @@ async def test_text_only_backup_never_receives_image(provider, monkeypatch):
     with pytest.raises(Exception):
         await LLMGateway.complete(messages=[{'role': 'user', 'content': content_parts('Read image', [IMAGE])}], model='gpt-6.1-sol', provider='openai')
     assert len(provider.requests) == 1
-    assert provider.requests[0]['model'] == 'openai/gpt-6.1-sol'
+    assert provider.requests[0]['model'] == 'gpt-6.1-sol'
     assert PNG in json.dumps(provider.requests[0]['input'])
 
 
@@ -133,7 +115,7 @@ async def test_transient_failover_uses_compatible_backup(provider, monkeypatch):
     provider.statuses = [503, 200]
     monkeypatch.setattr(settings, 'LLM_FALLBACK_MODEL', 'gpt-6-luna')
     response = await LLMGateway.complete(messages=[{'role': 'user', 'content': content_parts('Read image', [IMAGE])}], model='gpt-6.1-sol', provider='openai', options=RunOptions())
-    assert [r['model'] for r in provider.requests] == ['openai/gpt-6.1-sol', 'openai/gpt-6-luna']
+    assert [r['model'] for r in provider.requests] == ['gpt-6.1-sol', 'gpt-6-luna']
     assert all(PNG in json.dumps(r['input']) for r in provider.requests)
     assert response._hidden_params['grokbot_route']['fallback']
 

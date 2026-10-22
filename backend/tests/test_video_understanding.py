@@ -1,4 +1,3 @@
-from types import SimpleNamespace
 import pytest
 from app.services.tools.video import youtube_url
 
@@ -10,23 +9,31 @@ def test_video_tool_rejects_unapproved_sources(url):
     with pytest.raises(ValueError):youtube_url(url)
 
 @pytest.mark.asyncio
-async def test_video_requires_real_frame_processing_and_never_receives_tools(monkeypatch):
-    import ai
-    from app.services import model_routing
+async def test_video_analysis_processes_media_without_offering_model_tools(monkeypatch):
     from app.services.tools.video import analyze_video
-    from app.config import settings
-    monkeypatch.setattr(settings,'LLM_USE_GATEWAY',True)
-    async def catalog():return {'google/gemini-3.8-flash':{'modalities':{'input':['video']}}}
-    monkeypatch.setattr(model_routing,'gateway_catalog',catalog)
-    monkeypatch.setattr(ai,'get_model',lambda model:model)
-    mode={'video':False}
-    async def generate(model,messages,**kwargs):
-        assert 'tools' not in kwargs
-        assert messages[1].files[0].data=='https://www.youtube.com/watch?v=NyfYxpXiw_0'
-        raw={'raw':{'promptTokensDetails':[{'modality':'VIDEO' if mode['video'] else 'TEXT','tokenCount':300}]}}
-        return SimpleNamespace(text='At 01:00 a user creates a bot.',usage=SimpleNamespace(raw=raw))
-    monkeypatch.setattr(ai,'experimental_generate',generate)
-    assert not (await analyze_video({'url':'https://youtu.be/NyfYxpXiw_0'},'bot'))['success']
-    mode['video']=True
+    from app.services import video_sources, multimedia
+    calls=[]
+    async def download(url, root, bot_id):
+        calls.append(('download',url,bot_id))
+        return '/tmp/verified-video.mp4', '/tmp/verified-audio.m4a'
+    async def inspect(path, question, *, audio_path=None):
+        calls.append(('inspect',path,question,audio_path))
+        return {'analysis':'A blue car crosses the frame.','video_processed':True,'audio_processed':True,'sampled_frame_seconds':[0,1.5]}
+    monkeypatch.setattr(video_sources,'download_media',download)
+    monkeypatch.setattr(multimedia,'inspect_media',inspect)
     result=await analyze_video({'url':'https://youtu.be/NyfYxpXiw_0'},'bot')
-    assert result['success'] and result['video_processed'] and not result['audio_processed']
+    assert result['success'] and result['video_processed'] and result['audio_processed']
+    assert calls==[('download','https://www.youtube.com/watch?v=NyfYxpXiw_0','bot'),('inspect','/tmp/verified-video.mp4','Describe the video, spoken content and important timestamps.','/tmp/verified-audio.m4a')]
+    assert 'timestamps' in result['instruction']
+
+
+@pytest.mark.asyncio
+async def test_video_errors_do_not_fall_back_to_titles_or_captions(monkeypatch):
+    from app.services.tools.video import analyze_video
+    from app.services import video_sources
+    from app.services.model_routing import ModelCapabilityError
+    async def unavailable(*args):
+        raise ModelCapabilityError('No video-capable provider connection.')
+    monkeypatch.setattr(video_sources,'download_media',unavailable)
+    result=await analyze_video({'url':'https://youtu.be/NyfYxpXiw_0'},'bot')
+    assert not result['success'] and 'No video-capable provider connection' in result['error']

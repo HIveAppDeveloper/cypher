@@ -18,7 +18,7 @@ The reference was analyzed using actual video frames and audio through Gemini 3.
 
 ## Scope and limitations
 
-This implements the reference's workspace concepts; it is not a measured claim of product parity or superiority. The computer is browser/terminal/files, not a streamed full desktop. Skill teaching uses completed runs or explicitly recorded interactions in the app’s browser view. It does not record the user’s desktop. Shared files support text up to 200 KB; existing attachments/media use their own flow. The video tool currently supports public YouTube links and checks provider video-token evidence before claiming visual understanding. A failed provider request is reported instead of substituting a caption summary.
+This implements the reference's workspace concepts; it is not a measured claim of product parity or superiority. The computer is browser/terminal/files, not a streamed full desktop. Skill teaching uses completed runs or explicitly recorded interactions in the app’s browser view. It does not record the user’s desktop. Shared files support text up to 200 KB; existing attachments/media use their own flow. Video analysis samples frames and speech through OmniRoute or direct OpenAI and reports timestamps and coverage limits; a failed provider request is reported instead of substituting a caption summary.
 
 Live provider quota recovery was verified after the owner approved Hive's Neon installation upgrade to Launch. Earlier constant polling was projecting full base64 assets out of PostgreSQL; the preceding release moved stripping into SQL, added incremental synchronization and reduced idle worker/poll traffic. Do not undo those transfer controls.
 

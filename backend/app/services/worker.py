@@ -77,16 +77,12 @@ async def heartbeat():
             from sqlalchemy.dialects.postgresql import insert
             now = datetime.utcnow()
             values = [{'name':'worker','updated_at':now}]
-            if os.getenv('AI_GATEWAY_API_KEY') or os.getenv('VERCEL_OIDC_TOKEN') or os.getenv('VERCEL_OIDC_TOKEN_FILE'):
-                values.append({'name':'gateway_configured','updated_at':now})
             statement = insert(RuntimeHeartbeat).values(values)
             await db.execute(statement.on_conflict_do_update(index_elements=['name'],set_={'updated_at':statement.excluded.updated_at}))
             statement = insert(RuntimeCheck).values(name='worker_release',status='running',detail={**runtime_identity(),'boot_id':PROCESS_BOOT_ID,'boot_started_at':PROCESS_STARTED_AT},updated_at=now)
             await db.execute(statement.on_conflict_do_update(index_elements=['name'],set_={'detail':statement.excluded.detail,'updated_at':now}))
             await db.commit()
             return
-        if os.getenv('AI_GATEWAY_API_KEY') or os.getenv('VERCEL_OIDC_TOKEN'):
-            await record('gateway_configured')
         item = await db.get(RuntimeHeartbeat, "worker")
         if item is None:
             item = RuntimeHeartbeat(name="worker", updated_at=datetime.utcnow())

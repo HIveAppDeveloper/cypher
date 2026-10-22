@@ -191,36 +191,36 @@ async def test_participant_changes_cannot_attach_another_owners_room_or_agent(wo
 @pytest.mark.asyncio
 async def test_queued_document_does_not_read_future_audio_and_transcript_is_cached(workspace, monkeypatch):
     import base64
-    import ai
+    from io import BytesIO
+    from PIL import Image
     from app.models.message import Message
     from app.services.model_routing import required_modalities
     client, sessions = workspace
     headers = {'x-grokbot-user-id': 'attachment-owner'}
     rid = await room(client, 'attachment-owner')
     audio = {'name': 'recording.wav', 'mime': 'audio/wav', 'data': base64.b64encode(b'controlled-audio-bytes').decode()}
-    first = (await client.post(f'/api/conversations/{rid}/messages', headers=headers, json={'sender_type': 'user', 'content': 'Read the PDF only.', 'attachments': [{'name': 'document.pdf', 'mime': 'application/pdf', 'data': base64.b64encode(b'%PDF-controlled').decode()}]})).json()
+    pdf=BytesIO();Image.new('RGB',(48,48),(240,240,240)).save(pdf,format='PDF')
+    first = (await client.post(f'/api/conversations/{rid}/messages', headers=headers, json={'sender_type': 'user', 'content': 'Read the PDF only.', 'attachments': [{'name': 'document.pdf', 'mime': 'application/pdf', 'data': base64.b64encode(pdf.getvalue()).decode()}]})).json()
     second = (await client.post(f'/api/conversations/{rid}/messages', headers=headers, json={'sender_type': 'user', 'content': 'Listen to FUTURE-AUDIO-REQUEST.', 'attachments': [audio]})).json()
-    monkeypatch.setattr(settings, 'LLM_USE_GATEWAY', True)
     from app.services import attachments
-    async def catalog():return {settings.AUDIO_TRANSCRIPTION_MODEL: {'type': 'transcription'}}
-    monkeypatch.setattr(attachments, 'gateway_catalog', catalog)
     transcribed = []
-    async def transcribe(model, file):
-        assert file.data == b'controlled-audio-bytes' and file.media_type == 'audio/wav'
-        transcribed.append(model.id)
-        return SimpleNamespace(value=SimpleNamespace(text='The verification code is 729416.'))
-    monkeypatch.setattr(ai.ops, 'transcribe', transcribe)
+    async def transcribe(file):
+        assert base64.b64decode(file['data']) == b'controlled-audio-bytes' and file['mime'] == 'audio/wav'
+        transcribed.append(settings.AUDIO_TRANSCRIPTION_MODEL)
+        return 'The verification code is 729416.'
+    monkeypatch.setattr(attachments, 'transcribe_audio', transcribe)
     calls = []
     async def complete(**kwargs):
         messages = kwargs['messages']
         serialized = json.dumps(messages)
         assert 'input_audio' not in serialized
-        assert messages[-1] == {'role': 'user', 'content': ['Read the PDF only.', 'Listen to FUTURE-AUDIO-REQUEST.', 'Listen again.'][len(calls)]}
         if not calls:
-            assert required_modalities(messages) == {'text', 'pdf'}
+            assert 'Read the PDF only.' in serialized
+            assert required_modalities(messages) == {'text', 'image'}
             assert 'FUTURE-AUDIO-REQUEST' not in serialized
             assert transcribed == []
         else:
+            assert 'Listen to FUTURE-AUDIO-REQUEST.' in serialized
             assert '729416' in serialized
         calls.append(messages)
         return litellm.ModelResponse(choices=[{'index': 0, 'message': {'role': 'assistant', 'content': 'Checked.'}, 'finish_reason': 'stop'}])

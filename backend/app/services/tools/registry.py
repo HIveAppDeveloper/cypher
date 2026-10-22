@@ -148,7 +148,6 @@ class ToolRegistry:
         if name == 'plugin_call':
             return any(t['plugin_id'] == arguments.get('plugin_id') and t['name'] == arguments.get('tool_name') and t.get('read_only') for t in getattr(self, '_plugin_manifest', []))
         return name in {'read_file', 'list_directory', 'search_files', 'search_web',
-                        'analyze_video',
                         'search_chat_history', 'list_context', 'forget_context', 'consult_specialist', 'plugin_search', 'publish_file',
                         'complete_goal', 'remember_context'}
 
@@ -168,13 +167,12 @@ class ToolRegistry:
             if len(video_results)>=2:return {'success':False,'error':'Video analysis limit reached for this task. Use the evidence already collected.'}
             video_results[key]=await analyze_video(args,bot_id)
             return video_results[key]
-        self.register('analyze_video','Analyze actual YouTube or Instagram video frames and the audio track through OmniRoute. Reuses this agent’s saved browser login when present. Returns timestamped analysis with frame sampling coverage and speech status. Use for reels and video posts; captions alone are insufficient. At most two analyses per task.',{'type':'object','properties':{'url':{'type':'string','maxLength':1000},'question':{'type':'string','maxLength':4000}},'required':['url']},inspect_video)
-        for kind in ("image", "video"):
-            self.register(
+        self.register('analyze_video','Analyze actual YouTube or Instagram video frames and speech using the active OmniRoute or direct OpenAI connection. Reuses this agent’s saved browser login when present. Returns timestamped findings and frame-sampling limits; captions alone are not evidence. At most two analyses per task.',{'type':'object','properties':{'url':{'type':'string','maxLength':1000},'question':{'type':'string','maxLength':4000}},'required':['url']},inspect_video)
+        for kind in ("image",):            self.register(
                 name=f"generate_{kind}",
                 description=f"Generate an actual {kind} from a detailed text prompt. This uses paid model credits. The result is attached to the conversation. Do not call again for the same request unless the first call failed.",
-                parameters={"type": "object", "properties": {"prompt": {"type": "string"}, "aspect_ratio": {"type": "string", "enum": ["16:9", "9:16"]}, "duration": {"type": "integer", "enum": [4, 6, 8]}, "image_provider": {"type": "string", "enum": ["openai", "google"], "description": "Choose automatically for the task: OpenAI GPT Image or Google Gemini image generation."}}, "required": ["prompt"]},
-                handler=self._handle_generate_image if kind == "image" else self._handle_generate_video,
+                parameters={"type": "object", "properties": {"prompt": {"type": "string"}, "aspect_ratio": {"type": "string", "enum": ["16:9", "9:16", "1:1"]}, "duration": {"type": "integer", "enum": [4, 6, 8]}, "image_provider": {"type": "string", "enum": ["openai"], "description": "OpenAI GPT Image through the connected OmniRoute route or direct OpenAI API."}}, "required": ["prompt"]},
+                handler=self._handle_generate_image,
             )
         # --- Browser Tools ---
         from app.services.tools.web_search import search_web
@@ -422,8 +420,8 @@ class ToolRegistry:
         # Map tool category names to tool prefixes
         category_map = {
             "plugins": "plugin_",
-            "media": ["generate_image", "generate_video"],
-            "browser": ["search_web", "analyze_video", "browse_url", "browser_click", "browser_type", "browser_screenshot", "browser_extract", "browser_fill_form"],
+            "media": ["generate_image"],
+            "browser": ["search_web", "browse_url", "browser_click", "browser_type", "browser_screenshot", "browser_extract", "browser_fill_form"],
             "shell": "shell",
             "filesystem": ["local_device", "workspace_files", "publish_file", "read_file", "write_file", "list_directory", "search_files"],
         }
@@ -542,8 +540,3 @@ class ToolRegistry:
         from app.services.media import generate_media
         files = await generate_media("image", args["prompt"], args.get("aspect_ratio", "16:9"), image_provider=args.get("image_provider"))
         return {"success": True, "message": "Generated image attached to this conversation.", "_attachments": files}
-
-    async def _handle_generate_video(self, args: dict, bot_id: str) -> dict:
-        from app.services.media import generate_media
-        files = await generate_media("video", args["prompt"], args.get("aspect_ratio", "16:9"), args.get("duration", 4))
-        return {"success": True, "message": "Generated video attached to this conversation.", "_attachments": files}

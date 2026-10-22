@@ -28,6 +28,7 @@ export const api = {
   getDeliveries: (id:string): Promise<{id:string;status:string;attempts:number;detail:string}[]> => request('/channels/'+id+'/deliveries'),
   defaultTeam: (): Promise<Conversation> => request('/teams/default', { method: 'POST' }),
   getPluginCatalog: (): Promise<import('../components/PluginPanel').CatalogEntry[]> => request('/plugins/catalog'),
+  searchMcpRegistry: (query:string,cursor?:string): Promise<{items:import('../components/PluginPanel').CatalogEntry[];next_cursor:string|null}> => request('/plugins/registry/search?q='+encodeURIComponent(query)+(cursor?'&cursor='+encodeURIComponent(cursor):'')),
   getAvailableConnections: (): Promise<import('../components/PluginPanel').AvailableConnection[]> => request('/plugins/available-connections'),
   pluginSyncStatus: (): Promise<import('../components/PluginPanel').PluginSync|null> => request('/plugins/catalog/sync'),
   syncPlugins: (approval_id?:string): Promise<import('../components/PluginPanel').PluginSync> => request('/plugins/catalog/sync',{method:'POST',body:JSON.stringify({approval_id})}),

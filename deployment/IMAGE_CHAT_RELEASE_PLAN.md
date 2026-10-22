@@ -1,4 +1,6 @@
-# Proposed release — approval pending
+# Historical release plan — superseded
+
+This plan described a Vercel AI Gateway inference route. Current model inference uses OmniRoute or a direct provider API instead; the route and credential assumptions below are obsolete.
 
 ## Exact target
 

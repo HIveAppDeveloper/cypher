@@ -1,6 +1,6 @@
 """Generate actual media in the persistent worker through its configured transport."""
-import asyncio
 import base64
+import asyncio
 from app.config import settings
 
 MAX_ASSET_BYTES = 32 * 1024 * 1024
@@ -8,9 +8,11 @@ MAX_ASSET_BYTES = 32 * 1024 * 1024
 async def generate_media(kind: str, prompt: str, aspect_ratio='16:9', duration=4, image_provider=None):
     if not prompt.strip():
         raise ValueError('Describe the media you want to generate.')
+    if kind != 'image':
+        raise ValueError('Video generation is not available on the configured OmniRoute or direct model connection yet. No request was sent.')
+    if image_provider == 'google':
+        raise ValueError('Google image generation is not available on the configured OmniRoute or direct model connection yet. Choose OpenAI image generation.')
     if settings.OMNIROUTE_URL:
-        if kind != 'image' or image_provider == 'google':
-            raise ValueError('The Google image/video connection needs provider account verification in OmniRoute. Choose OpenAI images for the verified image connection.')
         from app.services import omniroute
         from app.services.usage import check_allowance, record
         await check_allowance()
@@ -36,47 +38,29 @@ async def generate_media(kind: str, prompt: str, aspect_ratio='16:9', duration=4
         await record('openai', 'gpt-6.1-sol', response.get('usage'))
         extension = {'image/png': 'png', 'image/jpeg': 'jpg', 'image/webp': 'webp'}[mime]
         return [{'name': f'generated-image-1.{extension}', 'mime': mime, 'data': base64.b64encode(data).decode()}]
-    import ai
-    if kind == 'image' and image_provider == 'google':
-        # Gemini image output uses Chat Completions, not the image-only endpoint.
-        from openai import AsyncOpenAI
-        from app.services.llm_gateway import completion_options
-        auth = completion_options('gpt-6.1-sol', 'openai')
-        if not settings.LLM_USE_GATEWAY:
-            raise ValueError('Google image generation requires the configured AI Gateway connection.')
-        async with AsyncOpenAI(api_key=auth['api_key'], base_url=auth['api_base'], max_retries=0) as client:
-            response = await client.chat.completions.create(
-                model=settings.GOOGLE_IMAGE_MODEL,
-                messages=[{'role':'user','content':f'Generate exactly one image with aspect ratio {aspect_ratio}. '+prompt}],
-                extra_body={'modalities':['text','image']}, timeout=300)
-        images = response.choices[0].message.model_dump().get('images') or []
-        from types import SimpleNamespace
-        parts = []
-        for item in images[:1]:
-            url = item.get('image_url', {}).get('url', '')
-            if not url.startswith('data:image/') or ';base64,' not in url:
-                raise ValueError('Google returned an unsupported image response.')
-            header, data = url.split(';base64,', 1)
-            parts.append(SimpleNamespace(data=data, media_type=header.removeprefix('data:')))
-        result = SimpleNamespace(value=parts)
-    elif kind == 'image':
-        size = {'16:9':'1536x1024', '9:16':'1024x1536', '1:1':'1024x1024'}.get(aspect_ratio,'1024x1024')
-        params = ai.ops.ImageParams(n=1, size=size) if settings.IMAGE_MODEL.startswith('openai/') else ai.ops.ImageParams(n=1, aspect_ratio=aspect_ratio)
-        result = await asyncio.wait_for(ai.ops.generate_image(ai.get_model(settings.IMAGE_MODEL), prompt, params=params), timeout=300)
-    elif kind == 'video':
-        if aspect_ratio == '1:1':
-            raise ValueError('Choose landscape or portrait for this video model.')
-        result = await asyncio.wait_for(ai.ops.generate_video(ai.get_model(settings.VIDEO_MODEL), prompt, params=ai.ops.VideoParams(n=1, aspect_ratio=aspect_ratio, duration=duration)), timeout=900)
-    else:
-        raise ValueError('Unsupported media output')
-    if not result.value:
-        raise RuntimeError('The model returned no media.')
-    files = []
-    for index, item in enumerate(result.value[:1]):
-        data = item.data if isinstance(item.data, bytes) else base64.b64decode(item.data)
-        mime = item.media_type
-        allowed = {'image/png': 'png', 'image/jpeg': 'jpg', 'image/webp': 'webp', 'video/mp4': 'mp4'}
-        if mime not in allowed or len(data) > MAX_ASSET_BYTES:
-            raise ValueError('Generated media has an unsupported format or exceeds 32 MB.')
-        files.append({'name': f'generated-{kind}-{index + 1}.{allowed[mime]}', 'mime': mime, 'data': base64.b64encode(data).decode()})
-    return files
+    from openai import AsyncOpenAI
+    from app.services.llm_gateway import completion_options
+    from app.services.usage import check_allowance, record
+    await check_allowance()
+    connection = completion_options('gpt-6.1-sol', 'openai')
+    size = {'16:9':'1536x1024', '9:16':'1024x1536', '1:1':'1024x1024'}.get(aspect_ratio,'1024x1024')
+    async with AsyncOpenAI(api_key=connection['api_key'], base_url='https://api.openai.com/v1', max_retries=0) as client:
+        response = await asyncio.wait_for(client.images.generate(
+            model=settings.IMAGE_MODEL.removeprefix('openai/'), prompt=prompt, n=1, size=size, timeout=300,
+        ), timeout=310)
+    item = response.data[0] if response.data else None
+    if not item or not item.b64_json:
+        raise RuntimeError('The OpenAI image model returned no image data.')
+    data = base64.b64decode(item.b64_json, validate=True)
+    if len(data) > MAX_ASSET_BYTES:
+        raise ValueError('Generated image exceeds 32 MB.')
+    from PIL import Image
+    from io import BytesIO
+    with Image.open(BytesIO(data)) as image:
+        mime = Image.MIME.get(image.format)
+        image.verify()
+    if mime not in {'image/png', 'image/jpeg', 'image/webp'}:
+        raise ValueError('Generated image has an unsupported format.')
+    await record('openai', settings.IMAGE_MODEL.removeprefix('openai/'), getattr(response, 'usage', None))
+    extension = {'image/png':'png', 'image/jpeg':'jpg', 'image/webp':'webp'}[mime]
+    return [{'name': f'generated-image-1.{extension}', 'mime': mime, 'data': base64.b64encode(data).decode()}]

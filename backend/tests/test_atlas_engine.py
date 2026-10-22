@@ -297,7 +297,6 @@ def test_per_principal_concurrency_is_bounded_without_storing_prompts():
 
 @pytest.mark.parametrize("provider,model,base", [("gemini", "gemini-3.8-flash", "https://generativelanguage.googleapis.com/v1alpha"), ("openai", "gpt-6-luna", "https://api.openai.com/v1"), ("anthropic", "claude-sonnet-5.5", "https://api.anthropic.com"), ("deepseek", "deepseek-v4.1-flash", "https://api.deepseek.com")])
 def test_direct_recipient_pins_official_base_even_with_hostile_environment(monkeypatch, provider, model, base):
-    monkeypatch.setattr(settings, "LLM_USE_GATEWAY", True)
     monkeypatch.setattr(settings, "LLM_API_BASE", "https://unapproved-router.invalid")
     monkeypatch.setattr(settings, "LLM_API_KEY", "generic-must-not-be-reused")
     for name in ["OPENAI_API_BASE", "OPENAI_BASE_URL", "GEMINI_API_BASE", "ANTHROPIC_API_BASE", "DEEPSEEK_API_BASE"]:

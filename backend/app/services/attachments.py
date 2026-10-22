@@ -2,7 +2,7 @@
 import asyncio
 import base64
 from app.config import settings
-from app.services.model_routing import ModelCapabilityError, gateway_catalog
+from app.services.model_routing import ModelCapabilityError
 
 
 async def transcribe_audio(file):
@@ -18,22 +18,14 @@ async def transcribe_audio(file):
         if not text:
             raise ModelCapabilityError('No speech was detected in this audio. Your original audio is saved.')
         return text
-    if settings.LLM_USE_GATEWAY:
-        import ai
-        from ai.types.messages import FilePart
-        model = settings.AUDIO_TRANSCRIPTION_MODEL
-        item = (await gateway_catalog()).get(model)
-        if not item or item.get('type') != 'transcription':
-            raise ModelCapabilityError('Audio transcription is not available in the configured model catalog. Your original file is saved.')
-        result = await asyncio.wait_for(ai.ops.transcribe(ai.get_model(model), FilePart(data=data, media_type=file['mime'], filename=file['name'])), timeout=90)
-        text = result.value.text
-    else:
-        from openai import AsyncOpenAI
-        from app.services.llm_gateway import completion_options
-        connection = completion_options('gpt-6.1-sol', 'openai')
-        async with AsyncOpenAI(api_key=connection['api_key'], base_url=settings.LLM_API_BASE or 'https://api.openai.com/v1', max_retries=0) as client:
-            result = await client.audio.transcriptions.create(model=settings.AUDIO_TRANSCRIPTION_MODEL.removeprefix('openai/'), file=(file['name'], data, file['mime']), timeout=90)
-        text = result.text
+    from openai import AsyncOpenAI
+    from app.services.llm_gateway import completion_options
+    connection = completion_options('gpt-6.1-sol', 'openai')
+    if connection.get('api_base') not in (None, 'https://api.openai.com/v1'):
+        raise ModelCapabilityError('Audio transcription needs the direct OpenAI API connection. Your original audio is saved.')
+    async with AsyncOpenAI(api_key=connection['api_key'], base_url='https://api.openai.com/v1', max_retries=0) as client:
+        result = await client.audio.transcriptions.create(model=settings.AUDIO_TRANSCRIPTION_MODEL.removeprefix('openai/'), file=(file['name'], data, file['mime']), timeout=90)
+    text = result.text
     if not text.strip():
         raise ModelCapabilityError('No speech could be transcribed from this audio. Your original file is saved; send a clearer recording or text.')
     return text.strip()
@@ -46,7 +38,7 @@ async def prepare_audio(db, message, files):
     prepared = []
     # Render PDF pages rather than passing an unsupported file part through an
     # OpenAI-compatible translator. The original remains the downloadable source.
-    if settings.OMNIROUTE_URL:
+    if any(file['mime']=='application/pdf' for file in files):
         from app.services.multimedia import prepare_documents
         files = await asyncio.to_thread(prepare_documents, files)
     for index, file in enumerate(files):
