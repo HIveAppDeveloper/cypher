@@ -1,4 +1,4 @@
-"""Prepare uploaded audio once, preserving the original file and cached transcript."""
+"""Prepare original uploads for connected models without dropping their evidence."""
 import asyncio
 import base64
 from app.config import settings
@@ -6,9 +6,18 @@ from app.services.model_routing import ModelCapabilityError, gateway_catalog
 
 
 async def transcribe_audio(file):
+    try:
+        data=base64.b64decode(file['data'],validate=True)
+        if not 0<len(data)<=3*1024*1024:raise ValueError()
+    except (KeyError,ValueError) as error:
+        raise ModelCapabilityError('This recording is not valid audio data. Your original audio is saved.') from error
     if settings.OMNIROUTE_URL:
-        raise ModelCapabilityError('Audio transcription is not exposed by this OmniRoute connection. Your original audio is saved; no other model service was contacted.')
-    data = base64.b64decode(file['data'], validate=True)
+        from app.services import omniroute
+        result = await omniroute.request('/audio/transcriptions', {'model':'omniroute/whisper-base-local','file':file})
+        text = result.get('text', '').strip()
+        if not text:
+            raise ModelCapabilityError('No speech was detected in this audio. Your original audio is saved.')
+        return text
     if settings.LLM_USE_GATEWAY:
         import ai
         from ai.types.messages import FilePart
@@ -35,13 +44,26 @@ async def prepare_audio(db, message, files):
     metadata = dict(message.metadata_json or {})
     cached = dict(metadata.get('audio_transcripts') or {})
     prepared = []
+    # Render PDF pages rather than passing an unsupported file part through an
+    # OpenAI-compatible translator. The original remains the downloadable source.
+    if settings.OMNIROUTE_URL:
+        from app.services.multimedia import prepare_documents
+        files = await asyncio.to_thread(prepare_documents, files)
     for index, file in enumerate(files):
+        if file['mime'].startswith('video/'):
+            from app.services.multimedia import prepare_uploaded_video
+            key = 'video:' + __import__('hashlib').sha256(file['data'].encode()).hexdigest()
+            if key not in cached:
+                cached[key] = {'text':await prepare_uploaded_video(file), 'model':'omniroute/video-frames-and-speech'}
+                metadata['audio_transcripts'] = dict(cached);message.metadata_json = dict(metadata);await db.commit()
+            prepared.append({'name':file['name']+' (video evidence)', 'mime':'text/plain','data':base64.b64encode(cached[key]['text'].encode()).decode()})
+            continue
         if not file['mime'].startswith('audio/'):
             prepared.append(file)
             continue
-        key = str(index)
+        key = 'audio:' + __import__('hashlib').sha256(file['data'].encode()).hexdigest() if settings.OMNIROUTE_URL else str(index)
         if key not in cached:
-            cached[key] = {'text': await transcribe_audio(file), 'model': settings.AUDIO_TRANSCRIPTION_MODEL}
+            cached[key] = {'text': await transcribe_audio(file), 'model': 'omniroute/whisper-base-local' if settings.OMNIROUTE_URL else settings.AUDIO_TRANSCRIPTION_MODEL}
             metadata['audio_transcripts'] = dict(cached)
             message.metadata_json = dict(metadata)
             await db.commit()

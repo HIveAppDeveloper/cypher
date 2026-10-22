@@ -26,15 +26,24 @@ def input_tokens(usage,modality):
 
 
 async def analyze_video(args,bot_id):
-    import ai
-    from ai.types.messages import FilePart
     from app.config import settings
     from app.services.model_routing import gateway_catalog
     model='google/gemini-3.8-flash'
     try:
-        url=youtube_url(args.get('url',''))
         if settings.OMNIROUTE_URL:
-            raise ValueError('This OmniRoute connection has no verified video-understanding route. Its connected models cannot verify YouTube frames and speech. No caption-only substitute or Vercel AI Gateway request was used.')
+            import tempfile
+            from app.services.video_sources import video_url,download_media
+            from app.services.multimedia import inspect_media
+            url=video_url(args.get('url',''))
+            question=str(args.get('question','Describe the video, spoken content and important timestamps.'))[:4000]
+            with tempfile.TemporaryDirectory(prefix='grokbot-link-video-') as root:
+                async with asyncio.timeout(600):
+                    path,audio=await download_media(url,root,bot_id)
+                    result=await inspect_media(path,question,audio_path=audio)
+                return {'success':True,'url':url,**result,'instruction':'Cite this URL and timestamps. State that visuals were sampled; separate observed content, speech and independently verified facts.'}
+        import ai
+        from ai.types.messages import FilePart
+        url=youtube_url(args.get('url',''))
         question=str(args.get('question','Describe the video, spoken content and important timestamps.'))[:4000]
         if not settings.LLM_USE_GATEWAY:raise ValueError('Video understanding requires the configured AI Gateway connection.')
         metadata=(await gateway_catalog()).get(model,{})

@@ -6,7 +6,7 @@ from pydantic import BaseModel, Field, field_validator
 MAX_TOTAL_BYTES = 3 * 1024 * 1024
 class Attachment(BaseModel):
     name: str = Field(min_length=1, max_length=160)
-    mime: Literal['image/png', 'image/jpeg', 'image/webp', 'application/pdf', 'text/plain', 'audio/wav', 'audio/mpeg']
+    mime: Literal['image/png', 'image/jpeg', 'image/webp', 'application/pdf', 'text/plain', 'audio/wav', 'audio/mpeg', 'audio/mp4', 'audio/ogg', 'audio/webm', 'audio/flac', 'video/mp4', 'video/webm', 'video/quicktime']
     data: str = Field(max_length=4 * 1024 * 1024)
 
     @field_validator('data')
@@ -49,6 +49,7 @@ def content_parts(text, attachments):
     for a in attachments:
         url = f"data:{a['mime']};base64,{a['data']}"
         if a['mime'].startswith('image/'):
+            parts.append({'type':'text','text':f"Attached image: {a['name']}"})
             parts.append({'type': 'image_url', 'image_url': {'url': url}})
         elif a['mime'] == 'text/plain':
             decoded = base64.b64decode(a['data']).decode('utf-8', errors='replace')

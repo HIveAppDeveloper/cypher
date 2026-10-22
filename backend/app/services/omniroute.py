@@ -53,7 +53,7 @@ class OmniRouteError(RuntimeError):
 
 
 async def request(path, payload=None):
-    if path not in {'/models', '/chat/completions', '/responses'}:
+    if path not in {'/models', '/chat/completions', '/responses', '/audio/transcriptions'}:
         raise ValueError('Unsupported OmniRoute inference endpoint.')
     try:
         async with httpx.AsyncClient(timeout=110, follow_redirects=False) as client:
