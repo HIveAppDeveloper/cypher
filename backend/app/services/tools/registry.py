@@ -168,7 +168,7 @@ class ToolRegistry:
             if len(video_results)>=2:return {'success':False,'error':'Video analysis limit reached for this task. Use the evidence already collected.'}
             video_results[key]=await analyze_video(args,bot_id)
             return video_results[key]
-        self.register('analyze_video','Understand the actual frames and speech of a public YouTube video. Use when asked what a YouTube video shows, explains or demonstrates. Returns timestamped analysis only when the provider confirms processing video frames. A website caption is insufficient. At most two analyses per task.',{'type':'object','properties':{'url':{'type':'string','maxLength':1000},'question':{'type':'string','maxLength':4000}},'required':['url']},inspect_video)
+        self.register('analyze_video','Analyze actual YouTube or Instagram video frames and the audio track through OmniRoute. Reuses this agent’s saved browser login when present. Returns timestamped analysis with frame sampling coverage and speech status. Use for reels and video posts; captions alone are insufficient. At most two analyses per task.',{'type':'object','properties':{'url':{'type':'string','maxLength':1000},'question':{'type':'string','maxLength':4000}},'required':['url']},inspect_video)
         for kind in ("image", "video"):
             self.register(
                 name=f"generate_{kind}",
