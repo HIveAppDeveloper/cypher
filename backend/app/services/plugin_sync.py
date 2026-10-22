@@ -35,7 +35,9 @@ async def connect_entry(item, sessions=None):
     async with sessions() as db:
         existing=(await db.execute(select(Plugin).where(Plugin.url==item['url']))).scalars().first()
         if existing and (item.get('auth')!='api_key' or existing.credential):
-            return {'status':'connected' if existing.enabled else 'paused','plugin_id':existing.id,'tool_count':len(existing.tools),'message':'Existing connection preserved.'}
+            if not existing.enabled:
+                return {'status':'paused','plugin_id':existing.id,'tool_count':len(existing.tools),'message':'Existing connection remains paused.'}
+            return await recheck_saved(db,existing,item)
     token = mapped_credential(item['url'], current_tenant_id.get())
     if item.get('setup_note'):
         return {'status':'setup_required','message':item['setup_note']}
@@ -73,6 +75,34 @@ async def connect_entry(item, sessions=None):
         return {'status':'connected' if plugin.enabled else 'paused','plugin_id':plugin.id,'tool_count':len(plugin.tools),'credential_source':'server' if token else 'public','message':'Tools discovered; execution has not been tested.'}
 
 
+async def recheck_saved(db,plugin,item):
+    """Refresh through saved auth without performing provider write operations."""
+    from app.services.plugins import connection_auth
+    original_credential=plugin.credential
+    base={'plugin_id':plugin.id,'tool_count':len(plugin.tools)}
+    try:
+        token,auth=await connection_auth(db,plugin)
+        tools=await discover(plugin.url,token,auth=auth)
+        if not tools:raise ValueError('No tools advertised')
+    except Exception as error:
+        if authentication_failure(error):
+            return {**base,'status':'key_required' if item.get('auth')=='api_key' else 'sign_in_required','message':'The saved connection needs authorization again. Its credentials and tool choices were preserved.'}
+        return {**base,'status':'unavailable','message':'The saved connection did not respond to discovery. Its credentials and tool choices were preserved.'}
+    # The owner may pause, reconnect or remove the plugin while discovery runs.
+    saved=(await db.execute(select(Plugin).where(Plugin.id==plugin.id).with_for_update().execution_options(populate_existing=True))).scalar_one_or_none()
+    if not saved:return {**base,'status':'unavailable','message':'The connection was removed while it was checked.'}
+    if not saved.enabled:return {**base,'status':'paused','message':'Existing connection remains paused.'}
+    if saved.credential!=original_credential:
+        return {**base,'status':'unavailable','message':'The connection changed while it was checked. Run the check again.'}
+    enabled={tool['name']:tool.get('enabled',True) for tool in saved.tools}
+    saved.tools=[{**tool,'enabled':enabled.get(tool['name'],True)} for tool in tools]
+    from app.models.runtime import RuntimeCheck
+    stale=await db.get(RuntimeCheck,'plugin:'+saved.id)
+    if stale:await db.delete(stale)
+    await db.commit()
+    return {'status':'connected','plugin_id':saved.id,'tool_count':len(saved.tools),'credential_source':'saved','message':'Saved authorization reused. Tools discovered; execution has not been tested.'}
+
+
 def public(job, total):
     results=job.results or {}
     counts={}
@@ -84,7 +114,7 @@ async def tick(sessions=None):
     sessions=sessions or AsyncSessionLocal
     from app.api.plugin_catalog import list_catalog
     async with sessions() as db:
-        job=(await db.execute(select(PluginSync).where(PluginSync.status.in_(('pending','running'))).order_by(PluginSync.created_at).limit(1))).scalar_one_or_none()
+        job=(await db.execute(select(PluginSync).where(PluginSync.status.in_(('pending','running'))).order_by(PluginSync.updated_at,PluginSync.created_at,PluginSync.id).limit(1))).scalar_one_or_none()
         if not job:return False
         tenant=job.tenant_id
         context=current_tenant_id.set(tenant)
@@ -96,7 +126,13 @@ async def tick(sessions=None):
     token=current_tenant_id.set(tenant)
     try:
         batch=remaining[:6]
-        results=await asyncio.gather(*(connect_entry(item,sessions) for item in batch),return_exceptions=True)
+        async def bounded_connect(item):
+            # Include saved-token refresh, not only MCP discovery, in the bound.
+            try:
+                async with asyncio.timeout(45):return await connect_entry(item,sessions)
+            except TimeoutError:
+                return {'status':'unavailable','message':'The provider timed out. Saved credentials were preserved; retry this connection later.'}
+        results=await asyncio.gather(*(bounded_connect(item) for item in batch),return_exceptions=True)
         async with sessions() as db:
             job=await db.get(PluginSync,job_id)
             progress=dict(job.results)

@@ -72,12 +72,68 @@ async def test_catalog_job_persists_progress_and_is_tenant_isolated(workspace,mo
     assert len((await client.get('/api/plugins',headers=a)).json())==8
     assert (await client.get('/api/plugins',headers=b)).json()==[]
 
+@pytest.mark.asyncio
+async def test_catalog_batches_yield_to_other_workspaces(workspace,monkeypatch):
+    client,sessions=workspace
+    from app.api import plugin_catalog
+    entries=[{'id':str(i),'name':'Service '+str(i),'url':f'https://service{i}.example/mcp','auth':'auto'} for i in range(8)]
+    monkeypatch.setattr(plugin_catalog,'catalog',lambda:entries)
+    async def discover(url,token=None,auth=None):return [{'name':'read','description':'Read','schema':{'type':'object'}}]
+    monkeypatch.setattr(plugin_sync,'discover',discover)
+    a={'x-grokbot-user-id':'first-sync-owner'};b={'x-grokbot-user-id':'next-sync-owner'}
+    assert (await client.post('/api/plugins/catalog/sync',headers=a,json={})).status_code==202
+    assert (await client.post('/api/plugins/catalog/sync',headers=b,json={})).status_code==202
+    await plugin_sync.tick(sessions)
+    assert (await client.get('/api/plugins/catalog/sync',headers=a)).json()['checked']==6
+    await plugin_sync.tick(sessions)
+    assert (await client.get('/api/plugins/catalog/sync',headers=b)).json()['checked']==6
+    assert (await client.get('/api/plugins/catalog/sync',headers=a)).json()['checked']==6
+
 def test_server_credentials_are_explicitly_endpoint_and_owner_bound(monkeypatch):
     monkeypatch.setenv('GROKBOT_PLUGIN_CREDENTIALS',json.dumps({'https://official.example/mcp':{'env':'SERVICE_TEST_KEY','header':'x-api-key'}}))
     monkeypatch.setenv('SERVICE_TEST_KEY','test-only-secret')
     assert plugin_sync.mapped_credential('https://official.example/mcp','another-owner') is None
     assert plugin_sync.mapped_credential('https://untrusted.example/mcp','legacy-owner') is None
     assert json.loads(plugin_sync.mapped_credential('https://official.example/mcp','legacy-owner'))=={'x-api-key':'test-only-secret'}
+
+@pytest.mark.asyncio
+async def test_catalog_rechecks_saved_auth_and_refreshes_tools_without_enabling_paused_tools(workspace,monkeypatch):
+    _,sessions=workspace
+    marker=object();calls=[]
+    async def auth(db,plugin):return 'saved-token',marker
+    async def discover(url,token=None,auth=None):
+        calls.append((url,token,auth))
+        return [{'name':name,'schema':{'type':'object'},'description':'Updated'} for name in ['read','write','new']]
+    monkeypatch.setattr(plugins,'connection_auth',auth)
+    monkeypatch.setattr(plugin_sync,'discover',discover)
+    async with sessions() as db:
+        p=Plugin(name='Saved service',url='https://saved.example/mcp',credential='encrypted-existing',tools=[{'name':'read'},{'name':'write','enabled':False}],enabled=True)
+        db.add(p);await db.commit();pid=p.id
+    result=await plugin_sync.connect_entry({'name':'Saved service','url':p.url,'auth':'auto'},sessions)
+    assert calls==[(p.url,'saved-token',marker)] and result['status']=='connected'
+    assert 'execution has not been tested' in result['message']
+    async with sessions() as db:
+        saved=await db.get(Plugin,pid)
+        assert saved.credential=='encrypted-existing' and len(saved.tools)==3
+        assert not next(t for t in saved.tools if t['name']=='write')['enabled']
+
+@pytest.mark.asyncio
+async def test_catalog_reports_saved_connection_failure_and_keeps_credentials_and_pause(workspace,monkeypatch):
+    _,sessions=workspace
+    async def auth(db,plugin):return 'saved-token',None
+    async def discover(*args,**kwargs):raise httpx.ConnectError('provider unavailable')
+    monkeypatch.setattr(plugins,'connection_auth',auth)
+    monkeypatch.setattr(plugin_sync,'discover',discover)
+    async with sessions() as db:
+        p=Plugin(name='Saved',url='https://saved.example/mcp',credential='encrypted-existing',tools=[{'name':'read'}],enabled=True)
+        paused=Plugin(name='Paused',url='https://paused.example/mcp',tools=[{'name':'read'}],enabled=False)
+        db.add_all([p,paused]);await db.commit();pid=p.id
+    result=await plugin_sync.connect_entry({'name':'Saved','url':p.url,'auth':'auto'},sessions)
+    assert result['status']=='unavailable'
+    assert (await plugin_sync.connect_entry({'name':'Paused','url':paused.url,'auth':'auto'},sessions))['status']=='paused'
+    async with sessions() as db:
+        saved=await db.get(Plugin,pid)
+        assert saved.credential=='encrypted-existing' and saved.tools==[{'name':'read'}] and saved.enabled
 
 @pytest.mark.asyncio
 async def test_key_setup_updates_discovered_connection_without_duplicates(workspace,monkeypatch):

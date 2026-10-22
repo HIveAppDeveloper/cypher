@@ -1,7 +1,7 @@
 """Database-backed bounded goals and a signed webhook outbox."""
 import asyncio,hashlib,hmac,json,uuid
 from datetime import datetime,timedelta
-from sqlalchemy import select
+from sqlalchemy import select,exists,or_,case
 from app.db.session import AsyncSessionLocal
 from app.models.automation import Goal,Channel,Delivery
 from app.models.task import Task
@@ -11,7 +11,14 @@ from app.services.plugins import validate_endpoint,reveal,http_client
 async def tick_goals(session_factory=None):
     sessions=session_factory or AsyncSessionLocal
     async with sessions() as db:
-        goals=(await db.execute(select(Goal).where(Goal.status=='active').with_for_update(skip_locked=True).limit(10))).scalars().all()
+        # Select work that can advance before applying the global batch limit.
+        # Otherwise ten waiting goals in one workspace can starve every other
+        # workspace indefinitely, including recording a completed goal.
+        previous_busy=exists(select(Task.id).where(Task.id==Goal.last_task_id,Task.tenant_id==Goal.tenant_id,Task.status.in_(('pending','running','cancel_requested'))))
+        previous_failed=exists(select(Task.id).where(Task.id==Goal.last_task_id,Task.tenant_id==Goal.tenant_id,Task.status.not_in(('pending','running','cancel_requested','completed'))))
+        finalize=or_(Goal.completion_requested.is_(True),Goal.runs>=Goal.max_runs,previous_failed)
+        due=or_(Goal.next_run_at.is_(None),Goal.next_run_at<=datetime.utcnow())
+        goals=(await db.execute(select(Goal).where(Goal.status=='active',~previous_busy,or_(finalize,due)).order_by(case((finalize,0),else_=1),Goal.next_run_at.asc().nulls_first(),Goal.created_at,Goal.id).with_for_update(of=Goal,skip_locked=True).limit(10))).scalars().all()
         for g in goals:
             from app.db.tenancy import current_tenant_id
             token=current_tenant_id.set(g.tenant_id)
