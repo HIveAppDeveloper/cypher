@@ -9,5 +9,5 @@ export default function Page() {
   let session: AppSession | null = null;
   try { session = readSignedPayload<AppSession>(cookies().get('grokbot_session')?.value); } catch { session = null; }
   if (process.env.REQUIRE_USER_AUTH === 'true' && !session) redirect('/login');
-  return <WorkspaceApp accountEmail={session?.email}/>;
+  return <WorkspaceApp accountEmail={session?.email} accountId={session?.sub}/>;
 }
