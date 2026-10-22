@@ -3,6 +3,13 @@ import { getSessionFromCookieHeader } from '../../../lib/auth-server';
 export const dynamic = 'force-dynamic';
 async function proxy(request: NextRequest, { params }: { params: { path: string[] } }) {
   const path = params.path.join('/');
+  if (request.method==='GET' && path==='plugin-oauth/client-metadata') {
+    const origin=request.nextUrl.origin;
+    const configured=(process.env.GROKBOT_PUBLIC_URL||'https://open-grokbot-hiveapp.vercel.app').replace(/\/$/,'');
+    const origins=Array.from(new Set([configured,...(process.env.GROKBOT_OAUTH_ALLOWED_ORIGINS||'').split(',').map(value=>value.trim().replace(/\/$/,'')).filter(Boolean)]));
+    if(!origins.includes(origin))return NextResponse.json({detail:'Unknown app origin.'},{status:404});
+    return NextResponse.json({client_id:origin+'/api/plugin-oauth/client-metadata',client_name:'GrokBot',client_uri:origin,redirect_uris:origins.map(value=>value+'/api/plugin-oauth/callback'),grant_types:['authorization_code','refresh_token'],response_types:['code'],token_endpoint_auth_method:'none'},{headers:{'Cache-Control':'public, max-age=300','X-Content-Type-Options':'nosniff'}});
+  }
   const publicAuthPath = path === 'auth/email/request' || path === 'auth/email/verify' || (request.method==='GET' && /^workspace\/templates\/shared\/[A-Za-z0-9_-]{24,64}$/.test(path));
   const deviceIngress=request.method==='POST'&&['local-device/claim','local-device/poll','local-device/complete'].includes(path);
   const channelIngress = request.method === 'POST' && params.path.length === 3 && params.path[0] === 'channels' && params.path[2] === 'events';
@@ -15,6 +22,7 @@ async function proxy(request: NextRequest, { params }: { params: { path: string[
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
   if (process.env.GROKBOT_BACKEND_API_TOKEN) headers.Authorization = `Bearer ${process.env.GROKBOT_BACKEND_API_TOKEN}`;
   if (session) headers['x-grokbot-user-id'] = session.sub;
+  if (path==='plugins/authorize') headers['x-grokbot-public-origin']=request.nextUrl.origin;
   const channelKey=request.headers.get('x-grokbot-channel-key');
   if(channelKey) headers['x-grokbot-channel-key']=channelKey;
   let response: Response;
