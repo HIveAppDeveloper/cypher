@@ -1,6 +1,7 @@
 'use client';
 
 import { useRef, useState } from 'react';
+import Image from 'next/image';
 import { buildProspects, exportProspects, Prospect } from '../lib/territory-pulse';
 import './territory-pulse.css';
 
@@ -57,7 +58,7 @@ export default function TerritoryPulse() {
   }
   return <div className="pulse-app">
     <aside className="pulse-sidebar">
-      <a className="pulse-brand" href="/?workspace=1"><span aria-hidden="true">G</span>Open GrokBot</a>
+      <a className="pulse-brand" href="/?workspace=1" aria-label="Cipher — open agent workspace"><span className="pulse-logo-frame"><Image src="/cipher-logo.png" alt="Cipher" width={184} height={184} priority unoptimized/></span></a>
       <nav aria-label="Prospecting navigation"><a className="pulse-current" href="#territory">Territory pulse <span>20</span></a><a href="/?workspace=1">Agent workspace <span aria-hidden="true">↗</span></a></nav>
       <div className="pulse-sidebar-foot"><span className="pulse-dot"/> Demo workspace<p>Review first. Send with intent.</p></div>
     </aside>

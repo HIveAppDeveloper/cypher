@@ -17,7 +17,7 @@
    Collecting build traces ...
 
 Route (app)                              Size     First Load JS
-┌ ƒ /                                    126 kB          213 kB
+┌ ƒ /                                    131 kB          218 kB
 ├ ○ /_not-found                          875 B          88.2 kB
 ├ ƒ /api/[...path]                       0 B                0 B
 ├ ƒ /api/auth/email/request              0 B                0 B

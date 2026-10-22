@@ -19,3 +19,6 @@ This is a visibly labeled synthetic demo. The fixed 20-company fixture is not ma
 
 ## Limits / next work
 Not a complete prospecting service: real company discovery, dated source retrieval, evidence-based ranking, verified contacts, durable shared activity/drafts, and a reviewed/approved sending adapter are not implemented. State resets on refresh. Browser export control/action was checked; CSV content/formula safety covered by unit tests. No real sign-in, inference, connector delivery, or external outbound tested. Deployment status must be read from the release result, not inferred from this report.
+
+## Cipher logo and visual follow-up
+Used the exact user-provided Library asset libfile_a557535e8ae481919079291f4a729e91 (Cipher logo.png, 2000x2000 RGBA) as the main logo at frontend/public/cipher-logo.png. PNG bytes are unchanged; Git blob 08d6c37ce9aa9fbaa69a823247558a097f9e6ba7. Inspected on white to see the transparent black binary cloud and Cipher wordmark. Added system typography, graphite controls, neutral surfaces, soft corners and focus states, scoped to the prospecting screen. Fresh desktop/mobile browser screenshots captured after checking actual logo rendering and no horizontal overflow. The web app is not a native macOS app.
