@@ -32,12 +32,21 @@ def mapped_credential(url, tenant_id):
 
 async def connect_entry(item, sessions=None):
     sessions=sessions or AsyncSessionLocal
+    urls=(item['url'].rstrip('/'),item['url'].rstrip('/')+'/')
     async with sessions() as db:
-        existing=(await db.execute(select(Plugin).where(Plugin.url==item['url']))).scalars().first()
-        if existing and (item.get('auth')!='api_key' or existing.credential):
-            if not existing.enabled:
-                return {'status':'paused','plugin_id':existing.id,'tool_count':len(existing.tools),'message':'Existing connection remains paused.'}
-            return await recheck_saved(db,existing,item)
+        saved=(await db.execute(select(Plugin).where(Plugin.url.in_(urls)).order_by(Plugin.id))).scalars().all()
+        saved=[plugin for plugin in saved if item.get('auth')!='api_key' or plugin.credential]
+        if saved:
+            results=[]
+            for plugin in saved:
+                if not plugin.enabled:
+                    results.append({'status':'paused','plugin_id':plugin.id,'tool_count':len(plugin.tools),'message':'Existing connection remains paused.'})
+                else:results.append(await recheck_saved(db,plugin,item))
+            if len(results)==1:return results[0]
+            # A provider URL can represent several separately authorized accounts.
+            # Never let one successful account conceal another one's failed check.
+            status=next((state for state in ('sign_in_required','key_required','unavailable','connected') if any(r['status']==state for r in results)),'paused')
+            return {'status':status,'connections':results,'tool_count':sum(r['tool_count'] for r in results),'message':f'Checked {len(results)} saved accounts separately. Tools discovered; execution has not been tested.'}
     token = mapped_credential(item['url'], current_tenant_id.get())
     if item.get('setup_note'):
         return {'status':'setup_required','message':item['setup_note']}
@@ -63,7 +72,7 @@ async def connect_entry(item, sessions=None):
         return {'status':'unavailable','message':'Tool discovery failed. Check the provider endpoint and required account setup.'}
     async with sessions() as db:
         # Idempotent when a browser connection finishes during catalog discovery.
-        plugin=(await db.execute(select(Plugin).where(Plugin.url==item['url']))).scalars().first()
+        plugin=(await db.execute(select(Plugin).where(Plugin.url.in_(urls)))).scalars().first()
         if not plugin:
             plugin=Plugin(name=item['name'][:80],url=item['url'],tools=tools,credential=seal(token),enabled=True)
             db.add(plugin);await db.commit();await db.refresh(plugin)
