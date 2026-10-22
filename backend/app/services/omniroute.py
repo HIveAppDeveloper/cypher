@@ -53,7 +53,7 @@ class OmniRouteError(RuntimeError):
 
 
 async def request(path, payload=None):
-    if path not in {'/models', '/chat/completions', '/responses', '/audio/transcriptions'}:
+    if path not in {'/models', '/chat/completions', '/responses', '/audio/transcriptions', '/video/analyses'}:
         raise ValueError('Unsupported OmniRoute inference endpoint.')
     try:
         async with httpx.AsyncClient(timeout=110, follow_redirects=False) as client:
@@ -108,6 +108,16 @@ async def catalog():
 
 async def complete(messages, tools, provider, model, generation):
     from litellm import ModelResponse
+    if provider == 'gemini':
+        # OmniRoute's Gemini SSE translator preserves the signed function-call
+        # context needed to consume real tool results on the next turn. Its
+        # non-streaming path loses that context and can repeat completed calls.
+        from litellm import stream_chunk_builder
+        chunks = [chunk async for chunk in stream(messages, tools, provider, model, generation)]
+        response = stream_chunk_builder(chunks)
+        if not response or not response.choices:
+            raise OmniRouteError(502)
+        return response
     body = {'model': model_id(provider, model), 'messages': messages, **generation}
     if tools:
         body['tools'] = tools

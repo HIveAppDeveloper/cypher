@@ -36,6 +36,16 @@ async def analyze_video(args,bot_id):
             from app.services.multimedia import inspect_media
             url=video_url(args.get('url',''))
             question=str(args.get('question','Describe the video, spoken content and important timestamps.'))[:4000]
+            if url.startswith('https://www.youtube.com/'):
+                from app.services import omniroute
+                from app.services.usage import check_allowance,record
+                await check_allowance()
+                result=await omniroute.request('/video/analyses',{'model':'gemini/gemini-3.8-flash','url':url,'question':question})
+                usage=result.get('provider_usage') or {}
+                await record('gemini','gemini-3.8-flash',{'prompt_tokens':usage.get('input_tokens',0),'completion_tokens':usage.get('output_tokens',0)})
+                if not result.get('video_processed') or not usage.get('video_tokens') or not result.get('analysis'):
+                    return {'success':False,'url':url,'error':'Actual video frame processing was not confirmed. Do not substitute captions.'}
+                return result
             with tempfile.TemporaryDirectory(prefix='grokbot-link-video-') as root:
                 async with asyncio.timeout(600):
                     path,audio=await download_media(url,root,bot_id)
