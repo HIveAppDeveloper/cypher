@@ -1,0 +1,49 @@
+{
+  "release": {
+    "pr": 9,
+    "commit": "d418a30fdcdcc0b3332788c4bc4eba9754915771",
+    "deployment": "dpl_GKe2gfL6qZFGuNFdHCSKXfZ6KhAB",
+    "url": "https://open-grokbot-mar373i0c-hiveapp.vercel.app/",
+    "state": "READY"
+  },
+  "screenshots": {
+    "scope": "Public login page only, actual authorized Mac Chrome, no private account/history data. Captured on the approved Git release before the later concurrent manual deployment.",
+    "desktop": "1440x1000",
+    "mobile": "390x844"
+  },
+  "liveChecks": {
+    "mobileDocumentWidthBefore": 408,
+    "mobileDocumentWidthAfter": 390,
+    "desktopDocumentWidth": 1440,
+    "googleAndEmailControlsRendered": true,
+    "emailTabFocus": true,
+    "agentFormOpenedCustomizedCancelledWithoutSubmission": true,
+    "pluginCatalogFilteredWithoutConnection": true
+  },
+  "subsequentConcurrentState": {
+    "deployment": "dpl_HixKxBaar4dXWfoXcNCNwV4DhtWK",
+    "url": "https://open-grokbot-b56jsny2v-hiveapp.vercel.app/",
+    "bothHostnames": true,
+    "apiAndWorkerIdentityMatch": true,
+    "database": true,
+    "worker": true,
+    "workerHeartbeatSeconds": 3,
+    "commitMetadata": null,
+    "main": "e9b77489909de0f10e722a200eb1bfe2ad7a26c4",
+    "note": "Newer work was not deployed by this task; its manual source cannot be certified as this main SHA from deployment metadata. No rollback/redeployment performed."
+  },
+  "limits": [
+    "No live sign-in submitted or email sent.",
+    "No paid model inference or live send/Stop/attachment persistence tested.",
+    "No production workspace records created, no connector permission changed.",
+    "Local controlled-inference tests do not establish live provider behavior."
+  ],
+  "docker": {
+    "requiredOnMac": false,
+    "appBackendWorker": "Vercel",
+    "sandbox": "vercel",
+    "inference": "OmniRoute Vercel daemon with Prisma Postgres",
+    "liveRouterHealth": "ok",
+    "localComputerBridge": "Optional for access to user's own computer; no process was stopped."
+  }
+}
