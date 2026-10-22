@@ -171,11 +171,23 @@ button:focus-visible,input:focus-visible,textarea:focus-visible{outline-color:va
 .connector-tabs button[aria-pressed=true]{color:#25232e;font-weight:600}
 .connector-tabs button[aria-pressed=true]::after{content:'';position:absolute;bottom:0;left:14px;right:14px;height:2px;border-radius:2px;background:#5e586a}
 .connectors-body{flex:1;min-height:0;overflow:auto;overscroll-behavior:contain;padding:24px 28px 28px}
+.connector-discovery{padding:20px 22px;margin:0 0 18px;border:1px solid #e0ded9;border-radius:16px;background:#f0efed}
+.discovery-heading{margin:0 0 16px}
+.discovery-heading h3{font-size:19px;line-height:1.3;font-weight:650;letter-spacing:-.02em;margin:0}
+.discovery-heading p{font-size:13px;line-height:1.5;color:#625f67;margin:5px 0 0}
 .website-connect{padding:0 0 24px;margin:0 0 24px;border-bottom:1px solid #e4e3e9}
+.connector-discovery .website-connect{padding:0;margin:0;border:0}
 .website-connect label{display:block;font-size:15px;font-weight:550;margin-bottom:12px}
 .website-connect>div:not(.connector-catalog){display:flex;gap:8px}
 .connectors-dialog input{display:block;background:#fff;border:1px solid #d9d7df;min-height:44px;padding:10px 12px;border-radius:12px;color:#27242e;font-size:14px;min-width:0;outline-offset:2px}
 .website-connect input{flex:1;width:auto}
+.website-search{position:relative;align-items:center}
+.website-search>svg{position:absolute;left:15px;width:19px;height:19px;fill:none;stroke:#77737b;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;pointer-events:none}
+.connector-discovery .website-search input{min-height:52px;padding:12px 15px 12px 44px;border-color:#cfccd2;border-radius:12px;font-size:15px}
+.connector-discovery .website-search input:focus{border-color:#77707f;box-shadow:0 0 0 3px #77707f22}
+.website-search input::placeholder{color:#706c75;opacity:1}
+.website-search .btn-primary{display:flex;align-items:center;justify-content:center;gap:8px;min-height:46px;padding-inline:18px}
+.website-search .btn-primary svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
 .connectors-dialog .btn-primary{background:#403b49;color:#fff;border:0;border-radius:12px;min-height:44px;padding:10px 18px;font-size:14px;box-shadow:none;white-space:nowrap}
 .connectors-dialog .btn-primary:hover{background:#29252f}
 .connectors-dialog .btn-secondary{background:#fff;border:1px solid #dbd8e1;border-radius:10px;min-height:36px;padding:7px 12px;font-size:12px;white-space:nowrap}
@@ -225,6 +237,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible{outline-color:va
 .connector-notice button{display:block;margin-top:8px;min-height:36px;font-weight:550;text-decoration:underline}
 .connector-empty{padding:36px 20px;text-align:center;color:#6c6575;font-size:14px;line-height:1.6}
 .connector-empty h3{font-size:18px;color:#36303f;font-weight:500;margin:0 0 10px}
+.connector-empty-actions{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin-top:18px}
 .connector-custom{max-width:500px;margin:0 auto}
 .connector-custom h3,.connector-settings h3{font-size:18px;font-weight:550;margin:0 0 8px}
 .connector-custom>p,.connector-settings p{font-size:13px;color:#71697b;line-height:1.7;margin:0 0 24px}
@@ -251,7 +264,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible{outline-color:va
 .connector-settings>details{border-bottom:1px solid #e4e0e9;padding:8px 0}
 .connector-settings>details button{margin-top:16px}
 @media(max-width:1100px){.connector-catalog{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media(max-width:600px){.connectors-dialog{width:calc(100vw - 20px);height:calc(100dvh - 20px);border-radius:20px}.connectors-header{padding:20px 18px 14px}.connectors-header h2{font-size:21px}.connectors-header p{font-size:12px}.connector-tabs{padding:0 8px;gap:0}.connector-tabs button{font-size:12px;padding:10px 12px}.connectors-body{padding:20px 18px}.website-connect label{font-size:14px}.website-connect input{font-size:16px;flex-basis:100%;width:100%}.website-connect>div{flex-wrap:wrap}.website-connect .btn-primary{flex-basis:100%;width:100%}.catalog-heading{align-items:flex-start;flex-direction:column;gap:12px}.catalog-heading input{width:100%;max-width:100%;font-size:16px}.connector-catalog{grid-template-columns:1fr}.connector-entry{padding:14px}.connector-entry>p{min-height:0;margin:10px 0}.connector-entry-footer{margin-top:4px}.connector-connect{min-height:44px}.connector-entry-footer>a{min-height:44px}.connector-categories button{min-height:40px}.connector-logo{width:40px;height:40px}.connector-entry h4{font-size:14px}.connector-entry-title>div>span{font-size:11px}}
+@media(max-width:600px){.connectors-dialog{width:calc(100vw - 20px);height:calc(100dvh - 20px);border-radius:20px}.connectors-header{padding:20px 18px 14px}.connectors-header h2{font-size:21px}.connectors-header p{font-size:12px}.connector-tabs{padding:0 8px;gap:0}.connector-tabs button{font-size:12px;padding:10px 12px}.connectors-body{padding:20px 18px}.connector-discovery{padding:17px 15px;margin-bottom:16px}.discovery-heading{margin-bottom:13px}.discovery-heading h3{font-size:17px}.website-connect label{font-size:14px}.website-connect input{font-size:16px;flex-basis:100%;width:100%}.connector-discovery .website-search input{font-size:16px}.website-connect>div{flex-wrap:wrap}.website-connect .btn-primary{flex-basis:100%;width:100%}.catalog-heading{align-items:flex-start;flex-direction:column;gap:12px}.catalog-heading input{width:100%;max-width:100%;font-size:16px}.connector-catalog{grid-template-columns:1fr}.connector-entry{padding:14px}.connector-entry>p{min-height:0;margin:10px 0}.connector-entry-footer{margin-top:4px}.connector-connect{min-height:44px}.connector-entry-footer>a{min-height:44px}.connector-categories button{min-height:40px}.connector-logo{width:40px;height:40px}.connector-entry h4{font-size:14px}.connector-entry-title>div>span{font-size:11px}}
 /* Consistent desktop scale across conversation and navigation. */
 .workspace-toolbar{padding:0 24px;min-height:56px;border-bottom-color:#ecebf0}
 .chat-header{min-height:76px;padding:16px 24px}

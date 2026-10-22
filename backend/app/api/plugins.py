@@ -39,6 +39,8 @@ async def list_plugins(db: AsyncSession = Depends(get_db)):
 
 @router.post('')
 async def connect(data: ConnectPlugin, db: AsyncSession = Depends(get_db)):
+    if data.auth_header.strip().lower() == 'cookie':
+        raise HTTPException(status_code=422, detail='Browser session cookies cannot be used as API keys. Use provider sign-in or a provider-issued API token.')
     from app.api.device import require_device
     await require_device(db,data.approval_id,'connect_plugin:'+data.url.strip())
     try:
