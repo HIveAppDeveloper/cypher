@@ -33,8 +33,8 @@ async def db(tmp_path,monkeypatch):
 @pytest.mark.asyncio
 async def test_website_resolution_and_catalog(monkeypatch):
     monkeypatch.setattr(catalog_api,'http_client',lambda:httpx.AsyncClient(transport=httpx.MockTransport(lambda request:httpx.Response(404))))
-    assert len(catalog_api.catalog())==500
-    assert len({item['url'] for item in catalog_api.catalog()})==500
+    assert len(catalog_api.catalog())==504
+    assert len({item['url'] for item in catalog_api.catalog()})==504
     result=await catalog_api.resolve(catalog_api.Website(website='https://vercel.com/hiveapp/open-grokbot'))
     assert result['url']=='https://mcp.vercel.com'
     for url in ['vercel.com','https://www.vercel.com/','notion.so','linear.app']:

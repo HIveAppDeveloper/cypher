@@ -104,6 +104,11 @@ def credential_headers(token):
 
 @asynccontextmanager
 async def session(url, token=None, auth=None):
+    from app.services.site_mcp import is_site, site_session
+    if is_site(url):
+        async with site_session(url, token) as client:
+            yield client
+        return
     await validate_endpoint(url)
     headers = credential_headers(token)
     async with streamablehttp_client(url, headers=headers, timeout=15, sse_read_timeout=25, httpx_client_factory=http_client, auth=auth) as streams:

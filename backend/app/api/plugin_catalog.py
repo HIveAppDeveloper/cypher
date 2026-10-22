@@ -86,6 +86,9 @@ async def resolve(body:Website):
     from app.services.website_connectors import published_connector
     published=await published_connector(host,http_client)
     if published:return published
+    from app.services.site_mcp import probe_mcp, openapi_spec, site_url
+    found=await probe_mcp(host)
+    if found:return {'id':'website-'+host,'name':host,'url':found,'description':'Connector published by this website. Sign in to grant access to your account.','category':'Custom','domains':[host],'auth':'auto','source':'https://'+host}
     # Registry search is discovery only; accept exact publisher website/domain matches.
     try:
         async with http_client() as client:
@@ -100,7 +103,8 @@ async def resolve(body:Website):
                         return {'id':server.get('name',endpoint),'name':server.get('title') or host,'url':endpoint,'description':server.get('description','Published connector'),'category':'Custom','domains':[host],'source':'https://registry.modelcontextprotocol.io/'}
     except Exception:
         pass
-    raise HTTPException(404,'We could not find a published connector for this website. Search the catalog, or use Advanced to add a server URL supplied by the company.')
+    api='its published API and ' if await openapi_spec(host) else ''
+    return {'id':'site-'+host,'name':host,'url':site_url(host),'description':f'Generated connector for {host}: {api}cloud-browser tools to read and use the site.','category':'Custom','domains':[host],'auth':'generated','source':'https://'+host}
 
 class Begin(BaseModel):
     name:str=Field(min_length=1,max_length=80)
@@ -112,7 +116,22 @@ class Begin(BaseModel):
 @router.post('/authorize')
 async def authorize(body:Begin,db:AsyncSession=Depends(get_db)):
     from app.api.device import require_device
+    from app.services.site_mcp import is_site, site_host, site_url
     url=body.url.strip()
+    if is_site(url):
+        url=site_url(hostname(site_host(url)))
+        try:await validate_endpoint('https://'+site_host(url))
+        except (ValueError,OSError):raise HTTPException(422,'Use a public website address.')
+        await require_device(db,body.approval_id,'connect_plugin:'+url)
+        existing=(await db.execute(select(Plugin).where(Plugin.url==url))).scalars().first()
+        if existing and not body.reconnect:return {'status':'connected','plugin_id':existing.id,'name':existing.name}
+        tools=await discover(url)
+        plugin=existing or Plugin(name=body.name.strip(),url=url,enabled=True)
+        old={tool['name']:tool.get('enabled',True) for tool in (existing.tools if existing else [])}
+        plugin.tools=[{**tool,'enabled':old.get(tool['name'],True)} for tool in tools]
+        if not existing:db.add(plugin)
+        await db.commit()
+        return {'status':'connected','plugin_id':plugin.id,'name':plugin.name}
     try: await validate_endpoint(url)
     except (ValueError,OSError): raise HTTPException(422,'Use a public HTTPS connector URL. A company website belongs in the website lookup field.')
     await require_device(db,body.approval_id,'connect_plugin:'+url)
