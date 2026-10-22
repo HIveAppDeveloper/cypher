@@ -209,6 +209,39 @@ async def test_memory_deletion_cannot_cross_tenants_even_with_exact_ids(workspac
     assert any(r['id']==note['note_id'] for r in (await client.get('/api/workspace/knowledge',headers=A)).json())
 
 
+@pytest.mark.asyncio
+async def test_memory_deletion_honors_write_approval_even_though_replay_is_idempotent(workspace):
+    from app.db.tenancy import current_tenant_id
+    from app.models.task import Task
+    from app.services import usage
+    client,sessions=workspace
+    cid=await room(client,'benchmark-owner')
+    bid=(await client.get('/api/bots',headers=A)).json()[0]['id']
+    registry=ToolRegistry();await context.register_context_tools(registry,cid,sessions)
+    tenant=current_tenant_id.set('benchmark-owner')
+    try:note=await registry._tools['remember_context']['handler']({'name':'Preference','kind':'preference','content':'Prefer aisle seats','scope':'bot'},bid)
+    finally:current_tenant_id.reset(tenant)
+    task_id=(await client.post('/api/conversations/'+cid+'/messages',headers=A,json={'sender_type':'user','content':'Delete my saved seating preference'})).json()['task_id']
+    await client.patch('/api/workspace/settings',headers=A,json={'tool_approval':'writes'})
+    async with sessions() as db:
+        task=await db.get(Task,task_id);task.status='running';await db.commit()
+    tenant=current_tenant_id.set('benchmark-owner');active=usage.active.set((task_id,sessions))
+    try:
+        assert registry.replay_safe('forget_context',{'note_ids':[note['note_id']]})
+        execution=asyncio.create_task(registry.execute_tool('forget_context',{'note_ids':[note['note_id']]},bid))
+        for _ in range(100):
+            pending=(await client.get('/api/computer/approvals/pending',headers=A)).json()
+            if pending:break
+            await asyncio.sleep(.01)
+        assert len(pending)==1 and not execution.done()
+        assert any(r['id']==note['note_id'] for r in (await client.get('/api/workspace/knowledge',headers=A)).json())
+        assert (await client.post('/api/computer/approvals/'+pending[0]['id'],headers=B,json={'approved':True})).status_code==404
+        assert (await client.post('/api/computer/approvals/'+pending[0]['id'],headers=A,json={'approved':True})).status_code==200
+        assert (await asyncio.wait_for(execution,4))['deleted_count']==1
+        assert not any(r['id']==note['note_id'] for r in (await client.get('/api/workspace/knowledge',headers=A)).json())
+    finally:usage.active.reset(active);current_tenant_id.reset(tenant)
+
+
 def test_plugin_search_keeps_service_and_exact_operation_in_scope():
     manifest=[{'service':'Linear','name':'list_projects','description':'list projects and deployments '*100},
               {'service':'Vercel','name':'search_vercel_documentation','description':'Search docs for projects and deployments'},

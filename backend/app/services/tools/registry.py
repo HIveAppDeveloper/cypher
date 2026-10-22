@@ -442,7 +442,10 @@ class ToolRegistry:
         handler = self._tools[name]["handler"]
         try:
             from app.services.computer import approve_tool,agent_access
-            if not await approve_tool(name,arguments,bot_id,self.replay_safe(name,arguments)):
+            # Deleting exact IDs is safe to replay after a crash, but is still
+            # a write under the owner's approval policy.
+            approval_safe=self.replay_safe(name,arguments) and name!='forget_context'
+            if not await approve_tool(name,arguments,bot_id,approval_safe):
                 return {'error':'The owner did not approve this tool action. No action was performed.'}
             computer_tools={'browse_url','browser_click','browser_type','browser_screenshot','browser_extract','browser_fill_form','shell_exec','read_file','write_file','list_directory','publish_file'}
             from app.services.usage import active
