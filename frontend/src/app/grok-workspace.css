@@ -32,7 +32,7 @@ body { color: var(--text-primary); }
 .sidebar-shell { width: clamp(220px,var(--sidebar-width,256px),min(480px,calc(100vw - 360px))); background: #f3f2ef; }
 .sidebar-layout-tools { height: 56px; min-height: 56px; padding: 8px 12px; gap: 2px; }
 .sidebar-brand { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0; font-size: 14px; font-weight: 550; letter-spacing: -.025em; white-space: nowrap; }
-.brand-symbol { display: grid; place-items: center; width: 26px; height: 26px; border: 1.5px solid currentColor; border-radius: 8px; font-size: 14px; font-weight: 600; }
+.brand-symbol { display: grid; place-items: center; width: 26px; height: 26px; padding: 0; border: 0; background: none; }
 .sidebar-layout-tools > button, .sidebar-layout-menu > summary { width: 30px; min-height: 36px; height: 36px; color: #62615c; }
 .sidebar-shell .sidebar { padding: 0 10px 8px; }
 .command-launcher { margin: 0 10px 8px; border: 0; background: transparent; min-height: 36px; padding: 8px 10px; font-size: 13px; color: #55534e; }

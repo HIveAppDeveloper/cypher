@@ -51,7 +51,8 @@ textarea:focus-visible, select:focus-visible, [role="button"]:focus-visible {
 .sidebar-shell .sidebar { padding: 8px 10px 12px; }
 .sidebar-layout-tools { min-height: 52px; height: 52px; padding: 6px 10px; gap: 4px; }
 .sidebar-brand { gap: 9px; font-size: 13px; font-weight: 600; letter-spacing: -.01em; }
-.brand-symbol { width: 25px; height: 25px; border: 0; border-radius: 7px; background: var(--accent-blue); color: #fff; font-size: 14px; }
+.brand-symbol { display: grid; place-items: center; width: 25px; height: 25px; padding: 0; border: 0; border-radius: 7px; background: none; color: inherit; }
+button.brand-symbol { cursor: pointer; }
 .sidebar-layout-tools > button, .sidebar-layout-menu > summary {
   width: 32px; height: 32px; min-height: 32px; border-radius: 7px; color: var(--text-secondary);
 }
@@ -206,6 +207,7 @@ textarea:focus-visible, select:focus-visible, [role="button"]:focus-visible {
 .attachment-tray > span { background: var(--system-subtle); color: var(--text-primary); }
 
 .quickstart { padding: clamp(88px, 16vh, 168px) 28px 40px; }
+.quickstart .hero-mark { margin: 0 0 20px; }
 .quickstart h1 {
   max-width: 620px; margin: 0 0 28px; color: var(--text-primary);
   font-size: clamp(26px, 2.6vw, 32px); font-weight: 650; line-height: 1.2;
@@ -360,6 +362,7 @@ textarea:focus-visible, select:focus-visible, [role="button"]:focus-visible {
 }
 .mobile-navigation::backdrop { background: rgba(20, 20, 24, .28); }
 .mobile-nav-header strong { color: var(--text-secondary); }
+.mobile-nav-brand { display: flex; align-items: center; gap: 8px; }
 
 @media (prefers-color-scheme: dark) {
   :root {
