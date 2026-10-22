@@ -192,6 +192,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible{outline-color:va
 .catalog-sync summary{cursor:pointer;font-size:13px;font-weight:550;min-height:24px}
 .catalog-sync p{color:#66636b;font-size:12px;line-height:1.5;margin:9px 0}
 .connector-filters{display:flex;gap:7px;overflow-x:auto;padding:5px 0 12px}
+.connector-filters>span,.connector-categories>span{align-self:center;color:#77737b;font-size:11px;font-weight:550;margin-right:5px;white-space:nowrap}
 .connector-filters button{border:1px solid #dedbdc;border-radius:999px;background:#fff;color:#55525b;padding:7px 13px;white-space:nowrap;font-size:12px;min-height:36px}
 .connector-filters button[aria-pressed=true]{background:#35343a;color:#fff;border-color:#35343a}
 .connector-filters button:focus-visible,.connector-connect:focus-visible,.connector-categories button:focus-visible{outline:2px solid #55534e;outline-offset:2px}
