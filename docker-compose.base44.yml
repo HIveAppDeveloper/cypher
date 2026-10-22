@@ -1,0 +1,108 @@
+# Base44 development stack: runs the cloned source with live reload.
+# The repository's own docker-compose.yml builds production images from baked
+# source, which cannot reflect edits, so it is not used here.
+name: open-grokbot
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: on-failure
+    environment:
+      POSTGRES_USER: grokbot
+      POSTGRES_PASSWORD: grokbot_local_dev_password
+      POSTGRES_DB: grokbot_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U grokbot -d grokbot_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    labels:
+      base44.kind: infra
+
+  redis:
+    image: redis:7-alpine
+    restart: on-failure
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    labels:
+      base44.kind: infra
+
+  backend:
+    build:
+      context: .
+      dockerfile: docker/backend.dev.Dockerfile
+    restart: on-failure
+    working_dir: /app
+    volumes:
+      - ./backend:/app
+      # The backend manages agent sandbox containers through the host daemon,
+      # as the repository's own compose file expects.
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: ["sh", "-ec", "exec uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload --reload-dir /app/app"]
+    env_file:
+      - ./.env.base44-defaults
+      - /run/base44/app.env
+    environment:
+      - DATABASE_URL=postgresql://grokbot:grokbot_local_dev_password@postgres:5432/grokbot_db
+      - REDIS_URL=redis://redis:6379/0
+      - WATCHFILES_FORCE_POLLING=true
+      - BASE44_PREVIEW_MODE
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:8000/health >/dev/null || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 40s
+    labels:
+      base44.project: API
+      base44.kind: api
+      base44.port: "8000"
+      base44.docs: /docs
+
+  web:
+    build:
+      context: .
+      dockerfile: docker/web.dev.Dockerfile
+    restart: on-failure
+    working_dir: /app
+    volumes:
+      - ./frontend:/app
+      - web_node_modules:/app/node_modules
+    command: ["sh", "-ec", "exec npm run dev -- --hostname 0.0.0.0 --port 3000"]
+    env_file:
+      - ./.env.base44-defaults
+      - /run/base44/app.env
+    environment:
+      - BACKEND_INTERNAL_URL=http://backend:8000
+      - WATCHPACK_POLLING=true
+      - CHOKIDAR_USEPOLLING=true
+      - BASE44_PREVIEW_MODE
+    ports:
+      - "3000:3000"
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"fetch('http://127.0.0.1:3000/').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))\""]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+    labels:
+      base44.project: Web
+      base44.kind: web
+      base44.port: "3000"
+
+volumes:
+  postgres_data:
+  web_node_modules:
