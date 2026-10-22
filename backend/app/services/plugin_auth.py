@@ -99,6 +99,18 @@ async def make_provider(db, row, callback_url=None):
     )
     callback = urlsplit(str(metadata.redirect_uris[0]))
     metadata_url = saved.get('client_metadata_url') or (urlunsplit((callback.scheme, callback.netloc, CLIENT_METADATA_PATH, '', '')) if callback.scheme == 'https' else None)
+    # Lovable advertises CIMD but currently rejects unapproved client-ID domains.
+    # Its supported alternatives are approved DCR callbacks or a workspace client.
+    if urlsplit(row.url).hostname == 'mcp.lovable.dev':
+        metadata_url = None
+        client_id = os.getenv('LOVABLE_OAUTH_CLIENT_ID', '').strip()
+        if client_id and not saved.get('client_info'):
+            client_secret = os.getenv('LOVABLE_OAUTH_CLIENT_SECRET', '').strip() or None
+            client = OAuthClientInformationFull(
+                **{**metadata.model_dump(mode='json'), 'token_endpoint_auth_method': 'client_secret_post' if client_secret else 'none'},
+                client_id=client_id, client_secret=client_secret,
+            )
+            await storage.set_client_info(client)
     provider=BrowserOAuthProvider(server_url=row.url,client_metadata=metadata,storage=storage,client_metadata_url=metadata_url)
     if saved.get('oauth_metadata'): provider.context.oauth_metadata=OAuthMetadata.model_validate(saved['oauth_metadata'])
     if saved.get('resource_metadata'): provider.context.protected_resource_metadata=ProtectedResourceMetadata.model_validate(saved['resource_metadata'])

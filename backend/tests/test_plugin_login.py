@@ -57,7 +57,7 @@ async def prepare_consent(db,row,monkeypatch,cimd=False):
     def transport(request):
         requests.append(request)
         if request.url.path=='/mcp':return httpx.Response(401,headers={'WWW-Authenticate':'Bearer resource_metadata="https://service.example/.well-known/oauth-protected-resource"'},json={})
-        if request.url.path=='/.well-known/oauth-protected-resource':return httpx.Response(200,json={'resource':'https://service.example/mcp','authorization_servers':['https://accounts.example'],'scopes_supported':['read']})
+        if request.url.path=='/.well-known/oauth-protected-resource':return httpx.Response(200,json={'resource':row.url,'authorization_servers':['https://accounts.example'],'scopes_supported':['read']})
         if request.url.path=='/.well-known/oauth-authorization-server':return httpx.Response(200,json={'issuer':'https://accounts.example','authorization_endpoint':'https://accounts.example/authorize','token_endpoint':'https://accounts.example/token','registration_endpoint':'https://accounts.example/register','code_challenge_methods_supported':['S256'],'response_types_supported':['code'],'token_endpoint_auth_methods_supported':['none'],'client_id_metadata_document_supported':cimd})
         if request.url.path=='/register' and cimd:return httpx.Response(400,json={'error':'invalid_redirect_uri','error_description':'Use the client_id_metadata_document flow for hosted callbacks.'})
         if request.url.path=='/register':return httpx.Response(201,json={'client_id':'test-client','redirect_uris':['https://grokbot.example/api/plugin-oauth/callback'],'token_endpoint_auth_method':'none'})
@@ -98,6 +98,44 @@ async def test_hosted_client_metadata_avoids_rejected_dynamic_registration(db,mo
     restored=await make_provider(db,row)
     assert restored.context.client_metadata_url==metadata_url
     assert restored.context.client_metadata.redirect_uris==provider.context.client_metadata.redirect_uris
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize('client_secret',[None,'test-only-client-secret'])
+async def test_registered_lovable_client_uses_pkce_and_encrypted_credentials(db,monkeypatch,client_secret):
+    monkeypatch.setenv('LOVABLE_OAUTH_CLIENT_ID','registered-grokbot-client')
+    if client_secret:monkeypatch.setenv('LOVABLE_OAUTH_CLIENT_SECRET',client_secret)
+    else:monkeypatch.delenv('LOVABLE_OAUTH_CLIENT_SECRET',raising=False)
+    row,_=await create_flow(db);row.url='https://mcp.lovable.dev/mcp';await db.commit()
+    provider,saved,requests=await prepare_consent(db,row,monkeypatch,cimd=True)
+    params=parse_qs(urlsplit(saved['authorization_url']).query)
+    assert params['client_id']==['registered-grokbot-client']
+    assert params['code_challenge_method']==['S256']
+    assert provider.context.client_metadata_url is None
+    assert not any(request.url.path=='/register' for request in requests)
+    assert 'registered-grokbot-client' not in row.payload
+    if client_secret:assert client_secret not in row.payload
+    restored=await make_provider(db,row);await restored._initialize()
+    exchange=await restored._exchange_token_authorization_code('temporary-code',saved['verifier'])
+    form=parse_qs(exchange.content.decode())
+    assert form['client_id']==['registered-grokbot-client']
+    assert form.get('client_secret')==([client_secret] if client_secret else None)
+
+@pytest.mark.asyncio
+async def test_unregistered_lovable_keeps_approved_callback_registration_path(db,monkeypatch):
+    monkeypatch.delenv('LOVABLE_OAUTH_CLIENT_ID',raising=False)
+    row,_=await create_flow(db);row.url='https://mcp.lovable.dev';await db.commit()
+    provider=await make_provider(db,row,'https://grokbot.example/api/plugin-oauth/callback')
+    assert provider.context.client_metadata_url is None
+    assert await provider.context.storage.get_client_info() is None
+
+@pytest.mark.asyncio
+async def test_lovable_client_credentials_are_not_used_for_other_services(db,monkeypatch):
+    monkeypatch.setenv('LOVABLE_OAUTH_CLIENT_ID','registered-grokbot-client')
+    monkeypatch.setenv('LOVABLE_OAUTH_CLIENT_SECRET','test-only-client-secret')
+    row,_=await create_flow(db)
+    provider=await make_provider(db,row,'https://grokbot.example/api/plugin-oauth/callback')
+    assert await provider.context.storage.get_client_info() is None
+    assert provider.context.client_metadata_url=='https://grokbot.example/api/plugin-oauth/client-metadata'
 
 
 def test_callback_origin_is_restricted_to_configured_app_domains(monkeypatch):

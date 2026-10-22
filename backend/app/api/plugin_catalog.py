@@ -109,6 +109,8 @@ class Begin(BaseModel):
     approval_id:str|None=Field(default=None,max_length=36)
     reconnect:bool=False
     connection_id:str|None=Field(default=None,max_length=80)
+    plugin_id:UUID|None=None
+    new_connection:bool=False
 
 @router.post('/authorize')
 async def authorize(body:Begin,db:AsyncSession=Depends(get_db),request:Request=None):
@@ -135,7 +137,21 @@ async def authorize(body:Begin,db:AsyncSession=Depends(get_db),request:Request=N
     from app.services import managed_connections
     config=managed_connections.configuration(url,body.connection_id)
     if body.connection_id and not config:raise HTTPException(422,'Choose an available connection for this provider.')
-    existing=await managed_connections.matching_connection(db,url,config) if config else (await db.execute(select(Plugin).where(Plugin.url==url))).scalars().first()
+    from app.api.plugins import selected_connection
+    selected=await selected_connection(db,url,body.plugin_id,body.new_connection) if body.plugin_id else None
+    if body.new_connection and body.connection_id:
+        raise HTTPException(422,'Choose a managed account or add a separate sign-in, not both.')
+    # A new account uses a fresh native OAuth grant, not the installation owner's
+    # managed grant. Reconnect must retain the selected account's auth method.
+    from app.services.plugins import reveal
+    if body.new_connection or (selected and not (reveal(selected.credential) or '').startswith(managed_connections.REFERENCE_PREFIX)):
+        config=None
+    if config:
+        existing=await managed_connections.matching_connection(db,url,config)
+        if body.plugin_id and (not existing or existing.id!=str(body.plugin_id)):
+            raise HTTPException(404,'This account does not match the selected managed connection.')
+    else:
+        existing=selected if body.plugin_id else await selected_connection(db,url,None,body.new_connection)
     if existing and not body.reconnect: return {'status':'connected','plugin_id':existing.id,'name':existing.name}
     await db.execute(delete(PluginAuthorization).where(PluginAuthorization.status!='connected',PluginAuthorization.created_at<time.time()-FLOW_TTL))
     if config:return await managed_connections.begin(db,body.name.strip(),url,config,existing)

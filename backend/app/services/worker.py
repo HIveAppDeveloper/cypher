@@ -130,9 +130,9 @@ async def _run_worker_loop(lock_connection=None, owner_pid=None, stop_event=None
             finally:current_tenant_id.reset(owner)
         await db.execute(update(Task).where(Task.status == "cancel_requested").values(status="cancelled", completed_at=datetime.utcnow(), result={"note":"Worker restarted after cancellation. Review any in-flight external actions."}))
         await db.commit()
-    async def run_checks(force=False):
-        from app.services.verification import verify_cloud
-        check = asyncio.create_task(verify_cloud(force=force))
+    async def run_checks(force=False, model_only=False):
+        from app.services.verification import verify_cloud, verify_primary_model_once
+        check = asyncio.create_task(verify_primary_model_once() if model_only else verify_cloud(force=force))
         try:
             while not check.done():
                 await pulse()
@@ -149,6 +149,8 @@ async def _run_worker_loop(lock_connection=None, owner_pid=None, stop_event=None
             await db.commit()
     if os.getenv("GROKBOT_VERIFY_CLOUD") == "true":
         await run_checks()
+    if os.getenv('GROKBOT_VERIFY_MODEL_ONCE'):
+        await run_checks(model_only=True)
     from app.db.wakeup import wait_for_work
     from app.services.computer import tick_commands
     from app.models.workspace import ComputerCommand

@@ -6,7 +6,8 @@
     "description": "Run Atlas outreach and reach Hive: prospects, campaign drafts, approvals, launches, replies and results. Connect with an Atlas bot key.",
     "category": "Business",
     "domains": [
-      "atlassolution.net"
+      "atlassolution.net",
+      "atlas-hiveapp.vercel.app"
     ],
     "source": "https://atlassolution.net",
     "iconSource": "https://atlassolution.net/icon.svg",
