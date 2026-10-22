@@ -119,7 +119,7 @@ async def reuse_authorized(db,config):
         await db.rollback();row=await db.get(PluginAuthorization,row.id);row.status='failed';await db.commit();raise
 
 
-async def begin(db,name,url,config,existing=None):
+async def begin(db,name,url,config,existing=None,callback_url=None):
     from vercel.connect import UserAuthorizationRequiredError,ConnectorInstallationRequiredError,InvalidGrantError,NoValidTokenError
     binding=secrets.token_urlsafe(32)
     row=PluginAuthorization(name=name,url=url,created_at=time.time(),binding_hash=hashlib.sha256(binding.encode()).hexdigest(),status='discovering',plugin_id=existing.id if existing else None,payload=seal(json.dumps({'managed_id':config['id']})))
@@ -128,8 +128,8 @@ async def begin(db,name,url,config,existing=None):
         try:access=await get_access(config,force_refresh=True)
         except (UserAuthorizationRequiredError,ConnectorInstallationRequiredError,InvalidGrantError,NoValidTokenError):
             state=row.id+'.'+secrets.token_urlsafe(32)
-            origin=os.getenv('GROKBOT_PUBLIC_URL','https://open-grokbot-hiveapp.vercel.app').rstrip('/')
-            return_url=origin+'/api/plugin-oauth/callback?'+urlencode({'managed':'1','state':state})
+            from app.services.plugin_auth import callback_url_for
+            return_url=(callback_url or callback_url_for())+'?'+urlencode({'managed':'1','state':state})
             authorization_url=await start_consent(config,return_url)
             row.status='awaiting_login';row.state_hash=hashlib.sha256(state.encode()).hexdigest();await db.commit()
             return {'status':'awaiting_login','flow_id':row.id,'name':row.name,'authorization_url':authorization_url,'binding':binding}

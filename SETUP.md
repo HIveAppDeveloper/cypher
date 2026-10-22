@@ -110,3 +110,13 @@ Context & memory stores up to 30 inspectable notes per conversation in PostgreSQ
 Connections → Accounts & device approval can register one platform passkey on the stable app origin. New plugin connections then require an actual WebAuthn user-verification signature. Challenges expire, are single-use, and approvals bind to the exact plugin URL. Synced passkeys can work on another device. This is extra approval for the private owner workspace, not a replacement for Vercel access protection or a multi-user identity system. Device enrollment cannot be completed by a remote agent without the user's authenticator.
 
 Start account setup queues a Luna-managed browser task with an explicit service URL and account email. It does not imply an account was created, a paid plan was accepted, a CAPTCHA was bypassed, or OAuth was granted. Unsupported human-only steps are reported as blockers. Gmail app OAuth credentials and a mailbox grant are absent. Resend's production receiving credential remains unconfigured after automatic approval review blocked storing an account-wide credential. Existing ChatGPT app sessions are not exported into this application.
+
+## Hosted Lovable sign-in
+
+Lovable restricts automatic registration for hosted callbacks. Its advertised client-metadata flow also rejects unapproved client domains. Either request callback approval from Lovable or register a custom client in **Workspace settings → API keys & OAuth → OAuth clients** as a workspace owner/admin.
+
+Register each production callback, for example `https://open-grokbot-hiveapp.vercel.app/api/plugin-oauth/callback` and `https://open-grokbot.vercel.app/api/plugin-oauth/callback`. Select `offline`, `projects:read`, `projects:write`, `workspaces:read`, and `workspaces:write` for the MCP tools; project/workspace scopes require Business or Enterprise. Users still review and authorize access.
+
+Set `LOVABLE_OAUTH_CLIENT_ID` on the backend and worker. For a Web server client, also set the encrypted `LOVABLE_OAUTH_CLIENT_SECRET`; a public PKCE client uses only the ID. Redeploy, then reconnect Lovable. The SDK handles PKCE, token exchange and refresh; client credentials and tokens stay encrypted in storage. No client is registered automatically in the user's Lovable workspace.
+
+Official instructions: [Lovable OAuth clients](https://docs.lovable.dev/features/oauth-clients).

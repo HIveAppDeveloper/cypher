@@ -1461,7 +1461,7 @@
   {
     "id": "db8420f56e46da8d",
     "name": "citepath",
-    "url": "https://citepath.ai/api/mcp",
+    "url": "https://www.citepath.ai/api/mcp",
     "description": "Citepath public MCP server for LLM readiness audits and public scan results.",
     "category": "Productivity",
     "domains": [
@@ -4235,12 +4235,13 @@
   },
   {
     "id": "510a6f772fe67627",
-    "name": "Jobero job search",
-    "url": "https://jobero.ai/mcp",
+    "name": "Jobherder job search",
+    "url": "https://jobherder.com/mcp",
     "description": "Paid job search: 7 matched roles, each with a tailored CV and cover letter.",
     "category": "Research",
     "domains": [
-      "jobero.ai"
+      "jobero.ai",
+      "jobherder.com"
     ],
     "source": "https://registry.modelcontextprotocol.io/?q=ai.jobero/job-search",
     "iconSource": null,

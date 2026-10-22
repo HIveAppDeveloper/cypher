@@ -57,6 +57,8 @@ def tool_result(result, name):
     structured = getattr(result, 'structuredContent', None)
     if structured is not None and not parts: parts.append(json.dumps(structured, default=str))
     output = {'success': not result.isError, 'content': '\n'.join(parts)[:20000], 'plugin': name}
+    if result.isError and output['content'].lstrip().lower().startswith('output validation error:'):
+        output['code']='invalid_provider_output'
     if structured is not None:
         encoded = json.dumps(structured, default=str)
         if len(encoded) <= 20000: output['structured_content'] = structured
@@ -112,6 +114,18 @@ async def session(url, token=None, auth=None):
             yield client
 
 async def discover(url, token=None, auth=None):
+    # Initialization and tools/list are read-only. A transient network failure
+    # should not turn a working saved connection into an unavailable catalog
+    # entry; never retry provider sign-in or permanent protocol errors.
+    for attempt in range(2):
+        try:
+            return await _discover_once(url,token,auth)
+        except Exception as error:
+            if attempt or authentication_failure(error) or not transient_failure(error):raise
+            await asyncio.sleep(1)
+
+
+async def _discover_once(url, token=None, auth=None):
     async with asyncio.timeout(25):
         async with session(url, token, auth) as client:
             tools = []
