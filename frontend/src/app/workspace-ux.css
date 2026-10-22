@@ -17,7 +17,7 @@ textarea { caret-color: var(--focus-color); }
 button:disabled { opacity: .5; cursor: not-allowed; }
 .workspace-main { display: flex; flex-direction: column; flex: 1; min-width: 0; min-height: 0; }
 .workspace-main > .main-content { min-height: 0; }
-.workspace-alert, .conversation-alert { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 16px; padding: 12px 24px; background: #fff5f5; color: #8c3043; font-size: 13px; line-height: 1.5; }
+.workspace-alert, .conversation-alert { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 16px; padding: 12px 24px; background: #fff8fa; color: #1d4a8a; font-size: 13px; line-height: 1.5; }
 .workspace-alert span, .conversation-alert span { flex: 1; min-width: 180px; }
 .workspace-alert button, .conversation-alert button { min-height: 36px; text-decoration: underline; text-underline-offset: 3px; font-size: 12px; }
 .sidebar-shell { width: clamp(220px, var(--sidebar-width,280px), min(480px,calc(100vw - 360px))); background: #f6f6f8; }
