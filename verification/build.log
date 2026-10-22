@@ -1,0 +1,41 @@
+
+> open-grokbot-ui@0.1.0 build
+> next build
+
+  ▲ Next.js 14.2.35
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully
+   Linting and checking validity of types ...
+   Collecting page data ...
+   Generating static pages (0/6) ...
+   Generating static pages (1/6) 
+   Generating static pages (2/6) 
+   Generating static pages (4/6) 
+ ✓ Generating static pages (6/6)
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                              Size     First Load JS
+┌ ƒ /                                    131 kB          218 kB
+├ ○ /_not-found                          875 B          88.2 kB
+├ ƒ /api/[...path]                       0 B                0 B
+├ ƒ /api/auth/email/request              0 B                0 B
+├ ƒ /api/auth/email/verify               0 B                0 B
+├ ƒ /api/auth/google/callback            0 B                0 B
+├ ƒ /api/auth/logout                     0 B                0 B
+├ ƒ /api/connections                     0 B                0 B
+├ ƒ /api/integrations/atlas/v1/chat      0 B                0 B
+├ ƒ /api/plugin-oauth/callback           0 B                0 B
+├ ƒ /api/runtime                         0 B                0 B
+├ ƒ /login                               3.96 kB        91.3 kB
+└ ƒ /templates/[id]                      3.67 kB          91 kB
++ First Load JS shared by all            87.4 kB
+  ├ chunks/117-9b75535062880ecb.js       31.7 kB
+  ├ chunks/fd9d1056-0d6d5894bbafe048.js  53.7 kB
+  └ other shared chunks (total)          1.97 kB
+
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+
