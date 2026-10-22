@@ -10,7 +10,7 @@ from app.services.runtime_identity import runtime_identity, same_release
 router=APIRouter()
 from typing import Literal
 from pydantic import SecretStr
-Provider = Literal['openai', 'gemini', 'claude']
+Provider = Literal['openai', 'gemini', 'claude', 'xai']
 
 @router.post('/model-connections/{provider}/verify', status_code=202)
 async def queue_model_verification(provider: Provider, db=Depends(get_db)):
@@ -84,7 +84,9 @@ async def runtime(db=Depends(get_db)):
         if result:
             stale_transport = name in {'model','fallback','fleet','media_openai'} and (result.detail or {}).get('transport', 'direct') != transport
             details[name] = {'status':'not_checked' if stale_transport else result.status,'detail':{} if stale_transport else result.detail,'checked_at':result.updated_at.isoformat()+'Z'}
-    model_configured = bool(settings.OMNIROUTE_URL and settings.OMNIROUTE_API_KEY) or bool(settings.LLM_API_KEY)
+    managed_provider_key = any((item.detail or {}).get('state') == 'ready' and (item.detail or {}).get('credentials_encrypted')
+                               for name, item in recorded_checks.items() if name in {'model_connection:gemini', 'model_connection:xai'})
+    model_configured = bool(settings.OMNIROUTE_URL and settings.OMNIROUTE_API_KEY) or bool(settings.LLM_API_KEY) or managed_provider_key
     return {'checks':details, **checks, **connections, 'database':True,'worker':worker_fresh and version_ready,'worker_last_seen_seconds':int(age) if age is not None else None,'worker_version_matches':version_matches,'deployment':deployment,'worker_deployment':worker_deployment,'model_transport':transport,'model_configured':model_configured,'configured_models':list(model_map(model_records)) if settings.OMNIROUTE_URL else [],'sandbox_backend':settings.SANDBOX_BACKEND}
 
 @router.post('/checks', status_code=202)
