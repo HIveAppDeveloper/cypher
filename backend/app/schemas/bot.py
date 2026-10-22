@@ -15,6 +15,14 @@ class BotBase(BaseModel):
     memory_enabled: bool = True
 
 class BotCreate(BotBase):
+    client_request_id: Optional[UUID] = None
+    system_prompt: str = Field(min_length=1, max_length=20000)
+
+    @field_validator('name', 'role', 'system_prompt', mode='before')
+    @classmethod
+    def normalized_text(cls, value):
+        return value.strip() if isinstance(value, str) else value
+
     @field_validator('llm_provider', 'llm_model', mode='before')
     @classmethod
     def valid_model(cls, value):

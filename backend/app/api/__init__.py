@@ -19,6 +19,8 @@ from .accounts import router as accounts_router
 from .auth import router as auth_router
 
 router = APIRouter()
+from .atlas_engine import router as atlas_engine_router
+router.include_router(atlas_engine_router, prefix="/integrations/atlas/v1", tags=["atlas-engine"])
 router.include_router(accounts_router,prefix="/accounts",tags=["accounts"])
 router.include_router(auth_router,prefix="/auth",tags=["auth"])
 router.include_router(device_router,prefix="/device",tags=["device"])

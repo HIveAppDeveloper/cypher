@@ -1,13 +1,17 @@
 import asyncio
+import hashlib
+import json
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.future import select
 from sqlalchemy import delete,update,func
 from typing import List
-from uuid import UUID
+from uuid import UUID, NAMESPACE_URL, uuid5
 from app.db.session import get_db
+from app.db.tenancy import current_tenant_id
 from app.models.bot import Bot
+from app.models.workspace import WorkspaceSetting
 from app.schemas.bot import BotCreate, BotUpdate, BotResponse
 from app.services.sandbox import SandboxManager
 
@@ -15,26 +19,60 @@ router = APIRouter()
 
 @router.post("", response_model=BotResponse)
 async def create_bot(bot: BotCreate, db: AsyncSession = Depends(get_db)):
-    data = bot.model_dump()
-    name = data["name"].strip()
-    if not name:
-        base = data["role"].strip()[:60] or "Agent"
-        existing = set((await db.execute(select(Bot.name).where(Bot.name.like(base + "%")))).scalars().all())
-        name = base
-        suffix = 2
-        while name in existing:
-            name = f"{base} {suffix}"
-            suffix += 1
-    data["name"] = name
-    db_bot = Bot(**data)
-    db.add(db_bot)
-    try:
-        await db.commit()
-    except IntegrityError:
-        await db.rollback()
-        raise HTTPException(status_code=409, detail="That agent name is already in use. Choose another name or leave it blank.")
-    await db.refresh(db_bot)
-    return db_bot
+    data = bot.model_dump(exclude={"client_request_id"})
+    tenant = current_tenant_id.get() or "legacy-owner"
+    request_id = str(uuid5(NAMESPACE_URL, f"grokbot:bot-create:{tenant}:{bot.client_request_id}")) if bot.client_request_id else None
+    fingerprint = hashlib.sha256(json.dumps(data, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
+    receipt_id = "bot-create:" + request_id if request_id else None
+
+    async def previous_request():
+        if not request_id:
+            return None
+        receipt = await db.get(WorkspaceSetting, receipt_id)
+        if receipt is None:
+            return None
+        previous = await db.get(Bot, request_id)
+        # The same retry must never create a second agent, even when the user
+        # changes the form after a lost response. Persist only a fingerprint in
+        # a private, namespaced settings row, atomically with the created agent.
+        matches = (
+            receipt.tenant_id == tenant and receipt.value.get("fingerprint") == fingerprint
+            and previous is not None and previous.tenant_id == tenant and previous.status != "deleted"
+        )
+        if not matches:
+            raise HTTPException(409, "This creation request already created an agent with different settings. Refresh your agent list before creating another.")
+        return previous
+
+    previous = await previous_request()
+    if previous is not None:
+        return previous
+    for _attempt in range(5):
+        name = data["name"]
+        if not name:
+            base = data["role"][:60]
+            existing = set((await db.execute(select(Bot.name).where(Bot.name.startswith(base, autoescape=True)))).scalars().all())
+            name, suffix = base, 2
+            while name in existing:
+                name, suffix = f"{base} {suffix}", suffix + 1
+        db_bot = Bot(**{**data, "name": name}, **({"id": request_id} if request_id else {}))
+        db.add(db_bot)
+        if receipt_id:
+            db.add(WorkspaceSetting(id=receipt_id, value={"fingerprint": fingerprint}))
+        try:
+            await db.commit()
+        except IntegrityError:
+            await db.rollback()
+            previous = await previous_request()
+            if previous is not None:
+                return previous
+            if data["name"]:
+                raise HTTPException(409, "That agent name is already in use. Choose another name or leave it blank.")
+            # Another request can win the optional-name allocation between the
+            # read and insert. Retry in a fresh transaction with a fresh name.
+            continue
+        await db.refresh(db_bot)
+        return db_bot
+    raise HTTPException(503, "Agents are being created at the same time. Retry this request shortly.", headers={"Retry-After": "1"})
 
 @router.get("", response_model=List[BotResponse])
 async def list_bots(db: AsyncSession = Depends(get_db)):

@@ -72,6 +72,11 @@ app = FastAPI(
 
 @app.middleware("http")
 async def authenticate_backend(request: Request, call_next):
+    # This exact, stateless endpoint authenticates its raw body with a scoped
+    # Atlas HMAC. It never accepts the browser's user-id header or accesses the
+    # workspace database. All other paths retain their existing auth gates.
+    if request.method == "POST" and request.url.path == "/api/integrations/atlas/v1/chat":
+        return await call_next(request)
     api_request = request.url.path.startswith("/api/")
     public_auth_path = request.url.path in {"/api/auth/email/request", "/api/auth/email/verify", "/api/auth/google/verify"}
     public_auth_path = public_auth_path or (request.method=='GET' and re.fullmatch(r'/api/workspace/templates/shared/[A-Za-z0-9_-]{24,64}',request.url.path) is not None)

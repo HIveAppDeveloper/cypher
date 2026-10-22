@@ -3,8 +3,10 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Bot } from '../lib/types';
 import { ModelControls, ModelValue } from './ModelControls';
 import { AGENT_PRESETS } from '../lib/presets';
-export function BotCreator({ onClose, onCreate }: { onClose: () => void; onCreate: (bot: Partial<Bot>) => Promise<Bot> }) {
+export function BotCreator({ onClose, onCreate }: { onClose: () => void; onCreate: (bot: Partial<Bot>, clientRequestId: string) => Promise<Bot> }) {
   const dialog = useRef<HTMLDialogElement>(null);
+  const requestId = useRef<string>();
+  const inFlight = useRef(false);
   const [preset, setPreset] = useState(AGENT_PRESETS[0]);
   const [name, setName] = useState('');
   const [modelValue, setModelValue] = useState<ModelValue>({ provider: 'openai', model: 'gpt-6.1-sol', reasoning_effort: 'medium' });
@@ -14,17 +16,22 @@ export function BotCreator({ onClose, onCreate }: { onClose: () => void; onCreat
   const [saving, setSaving] = useState(false);
   useEffect(() => { const el = dialog.current; const previous = document.activeElement as HTMLElement | null; el?.showModal(); return () => { el?.close(); previous?.focus(); }; }, []);
   async function submit(e: React.FormEvent) {
-    e.preventDefault(); setSaving(true); setError('');
+    e.preventDefault();
+    if (inFlight.current) return;
+    if (!instructions.trim()) { setError('Add instructions before creating this agent.'); return; }
+    inFlight.current = true;
+    requestId.current ||= crypto.randomUUID();
+    setSaving(true); setError('');
     const model = { provider: modelValue.provider!, model: modelValue.model! };
     try {
-      await onCreate({ name: name.trim(), role: preset.name, description: preset.description, systemPrompt: instructions, llmProvider: model.provider, llmModel: model.model, toolsEnabled: tools.length ? tools : ['none'], defaultOptions: { ...modelValue } });
+      await onCreate({ name: name.trim(), role: preset.name, description: preset.description, systemPrompt: instructions.trim(), llmProvider: model.provider, llmModel: model.model, toolsEnabled: tools.length ? tools : ['none'], defaultOptions: { ...modelValue } }, requestId.current);
       onClose();
-    } catch (e) { setError(String(e).replace(/^Error: /, '')); } finally { setSaving(false); }
+    } catch (e) { setError(String(e).replace(/^Error: /, '')); } finally { inFlight.current = false; setSaving(false); }
   }
-  return <dialog ref={dialog} className="bot-dialog" aria-labelledby="create-bot-heading" onCancel={e => { e.preventDefault(); if (!saving) onClose(); }}>
+  return <dialog ref={dialog} className="bot-dialog" aria-labelledby="create-bot-heading" onCancel={e => { e.preventDefault(); if (!inFlight.current) onClose(); }}>
     <h2 id="create-bot-heading">Meet your next agent.</h2>
     <p className="dialog-intro">Pick a role. Everything else has a sensible default.</p>
-    <form className="agent-form" onSubmit={submit}><div className="agent-form-fields">
+    <form className="agent-form" noValidate onSubmit={submit}><div className="agent-form-fields">
       <label htmlFor="agent-role">What should it do?</label>
       <GlassSelect autoFocus id="agent-role" value={preset.id} onChange={e => { const next = AGENT_PRESETS.find(p => p.id === e.target.value)!; setPreset(next); setInstructions(next.prompt); }}>{AGENT_PRESETS.map(p => <option key={p.id} value={p.id}>{p.name} — {p.description}</option>)}</GlassSelect>
       <label htmlFor="bot-name">Name <span className="optional-label">optional</span></label><input id="bot-name" placeholder={preset.name} maxLength={80} value={name} onChange={e => setName(e.target.value)}/>
