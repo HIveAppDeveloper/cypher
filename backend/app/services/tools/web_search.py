@@ -60,7 +60,7 @@ async def search_web(args, bot_id):
         await check_allowance()
         # Reuse the existing connection and fresh rotating deployment credentials.
         connection = completion_options("gpt-6-luna", "openai")
-        model = omniroute.model_id('openai','gpt-6-luna') if omniroute.enabled() else "openai/gpt-6-luna" if settings.LLM_USE_GATEWAY else "gpt-6-luna"
+        model = omniroute.model_id('openai','gpt-6-luna') if omniroute.enabled() else "gpt-6-luna"
         endpoint = connection.get("api_base", "https://api.openai.com/v1").rstrip("/")
         if omniroute.enabled():
             payload = await omniroute.request('/responses', {

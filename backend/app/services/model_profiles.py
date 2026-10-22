@@ -1,4 +1,4 @@
-"""Reviewed task routes; exact IDs checked against the live Gateway catalog."""
+"""Reviewed task routes; OmniRoute checks mapped IDs against its live catalog."""
 import re
 from dataclasses import dataclass
 
@@ -17,7 +17,7 @@ PROFILES = {
     'research': Profile('gemini', 'gemini-3.8-flash', ('openai', 'gpt-6.1-sol')),
     'writing': Profile('anthropic', 'claude-sonnet-5.5', ('openai', 'gpt-6.1-sol')),
     'analysis': Profile('deepseek', 'deepseek-v4.1-flash', ('openai', 'gpt-6.1-sol')),
-    'review': Profile('spacexai', 'grok-4.7', ('openai', 'gpt-6.1-sol')),
+    'review': Profile('xai', 'grok-4.7', ('openai', 'gpt-6.1-sol')),
     'execution': Profile('openai', 'gpt-6-luna', ('openai', 'gpt-6.1-sol')),
     'vision': Profile('gemini', 'gemini-3.8-flash', ('openai', 'gpt-6.1-sol')),
 }
@@ -45,5 +45,6 @@ def task_specialty(prompt, role='', modalities=None):
     return next((kind for kind,pattern in rules if re.search(pattern,prompt,re.I)), 'general')
 
 
-def gateway_id(provider, model):
-    return f'{"google" if provider == "gemini" else provider}/{model}'
+def model_route_id(provider, model):
+    normalized = {"gemini": "google", "spacexai": "xai"}.get(provider, provider)
+    return f'{normalized}/{model}'

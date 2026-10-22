@@ -1,6 +1,4 @@
 """Validate input capabilities before inference; never turn images into text-only requests."""
-import time
-import httpx
 from app.config import settings
 
 
@@ -8,34 +6,22 @@ class ModelConfigurationError(ValueError):
     pass
 
 
+class ModelNotConfiguredError(ModelConfigurationError):
+    """The selected route has no credential; a declared backup may run."""
+
+
 class ModelCapabilityError(ValueError):
     pass
 
 
-_catalog: dict = {}
-_catalog_at = 0.0
-
-
-async def gateway_catalog():
+async def route_catalog():
     from app.services import omniroute
-    if omniroute.enabled():
-        return await omniroute.catalog()
-    global _catalog, _catalog_at
-    if _catalog and time.monotonic() - _catalog_at < 300:
-        return _catalog
+    if not omniroute.enabled():
+        raise ModelConfigurationError("Configure an OmniRoute connection to check its live model catalog.")
     try:
-        # Public metadata, no credential and no inference charge. Fail closed if
-        # capabilities cannot be verified rather than guessing or dropping data.
-        async with httpx.AsyncClient(timeout=5) as client:
-            response = await client.get("https://ai-gateway.vercel.sh/v1/models")
-            response.raise_for_status()
-            catalog = {m["id"]: m for m in response.json()["data"]}
-        if not catalog:
-            raise ValueError("Empty catalog")
-    except (httpx.HTTPError, ValueError, KeyError, TypeError) as error:
-        raise ModelConfigurationError("Model availability could not be checked. Try again when the gateway model catalog is reachable.") from error
-    _catalog, _catalog_at = catalog, time.monotonic()
-    return catalog
+        return await omniroute.catalog()
+    except Exception as error:
+        raise ModelConfigurationError("Model availability could not be checked. Try again when the OmniRoute model catalog is reachable.") from error
 
 
 def required_modalities(messages):
@@ -63,9 +49,10 @@ async def validate_direct_capabilities(messages, tools, provider, model):
 
 async def validate_capabilities(messages, tools, provider, model, *, direct=False):
     required = required_modalities(messages)
-    if not direct and (settings.OMNIROUTE_URL or settings.LLM_USE_GATEWAY):
-        from app.services.model_profiles import gateway_id
-        item = (await gateway_catalog()).get(gateway_id(provider,model))
+    from app.services import omniroute
+    if not direct and omniroute.enabled():
+        from app.services.model_profiles import model_route_id
+        item = (await route_catalog()).get(model_route_id(provider,model))
         if item is None or item.get("type") != "language":
             raise ModelCapabilityError("The selected model is unavailable on the configured model connection. Choose an available chat model in conversation settings.")
         supported = set(item.get("modalities", {}).get("input", []))
@@ -109,7 +96,7 @@ def public_model_error(error):
     if status == 401 or "authentication" in kind or "authentication" in reason:
         if settings.OMNIROUTE_URL:
             return "The OmniRoute connection could not authenticate. Check its inference key and deployment access. Your message and files are saved."
-        return "The model connection could not authenticate. Check the backend and worker's gateway key or rotating Vercel OIDC token. Your message and files are saved; no model result was produced."
+        return "The model provider connection could not authenticate. Check the configured provider key on the backend and worker. Your message and files are saved; no model result was produced."
     if status == 402 or any(word in reason for word in ("credit", "quota", "budget", "restrictedmodelserror", "free tier users")):
         return "The model provider reports a credit, quota, or budget limit. Review the provider account before retrying. Your message and files are saved."
     if status == 403:

@@ -45,10 +45,19 @@ async def record(provider,model,usage):
     incoming=data.get('prompt_tokens',data.get('input_tokens',0)) or 0
     outgoing=data.get('completion_tokens',data.get('output_tokens',0)) or 0
     try:
-        from app.services.model_routing import gateway_catalog
-        from app.services.model_profiles import gateway_id
-        pricing=(await gateway_catalog()).get(gateway_id(provider,model),{}).get('pricing',{})
-        cost=float(data.get('cost') or incoming*float(pricing.get('input',0))+outgoing*float(pricing.get('output',0)))
+        from app.services import omniroute
+        if data.get('cost') is not None:
+            cost=float(data['cost'])
+        elif omniroute.enabled():
+            from app.services.model_routing import route_catalog
+            from app.services.model_profiles import model_route_id
+            pricing=(await route_catalog()).get(model_route_id(provider,model),{}).get('pricing',{})
+            cost=incoming*float(pricing.get('input',0))+outgoing*float(pricing.get('output',0))
+        else:
+            from litellm import model_cost
+            from app.services.model_profiles import model_route_id
+            pricing=model_cost.get(model_route_id(provider,model),{})
+            cost=incoming*float(pricing.get('input_cost_per_token',0))+outgoing*float(pricing.get('output_cost_per_token',0))
     except Exception:cost=0
     async with current[1]() as db:
         db.add(UsageEvent(task_id=current[0],provider=provider,model=model,input_tokens=incoming,output_tokens=outgoing,estimated_cost=cost));await db.commit()

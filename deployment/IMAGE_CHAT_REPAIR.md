@@ -1,4 +1,6 @@
-# Image-chat repair verification — 2026-10-21
+# Historical image-chat repair notes — 2026-10-21
+
+This records an earlier Vercel AI Gateway implementation. Current model inference uses OmniRoute or a direct provider API; these route and OIDC assumptions are superseded.
 
 ## Target and isolation
 

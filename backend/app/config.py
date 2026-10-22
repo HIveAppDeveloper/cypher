@@ -19,7 +19,6 @@ class Settings(BaseSettings):
     LLM_FALLBACK_MODEL: str | None = None
     LLM_FALLBACK_PROVIDER: str | None = None
     RUN_EMBEDDED_WORKER: bool = True
-    LLM_USE_GATEWAY: bool = False
     OMNIROUTE_URL: str | None = None
     OMNIROUTE_API_KEY: str = Field(default="", repr=False)
     OMNIROUTE_PROTECTION_BYPASS: str = Field(default="", repr=False)
@@ -32,8 +31,6 @@ class Settings(BaseSettings):
     }
     AUDIO_TRANSCRIPTION_MODEL: str = "openai/gpt-4o-mini-transcribe"
     IMAGE_MODEL: str = "openai/gpt-image-2"
-    GOOGLE_IMAGE_MODEL: str = "google/gemini-3.1-flash-image-preview"
-    VIDEO_MODEL: str = "google/veo-3.1-fast-generate-001"
     SANDBOX_BACKEND: Literal["docker", "vercel"] = "docker"
     SANDBOX_IMAGE: str = "open-grokbot-sandbox:latest"
     BACKEND_API_TOKEN: str = ""

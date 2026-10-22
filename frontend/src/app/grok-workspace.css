@@ -9,6 +9,21 @@
   --focus-color: #55534e;
   --thread-width: 752px;
 }
+.roster-show-all { width: calc(100% - 12px); margin: 4px 6px 12px; padding: 8px 10px; min-height: 34px; border-radius: 9px; color: #68655d; text-align: left; font-size: 11px; }
+.roster-show-all:hover { background: #e9e8e4; color: #35332e; }
+.catalog-toolbar { display: flex; align-items: center; gap: 8px; margin: 4px 0 8px; color: #716f69; font-size: 12px; }
+.catalog-toolbar select { min-height: 34px; padding: 6px 28px 6px 10px; border: 1px solid #dedcd6; border-radius: 9px; background: #fff; color: #37352f; font-size: 12px; }
+.mcp-registry-results { margin-top: 28px; padding-top: 10px; border-top: 1px solid #e8e6e0; }
+.mcp-registry-results .catalog-heading { padding-top: 8px; }
+.mcp-registry-results .catalog-heading h3 { white-space: normal; }
+.registry-empty { padding: 20px 4px; color: #716f69; font-size: 13px; }
+.mcp-registry-results .connector-empty { padding: 20px 4px; text-align: left; }
+.mcp-registry-results .connector-error { margin: 4px 0 12px; }
+.connector-entry .connector-detail { display: block; min-height: 0; -webkit-line-clamp: unset; overflow: visible; margin: 0 0 12px; color: #746142; }
+@media(max-width:600px) {
+  .catalog-toolbar { margin: 0 0 8px; }
+  .mcp-registry-results { margin-top: 20px; }
+}
 html, body { background: var(--bg-main); }
 body { color: var(--text-primary); }
 .app-layout { padding: 0; gap: 0; background: var(--bg-main); }

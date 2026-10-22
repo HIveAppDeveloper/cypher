@@ -36,9 +36,8 @@ def headers():
 
 
 def model_id(provider, model):
-    from app.services.model_profiles import gateway_id
-    from app.services.model_routing import ModelCapabilityError
-    target = settings.OMNIROUTE_MODEL_MAP.get(gateway_id(provider, model))
+    from app.services.model_profiles import model_route_id
+    target = settings.OMNIROUTE_MODEL_MAP.get(model_route_id(provider, model)) or model_route_id(provider, model)
     if not isinstance(target, str) or not target or len(target) > 200 or any(c in target for c in ('?', '#', ':', '\\')):
         raise ModelCapabilityError('This task model has no verified OmniRoute connection. Use a connected model or its configured automatic fallback.')
     return target
@@ -81,7 +80,15 @@ async def catalog():
     payload = await request('/models')
     raw = {m['id']: m for m in payload.get('data', []) if isinstance(m, dict) and isinstance(m.get('id'), str)}
     result = {}
-    for public_id, target in settings.OMNIROUTE_MODEL_MAP.items():
+    from app.services.model_profiles import ALLOWED_MODELS, model_route_id
+    routes = dict(settings.OMNIROUTE_MODEL_MAP)
+    # Exact provider/model IDs may be used without a second alias when the
+    # authenticated OmniRoute catalog actually exposes them. Different native
+    # IDs remain an explicit deployment mapping.
+    for provider, model in ALLOWED_MODELS:
+        public_id = model_route_id(provider, model)
+        routes.setdefault(public_id, public_id)
+    for public_id, target in routes.items():
         item = raw.get(target)
         if not item:
             continue

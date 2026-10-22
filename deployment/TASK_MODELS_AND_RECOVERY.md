@@ -15,19 +15,20 @@ modalities; it does not choose a model from instructions inside retrieved pages.
 | Independent review | SpaceXAI Grok 4.7 | GPT-6.1 Sol |
 | Focused execution | OpenAI GPT-6 Luna | GPT-6.1 Sol |
 
-Exact IDs and capabilities were checked against the live Gateway catalog on
-2026-10-21. Every route retains the full request and allowed execution tools.
+Exact IDs and capabilities are checked against OmniRoute's authenticated live
+catalog, or the selected direct-provider capability metadata. Earlier Gateway
+catalog checks on 2026-10-21 are historical. Every route retains the full request and allowed execution tools.
 Backups are capability checked; unsupported attachments are never discarded.
 Authentication and billing failures do not trigger another model behind the
 same account. Completed answers include actual model-route metadata, including
 fallbacks, available under Options. Routes are saved with durable model steps
 so worker recovery does not infer a different route for an already saved step.
 
-`analyze_video` sends public YouTube video input to the video-capable Gemini
-model. It checks provider input-modality usage before reporting success; a
-caption-only text result cannot pass as verified video analysis. At most two
-analyses run per task. Other video sites may require authorized access or an
-uploaded file; there is no claim of arbitrary private-video access.
+`analyze_video` processes public YouTube or Instagram sources and uploaded
+clips through bounded frame sampling and speech transcription. It reports frame
+timestamps and sampling limits. A caption-only text result cannot pass as
+verified video analysis. At most two analyses run per task; private sources may
+need an authorized browser session or an uploaded file.
 
 ## Production outage and transfer reduction
 
@@ -59,7 +60,7 @@ still requires the provider account action; application retries cannot lift it.
 ## Validation
 
 Six distinct primary text models returned actual responses with no model
-fallback during live Gateway probes. The supplied 21-minute YouTube reference
+fallback during live model-route probes. The supplied 21-minute YouTube reference
 was processed by Gemini with 85,272 video-input tokens and 32,292 audio-input
 tokens. Its output is a requirements reference, not a claim that every feature
 demonstrated is already implemented.

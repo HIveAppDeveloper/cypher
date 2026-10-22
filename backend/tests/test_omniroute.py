@@ -18,8 +18,6 @@ def router(monkeypatch):
     monkeypatch.setattr(settings, 'OMNIROUTE_URL', 'https://router.example')
     monkeypatch.setattr(settings, 'OMNIROUTE_API_KEY', 'private-inference-key')
     monkeypatch.setattr(settings, 'OMNIROUTE_PROTECTION_BYPASS', 'private-access-key')
-    # OmniRoute must take priority over stale Gateway configuration.
-    monkeypatch.setattr(settings, 'LLM_USE_GATEWAY', True)
     monkeypatch.setattr(settings, 'LLM_FALLBACK_MODEL', None)
     monkeypatch.setattr(settings, 'OMNIROUTE_MODEL_MAP', {
         'openai/gpt-6.1-sol':'cx/gpt-6.1-sol',
@@ -141,7 +139,7 @@ async def test_image_generation_returns_verified_bytes_and_other_media_never_use
     files = await generate_media('image','A red square',image_provider='openai')
     assert files[0]['mime'] == 'image/png' and files[0]['data'] == encoded
     assert json.loads(seen[-1].content)['tool_choice'] == {'type':'image_generation'}
-    with pytest.raises(ValueError, match='verification'):
+    with pytest.raises(ValueError, match='Video generation is not available'):
         await generate_media('video','A square')
     with pytest.raises(ModelCapabilityError, match='original audio is saved'):
         await transcribe_audio({'data':'original-audio'})

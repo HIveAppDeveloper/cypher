@@ -12,6 +12,7 @@ from app.models.message import Message
 from app.models.workspace import Routine,UsageEvent,Knowledge,ContextCheckpoint
 from app.models.execution import ExecutionStep
 from app.services import workspace as service,usage,orchestrator
+from app.config import settings
 
 A={'x-grokbot-user-id':'capability-owner-a'}
 B={'x-grokbot-user-id':'capability-owner-b'}
@@ -84,7 +85,8 @@ async def test_calendar_routine_recovery_notifications_and_usage_are_tenant_scop
         try:
             async def catalog():return {'openai/gpt-6-luna':{'pricing':{'input':'0.000001','output':'0.000002'}}}
             from app.services import model_routing
-            monkeypatch.setattr(model_routing,'gateway_catalog',catalog)
+            monkeypatch.setattr(settings,'OMNIROUTE_URL','https://router.example')
+            monkeypatch.setattr(model_routing,'route_catalog',catalog)
             await usage.record('openai','gpt-6-luna',{'prompt_tokens':100,'completion_tokens':30})
             await client.patch('/api/workspace/settings',headers=A,json={'weekly_token_limit':100})
             with pytest.raises(usage.UsageLimitError):await usage.check_allowance()

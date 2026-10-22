@@ -22,13 +22,14 @@ def payload():
 async def test_search_uses_real_responses_http_with_bounded_native_search(monkeypatch):
     calls = []
     real_client = httpx.AsyncClient
+    monkeypatch.setattr(settings, 'OMNIROUTE_URL', None)
+    monkeypatch.setattr(settings, 'LLM_API_BASE', 'https://openai.example.test/v1')
+    monkeypatch.setattr(settings, 'LLM_API_KEY', 'test-only-key')
     def respond(request):
         calls.append(json.loads(request.content))
-        assert str(request.url) == "https://ai-gateway.vercel.sh/v1/responses"
+        assert str(request.url) == "https://openai.example.test/v1/responses"
         assert request.headers["authorization"] == "Bearer test-only-key"
         return httpx.Response(200, json=payload())
-    monkeypatch.setattr(settings, "LLM_USE_GATEWAY", True)
-    monkeypatch.setenv("AI_GATEWAY_API_KEY", "test-only-key")
     monkeypatch.setattr(web_search.httpx, "AsyncClient", lambda **kwargs: real_client(transport=httpx.MockTransport(respond), **kwargs))
     result = await web_search.search_web({"query": '"Boaz Novik"'}, "bot")
     assert result["success"] and result["sources"][0]["url"] == "https://example.org/profile"
@@ -55,8 +56,9 @@ def test_search_drops_unsafe_source_urls():
 @pytest.mark.parametrize("status", [401, 402, 403, 429, 500])
 async def test_search_errors_do_not_leak_provider_body_or_key(monkeypatch, status):
     real_client = httpx.AsyncClient
-    monkeypatch.setattr(settings, "LLM_USE_GATEWAY", True)
-    monkeypatch.setenv("AI_GATEWAY_API_KEY", "test-only-private-key")
+    monkeypatch.setattr(settings, 'OMNIROUTE_URL', None)
+    monkeypatch.setattr(settings, 'LLM_API_BASE', 'https://openai.example.test/v1')
+    monkeypatch.setattr(settings, 'LLM_API_KEY', 'test-only-private-key')
     monkeypatch.setattr(web_search.httpx, "AsyncClient", lambda **kwargs: real_client(transport=httpx.MockTransport(lambda r: httpx.Response(status, text="test-only-private-key and private diagnostic")), **kwargs))
     result = await web_search.search_web({"query": "test"}, "bot")
     assert not result["success"]
