@@ -1,0 +1,54 @@
+/* Go-to-market playbook: staged cards that start real tasks. */
+.playbook-surface { flex: 1; min-height: 0; overflow-y: auto; padding: 32px clamp(20px, 4vw, 48px) 80px; background: var(--bg-main); }
+.playbook-header { display: flex; align-items: flex-start; gap: 20px; max-width: 1060px; margin: 0 auto 30px; }
+.playbook-heading { flex: 1; min-width: 0; }
+.playbook-eyebrow { margin: 0 0 12px; font-size: 10.5px; font-weight: 600; letter-spacing: .19em; text-transform: uppercase; color: #9b978c; }
+.playbook-header h1 { margin: 0 0 12px; font-size: clamp(26px, 3vw, 34px); font-weight: 600; line-height: 1.12; letter-spacing: -.035em; color: #1c1b18; }
+.playbook-lede { margin: 0; max-width: 62ch; font-size: 14px; line-height: 1.65; color: #656460; }
+.playbook-close { display: grid; place-items: center; flex-shrink: 0; width: 34px; height: 34px; border-radius: 50%; color: #6b6862; }
+.playbook-close:hover { background: #ebe8e1; color: #24221e; }
+.playbook-close svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 1.6; }
+.playbook-body { display: grid; grid-template-columns: 236px minmax(0, 1fr); gap: clamp(20px, 3vw, 40px); align-items: start; max-width: 1060px; margin: 0 auto; }
+.playbook-rail { position: sticky; top: 8px; display: flex; flex-direction: column; gap: 2px; }
+.playbook-step { display: grid; grid-template-columns: 1fr auto; gap: 4px 10px; width: 100%; padding: 11px 13px; border: 1px solid transparent; border-radius: 13px; text-align: left; }
+.playbook-step:hover { background: #f1efe9; }
+.playbook-step[aria-current="step"] { border-color: #e6e3dc; background: #fff; box-shadow: 0 6px 20px #2415240e; }
+.playbook-step-index { grid-column: 1; font-size: 10px; font-weight: 600; letter-spacing: .15em; text-transform: uppercase; color: #a8a49a; font-variant-numeric: tabular-nums; }
+.playbook-step[aria-current="step"] .playbook-step-index { color: #6f6b60; }
+.playbook-step-name { grid-column: 1; font-size: 13.5px; font-weight: 500; letter-spacing: -.01em; color: #33322f; }
+.playbook-step-meta { grid-column: 2; grid-row: 1 / span 2; align-self: center; font-size: 10.5px; color: #a8a49a; white-space: nowrap; }
+.playbook-card { padding: clamp(22px, 3vw, 34px); border: 1px solid #e7e4dd; border-radius: 20px; background: #fff; box-shadow: 0 1px 2px #24152409, 0 18px 44px #2415240a; animation: playbook-rise 240ms cubic-bezier(.16, 1, .3, 1) both; }
+@keyframes playbook-rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+html[data-motion="false"] .playbook-card { animation: none; }
+@media (prefers-reduced-motion: reduce) { .playbook-card { animation: none; } }
+.playbook-stage-eyebrow { margin: 0 0 9px; font-size: 11px; font-weight: 600; letter-spacing: .18em; text-transform: uppercase; color: #9b978c; }
+.playbook-stage-title { margin: 0 0 12px; font-size: clamp(24px, 2.6vw, 30px); font-weight: 600; line-height: 1.14; letter-spacing: -.035em; color: #1c1b18; }
+.playbook-stage-subtitle { margin: 0; font-size: 14.5px; line-height: 1.65; color: #3d3b36; }
+.playbook-question { margin: 24px 0 0; padding: 16px 18px; border: 1px solid #e2eabf; border-radius: 14px; background: #eef3d9; }
+.playbook-question p:first-child { margin: 0 0 8px; font-size: 10px; font-weight: 600; letter-spacing: .17em; text-transform: uppercase; color: #6d7735; }
+.playbook-question p:last-child { margin: 0; font-size: 15.5px; font-weight: 500; line-height: 1.5; letter-spacing: -.012em; color: #2f3517; }
+.playbook-ideas-label { margin: 0; padding: 26px 0 2px; border-top: 1px solid #eeece6; font-size: 10.5px; font-weight: 600; letter-spacing: .16em; text-transform: uppercase; color: #a09c92; }
+.playbook-ideas { list-style: none; margin: 4px 0 0; padding: 0; }
+.playbook-ideas li + li { border-top: 1px solid #f1efea; }
+.playbook-idea { display: flex; align-items: flex-start; gap: 18px; width: 100%; padding: 16px 12px; border-radius: 12px; text-align: left; }
+.playbook-idea:hover { background: #fbfaf7; }
+.playbook-idea-text { display: flex; flex: 1; flex-direction: column; gap: 6px; min-width: 0; }
+.playbook-idea strong { font-size: 15px; font-weight: 600; letter-spacing: -.012em; color: #1f1e1b; }
+.playbook-idea-text > span { font-size: 13px; line-height: 1.6; color: #6c6960; }
+.playbook-idea-action { display: inline-flex; align-items: center; gap: 7px; flex-shrink: 0; margin-top: 1px; padding: 6px 11px; border: 1px solid #e2dfd8; border-radius: 999px; font-size: 11.5px; font-weight: 500; color: #55534e; white-space: nowrap; }
+.playbook-idea:hover .playbook-idea-action { border-color: #cbc7bd; color: var(--accent-blue); }
+.playbook-idea[data-running="true"] .playbook-idea-action { border-color: #e2dfd8; color: #8b877c; }
+.playbook-idea-action svg { width: 13px; height: 13px; fill: none; stroke: currentColor; stroke-width: 1.7; }
+.playbook-card-footer { margin: 22px 0 0; font-size: 12.5px; font-style: italic; color: #8d897f; }
+.playbook-error { padding: 14px 0 0; margin: 0; font-size: 12.5px; color: #9f2844; }
+@media (max-width: 900px) {
+  .playbook-body { grid-template-columns: minmax(0, 1fr); }
+  .playbook-rail { position: static; flex-direction: row; gap: 8px; padding-bottom: 4px; overflow-x: auto; }
+  .playbook-step { flex: 0 0 auto; grid-template-columns: 1fr; width: auto; min-width: 172px; border-color: #eae7e1; background: #fff; }
+  .playbook-step-meta { grid-column: 1; grid-row: auto; align-self: start; }
+}
+@media (max-width: 560px) {
+  .playbook-surface { padding: 22px 16px 60px; }
+  .playbook-idea { flex-direction: column; align-items: stretch; gap: 11px; }
+  .playbook-idea-action { align-self: flex-start; }
+}
