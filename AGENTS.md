@@ -16,6 +16,23 @@
   routes from the sandbox.
 - Backend health endpoint: `GET /health` on port 8000 inside the network.
 
+### If the stack refuses to start
+
+A boot that is interrupted while the dev images build (or two `docker compose` runs
+racing the same project) leaves half-created containers behind. The next
+`docker compose -f docker-compose.base44.yml up -d` then aborts with
+`Error response from daemon: Conflict. The container name "/open-grokbot-<svc>-1" is
+already in use ...` and the app never serves anything on port 3000. Recover with:
+
+```sh
+docker compose -f docker-compose.base44.yml down --remove-orphans
+docker compose -f docker-compose.base44.yml up -d --build
+```
+
+`docker compose -f docker-compose.base44.yml ps` must then show postgres, redis,
+backend and web healthy, and `curl -s localhost:3000/` must return the workspace
+page. Never delete the `postgres_data` volume to unblock a start.
+
 ## Non-obvious behaviour
 
 - There are no migrations to run. `app/db/bootstrap.py` creates the `grokbot`
@@ -39,6 +56,15 @@
   `model_configured`. In-app model connection management additionally needs
   `OMNIROUTE_CONTROL_KEY`. A direct provider key (`LLM_API_KEY`) is only used when
   `OMNIROUTE_URL` is unset.
+
+## Sandbox-only override
+
+- `frontend/next.config.mjs` adds `allowedDevOrigins: ['3000-' + BASE44_PUBLIC_HOST_SUFFIX]`
+  **only** while `BASE44_PREVIEW_MODE === '1'`. The preview reaches the dev server from the
+  proxied origin `https://3000-<BASE44_PUBLIC_HOST_SUFFIX>`, and Next dev warns on (and in
+  newer versions blocks) cross-origin `/_next/*` requests without it. With the flag unset or
+  empty the config is exactly the production one (`output: 'standalone'`), and the compose
+  `web` service passes both `BASE44_PREVIEW_MODE` and `BASE44_PUBLIC_HOST_SUFFIX` through.
 
 ## Verifying
 

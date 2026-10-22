@@ -87,6 +87,9 @@ services:
       - WATCHPACK_POLLING=true
       - CHOKIDAR_USEPOLLING=true
       - BASE44_PREVIEW_MODE
+      # Read by frontend/next.config.mjs to allow the proxied preview origin
+      # (https://3000-<suffix>) while BASE44_PREVIEW_MODE is "1".
+      - BASE44_PUBLIC_HOST_SUFFIX
     ports:
       - "3000:3000"
     depends_on:
