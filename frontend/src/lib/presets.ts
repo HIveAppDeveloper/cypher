@@ -6,6 +6,11 @@ export const MODEL_CHOICES = [
  {id:'grok47',label:'Grok 4.7',detail:'Independent review and verification',provider:'xai',model:'grok-4.7'},
  { id:'sol61',label:'GPT-6.1 Sol',detail:'OpenAI coordinator · reasoning and everyday work',provider:'openai',model:'gpt-6.1-sol' },
  { id:'luna6',label:'GPT-6 Luna',detail:'Quick, economical supporting work',provider:'openai',model:'gpt-6-luna' },
+ {id:'omni-coding',label:'OmniRoute · Best coding',detail:'Cloud picks a coding model from your connected providers. Availability and pricing follow that account.',provider:'auto',model:'best-coding'},
+ {id:'omni-reasoning',label:'OmniRoute · Best reasoning',detail:'Cloud picks a reasoning model from your connected providers. Availability and pricing follow that account.',provider:'auto',model:'best-reasoning'},
+ {id:'omni-vision',label:'OmniRoute · Best vision',detail:'Cloud picks a vision model from your connected providers. Availability and pricing follow that account.',provider:'auto',model:'best-vision'},
+ {id:'omni-fast',label:'OmniRoute · Best fast',detail:'Cloud picks a fast model from your connected providers. Availability and pricing follow that account.',provider:'auto',model:'best-fast'},
+ {id:'omni-chat',label:'OmniRoute · Best chat',detail:'Cloud picks an all-purpose model from your connected providers. Availability and pricing follow that account.',provider:'auto',model:'best-chat'},
 ];
 export const AGENT_PRESETS = [
   { id: 'assistant', name: 'Assistant', description: 'A capable all-rounder', prompt: 'Complete the user’s task using the available tools. Make reasonable decisions without routine clarification. Check your work and give a concise result. Never claim an action succeeded without evidence. Explain a blocker clearly when a required connection is unavailable.' },
