@@ -241,6 +241,7 @@ class AgentOrchestrator:
         await self._broadcast_status(bot_id, "working")
 
         responses = []
+        cancelled = False
 
         try:
             # Build system prompt
@@ -509,6 +510,13 @@ class AgentOrchestrator:
             else:
                 responses.append(await self._save_message(db, conversation_id, "system", None, "Agent iteration limit reached before completion.", message_type="status_update"))
 
+        except asyncio.CancelledError:
+            cancelled = True
+            try:
+                await self._release_cancelled_status(db, bot)
+            except Exception:
+                logger.warning("Could not confirm cancelled agent status bot=%s", bot_id)
+            raise
         except Exception as e:
             if isinstance(e, (RecoveryReviewRequired, RetryTask, ExecutionSuperseded)):
                 bot.status = 'idle'
@@ -527,10 +535,35 @@ class AgentOrchestrator:
         else:
             bot.status = "idle"
         finally:
-            await db.commit()
-            await self._broadcast_status(bot_id, bot.status)
+            if cancelled:
+                # Status cleanup must never turn a user's Stop into a retryable
+                # failure. Preserve the original cancellation if storage fails.
+                try:
+                    await db.commit()
+                    await self._broadcast_status(bot_id, bot.status)
+                except Exception:
+                    logger.warning("Could not publish cancelled agent status bot=%s", bot_id)
+            else:
+                await db.commit()
+                await self._broadcast_status(bot_id, bot.status)
 
         return responses
+
+    async def _release_cancelled_status(self, db, bot):
+        # A cancelled old attempt must not clear a replacement's working state.
+        journal = getattr(self, "journal", None)
+        if journal is None or journal.attempt is None:
+            return
+        try:
+            await journal.assert_current(db)
+        except ExecutionSuperseded:
+            return
+        await db.refresh(bot, attribute_names=["status"], with_for_update=True)
+        if bot.status != "working":
+            return
+        other = await db.scalar(select(Task.id).where(Task.bot_id == bot.id, Task.id != self.task_id, Task.status.in_(("running", "cancel_requested"))).limit(1))
+        if other is None:
+            bot.status = "idle"
 
     async def _durable(self, key, name, replay_safe, operation):
         journal = getattr(self, 'journal', None)
