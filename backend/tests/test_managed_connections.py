@@ -16,8 +16,11 @@ CONFIG=[{'id':'provider','name':'Provider','url':'https://provider.example/mcp',
         {'id':'private','name':'Private installation','url':'https://private.example/mcp','domains':[],'connector':'github/private','owner_installation':'private-install','owner_only':True}]
 
 @pytest.mark.asyncio
-async def test_new_users_sign_in_separately_and_reuse_their_own_grant(workspace,monkeypatch):
+@pytest.mark.parametrize('app_origin',['https://canonical.example','https://alternate.example'])
+async def test_new_users_sign_in_separately_and_reuse_their_own_grant(workspace,monkeypatch,app_origin):
     client,sessions=workspace
+    monkeypatch.setenv('GROKBOT_PUBLIC_URL','https://canonical.example')
+    monkeypatch.setenv('GROKBOT_OAUTH_ALLOWED_ORIGINS','https://alternate.example')
     monkeypatch.setenv('GROKBOT_MANAGED_CONNECTORS',json.dumps(CONFIG))
     async def public(_):pass
     monkeypatch.setattr(plugin_catalog,'validate_endpoint',public)
@@ -36,10 +39,13 @@ async def test_new_users_sign_in_separately_and_reuse_their_own_grant(workspace,
     monkeypatch.setattr(connect,'get_token',get_token)
     monkeypatch.setattr(connect,'start_authorization',start)
     monkeypatch.setattr(managed,'discover',discover)
-    a={'x-grokbot-user-id':'person-a'};b={'x-grokbot-user-id':'person-b'}
+    a={'x-grokbot-user-id':'person-a','x-grokbot-public-origin':app_origin};b={'x-grokbot-user-id':'person-b'}
     assert (await client.post('/api/plugins/resolve',headers=a,json={'website':'provider.example'})).json()['url']==CONFIG[0]['url']
     begun=(await client.post('/api/plugins/authorize',headers=a,json={'name':'Provider','url':CONFIG[0]['url']})).json()
     assert begun['status']=='awaiting_login'
+    returned=urlsplit(returns['grokbot:person-a'])
+    assert returned.scheme+'://'+returned.netloc==app_origin
+    assert returned.path=='/api/plugin-oauth/callback'
     state=parse_qs(urlsplit(returns['grokbot:person-a']).query)['state'][0]
     body={'state':state,'binding':begun['binding']}
     assert (await client.post('/api/plugins/managed/callback',headers=b,json=body)).status_code==400

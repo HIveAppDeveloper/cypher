@@ -162,6 +162,7 @@ async def test_connection(id:UUID,db:AsyncSession=Depends(get_db)):
         'mcp.linear.app': [('list_teams',{}),('list_projects',{})],
         'mcp.vercel.com': [('list_teams',{})],
         'api.githubcopilot.com': [('search_repositories',{'query':'repo:HIveAppDeveloper/open-grokbot','perPage':1})],
+        'jobherder.com': [('get_pricing',{})],
     }
     names={t['name'] for t in plugin.tools if t.get('enabled',True)}
     example=next(((name,args) for name,args in examples.get(host,[]) if name in names),None)
@@ -174,12 +175,18 @@ async def test_connection(id:UUID,db:AsyncSession=Depends(get_db)):
         except Exception:raise HTTPException(502,'The connection did not respond. Reconnect and check provider access.')
         return {'status':'discovered','tool_count':len(tools),'message':'Connection responded. No known read-only smoke operation is available; execution is not verified.'}
     started=time.monotonic()
+    code=None
     try:
         async with asyncio.timeout(45):
             result=await invoke(plugin.id,example[0],example[1])
         passed=result.get('success') is True
+        code=result.get('code')
     except Exception:
         passed=False
-    detail={'tool':example[0],'latency_ms':round((time.monotonic()-started)*1000),'message':'A read-only tool returned successfully.' if passed else 'The read-only test failed. Reconnect or check the service permissions.'}
+    message='A read-only tool returned successfully.' if passed else 'The read-only test failed. Reconnect or check the service permissions.'
+    if code=='invalid_provider_output':message='The provider returned output that does not match its published tool schema.'
+    elif code=='sign_in_required':message='This saved connection needs sign-in again. Reconnect it in Plugins.'
+    detail={'tool':example[0],'latency_ms':round((time.monotonic()-started)*1000),'message':message}
+    if code in {'invalid_provider_output','sign_in_required'}:detail['code']=code
     await save_check('plugin:'+plugin.id,'passed' if passed else 'failed',detail)
     return {'status':'passed' if passed else 'failed',**detail}

@@ -2,6 +2,7 @@
 import base64
 import hashlib
 import json
+import os
 import secrets
 import time
 from urllib.parse import urlencode, urlsplit, urlunsplit
@@ -13,6 +14,18 @@ from app.models.plugin import PluginAuthorization
 from app.services.plugins import seal, reveal, validate_endpoint
 
 FLOW_TTL = 600
+CLIENT_METADATA_PATH = '/api/plugin-oauth/client-metadata'
+
+
+def callback_url_for(origin=None):
+    configured = os.getenv('GROKBOT_PUBLIC_URL', 'https://open-grokbot-hiveapp.vercel.app').rstrip('/')
+    allowed = {configured, *(value.strip().rstrip('/') for value in os.getenv('GROKBOT_OAUTH_ALLOWED_ORIGINS', '').split(',') if value.strip())}
+    chosen = origin if origin is not None else configured
+    parsed = urlsplit(chosen)
+    local = parsed.scheme == 'http' and parsed.hostname in {'localhost', '127.0.0.1'}
+    if chosen not in allowed or (parsed.scheme != 'https' and not local) or not parsed.hostname or parsed.username or parsed.password or parsed.path or parsed.query or parsed.fragment:
+        raise ValueError('The sign-in origin must be an approved app domain.')
+    return chosen + '/api/plugin-oauth/callback'
 
 class SignInRequired(ValueError):
     pass
@@ -71,6 +84,7 @@ class BrowserOAuthProvider(OAuthClientProvider):
             oauth_metadata=metadata.model_dump(mode='json'),
             resource_metadata=self.context.protected_resource_metadata.model_dump(mode='json') if self.context.protected_resource_metadata else None,
             auth_server_url=self.context.auth_server_url, protocol_version=self.context.protocol_version,
+            client_metadata_url=self.context.client_metadata_url,
             authorization_url=endpoint+('&' if '?' in endpoint else '?')+urlencode(params),
         )
         storage.row.state_hash=hashlib.sha256(state.encode()).hexdigest()
@@ -83,7 +97,21 @@ async def make_provider(db, row, callback_url=None):
         client_name='GrokBot', redirect_uris=[callback_url], grant_types=['authorization_code','refresh_token'],
         response_types=['code'], token_endpoint_auth_method='none',
     )
-    provider=BrowserOAuthProvider(server_url=row.url,client_metadata=metadata,storage=storage)
+    callback = urlsplit(str(metadata.redirect_uris[0]))
+    metadata_url = saved.get('client_metadata_url') or (urlunsplit((callback.scheme, callback.netloc, CLIENT_METADATA_PATH, '', '')) if callback.scheme == 'https' else None)
+    # Lovable advertises CIMD but currently rejects unapproved client-ID domains.
+    # Its supported alternatives are approved DCR callbacks or a workspace client.
+    if urlsplit(row.url).hostname == 'mcp.lovable.dev':
+        metadata_url = None
+        client_id = os.getenv('LOVABLE_OAUTH_CLIENT_ID', '').strip()
+        if client_id and not saved.get('client_info'):
+            client_secret = os.getenv('LOVABLE_OAUTH_CLIENT_SECRET', '').strip() or None
+            client = OAuthClientInformationFull(
+                **{**metadata.model_dump(mode='json'), 'token_endpoint_auth_method': 'client_secret_post' if client_secret else 'none'},
+                client_id=client_id, client_secret=client_secret,
+            )
+            await storage.set_client_info(client)
+    provider=BrowserOAuthProvider(server_url=row.url,client_metadata=metadata,storage=storage,client_metadata_url=metadata_url)
     if saved.get('oauth_metadata'): provider.context.oauth_metadata=OAuthMetadata.model_validate(saved['oauth_metadata'])
     if saved.get('resource_metadata'): provider.context.protected_resource_metadata=ProtectedResourceMetadata.model_validate(saved['resource_metadata'])
     provider.context.auth_server_url=saved.get('auth_server_url')

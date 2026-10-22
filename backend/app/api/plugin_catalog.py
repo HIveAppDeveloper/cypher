@@ -2,13 +2,12 @@
 import asyncio
 import hashlib
 import json
-import os
 import secrets
 import time
 from pathlib import Path
 from urllib.parse import urlsplit
 from uuid import UUID
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from pydantic import BaseModel, Field
 from sqlalchemy import select, delete
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -19,8 +18,6 @@ from app.services.plugin_auth import DatabaseTokenStorage, FLOW_TTL, make_provid
 
 router=APIRouter()
 CATALOG_PATH=Path(__file__).parents[1]/'data'/'plugin_catalog.json'
-PUBLIC_ORIGIN=os.getenv('GROKBOT_PUBLIC_URL','https://open-grokbot-hiveapp.vercel.app').rstrip('/')
-CALLBACK_URL=PUBLIC_ORIGIN+'/api/plugin-oauth/callback'
 
 def catalog():
     return json.loads(CATALOG_PATH.read_text()) if CATALOG_PATH.exists() else []
@@ -117,8 +114,11 @@ class Begin(BaseModel):
     connection_id:str|None=Field(default=None,max_length=80)
 
 @router.post('/authorize')
-async def authorize(body:Begin,db:AsyncSession=Depends(get_db)):
+async def authorize(body:Begin,db:AsyncSession=Depends(get_db),request:Request=None):
     from app.api.device import require_device
+    from app.services.plugin_auth import callback_url_for
+    try:callback_url=callback_url_for(request.headers.get('x-grokbot-public-origin') if request else None)
+    except ValueError as error:raise HTTPException(422,str(error))
     url=body.url.strip()
     try: await validate_endpoint(url)
     except (ValueError,OSError): raise HTTPException(422,'Use a public HTTPS connector URL. A company website belongs in the website lookup field.')
@@ -129,12 +129,12 @@ async def authorize(body:Begin,db:AsyncSession=Depends(get_db)):
     existing=await managed_connections.matching_connection(db,url,config) if config else (await db.execute(select(Plugin).where(Plugin.url==url))).scalars().first()
     if existing and not body.reconnect: return {'status':'connected','plugin_id':existing.id,'name':existing.name}
     await db.execute(delete(PluginAuthorization).where(PluginAuthorization.status!='connected',PluginAuthorization.created_at<time.time()-FLOW_TTL))
-    if config:return await managed_connections.begin(db,body.name.strip(),url,config,existing)
+    if config:return await managed_connections.begin(db,body.name.strip(),url,config,existing,callback_url=callback_url)
     await db.execute(delete(PluginAuthorization).where(PluginAuthorization.status!='connected',PluginAuthorization.created_at<time.time()-FLOW_TTL))
     binding=secrets.token_urlsafe(32)
     row=PluginAuthorization(name=body.name.strip(),url=url,created_at=time.time(),binding_hash=hashlib.sha256(binding.encode()).hexdigest(),status='discovering',plugin_id=existing.id if existing else None)
     db.add(row);await db.commit();await db.refresh(row)
-    provider=await make_provider(db,row,CALLBACK_URL)
+    provider=await make_provider(db,row,callback_url)
     try:
         tools=await discover(url,auth=provider)
     except Exception as error:
@@ -144,7 +144,7 @@ async def authorize(body:Begin,db:AsyncSession=Depends(get_db)):
         def rejected_redirect(error):
             return 'invalid_redirect_uri' in str(error) or any(rejected_redirect(child) for child in getattr(error,'exceptions',[])) or bool(error.__cause__ and rejected_redirect(error.__cause__))
         if rejected_redirect(error):
-            raise HTTPException(422,'This provider requires approval for this app’s callback address before sign-in can work. Ask the provider to approve '+CALLBACK_URL+'. The service has not been connected.')
+            raise HTTPException(422,'This provider requires approval for this app’s callback address before sign-in can work. Ask the provider to approve '+callback_url+'. The service has not been connected.')
         raise HTTPException(422,'This service could not start automatic sign-in. It may require an API key, an administrator-installed app, or a different MCP endpoint. Your account has not been connected.')
     if not tools:
         row.status='failed';await db.commit();raise HTTPException(422,'The server connected but did not publish any tools.')

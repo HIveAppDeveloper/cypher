@@ -18,6 +18,32 @@ def test_structured_and_media_results_are_not_lost_or_unbounded():
     assert result['structured_content_truncated'] and 'structured_content' not in result and len(result['content'])==20000
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize('http_status,attempts',[(503,2),(401,1),(403,1)])
+async def test_discovery_retries_temporary_failures_without_repeating_sign_in(monkeypatch,http_status,attempts):
+    from mcp.types import Tool
+    calls=[];delays=[]
+    @asynccontextmanager
+    async def session(*args):
+        calls.append(args)
+        class Client:
+            async def list_tools(self,cursor=None):
+                if len(calls)==1:
+                    raise httpx.HTTPStatusError('Provider response',request=httpx.Request('POST','https://service.example/mcp'),response=httpx.Response(http_status))
+                return SimpleNamespace(tools=[Tool(name='read',inputSchema={'type':'object'})],nextCursor=None)
+        yield Client()
+    async def sleep(seconds):delays.append(seconds)
+    monkeypatch.setattr(plugins,'session',session)
+    monkeypatch.setattr(plugins.asyncio,'sleep',sleep)
+    if http_status==503:
+        assert [x['name'] for x in await plugins.discover('https://service.example/mcp','existing-token')]==['read']
+        assert delays==[1]
+    else:
+        with pytest.raises(httpx.HTTPStatusError):await plugins.discover('https://service.example/mcp','existing-token')
+        assert not delays
+    assert len(calls)==attempts
+    assert all(call==('https://service.example/mcp','existing-token',None) for call in calls)
+
+@pytest.mark.asyncio
 async def test_reads_retry_but_writes_do_not_and_invalid_arguments_never_run(workspace,monkeypatch):
     _,sessions=workspace
     from app.db import session as dbmodule
