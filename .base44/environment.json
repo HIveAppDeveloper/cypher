@@ -1,0 +1,37 @@
+{
+  "previewPort": 3000,
+  "healthPath": "/",
+  "startCommand": "docker compose -f docker-compose.base44.yml up -d",
+  "secrets": [
+    {
+      "name": "OMNIROUTE_URL",
+      "description": "OmniRoute origin (https origin or /v1 endpoint, no credentials or query). Setting it makes OmniRoute the exclusive model transport for agents, media, audio and verification.",
+      "requiredAtBoot": false
+    },
+    {
+      "name": "OMNIROUTE_API_KEY",
+      "description": "OmniRoute inference key. Required for every model call, because OmniRoute is the configured transport. Get it from your OmniRoute deployment's API keys page.",
+      "requiredAtBoot": false
+    },
+    {
+      "name": "OMNIROUTE_PROTECTION_BYPASS",
+      "description": "Optional: deployment access secret, only when the OmniRoute deployment is access-protected.",
+      "requiredAtBoot": false
+    },
+    {
+      "name": "OMNIROUTE_CONTROL_KEY",
+      "description": "Optional: enables model-connection management (Workspace setup → Model access) against OmniRoute's internal control API.",
+      "requiredAtBoot": false
+    },
+    {
+      "name": "OMNIROUTE_DASHBOARD_URL",
+      "description": "Optional: browser-facing OmniRoute dashboard URL used by the 'Manage models' link; defaults to the API origin.",
+      "requiredAtBoot": false
+    },
+    {
+      "name": "LLM_API_KEY",
+      "description": "Not used while OmniRoute is configured. Only meaningful if OMNIROUTE_URL is left unset, as a direct provider key.",
+      "requiredAtBoot": false
+    }
+  ]
+}
