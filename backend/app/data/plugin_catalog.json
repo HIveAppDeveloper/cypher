@@ -14,7 +14,8 @@
     "auth_header": "Authorization",
     "featured": true,
     "icon": "/connector-icons/03e4d05af2d714cf.svg",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "key_help": "In Atlas, open the workspace you run outreach for, go to its Team tab, and under API keys create a key with read and write access. Paste it below. The key only reaches that workspace, and every campaign still gets approved before it sends."
   },
   {
     "id": "4fe6ee93e7e1c94a",
