@@ -12,7 +12,7 @@ import time
 from contextlib import asynccontextmanager
 from urllib.parse import urljoin, urlsplit, urlencode, quote
 from mcp.server.lowlevel import Server
-from mcp.types import ImageContent, TextContent, Tool, ToolAnnotations
+from mcp.types import CallToolResult, ImageContent, TextContent, Tool, ToolAnnotations
 from app.services.plugins import validate_endpoint, http_client, credential_headers
 
 SCHEME = 'site-mcp://'
@@ -25,6 +25,7 @@ MAX_OPERATIONS = 60
 SPEC_TTL = 600
 PREVIEW_AGENT = 'facebookexternalhit/1.1 (+http://www.facebook.com/externalhit_uatext.php)'
 _specs: dict[str, tuple[float, dict | None]] = {}
+BROWSER_NAMES = {'open_page', 'read_page', 'search_site', 'click', 'fill_form', 'screenshot', 'read_instagram_link'}
 
 
 def site_url(host): return SCHEME + host
@@ -81,28 +82,88 @@ def api_base(spec, host):
     return 'https://' + host
 
 
+def reference(spec, pointer):
+    if not isinstance(pointer, str) or not pointer.startswith('#/'):
+        raise ValueError('Only local OpenAPI references are supported.')
+    value = spec
+    for part in pointer[2:].split('/'):
+        key = part.replace('~1', '/').replace('~0', '~')
+        if not isinstance(value, dict) or key not in value:
+            raise ValueError('OpenAPI reference was not found.')
+        value = value[key]
+    return value
+
+
+def resolved_object(value, spec):
+    seen = set()
+    while isinstance(value, dict) and '$ref' in value:
+        pointer = value['$ref']
+        if pointer in seen: raise ValueError('Circular OpenAPI object reference.')
+        seen.add(pointer)
+        target = reference(spec, pointer)
+        if not isinstance(target, dict): raise ValueError('Expected an OpenAPI object.')
+        value = {**target, **{k: v for k, v in value.items() if k != '$ref'}}
+    return value
+
+
+def tool_schema(schema, spec):
+    """Bundle local references into a standalone JSON schema, including cycles."""
+    definitions, names = {}, {}
+    def bundle(value):
+        if isinstance(value, list): return [bundle(item) for item in value]
+        if not isinstance(value, dict): return value
+        result = {key: bundle(item) for key, item in value.items() if key != '$ref'}
+        if '$ref' in value:
+            pointer = value['$ref']
+            if pointer not in names:
+                target = reference(spec, pointer)
+                if not isinstance(target, (dict, bool)): raise ValueError('Expected a schema reference.')
+                name = names[pointer] = 'schema_' + str(len(names))
+                definitions[name] = {}
+                definitions[name] = bundle(target)
+            result['$ref'] = '#/$defs/' + names[pointer]
+        return result
+    result = bundle(schema)
+    if definitions: result['$defs'] = definitions
+    return result
+
+
 def operations(spec):
-    taken = set()
+    taken = set(BROWSER_NAMES)
+    count = 0
     for path, item in spec.get('paths', {}).items():
+        try: item = resolved_object(item, spec)
+        except ValueError: continue
         if not isinstance(item, dict): continue
         shared = item.get('parameters', [])
         for method in ('get', 'post', 'put', 'patch', 'delete'):
             op = item.get(method)
             if not isinstance(op, dict): continue
             name = re.sub(r'[^A-Za-z0-9_]+', '_', op.get('operationId') or f'{method}_{path}').strip('_')[:60] or method
-            while name in taken: name += '_'
+            original, suffix = name, 1
+            while name in taken:
+                name = original[:54] + '_' + str(suffix)
+                suffix += 1
             taken.add(name)
-            params = [p for p in [*shared, *op.get('parameters', [])] if isinstance(p, dict) and p.get('in') in ('path', 'query') and p.get('name')]
+            try:
+                params = [resolved_object(p, spec) for p in [*shared, *op.get('parameters', [])]]
+                params = list({(p['in'], p['name']): p for p in params if isinstance(p, dict) and p.get('in') in ('path', 'query') and p.get('name')}.values())
+            except (ValueError, TypeError): continue
             properties = {p['name']: {**(p['schema'] if isinstance(p.get('schema'), dict) else {}), 'description': p.get('description', '')[:300]} for p in params}
             required = [p['name'] for p in params if p.get('required') or p.get('in') == 'path']
             if method in ('post', 'put', 'patch'):
-                body = ((op.get('requestBody') or {}).get('content') or {}).get('application/json', {}).get('schema')
-                properties['body'] = {'type': 'object', 'description': 'JSON request body.', 'additionalProperties': True}
-                if body and (op.get('requestBody') or {}).get('required'): required.append('body')
+                try: request_body = resolved_object(op.get('requestBody') or {}, spec)
+                except ValueError: continue
+                body = (request_body.get('content') or {}).get('application/json', {}).get('schema')
+                properties['body'] = body if isinstance(body, (dict, bool)) else {'description': 'JSON request body.'}
+                if request_body.get('required'): required.append('body')
+            try: schema = tool_schema({'type': 'object', 'properties': properties, 'required': required}, spec)
+            except (ValueError, TypeError, RecursionError): continue
             yield {'name': name, 'method': method.upper(), 'path': path, 'params': params,
                    'description': ((op.get('summary') or '') + ' ' + (op.get('description') or '')).strip()[:1500] or f'{method.upper()} {path}',
-                   'schema': {'type': 'object', 'properties': properties, 'required': required}}
-            if len(taken) >= MAX_OPERATIONS: return
+                   'schema': schema}
+            count += 1
+            if count >= MAX_OPERATIONS: return
 
 
 class SiteServer:
@@ -113,7 +174,14 @@ class SiteServer:
         @self.server.list_tools()
         async def list_tools(): return self.tools
         @self.server.call_tool()
-        async def call_tool(name, arguments): return await self.handlers[name](arguments)
+        async def call_tool(name, arguments):
+            content = await self.handlers[name](arguments)
+            if content and content[0].type == 'text':
+                try: result = json.loads(content[0].text)
+                except ValueError: result = None
+                if isinstance(result, dict) and result.get('success') is False:
+                    return CallToolResult(content=content, isError=True)
+            return content
 
     def add(self, name, description, schema, handler, read_only):
         self.tools.append(Tool(name=name, description=description, inputSchema=schema, annotations=ToolAnnotations(readOnlyHint=read_only)))
@@ -198,12 +266,16 @@ async def build(host, token=None):
         from app.services.computer import agent_access
         from app.services.usage import active
         bot_id, current = await browser_session(), active.get()
-        if bot_id and current:
-            async with agent_access(bot_id, current[1]): yield bot_id
-        else: yield bot_id or 'site:' + host
+        if not bot_id or not current:
+            yield None
+            return
+        async with agent_access(bot_id, current[1]): yield bot_id
     def scoped(handler):
         async def call(arguments):
-            async with session() as sid: return await handler(arguments, sid)
+            async with session() as sid:
+                if sid is None:
+                    return text({'success': False, 'error': 'Use this website tool from an agent conversation with its private cloud browser.'})
+                return await handler(arguments, sid)
         return call
     async def address(url):
         try:

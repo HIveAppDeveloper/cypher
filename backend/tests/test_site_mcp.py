@@ -49,7 +49,7 @@ async def test_openapi_site_becomes_mcp_tools_that_call_the_api(monkeypatch):
     assert calls[1][0]=='POST' and json.loads(calls[1][3])=={'name':'new'}
 
 @pytest.mark.asyncio
-async def test_operations_cannot_leave_the_website(monkeypatch):
+async def test_operations_cannot_leave_the_website(monkeypatch,browser):
     spec={**SPEC,'servers':[{'url':'https://attacker.example'}]}
     assert site_mcp.api_base(spec,'example.com')=='https://example.com'
     assert site_mcp.api_base({**SPEC,'servers':[{'url':'https://api.example.com/v2'}]},'example.com')=='https://api.example.com/v2'
@@ -131,6 +131,9 @@ async def test_featured_one_click_connectors_are_in_the_catalog(workspace):
 async def browser(monkeypatch):
     from types import SimpleNamespace
     from app.services.tools import registry
+    from app.services import computer
+    from app.services.usage import active
+    from contextlib import asynccontextmanager
     fake=SimpleNamespace(url='https://example.com/',calls=[],after={})
     async def get_page(sid):return fake
     def operation(name):
@@ -142,12 +145,17 @@ async def browser(monkeypatch):
     fake._get_page=get_page
     for name in ('navigate_to','extract_content','click','fill_form','screenshot'):setattr(fake,name,operation(name))
     async def no_spec(host):return None
-    async def no_bot():return None
+    async def bot():return 'test-bot'
+    @asynccontextmanager
+    async def access(*args):yield
     monkeypatch.setattr(registry,'_browser_tool',fake)
     monkeypatch.setattr(site_mcp,'openapi_spec',no_spec)
-    monkeypatch.setattr(site_mcp,'browser_session',no_bot)
+    monkeypatch.setattr(site_mcp,'browser_session',bot)
+    monkeypatch.setattr(computer,'agent_access',access)
     fake.server=await site_mcp.build('example.com')
-    return fake
+    token=active.set(('test-task',object()))
+    try:yield fake
+    finally:active.reset(token)
 
 BROWSER_ACTIONS=[('read_page',{},'extract_content'),('click',{'target':'a'},'click'),('fill_form',{'fields':{},'submit':'button'},'fill_form'),('screenshot',{},'screenshot')]
 
@@ -267,3 +275,78 @@ async def test_click_through_session_holds_owner_control_lock(browser,monkeypatc
     assert not result.isError and json.loads(result.content[0].text)['success']
     assert browser.calls==[('click','bot-id')]
     assert events==[('enter','bot-id'),('click','bot-id'),('exit','bot-id')]
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize('name,args',[(name,args) for name,args,_ in BROWSER_ACTIONS]+[('open_page',{}),('search_site',{'query':'hello'})])
+async def test_browser_tools_require_a_private_agent_context(browser,name,args):
+    from app.services.usage import active
+    token=active.set(None)
+    try: result=await browser.server.handlers[name](args)
+    finally: active.reset(token)
+    assert not json.loads(result[0].text)['success']
+    assert browser.calls==[]
+
+
+@pytest.mark.asyncio
+async def test_unresolved_task_cannot_use_a_shared_browser(browser,monkeypatch):
+    async def no_bot():return None
+    monkeypatch.setattr(site_mcp,'browser_session',no_bot)
+    result=await browser.server.handlers['open_page']({})
+    assert not json.loads(result[0].text)['success'] and browser.calls==[]
+
+
+@pytest.mark.asyncio
+async def test_generated_tool_failures_are_mcp_errors(browser):
+    from app.services.usage import active
+    token=active.set(None)
+    try:
+        async with session('site-mcp://example.com') as client:
+            result=await client.call_tool('open_page',{})
+    finally:active.reset(token)
+    assert result.isError and not json.loads(result.content[0].text)['success']
+    assert browser.calls==[]
+
+
+@pytest.mark.asyncio
+async def test_api_reference_parameters_and_array_bodies_work_through_mcp(monkeypatch):
+    from jsonschema import Draft202012Validator
+    spec={'openapi':'3.1.0','components':{
+        'parameters':{'Filter':{'name':'filter','in':'query','required':True,'schema':{'$ref':'#/components/schemas/Filter'}}},
+        'schemas':{'Filter':{'type':'string','enum':['active']},'Item':{'type':'object','properties':{'name':{'type':'string'}},'required':['name']}},
+        'requestBodies':{'Items':{'required':True,'content':{'application/json':{'schema':{'type':'array','items':{'$ref':'#/components/schemas/Item'}}}}}}},
+        'paths':{'/items':{
+            'get':{'operationId':'read_page','parameters':[{'$ref':'#/components/parameters/Filter'}]},
+            'post':{'operationId':'saveItems','requestBody':{'$ref':'#/components/requestBodies/Items'}}}}}
+    seen=[]
+    def handler(request):
+        if request.url.path=='/openapi.json':return httpx.Response(200,json=spec)
+        if request.url.path!='/items':return httpx.Response(404)
+        seen.append(request)
+        return httpx.Response(200,json={'ok':True})
+    monkeypatch.setattr(site_mcp,'http_client',fake_http(handler))
+    tools=await discover('site-mcp://example.com')
+    names=[tool['name'] for tool in tools]
+    assert len(names)==len(set(names)) and 'read_page_1' in names
+    by_name={tool['name']:tool for tool in tools}
+    Draft202012Validator(by_name['read_page_1']['schema']).validate({'filter':'active'})
+    Draft202012Validator(by_name['saveItems']['schema']).validate({'body':[{'name':'new'}]})
+    async with session('site-mcp://example.com') as client:
+        assert not (await client.call_tool('read_page_1',{'filter':'active'})).isError
+        assert not (await client.call_tool('saveItems',{'body':[{'name':'new'}]})).isError
+        assert (await client.call_tool('read_page_1',{'filter':'wrong'})).isError
+        assert (await client.call_tool('saveItems',{'body':[{}]})).isError
+    assert len(seen)==2
+    assert str(seen[0].url)=='https://example.com/items?filter=active'
+    assert json.loads(seen[1].content)==[{'name':'new'}]
+
+
+def test_recursive_schema_is_bundled_and_external_references_are_skipped():
+    from jsonschema import Draft202012Validator
+    node={'type':'object','properties':{'child':{'$ref':'#/components/schemas/Node'}}}
+    spec={'components':{'schemas':{'Node':node}},'paths':{'/tree':{'post':{
+        'requestBody':{'required':True,'content':{'application/json':{'schema':{'$ref':'#/components/schemas/Node'}}}}}}}}
+    op=next(site_mcp.operations(spec))
+    Draft202012Validator(op['schema']).validate({'body':{'child':{'child':{}}}})
+    node['properties']['child']['$ref']='https://external.example/schema'
+    assert list(site_mcp.operations(spec))==[]

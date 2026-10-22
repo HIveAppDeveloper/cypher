@@ -23,7 +23,7 @@ PUBLIC_ORIGIN=os.getenv('GROKBOT_PUBLIC_URL','https://open-grokbot-hiveapp.verce
 CALLBACK_URL=PUBLIC_ORIGIN+'/api/plugin-oauth/callback'
 
 def catalog():
-    return json.loads(CATALOG_PATH.read_text()) if CATALOG_PATH.exists() else []
+    return json.loads(CATALOG_PATH.read_text(encoding='utf-8')) if CATALOG_PATH.exists() else []
 
 def hostname(value):
     parsed=urlsplit(value if '://' in value else 'https://'+value)
