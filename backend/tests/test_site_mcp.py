@@ -236,3 +236,34 @@ async def test_all_tools_hold_owner_control_lock(browser,monkeypatch,name,args):
     try:result=await browser.server.handlers[name](args)
     finally:active.reset(token)
     assert result and events==['enter','exit']
+
+@pytest.mark.asyncio
+async def test_click_through_session_holds_owner_control_lock(browser,monkeypatch):
+    from contextlib import asynccontextmanager
+    from app.services import computer
+    from app.services.usage import active
+    events=[]
+    sessions=object()
+    async def bot():return 'bot-id'
+    @asynccontextmanager
+    async def access(bot_id,factory):
+        assert factory is sessions
+        events.append(('enter',bot_id))
+        try:yield
+        finally:events.append(('exit',bot_id))
+    original_click=browser.click
+    async def click(*args,**kwargs):
+        assert events==[('enter','bot-id')]
+        events.append(('click',kwargs['session_id']))
+        return await original_click(*args,**kwargs)
+    monkeypatch.setattr(browser,'click',click)
+    monkeypatch.setattr(site_mcp,'browser_session',bot)
+    monkeypatch.setattr(computer,'agent_access',access)
+    token=active.set(('task-id',sessions))
+    try:
+        async with session('site-mcp://example.com') as client:
+            result=await client.call_tool('click',{'target':'a'})
+    finally:active.reset(token)
+    assert not result.isError and json.loads(result.content[0].text)['success']
+    assert browser.calls==[('click','bot-id')]
+    assert events==[('enter','bot-id'),('click','bot-id'),('exit','bot-id')]
