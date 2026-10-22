@@ -102,7 +102,7 @@ async def test_key_setup_updates_discovered_connection_without_duplicates(worksp
 @pytest.mark.asyncio
 async def test_browser_cookies_are_not_accepted_as_plugin_api_keys(workspace):
     client,_=workspace
-    result=await client.post('/api/plugins',json={
+    result=await client.post('/api/plugins',headers={'x-grokbot-user-id':'cookie-owner'},json={
         'name':'Cookie service','url':'https://service.example/mcp',
         'token':'session=private-value','auth_header':'Cookie',
     })
