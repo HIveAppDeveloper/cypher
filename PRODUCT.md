@@ -12,7 +12,7 @@ Messages accept up to four files and 3 MB combined: PNG/JPEG/WebP, PDF, UTF-8 te
 
 ## Appearance, goals, and channels
 
-The light Grok identity now uses larger translucent glass select popovers, with Radix keyboard behavior, 48px general triggers, and 50px options. Browser-local preferences immediately adjust accent, message text size, desktop message width, glass blur, agent-list density, and interface motion. Inter Variable remains the default, with main-panel typeface controls. Preferences do not imply cross-device account synchronization.
+The system-style workspace uses the platform font stack, opaque compact controls, and adapts to the operating system's light or dark appearance. Blue is the default action accent; browser-local preferences can change accent, message text size, desktop message width, agent-list density, and interface motion. Inter and Georgia remain optional conversation typefaces. Preferences do not imply cross-device account synchronization.
 
 Cloud goals persist in the database and schedule finite runs in the hosted worker. Each goal specifies an objective, evidence-based completion criteria, room, Sol/Luna manager, interval (minimum 15 minutes), and run allowance. The UI offers 1–20 runs and 15–1440 minute intervals; the API permits intervals up to seven days. Defaults are three runs, one hour apart. At most ten goals may be active. Completion requires the completion tool and a successful task. Pause cancels pending work or requests running-task cancellation; failed/interrupted work blocks further runs until explicit resume/retry. Exhausted or completed goals cannot be resumed. Agent-created follow-up goals are limited to three runs, one per task, with no nested goals.
 

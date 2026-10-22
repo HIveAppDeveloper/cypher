@@ -1,20 +1,20 @@
 ---
 name: Open GrokBot
-description: A light agent workspace with team conversations, multimodal input, and adjustable run controls.
+description: A system-style agent workspace with light and dark appearance, team conversations, multimodal input, and adjustable run controls.
 colors:
   panel: "#fff"
-  conversation: "#faf9f7"
-  sidebar: "#f3f2ef"
-  card: "#eeede9"
-  card-hover: "#e9e8e4"
-  selected: "#e6e4e0"
-  border-light: "#e1dfd9"
-  text: "#202020"
-  text-muted: "#656460"
-  accent-blue: "#404047"
-  outgoing: "#e8e6e1"
-  send: "#404047"
-  focus: "#55534e"
+  conversation: "#fff"
+  sidebar: "#f5f5f7"
+  card: "#f2f2f7"
+  card-hover: "rgba(116,116,128,.12)"
+  selected: "rgba(0,122,255,.12)"
+  border-light: "rgba(60,60,67,.18)"
+  text: "#1d1d1f"
+  text-muted: "#6e6e73"
+  accent-blue: "#007aff"
+  outgoing: "#007aff"
+  send: "#007aff"
+  focus: "#007aff"
   status-green: "#33785c"
   status-red: "#b82840"
   notice-surface: "#fff9fc"
@@ -25,47 +25,44 @@ colors:
   member-chip: "#f1f1f1"
   attachment-surface: "#f2f2f2"
   running: "#936621"
-  glass-trigger: "rgba(255,255,255,.83)"
-  glass-menu: "rgba(252,251,253,.91)"
-  glass-dialog: "rgba(255,255,255,.9)"
-  glass-border: "rgba(98,85,99,.16)"
-  glass-ink: "#29262c"
+  system-surface: "#fff"
+  dark-surface: "#2c2c2e"
   violet: "#6945c6"
   forest: "#26765f"
   slate-blue: "#324f85"
   graphite: "#404047"
 typography:
   display:
-    fontFamily: '"Inter Variable", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
-    fontSize: "26px"
-    fontWeight: 550
-    lineHeight: 1.3
-    letterSpacing: "-.03em"
+    fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, "Segoe UI", sans-serif'
+    fontSize: "32px"
+    fontWeight: 650
+    lineHeight: 1.2
+    letterSpacing: "-.035em"
   headline:
-    fontFamily: '"Inter Variable", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
-    fontSize: "27px"
-    fontWeight: 500
+    fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, "Segoe UI", sans-serif'
+    fontSize: "24px"
+    fontWeight: 600
   title:
-    fontFamily: '"Inter Variable", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
-    fontSize: "18px"
-    fontWeight: 500
+    fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, "Segoe UI", sans-serif'
+    fontSize: "16px"
+    fontWeight: 600
     lineHeight: 1.2
   body:
-    fontFamily: '"Inter Variable", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
+    fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, "Segoe UI", sans-serif'
     fontSize: "16px"
     lineHeight: 1.65
   label:
-    fontFamily: '"Inter Variable", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
-    fontSize: "15px"
+    fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, "Segoe UI", sans-serif'
+    fontSize: "13px"
     fontWeight: 600
 rounded:
   sm: "6px"
-  md: "12px"
-  lg: "24px"
+  md: "8px"
+  lg: "16px"
   full: "999px"
-  roster-row: "11px"
-  message: "18px"
-  composer: "24px"
+  roster-row: "7px"
+  message: "16px"
+  composer: "16px"
 spacing:
   xs: "4px"
   sm: "8px"
@@ -76,17 +73,17 @@ components:
   button-primary:
     backgroundColor: "{colors.accent-blue}"
     textColor: "{colors.panel}"
-    rounded: "12px"
-    padding: "10px 18px"
+    rounded: "8px"
+    padding: "8px 12px"
   button-secondary:
     backgroundColor: "{colors.panel}"
-    rounded: "12px"
-    padding: "10px 18px"
+    rounded: "8px"
+    padding: "8px 12px"
   button-round:
     backgroundColor: "{colors.panel}"
     width: "30px"
     height: "32px"
-    rounded: "50%"
+    rounded: "8px"
   message-incoming:
     backgroundColor: "{colors.card}"
     rounded: "{rounded.message}"
@@ -100,19 +97,19 @@ components:
     backgroundColor: "{colors.member-chip}"
     rounded: "20px"
     padding: "3px 8px"
-  glass-select-trigger:
-    backgroundColor: "{colors.glass-trigger}"
-    textColor: "{colors.glass-ink}"
-    rounded: "12px"
-    padding: "12px 16px"
-    height: "48px"
+  select-trigger:
+    backgroundColor: "{colors.system-surface}"
+    textColor: "{colors.text}"
+    rounded: "8px"
+    padding: "8px 11px"
+    height: "40px"
   glass-select-option:
-    rounded: "13px"
-    padding: "13px 17px 13px 42px"
-    height: "50px"
-  glass-dialog:
-    backgroundColor: "{colors.glass-dialog}"
-    rounded: "24px"
+    rounded: "6px"
+    padding: "8px 10px 8px 34px"
+    height: "36px"
+  dialog:
+    backgroundColor: "{colors.system-surface}"
+    rounded: "16px"
   search-input:
     rounded: "{rounded.md}"
     padding: "10px"
@@ -122,9 +119,15 @@ components:
 
 ## Overview
 
-The October 22 workspace uses a full-bleed warm off-white conversation, a quiet neutral navigation rail, subdued initials avatars, and an adjustable Graphite default action accent. A single conversation toolbar and a centered two-row composer establish hierarchy. Open GrokBot keeps its own name and mark. Glass remains available for menus and dialogs; conversation text stays the primary visual anchor.
+The October 22 workspace uses a system-style interface with platform fonts, blue actions, a neutral sidebar, restrained separators, and a compact conversation toolbar. System appearance follows the operating system's light or dark setting. Open GrokBot keeps its own name and mark and remains a web app.
 
-The frontmatter and the October 22 refresh below describe the current composition. Earlier dated sections are preserved as implementation history; the October 22 values supersede conflicting frame, palette, bubble, sidebar, and composer descriptions. Existing product capability and verification limits remain separate from visual evidence.
+The frontmatter and current visual direction below describe the shipped composition. Earlier dated sections are preserved as implementation history; the current values supersede conflicting frame, palette, typography, bubble, sidebar, and composer descriptions. Existing product capability and verification limits remain separate from visual evidence.
+
+### Current visual direction — Apple-native web workspace
+
+Use the system UI font stack, platform semantic colors, an opaque sidebar and menus, one-pixel separators, clear keyboard focus, and familiar toolbar and form controls. The interface adapts to light and dark system appearance. Blue is the default action accent; browser-local accent choices remain available. Inter and Georgia remain optional conversation typefaces. The design borrows familiar macOS conventions without claiming native OS integration.
+
+Keep the app full-bleed with an adjustable sidebar, a compact conversation toolbar, and a centered task composer. Use small control corners, subtle edges, and clear focus states. Incoming bubbles use a neutral surface; outgoing bubbles use the current accent with white text. Menus, dialogs, and selectors use opaque system surfaces instead of glass blur. Preferences retain accent, density, message size, message width, and motion settings.
 
 Production revision b473 previously verified database/worker operation, generated OpenAI PNG, Gemini JPEG, and Veo MP4 media, and a real GPT-6 Luna → Gemini group job. DeepWiki tool invocation was also verified. The former free-credit restriction is historical and no longer describes the current verified capability. The new glass controls, appearance preferences, goals, channels, and per-plugin tool controls have passed source checks (31 backend tests and the frontend production build), but have not yet been verified live. Prior live results do not prove the new workflows or every model, provider, sandbox, or connected service.
 
@@ -298,6 +301,6 @@ Validation against reconciled upstream912eb6d:272backendtests,52frontendtests,12
 
 ## Model connection follow-up — October 22, 2026
 
-Keep model setup one action from both the empty task composer and conversation settings. The workspace setup dialog separates Gemini API access from Google consumer subscriptions, opens the configured OmniRoute dashboard without exposing URL credentials or query values, and tests Gemini with one short request through the actual configured model route. Loading, success, failure, and quota-cost states remain explicit. This test proves only the selected Gemini route at the moment it runs; it does not claim other providers or subscription OAuth are connected.
+Keep model setup one action from both the empty task composer and conversation settings. In OmniRoute mode, the owner can check the saved OpenAI, Gemini, and Claude connections, follow a fresh Google account-verification link when required, and retry a real model check. Checks continue in the worker after the dialog closes, with explicit queued, checking, verified, and failure states. API keys are password fields, encrypted on the server, and replace an existing key only after a model response succeeds. Direct mode retains the one-request Gemini test and provider setup links. These checks do not imply that consumer subscriptions or every provider are connected.
 
-The owner-managed OmniRoute follow-up replaces manual dashboard setup in hosted mode with three compact provider rows in Workspace setup. Each row names its last verified state, offers Check access or Check again, and shows Verify with Google only for a fresh provider-issued challenge. API-key entry is a labeled password field disclosed inline; Verify and save key queues a real check, while Cancel clears the field. The existing neutral palette, Inter typography and dialog behavior are preserved. Actions wrap on narrow screens and retain 44px targets. A pending job remains queued in the cloud after this dialog closes; green status requires a successful provider response and an exact supported model route.
+Provider rows use the same native system surfaces and compact controls as the workspace. Keep the provider name and verification state visible, wrap actions on narrow screens, and maintain accessible focus and minimum touch targets. Show the last check time and failure details as text; never imply that opening a verification link marks the connection verified.

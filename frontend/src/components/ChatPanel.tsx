@@ -67,7 +67,7 @@ export function ChatPanel({ bot, room, bots, onCreateBot, onCreateRoom, onQuickS
     setOptionsRestored(true);
   }, [bot?.id]);
   useEffect(() => { if (optionsRestored && bot) { try { localStorage.setItem('grokbot-options-' + bot.id, JSON.stringify(options)); } catch {} } }, [options, bot?.id, optionsRestored]);
-  const [font, setFont] = useState('inter');
+  const [font, setFont] = useState('system');
   const [hasEarlier, setHasEarlier] = useState(false);
   const [loadingEarlier, setLoadingEarlier] = useState(false);
   const prependOffset = useRef<number | null>(null);
@@ -168,7 +168,7 @@ export function ChatPanel({ bot, room, bots, onCreateBot, onCreateRoom, onQuickS
   }
   const visibleMessages = messages.filter(m => !m.internal && (!messageQuery.trim() || m.content.toLowerCase().includes(messageQuery.trim().toLowerCase())));
   const activeJobs = jobs.filter(j => j.status === 'pending' || j.status === 'running' || j.status === 'cancel_requested');
-  const fontFamily = font === 'serif' ? 'Georgia, serif' : font === 'system' ? 'system-ui, sans-serif' : '"Inter Variable", sans-serif';
+  const fontFamily = font === 'serif' ? 'Georgia, serif' : font === 'system' ? '-apple-system, BlinkMacSystemFont, system-ui, sans-serif' : '"Inter Variable", sans-serif';
   return <main className={`main-content ${draggingFiles ? 'files-dragging' : ''}`} style={{ fontFamily }} onDragOver={e=>{if(e.dataTransfer.types.includes('Files')){e.preventDefault();setDraggingFiles(true);}}} onDragLeave={e=>{if(!e.currentTarget.contains(e.relatedTarget as Node))setDraggingFiles(false);}} onDrop={e=>{e.preventDefault();setDraggingFiles(false);if(!readingFiles && conversationId)void addFiles(e.dataTransfer.files);}}>
     {draggingFiles?<div className="file-drop-hint">Drop files into this conversation</div>:null}
     <header className="workspace-toolbar"><div className="toolbar-location"><strong>{title}</strong></div><div className="toolbar-actions">{conversationId?<><button ref={searchTrigger} className="toolbar-button" aria-label="Search this conversation" aria-pressed={searchOpen} onClick={()=>{if(searchOpen)closeSearch();else setSearchOpen(true);}}><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4 4"/></svg><span>Search</span></button><button className="toolbar-button" aria-expanded={workOpen} onClick={()=>setWorkOpen(true)}>Work <span className="work-count">{activeJobs.length||jobs.length}</span></button></>:null}<details ref={settings} className="thread-settings"><summary>Conversation settings</summary><div className="thread-settings-sheet"><h2>Conversation settings</h2><RunControls options={options} onChange={setOptions} font={font} onFont={setFont} group={!!room?.is_group} model={bot ? { provider: bot.llmProvider, model: bot.llmModel } : undefined}/><button type="button" className="model-connection-link" onClick={() => onOpenSetup?.()}>Connect or test a model</button>    {jobs.length ? <details className="job-tray"><summary>{activeJobs.length ? `${activeJobs.length} job${activeJobs.length === 1 ? '' : 's'} in progress` : 'Recent work'}</summary>{jobs.slice(0,6).map(job => <div key={job.id}><span>{job.title}</span><strong data-status={job.status}>{job.status === 'cancel_requested' ? 'Stopping…' : job.status}</strong>{['pending','running'].includes(job.status) ? <button aria-label={`Cancel ${job.title}`} onClick={() => api.cancelJob(conversationId, job.id).catch(e => setError(e.message))}>Cancel</button> : null}</div>)}</details> : null}
