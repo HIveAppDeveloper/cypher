@@ -40,8 +40,7 @@ export function BotCreator({ onClose, onCreate }: { onClose: () => void; onCreat
         <label htmlFor="bot-prompt">Instructions</label><textarea id="bot-prompt" rows={5} required maxLength={20000} value={instructions} onChange={e => setInstructions(e.target.value)}/>
         <fieldset className="tool-picker"><legend>Tools it can use</legend>{[{id:'browser',label:'Browse websites'},{id:'shell',label:'Run code'},{id:'filesystem',label:'Work with files'},{id:'media',label:'Generate images & video'},{id:'plugins',label:'Use connected plugins'}].map(tool => <label key={tool.id}><input type="checkbox" checked={tools.includes(tool.id)} onChange={e => setTools(e.target.checked ? [...tools, tool.id] : tools.filter(t => t !== tool.id))}/>{tool.label}</label>)}</fieldset>
       </details>
-      {error ? <p className="form-error" role="alert">{error}</p> : null}
-      </div><div className="dialog-actions"><button disabled={saving} type="button" className="btn-secondary" onClick={onClose}>Cancel</button><button disabled={saving} type="submit" className="btn-primary">{saving ? 'Creating…' : 'Create agent'}</button></div>
+      </div><div className="dialog-actions">{error ? <p className="form-error" role="alert">{error}</p> : null}<button disabled={saving} type="button" className="btn-secondary" onClick={onClose}>Cancel</button><button disabled={saving} type="submit" className="btn-primary">{saving ? 'Creating…' : 'Create agent'}</button></div>
     </form>
   </dialog>;
 }

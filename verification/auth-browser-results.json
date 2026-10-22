@@ -1,0 +1,162 @@
+{
+  "status": "passed",
+  "sourceCommit": "03b47ac36f6d41e6ba7cd45d388f4c5ac18dc3e1",
+  "expectedClientResendSeconds": 60,
+  "cases": {
+    "googleUnconfigured": {
+      "googleWidgetCount": 0,
+      "emailControlEnabled": true
+    },
+    "googleConfiguredScriptBlocked": {
+      "metadataUsesSyntheticClientAndLocalCallback": true,
+      "errorVisible": true,
+      "emailFallbackEnabled": true
+    },
+    "mobileLoginAndUnavailableRecovery": {
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "touchInputFocus": true,
+      "keyboardTabReachesSubmit": true,
+      "minimumInputAndButtonHeight": 50,
+      "horizontalOverflow": false,
+      "tapSubmitStatus": 503,
+      "errorFullyInViewport": true,
+      "draftPreserved": true,
+      "submitUsableAfterFailure": true,
+      "realDeviceKeyboardVerified": false
+    },
+    "emailUnconfigured": {
+      "status": 503,
+      "draftPreserved": true,
+      "unsentChallengeRemoved": true,
+      "deliveryCount": 0
+    },
+    "emailDeliveryFailure": {
+      "status": 503,
+      "errorVisible": true,
+      "draftPreserved": true
+    },
+    "emailBusyAndDoubleSubmit": {
+      "requestCount": 1,
+      "inputAndButtonDisabledWhilePending": true,
+      "syntheticDeliveryRecorded": true
+    },
+    "resendAt31Seconds": {
+      "browserRequestCount": 0,
+      "newDeliveryCount": 0,
+      "explicitWaitError": true,
+      "observation": "The corrected control explains the 60-second window without sending a misleading request."
+    },
+    "resendAfter62Seconds": {
+      "newDeliveryCount": 1
+    },
+    "emailCallbackCookie": {
+      "status": 307,
+      "sessionFlags": [
+        "HttpOnly",
+        "Secure",
+        "SameSite=Lax",
+        "Max-Age=604800"
+      ],
+      "signedInBackendEmailMatches": true,
+      "externalReturnToIgnored": true
+    },
+    "magicLinkOneUseAndStorage": {
+      "secondUseRejected": true,
+      "rawTokenStored": false
+    },
+    "verifiedSessionTenantIsolation": {
+      "ownAgentCreated": true,
+      "otherTenantVisibleCount": 0,
+      "forgedUserHeaderIgnored": true
+    },
+    "expiredMagicLink": {
+      "rejected": true,
+      "recoveryMessageVisible": true
+    },
+    "googleCsrfBeforeBackend": {
+      "status": 303,
+      "backendVerifierCalls": 0
+    },
+    "googleThirdPartyOwnershipConflict": {
+      "emailRequired": true,
+      "existingOwnerNotReassigned": true
+    },
+    "syntheticGoogleCallbackCookie": {
+      "status": 303,
+      "sessionAcceptedLocally": true,
+      "csrfCookieCleared": true,
+      "externalReturnToIgnored": true,
+      "realProviderLogin": false
+    },
+    "logout": {
+      "cookieExpired": true,
+      "workspaceRedirectsToLogin": true,
+      "protectedApiStatus": 401
+    }
+  },
+  "limits": [
+    "No real email was sent and no Google/OAuth provider login, credential or grant was used.",
+    "Email delivery and Google credential verification are explicit synthetic stubs; Next cookie/proxy routes and backend ownership/token storage are real.",
+    "Local Chromium desktop and 390x844 mobile emulation do not establish deployed OAuth behavior, Safari, or a real device/software keyboard.",
+    "returnTo is currently ignored by both callbacks; successful login returns to /. This does not verify deep-link restoration.",
+    "No hosted database, production deployment, application worker, paid model, user-data migration, or external message was used."
+  ],
+  "sourceSha256": {
+    "src/components/EmailLoginForm.tsx": "c10df5dbae93aa61cf8894e07fa62707e334df3d1e2edb9584a4814719952225",
+    "src/components/GoogleLogin.tsx": "7ccdb43be4540a4ac50b96336555087a655add002de03576253f6932f2394e3b",
+    "src/app/login/page.tsx": "7e85203ba959e49d21660d1c3c4d10682fa94e6b5febbffcde9f986347093ded",
+    "src/lib/auth-server.ts": "50cdc7fa5976e3fe947c127c5111d3f3a2c511fda7415f0204ccd801c65ad46d",
+    "src/app/api/auth/logout/route.ts": "7c226c0fcce6aed9560b7a837c0dcfbbd9f2106d988f4a9d238c3507a0f62ca1",
+    "src/app/api/auth/email/verify/route.ts": "f170140b492bb98d5980ffc5b86966fcaed7ddd43ed58cb506738277710acaef",
+    "src/app/api/auth/email/request/route.ts": "eab3bba8c4dc1c94981851a0fc7188cf57b74cb6a4002ce804277fbffaf48a29",
+    "src/app/api/auth/google/callback/route.ts": "deac35863c9ed1d8bc6201ed087082cda97a78f111635f06214603d3dfd4a249"
+  },
+  "productionBuild": "passed",
+  "blockedExternalScriptRequests": [
+    "https://accounts.google.com/gsi/client"
+  ],
+  "finalBackendState": {
+    "emailRequests": 7,
+    "sendAttempts": 7,
+    "deliveryCount": 4,
+    "googleVerifications": 2,
+    "tokenCount": 4,
+    "usedTokenCount": 2,
+    "rawTokenStored": false,
+    "users": [
+      {
+        "id": "email:6adb77ec228baf58854f1b39d868c73d719cd2b781148ecc748544ae533d0190",
+        "email": "existing@example.test",
+        "googleLinked": false
+      },
+      {
+        "id": "email:b2096dbc5111b6305225657ffdfab205aaff1dfb30d71805aea56922b2cbb24f",
+        "email": "owner@example.test",
+        "googleLinked": false
+      },
+      {
+        "id": "email:90213789c0641b3dfdd4080d104662faff27902caaffb0ac27473f7ce697f76b",
+        "email": "another@example.test",
+        "googleLinked": false
+      },
+      {
+        "id": "email:838d09e7dbda3fd5145fd9ada713c41df06de63422f25db768027c73148a73f5",
+        "email": "synthetic-google@gmail.com",
+        "googleLinked": true
+      }
+    ]
+  },
+  "passedCases": 16,
+  "sourceMode": "Fresh frontend working-tree snapshot with auth source hashes; actual local backend with explicit synthetic provider stubs.",
+  "resendBeforeFix": {
+    "browserRequestCount": 1,
+    "newDeliveryCount": 0,
+    "explicitWaitError": false,
+    "observation": "The old 30-second control posts and shows success while the backend 60-second window suppresses delivery.",
+    "emailComponentSha256": "36241322baeb444cf41360ae8a18eb1edb68062394c9aa22791ec048caaad287",
+    "captureNote": "The initial browser run completed 10 cases, then stopped when its exact-origin allowlist rejected Next's 127.0.0.1-to-localhost failure redirect normalization. The harness now uses localhost; the final complete run passed all 16 cases."
+  }
+}

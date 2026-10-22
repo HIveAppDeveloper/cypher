@@ -45,6 +45,11 @@ def config(monkeypatch):
     monkeypatch.setattr(settings, "ATLAS_ENGINE_SIGNING_KEY", KEY)
     monkeypatch.setattr(settings, "GROKBOT_ATLAS_ENGINE_PROVIDER", "gemini")
     monkeypatch.setattr(settings, "GROKBOT_ATLAS_ENGINE_MODEL", "gemini-3.8-flash")
+    monkeypatch.setattr(settings, "GROKBOT_ATLAS_ENGINE_ADMISSION", "local-memory")
+    monkeypatch.setattr(settings, "GROKBOT_ATLAS_ENGINE_ALLOW_LOCAL_ADMISSION", True)
+    monkeypatch.setattr(settings, "GROKBOT_PUBLIC_URL", "http://localhost:3000")
+    for name in ("VERCEL", "VERCEL_ENV", "VERCEL_DEPLOYMENT_ID", "NODE_ENV"):
+        monkeypatch.delenv(name, raising=False)
     monkeypatch.setattr(settings, "BACKEND_API_TOKEN", "private-backend-token")
     monkeypatch.setattr(settings, "REQUIRE_USER_AUTH", True)
     monkeypatch.setattr(engine, "admission", engine.Admission())
@@ -77,6 +82,7 @@ async def test_signed_json_and_stream_preserve_protocol(client, monkeypatch):
     frames = [json.loads(line) for line in response.text.splitlines()]
     assert [frame["type"] for frame in frames] == ["token", "token", "result"]
     assert response.headers["content-type"].startswith("application/x-ndjson")
+    assert isinstance(captured[0][1].pop("deadline"), float)
     assert captured[0][1] == {"tools": None, "provider": "gemini", "model": "gemini-3.8-flash", "direct": True, "max_tokens": 1200}
     assert captured[0][2] == "atlas-engine:atlas-user:alice"
     assert current_tenant_id.get() is None
@@ -359,3 +365,49 @@ async def test_gateway_stream_forwards_limit_and_closes_actual_wrapper(monkeypat
     await source.aclose()
     assert closed == [True]
     assert options[0]["max_tokens"] == 17 and options[0]["num_retries"] == 0
+
+
+@pytest.mark.asyncio
+async def test_expired_original_deadline_never_starts_provider(monkeypatch):
+    called = []
+    def forbidden(*args, **kwargs):
+        called.append(True)
+        return normal_stream()
+    monkeypatch.setattr(LLMGateway, "stream", forbidden)
+    source = engine.events(engine.ChatInput.model_validate(payload()), asyncio.get_running_loop().time() - 1)
+    frames = [frame async for frame in source]
+    assert frames == [engine.error("engine_timeout", "The inference deadline was reached.", True)]
+    assert called == [] and current_tenant_id.get() is None
+
+
+@pytest.mark.asyncio
+async def test_admission_delay_consumes_inference_budget_before_first_model_call(client, monkeypatch):
+    acquire = engine.acquire_admission
+    async def delayed(*args, **kwargs):
+        result = await acquire(*args, **kwargs)
+        await asyncio.sleep(.12)
+        return result
+    called = []
+    def forbidden(*args, **kwargs):
+        called.append(True)
+        return normal_stream()
+    monkeypatch.setattr(engine, "acquire_admission", delayed)
+    monkeypatch.setattr(LLMGateway, "stream", forbidden)
+    response = await post(client, payload(timeoutMs=100))
+    assert response.status_code == 504
+    assert called == [] and engine.admission.active == {}
+
+
+@pytest.mark.asyncio
+async def test_gateway_rechecks_original_deadline_after_capability_preflight(monkeypatch):
+    called = []
+    async def completion(**kwargs):
+        called.append(True)
+        raise AssertionError("Expired inference must not be submitted")
+    async def capable(*args): pass
+    monkeypatch.setattr(llm_gateway.litellm, "acompletion", completion)
+    monkeypatch.setattr(llm_gateway, "validate_capabilities", capable)
+    monkeypatch.setattr(llm_gateway, "completion_options", lambda *args, **kwargs: {"model": "fixture", "api_key": "synthetic"})
+    source = ORIGINAL_STREAM([{"role": "user", "content": "Synthetic"}], provider="gemini", model="gemini-3.8-flash", direct=True, deadline=asyncio.get_running_loop().time() - 1)
+    with pytest.raises(TimeoutError): await anext(source)
+    assert called == []

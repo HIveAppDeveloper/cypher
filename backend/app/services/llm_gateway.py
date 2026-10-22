@@ -1,5 +1,6 @@
 import os
 import logging
+import asyncio
 import litellm
 from app.config import settings
 from app.services.model_routing import (
@@ -143,10 +144,12 @@ class LLMGateway:
         raise last_error
 
     @staticmethod
-    async def stream(messages, tools=None, model=None, provider=None, *, direct=False, **run_options):
+    async def stream(messages, tools=None, model=None, provider=None, *, direct=False, deadline=None, **run_options):
         provider, model = model_selection(model, provider)
         connection = completion_options(model, provider, direct=direct)
         await validate_capabilities(messages, tools, provider, model)
+        if deadline is not None and asyncio.get_running_loop().time() >= deadline:
+            raise TimeoutError()
         response = await litellm.acompletion(messages=messages, tools=tools, stream=True, num_retries=0, **run_options, **connection)
         try:
             async for chunk in response:
@@ -156,4 +159,8 @@ class LLMGateway:
             # Close the provider connection instead of leaving generation alive.
             close = getattr(response, "aclose", None)
             if close is not None:
-                await close()
+                try:
+                    async with asyncio.timeout(1):
+                        await close()
+                except TimeoutError:
+                    logger.warning("Provider stream cleanup reached its deadline")

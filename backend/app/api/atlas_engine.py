@@ -1,8 +1,8 @@
-"""Scoped inference for Atlas. No tools, database reads or actions run here.
+"""Scoped inference for Atlas. No tools, user-data reads or actions run here.
 
 Atlas authenticates people and authorizes every tool locally. This boundary
 accepts only that trusted service's signed, bounded text/function protocol.
-It keeps no conversation state and selects one explicitly configured direct
+Only hash admission metadata is persisted. It selects one configured direct
 model recipient; neither the body nor the global fallback pool picks a route.
 """
 import asyncio
@@ -24,6 +24,8 @@ from app.config import settings
 from app.db.tenancy import current_tenant_id
 from app.services.llm_gateway import LLMGateway, model_selection
 from app.services.model_routing import ModelConfigurationError, ModelCapabilityError
+from app.services.atlas_admission import AdmissionDenied, AdmissionUnavailable, DurableAdmission, local_admission_allowed
+from app.db.session import AsyncSessionLocal, engine as database_engine
 
 router = APIRouter()
 MAX_BODY_BYTES = 256 * 1024
@@ -129,11 +131,9 @@ class ProtocolError(ValueError):
 
 
 class Admission:
-    """Process-local replay/concurrency guard, containing identifiers only.
+    """Explicit local-fixture guard only, never a production fallback.
 
-    Cross-instance replay protection requires a shared nonce store before a
-    deployment with that guarantee is activated. Inference is stateless and
-    cannot execute actions even if a signed request reaches two instances.
+    Production uses DurableAdmission even when its database is unavailable.
     """
     def __init__(self):
         self.seen = OrderedDict()
@@ -164,6 +164,23 @@ class Admission:
 
 
 admission = Admission()
+durable_admission = DurableAdmission(AsyncSessionLocal, database_engine)
+
+
+async def acquire_admission(body: ChatInput, timestamp: int, raw: bytes):
+    if settings.GROKBOT_ATLAS_ENGINE_ADMISSION == "local-memory":
+        if not local_admission_allowed():
+            raise AdmissionUnavailable("Local admission is restricted to explicit local tests")
+        denied = admission.claim(body, timestamp)
+        if denied:
+            raise AdmissionDenied(*denied)
+        async def release():
+            admission.release(body)
+        return release
+    lease = await durable_admission.acquire(tenant_id=body.principal.tenantId, actor_id=body.principal.actorId, request_id=body.requestId, raw_body=raw, timeout_ms=body.timeoutMs)
+    async def release():
+        await durable_admission.release(lease)
+    return release
 
 
 class LeasedStreamingResponse(StreamingResponse):
@@ -176,7 +193,7 @@ class LeasedStreamingResponse(StreamingResponse):
         try:
             await super().__call__(scope, receive, send)
         finally:
-            self.on_close()
+            await self.on_close()
 
 
 def error(code: str, message: str, retryable=False):
@@ -210,7 +227,7 @@ def get(value, name, default=None):
     return value.get(name, default) if isinstance(value, dict) else getattr(value, name, default)
 
 
-async def events(body: ChatInput):
+async def events(body: ChatInput, deadline: float | None = None):
     """Generate token frames and exactly one final result or safe error.
 
     Closing/cancelling this iterator closes the provider iterator. A partial
@@ -222,14 +239,20 @@ async def events(body: ChatInput):
     model = settings.GROKBOT_ATLAS_ENGINE_MODEL
     source = None
     try:
+        loop = asyncio.get_running_loop()
+        deadline = loop.time() + body.timeoutMs / 1000 if deadline is None else deadline
+        if loop.time() >= deadline:
+            raise TimeoutError()
         messages = [message.model_dump(exclude_none=True) for message in body.messages]
         tools = [tool.model_dump() for tool in body.tools] if body.tools else None
         allowed = {tool.function.name for tool in body.tools or []}
-        source = LLMGateway.stream(messages, tools=tools, provider=provider, model=model, direct=True, max_tokens=body.maxTokens)
+        if loop.time() >= deadline:
+            raise TimeoutError()
+        source = LLMGateway.stream(messages, tools=tools, provider=provider, model=model, direct=True, deadline=deadline, max_tokens=body.maxTokens)
         text = ""
         calls: dict[int, dict[str, Any]] = {}
         finished = None
-        async with asyncio.timeout(body.timeoutMs / 1000):
+        async with asyncio.timeout_at(deadline):
             async for chunk in source:
                 choices = get(chunk, "choices", []) or []
                 if not choices:
@@ -303,7 +326,8 @@ async def events(body: ChatInput):
         try:
             if source is not None:
                 with suppress(Exception):
-                    await source.aclose()
+                    async with asyncio.timeout(2):
+                        await source.aclose()
         finally:
             current_tenant_id.reset(tenant)
 
@@ -354,19 +378,31 @@ async def chat(request: Request):
         return failure(400, "invalid_request", "The inference request does not match contract version 1.")
     if body.recipient != provider:
         return failure(409, "recipient_mismatch", "The configured inference recipient does not match the request.")
-    denied = admission.claim(body, timestamp)
-    if denied:
-        status, code = denied
+    # Count admission/queue time and any process pause against the original
+    # inference budget. A delayed worker must not start under an expired lease.
+    inference_deadline = asyncio.get_running_loop().time() + body.timeoutMs / 1000
+    try:
+        release_admission = await acquire_admission(body, timestamp, bytes(raw))
+    except AdmissionDenied as denied:
+        status, code = denied.status, denied.code
         return failure(status, code, "The inference request was already used." if status == 409 else "The inference engine is busy.", status == 429)
+    except AdmissionUnavailable:
+        return failure(503, "engine_admission_unavailable", "Shared inference admission could not be confirmed.", True)
     released = False
-    def release_once():
+    async def release_once():
         nonlocal released
         if not released:
             released = True
-            admission.release(body)
+            try:
+                await release_admission()
+            except AdmissionUnavailable:
+                # Leave the lease to its bounded expiry. Never repeat a model
+                # call because only release/bookkeeping could not be confirmed.
+                import logging
+                logging.getLogger(__name__).warning("Atlas inference admission release unavailable")
 
     async def owned_events():
-        source = events(body)
+        source = events(body, inference_deadline)
         try:
             async for event in source:
                 yield event
@@ -374,7 +410,7 @@ async def chat(request: Request):
             try:
                 await source.aclose()
             finally:
-                release_once()
+                await release_once()
 
     if body.stream:
         async def lines():
@@ -424,4 +460,4 @@ async def chat(request: Request):
         watcher.cancel()
         with suppress(asyncio.CancelledError):
             await watcher
-        release_once()
+        await release_once()
