@@ -385,7 +385,7 @@ async def test_result_cards_and_booking_controls_survive_long_filter_sidebar(mon
     monkeypatch.setattr(browser,'_load_state',lambda *a: asyncio.sleep(0,result=None))
     try:
         page=await browser._get_page('cards-test')
-        filters=''.join(f'<label>Filter {i}<input type="checkbox" name="filter{i}"></label>' for i in range(150))
+        filters=''.join(f'<label>Filter {i}<input type="checkbox" name="filter{i}" '+('checked' if i==0 else '')+'></label>' for i in range(150))
         cards=''.join(f'<div data-testid="result-card"><h3>Hotel {i}</h3><p>${180+i} including fees; free cancellation</p><button>Choose room {i}</button></div>' for i in range(25))
         await page.set_content('<nav><a href="https://example.test">Menu</a></nav><main><div>'+filters+'</div>'+cards+'</main>')
         result=await browser.extract_content('Compare available hotel options','cards-test')
@@ -397,6 +397,12 @@ async def test_result_cards_and_booking_controls_survive_long_filter_sidebar(mon
         assert sum(c['label'].startswith('Choose room') for c in result['controls'])==25
         fields=await browser.extract_content('Show filter fields','cards-test')
         assert fields['controls'][0]['name']=='filter0'
+        assert fields['controls'][0]['label']=='Filter 0' and fields['controls'][0]['checked'] is True
+        assert fields['controls'][1]['label']=='Filter 1' and fields['controls'][1]['checked'] is False
+        assert fields['forms'][0]['label']=='Filter 0' and fields['forms'][0]['checked'] is True
+        await browser.click(fields['controls'][1]['selector'],'cards-test')
+        checked=await browser.extract_content('Show filter fields','cards-test')
+        assert checked['controls'][1]['checked'] is True
         assert len(fields['controls'])<=100
     finally:await browser.close()
 

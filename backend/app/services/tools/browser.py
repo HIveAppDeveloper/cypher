@@ -217,7 +217,9 @@ class BrowserTool:
                 const id=prefix+'-'+index;el.setAttribute('data-grokbot-control',id);
                 return {selector:'[data-grokbot-control="'+id+'"]',tag:el.tagName.toLowerCase(),
                     type:el.getAttribute('type')||'',name:el.getAttribute('name')||'',
-                    label:(el.getAttribute('aria-label')||el.getAttribute('title')||el.innerText||el.getAttribute('placeholder')||'').trim().slice(0,200),
+                    label:(el.getAttribute('aria-label')||el.getAttribute('title')||[...(el.labels||[])].map(l=>l.innerText).join(' ')||el.innerText||el.getAttribute('placeholder')||(['submit','button','reset'].includes(el.type)?el.value:'')||'').trim().slice(0,200),
+                    ...(['checkbox','radio'].includes(el.type)?{checked:el.checked}:{}),
+                    ...(el.tagName==='SELECT'?{selected_options:[...el.selectedOptions].map(o=>o.text.trim()).slice(0,20)}:{}),
                     ...(el.tagName==='A'?{href:el.href}:{}),disabled:!!el.disabled};
             });
         }""",{'prefix':uuid4().hex[:12],'fieldsFirst':bool(re.search(r'\b(filters?|forms?|fields?|inputs?|checkboxes)\b',instruction,re.I))})
@@ -370,6 +372,8 @@ class BrowserTool:
                 () => Array.from(document.querySelectorAll('input, textarea, select')).map(el => ({
                     type: el.type || el.tagName.toLowerCase(),
                     name: el.name || el.id,
+                    label: (el.getAttribute('aria-label') || [...(el.labels||[])].map(l=>l.innerText).join(' ') || el.getAttribute('placeholder') || '').trim().slice(0,200),
+                    ...(['checkbox','radio'].includes(el.type)?{checked:el.checked}:{}),
                     placeholder: el.placeholder || '',
                     value: el.type === 'password' || /password|secret|token|key|credit|card|cvv/i.test((el.name || '')+' '+(el.id || '')) ? '[redacted]' : el.value || ''
                 }))
