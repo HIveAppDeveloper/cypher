@@ -107,6 +107,37 @@ async def save_check(name,status,detail):
         await db.commit()
 
 
+async def verify_primary_model_once():
+    """Opt-in release check: one short model reply, with no plugin or media calls."""
+    import os
+    from app.config import settings
+    nonce = os.getenv('GROKBOT_VERIFY_MODEL_ONCE', '').strip()
+    if not nonce:
+        return
+    async with AsyncSessionLocal() as db:
+        previous = await db.get(RuntimeCheck, 'gateway')
+        if previous and previous.status in {'passed', 'failed'} and (previous.detail or {}).get('release_check') == nonce:
+            return
+    transport = 'omniroute' if settings.OMNIROUTE_URL else 'vercel' if settings.LLM_USE_GATEWAY else 'direct'
+    detail = {'transport': transport, 'release_check': nonce, 'model': settings.LLM_MODEL}
+    await save_check('gateway', 'running', detail)
+    from app.services.llm_gateway import LLMGateway
+    try:
+        async with asyncio.timeout(60):
+            response = await LLMGateway.complete(
+                messages=[{'role': 'user', 'content': 'Reply with exactly: Model connection ready'}],
+                provider=settings.LLM_PROVIDER, model=settings.LLM_MODEL,
+                max_tokens=512, reasoning_effort='low',
+            )
+        if not response.choices[0].message.content:
+            raise RuntimeError('The model check returned no text.')
+        await save_check('gateway', 'passed', detail)
+        logger.info('Primary model release check passed transport=%s model=%s', transport, settings.LLM_MODEL)
+    except Exception as error:
+        await save_check('gateway', 'failed', {**detail, **safe_error(error)})
+        logger.warning('Primary model release check failed transport=%s type=%s', transport, type(error).__name__)
+
+
 async def verify_media_cloud(force=False):
     import os
     from app.config import settings

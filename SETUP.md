@@ -65,6 +65,16 @@ Attachment previews are capped at 280 px on desktop and 220 px on narrow screens
 
 Open Connections → MCP servers, supply a public HTTPS Streamable HTTP endpoint and optional bearer token, then Connect & enable. Discovery must advertise at least one tool. The app requires a private authentication/encryption secret of at least 32 characters before accepting a bearer credential. It stores the token encrypted, never returns it through the public listing, and exposes discovered tools to agents with Plugins enabled. Connections can be toggled or disconnected. OAuth-only services need their own connection flow. These tools can read or change external service data; enable only intended connections. The UI lists tool names and descriptions, not credentials.
 
+## Hosted Lovable sign-in
+
+Lovable restricts automatic registration for hosted callbacks. Its advertised client-metadata flow also rejects unapproved client domains. Either request callback approval from Lovable or register a custom client in **Workspace settings → API keys & OAuth → OAuth clients** as a workspace owner/admin.
+
+Register each production callback, for example `https://open-grokbot-hiveapp.vercel.app/api/plugin-oauth/callback` and `https://open-grokbot.vercel.app/api/plugin-oauth/callback`. Select `offline`, `projects:read`, `projects:write`, `workspaces:read`, and `workspaces:write` for the MCP tools; project/workspace scopes require Business or Enterprise. Users still review and authorize access.
+
+Set `LOVABLE_OAUTH_CLIENT_ID` on the backend and worker. For a Web server client, also set the encrypted `LOVABLE_OAUTH_CLIENT_SECRET`; a public PKCE client uses only the ID. Redeploy, then reconnect Lovable. The SDK handles PKCE, token exchange and refresh; client credentials and tokens stay encrypted in storage. No client is registered automatically in the user's Lovable workspace.
+
+Official instructions: [Lovable OAuth clients](https://docs.lovable.dev/features/oauth-clients).
+
 ## Local or Docker alternative
 
 Use `.env.example` as a starting point. Set a native state database URL and explicit provider credentials or gateway authentication. Docker sandbox mode uses `SANDBOX_BACKEND=docker` and the `open-grokbot-sandbox:latest` image. Build it with `docker build -t open-grokbot-sandbox:latest ./sandbox`, then run the applicable Compose configuration. A local embedded worker is available through `RUN_EMBEDDED_WORKER=true`; do not run it alongside another runner unless protected by the PostgreSQL lock. Keep this deployment private and use stable backend authentication/encryption configuration.

@@ -1,5 +1,93 @@
 [
   {
+    "id": "03e4d05af2d714cf",
+    "name": "Atlas",
+    "url": "https://atlassolution.net/api/mcp",
+    "description": "Run Atlas outreach and reach Hive: prospects, campaign drafts, approvals, launches, replies and results. Connect with an Atlas bot key.",
+    "category": "Business",
+    "domains": [
+      "atlassolution.net",
+      "atlas-hiveapp.vercel.app"
+    ],
+    "source": "https://atlassolution.net",
+    "iconSource": "https://atlassolution.net/icon.svg",
+    "auth": "api_key",
+    "auth_header": "Authorization",
+    "featured": true,
+    "icon": "/connector-icons/03e4d05af2d714cf.svg",
+    "verification": "not_tested",
+    "key_help": "In Atlas, open the workspace you run outreach for, go to its Team tab, and under API keys create a key with read and write access. Paste it below. The key only reaches that workspace, and every campaign still gets approved before it sends."
+  },
+  {
+    "id": "4fe6ee93e7e1c94a",
+    "name": "Lovable",
+    "url": "https://mcp.lovable.dev",
+    "description": "Build, edit and publish Lovable apps. Sign in with your Lovable account.",
+    "category": "Development",
+    "domains": [
+      "lovable.dev",
+      "lovable.app",
+      "mcp.lovable.dev"
+    ],
+    "source": "https://registry.modelcontextprotocol.io/?q=dev.lovable/mcp",
+    "iconSource": "https://lovable.dev/favicon.svg",
+    "auth": "auto",
+    "featured": true,
+    "icon": "/connector-icons/4fe6ee93e7e1c94a.svg",
+    "verification": "not_tested"
+  },
+  {
+    "id": "b107154532c6653c",
+    "name": "Base44",
+    "url": "https://app.base44.com/mcp/",
+    "description": "Create and manage Base44 apps, entities and data. Sign in with your Base44 account.",
+    "category": "Development",
+    "domains": [
+      "base44.com",
+      "app.base44.com"
+    ],
+    "source": "https://app.base44.com/.well-known/oauth-protected-resource/mcp",
+    "iconSource": "https://base44.com/favicon.ico",
+    "auth": "auto",
+    "featured": true,
+    "icon": "/connector-icons/b107154532c6653c.png",
+    "verification": "not_tested"
+  },
+  {
+    "id": "fdfb49098c03a82f",
+    "name": "Readdy",
+    "url": "https://mcp.readdy.ai/mcp",
+    "description": "Generate and edit websites with Readdy AI. Sign in with your Readdy account.",
+    "category": "Development",
+    "domains": [
+      "readdy.ai",
+      "mcp.readdy.ai"
+    ],
+    "source": "https://mcp.readdy.ai/mcp",
+    "iconSource": "https://readdy.ai/site-static/favicon/apple-touch-icon.png",
+    "auth": "auto",
+    "featured": true,
+    "verification": "not_tested",
+    "icon": "/connector-icons/fdfb49098c03a82f.png"
+  },
+  {
+    "id": "ec75118ffa4dc736",
+    "name": "Instagram",
+    "url": "site-mcp://instagram.com",
+    "description": "Read public Instagram posts, reels and profiles from a link: caption, author, likes, comments and image.",
+    "category": "Images & media",
+    "domains": [
+      "instagram.com",
+      "instagr.am"
+    ],
+    "source": "https://www.instagram.com",
+    "iconSource": "https://static.cdninstagram.com/rsrc.php/yr/r/rzWiSjZRxk5.webp",
+    "auth": "generated",
+    "featured": true,
+    "verification": "not_tested",
+    "icon": "/connector-icons/ec75118ffa4dc736.webp"
+  },
+  {
     "id": "37a30e4bfcf9dbab",
     "name": "Vercel",
     "url": "https://mcp.vercel.com",

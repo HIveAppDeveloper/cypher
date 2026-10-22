@@ -2,13 +2,12 @@
 import asyncio
 import hashlib
 import json
-import os
 import secrets
 import time
 from pathlib import Path
 from urllib.parse import urlsplit
 from uuid import UUID
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, Field
 from sqlalchemy import select, delete
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -19,11 +18,9 @@ from app.services.plugin_auth import DatabaseTokenStorage, FLOW_TTL, make_provid
 
 router=APIRouter()
 CATALOG_PATH=Path(__file__).parents[1]/'data'/'plugin_catalog.json'
-PUBLIC_ORIGIN=os.getenv('GROKBOT_PUBLIC_URL','https://open-grokbot-hiveapp.vercel.app').rstrip('/')
-CALLBACK_URL=PUBLIC_ORIGIN+'/api/plugin-oauth/callback'
 
 def catalog():
-    return json.loads(CATALOG_PATH.read_text()) if CATALOG_PATH.exists() else []
+    return json.loads(CATALOG_PATH.read_text(encoding='utf-8')) if CATALOG_PATH.exists() else []
 
 def hostname(value):
     parsed=urlsplit(value if '://' in value else 'https://'+value)
@@ -86,6 +83,9 @@ async def resolve(body:Website):
     from app.services.website_connectors import published_connector
     published=await published_connector(host,http_client)
     if published:return published
+    from app.services.site_mcp import probe_mcp, openapi_spec, site_url
+    found=await probe_mcp(host)
+    if found:return {'id':'website-'+host,'name':host,'url':found,'description':'Connector published by this website. Sign in to grant access to your account.','category':'Custom','domains':[host],'auth':'auto','source':'https://'+host}
     # Registry search is discovery only; accept exact publisher website/domain matches.
     try:
         async with http_client() as client:
@@ -100,7 +100,8 @@ async def resolve(body:Website):
                         return {'id':server.get('name',endpoint),'name':server.get('title') or host,'url':endpoint,'description':server.get('description','Published connector'),'category':'Custom','domains':[host],'source':'https://registry.modelcontextprotocol.io/'}
     except Exception:
         pass
-    raise HTTPException(404,'We could not find a published connector for this website. Search the catalog, or use Advanced to add a server URL supplied by the company.')
+    api='its published API and ' if await openapi_spec(host) else ''
+    return {'id':'site-'+host,'name':host,'url':site_url(host),'description':f'Generated connector for {host}: {api}cloud-browser tools to read and use the site.','category':'Custom','domains':[host],'auth':'generated','source':'https://'+host}
 
 class Begin(BaseModel):
     name:str=Field(min_length=1,max_length=80)
@@ -108,26 +109,60 @@ class Begin(BaseModel):
     approval_id:str|None=Field(default=None,max_length=36)
     reconnect:bool=False
     connection_id:str|None=Field(default=None,max_length=80)
+    plugin_id:UUID|None=None
+    new_connection:bool=False
 
 @router.post('/authorize')
-async def authorize(body:Begin,db:AsyncSession=Depends(get_db)):
+async def authorize(body:Begin,db:AsyncSession=Depends(get_db),request:Request=None):
     from app.api.device import require_device
+    from app.services.site_mcp import is_site, site_host, site_url
     url=body.url.strip()
+    if is_site(url):
+        url=site_url(hostname(site_host(url)))
+        try:await validate_endpoint('https://'+site_host(url))
+        except (ValueError,OSError):raise HTTPException(422,'Use a public website address.')
+        await require_device(db,body.approval_id,'connect_plugin:'+url)
+        existing=(await db.execute(select(Plugin).where(Plugin.url==url))).scalars().first()
+        if existing and not body.reconnect:return {'status':'connected','plugin_id':existing.id,'name':existing.name}
+        tools=await discover(url)
+        plugin=existing or Plugin(name=body.name.strip(),url=url,enabled=True)
+        old={tool['name']:tool.get('enabled',True) for tool in (existing.tools if existing else [])}
+        plugin.tools=[{**tool,'enabled':old.get(tool['name'],True)} for tool in tools]
+        if not existing:db.add(plugin)
+        await db.commit()
+        return {'status':'connected','plugin_id':plugin.id,'name':plugin.name}
     try: await validate_endpoint(url)
     except (ValueError,OSError): raise HTTPException(422,'Use a public HTTPS connector URL. A company website belongs in the website lookup field.')
     await require_device(db,body.approval_id,'connect_plugin:'+url)
     from app.services import managed_connections
     config=managed_connections.configuration(url,body.connection_id)
     if body.connection_id and not config:raise HTTPException(422,'Choose an available connection for this provider.')
-    existing=await managed_connections.matching_connection(db,url,config) if config else (await db.execute(select(Plugin).where(Plugin.url==url))).scalars().first()
+    from app.api.plugins import selected_connection
+    selected=await selected_connection(db,url,body.plugin_id,body.new_connection) if body.plugin_id else None
+    if body.new_connection and body.connection_id:
+        raise HTTPException(422,'Choose a managed account or add a separate sign-in, not both.')
+    # A new account uses a fresh native OAuth grant, not the installation owner's
+    # managed grant. Reconnect must retain the selected account's auth method.
+    from app.services.plugins import reveal
+    if body.new_connection or (selected and not (reveal(selected.credential) or '').startswith(managed_connections.REFERENCE_PREFIX)):
+        config=None
+    if config:
+        existing=await managed_connections.matching_connection(db,url,config)
+        if body.plugin_id and (not existing or existing.id!=str(body.plugin_id)):
+            raise HTTPException(404,'This account does not match the selected managed connection.')
+    else:
+        existing=selected if body.plugin_id else await selected_connection(db,url,None,body.new_connection)
     if existing and not body.reconnect: return {'status':'connected','plugin_id':existing.id,'name':existing.name}
     await db.execute(delete(PluginAuthorization).where(PluginAuthorization.status!='connected',PluginAuthorization.created_at<time.time()-FLOW_TTL))
     if config:return await managed_connections.begin(db,body.name.strip(),url,config,existing)
     await db.execute(delete(PluginAuthorization).where(PluginAuthorization.status!='connected',PluginAuthorization.created_at<time.time()-FLOW_TTL))
+    from app.services.plugin_auth import callback_url_for
+    try:callback_url=callback_url_for(request.headers.get('x-grokbot-public-origin') if request else None)
+    except ValueError as error:raise HTTPException(422,str(error))
     binding=secrets.token_urlsafe(32)
     row=PluginAuthorization(name=body.name.strip(),url=url,created_at=time.time(),binding_hash=hashlib.sha256(binding.encode()).hexdigest(),status='discovering',plugin_id=existing.id if existing else None)
     db.add(row);await db.commit();await db.refresh(row)
-    provider=await make_provider(db,row,CALLBACK_URL)
+    provider=await make_provider(db,row,callback_url)
     try:
         tools=await discover(url,auth=provider)
     except Exception as error:
@@ -137,7 +172,7 @@ async def authorize(body:Begin,db:AsyncSession=Depends(get_db)):
         def rejected_redirect(error):
             return 'invalid_redirect_uri' in str(error) or any(rejected_redirect(child) for child in getattr(error,'exceptions',[])) or bool(error.__cause__ and rejected_redirect(error.__cause__))
         if rejected_redirect(error):
-            raise HTTPException(422,'This provider requires approval for this app’s callback address before sign-in can work. Ask the provider to approve '+CALLBACK_URL+'. The service has not been connected.')
+            raise HTTPException(422,'This provider requires approval for this app’s callback address before sign-in can work. Ask the provider to approve '+callback_url+'. The service has not been connected.')
         raise HTTPException(422,'This service could not start automatic sign-in. It may require an API key, an administrator-installed app, or a different MCP endpoint. Your account has not been connected.')
     if not tools:
         row.status='failed';await db.commit();raise HTTPException(422,'The server connected but did not publish any tools.')

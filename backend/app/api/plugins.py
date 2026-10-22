@@ -13,6 +13,8 @@ class ConnectPlugin(BaseModel):
     name: str = Field(min_length=1, max_length=80)
     url: str = Field(min_length=8, max_length=1000)
     token: str = Field(default='', max_length=4096)
+    plugin_id: UUID | None = None
+    new_connection: bool = False
     auth_header: str = Field(default='Authorization',pattern=r'^[A-Za-z][A-Za-z0-9-]{0,63}$')
 class TogglePlugin(BaseModel):
     enabled: bool
@@ -37,12 +39,29 @@ async def list_plugins(db: AsyncSession = Depends(get_db)):
         output.append(item)
     return output
 
+async def selected_connection(db, url, plugin_id=None, new_connection=False):
+    """Select one tenant-owned account explicitly; never guess among accounts."""
+    if plugin_id and new_connection:
+        raise HTTPException(422,'Choose an existing connection or add another account, not both.')
+    if plugin_id:
+        plugin=await db.get(Plugin,str(plugin_id))
+        if not plugin or plugin.url!=url:
+            raise HTTPException(404,'Connection not found for this server.')
+        return plugin
+    if new_connection:return None
+    rows=(await db.execute(select(Plugin).where(Plugin.url==url).with_for_update())).scalars().all()
+    if len(rows)>1:
+        raise HTTPException(409,'Choose which account to reconnect, or select Add another account.')
+    return rows[0] if rows else None
+
+
 @router.post('')
 async def connect(data: ConnectPlugin, db: AsyncSession = Depends(get_db)):
     if data.auth_header.strip().lower() == 'cookie':
         raise HTTPException(status_code=422, detail='Browser session cookies cannot be used as API keys. Use provider sign-in or a provider-issued API token.')
     from app.api.device import require_device
     await require_device(db,data.approval_id,'connect_plugin:'+data.url.strip())
+    plugin=await selected_connection(db,data.url.strip(),data.plugin_id,data.new_connection)
     try:
         import json
         from app.services.plugins import credential_headers
@@ -60,7 +79,6 @@ async def connect(data: ConnectPlugin, db: AsyncSession = Depends(get_db)):
         raise HTTPException(status_code=502, detail='Could not connect to this MCP server. Check its HTTPS endpoint and bearer token.')
     if not tools:
         raise HTTPException(status_code=422, detail='This MCP server did not advertise any tools.')
-    plugin=(await db.execute(select(Plugin).where(Plugin.url==data.url.strip()).with_for_update())).scalars().first()
     if plugin:
         from sqlalchemy import delete
         enabled={t['name']:t.get('enabled',True) for t in plugin.tools}
@@ -156,6 +174,8 @@ async def test_connection(id:UUID,db:AsyncSession=Depends(get_db)):
     if not plugin or not plugin.enabled:raise HTTPException(409,'Enable the connection before testing it.')
     host=urlsplit(plugin.url).hostname
     examples={
+        'atlassolution.net': [('atlas_organizations',{})],
+        'atlas-hiveapp.vercel.app': [('atlas_organizations',{})],
         'mcp.deepwiki.com': [('read_wiki_structure',{'repoName':'vercel/ai'})],
         'learn.microsoft.com': [('microsoft_docs_search',{'query':'Azure Functions overview'})],
         'docs.mcp.cloudflare.com': [('search_cloudflare_documentation',{'query':'Workers overview'})],
@@ -178,8 +198,20 @@ async def test_connection(id:UUID,db:AsyncSession=Depends(get_db)):
         async with asyncio.timeout(45):
             result=await invoke(plugin.id,example[0],example[1])
         passed=result.get('success') is True
+        no_teams=False
+        if passed and host=='mcp.vercel.com' and example[0]=='list_teams':
+            import json
+            value=result.get('structured_content')
+            if not isinstance(value,dict):
+                try:value=json.loads(result.get('content',''))
+                except (ValueError,TypeError):value={}
+            value=value.get('result',value) if isinstance(value,dict) else {}
+            no_teams=isinstance(value,dict) and value.get('teams')==[]
+            if no_teams:passed=False
     except Exception:
-        passed=False
-    detail={'tool':example[0],'latency_ms':round((time.monotonic()-started)*1000),'message':'A read-only tool returned successfully.' if passed else 'The read-only test failed. Reconnect or check the service permissions.'}
+        passed=False;no_teams=False
+    message='A read-only tool returned successfully.' if passed else 'The read-only test failed. Reconnect or check the service permissions.'
+    if no_teams:message='Vercel signed in, but this connection has no team access. Reconnect using your Hive account and include the Hive team in the access you grant.'
+    detail={'tool':example[0],'latency_ms':round((time.monotonic()-started)*1000),'message':message}
     await save_check('plugin:'+plugin.id,'passed' if passed else 'failed',detail)
     return {'status':'passed' if passed else 'failed',**detail}

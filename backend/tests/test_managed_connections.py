@@ -122,8 +122,8 @@ async def test_new_website_uses_its_published_connector_and_rejects_registry_imp
     monkeypatch.setattr(plugin_catalog,'http_client',lambda:httpx.AsyncClient(transport=httpx.MockTransport(transport)))
     found=await plugin_catalog.resolve(plugin_catalog.Website(website='new-provider.example'))
     assert found['url']=='https://mcp.new-provider.example/mcp' and found['source']=='https://new-provider.example'
-    with pytest.raises(Exception) as error:await plugin_catalog.resolve(plugin_catalog.Website(website='unlisted.example'))
-    assert error.value.status_code==404
+    generated=await plugin_catalog.resolve(plugin_catalog.Website(website='unlisted.example'))
+    assert generated['url']=='site-mcp://unlisted.example' and generated['auth']=='generated'
 
 @pytest.mark.asyncio
 async def test_two_managed_accounts_on_one_endpoint_remain_distinct(workspace,monkeypatch):

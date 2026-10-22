@@ -9,7 +9,7 @@ export const dynamic='force-dynamic';
 export async function GET(request:NextRequest){
   const state=request.nextUrl.searchParams.get('state')||'';
   const flow=state.split('.')[0];
-  const origin=process.env.GROKBOT_PUBLIC_URL || 'https://open-grokbot-hiveapp.vercel.app';
+  const origin=request.nextUrl.origin;
   const redirect=new URL('/',origin);
   const binding=/^[0-9a-f-]{36}$/.test(flow)?request.cookies.get('grokbot-oauth-'+flow)?.value:undefined;
   const backend=process.env.BACKEND_INTERNAL_URL||process.env.GROKBOT_BACKEND_URL;

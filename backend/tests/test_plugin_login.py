@@ -33,8 +33,8 @@ async def db(tmp_path,monkeypatch):
 @pytest.mark.asyncio
 async def test_website_resolution_and_catalog(monkeypatch):
     monkeypatch.setattr(catalog_api,'http_client',lambda:httpx.AsyncClient(transport=httpx.MockTransport(lambda request:httpx.Response(404))))
-    assert len(catalog_api.catalog())==500
-    assert len({item['url'] for item in catalog_api.catalog()})==500
+    assert len(catalog_api.catalog())==505
+    assert len({item['url'] for item in catalog_api.catalog()})==505
     result=await catalog_api.resolve(catalog_api.Website(website='https://vercel.com/hiveapp/open-grokbot'))
     assert result['url']=='https://mcp.vercel.com'
     for url in ['vercel.com','https://www.vercel.com/','notion.so','linear.app']:
@@ -49,7 +49,7 @@ async def create_flow(db):
     db.add(row);await db.commit();await db.refresh(row)
     return row,binding
 
-async def prepare_consent(db,row,monkeypatch):
+async def prepare_consent(db,row,monkeypatch,cimd=False):
     async def valid_endpoint(url):pass
     monkeypatch.setattr(plugin_auth,'validate_endpoint',valid_endpoint)
     provider=await make_provider(db,row,'https://grokbot.example/api/plugin-oauth/callback')
@@ -57,8 +57,9 @@ async def prepare_consent(db,row,monkeypatch):
     def transport(request):
         requests.append(request)
         if request.url.path=='/mcp':return httpx.Response(401,headers={'WWW-Authenticate':'Bearer resource_metadata="https://service.example/.well-known/oauth-protected-resource"'},json={})
-        if request.url.path=='/.well-known/oauth-protected-resource':return httpx.Response(200,json={'resource':'https://service.example/mcp','authorization_servers':['https://accounts.example'],'scopes_supported':['read']})
-        if request.url.path=='/.well-known/oauth-authorization-server':return httpx.Response(200,json={'issuer':'https://accounts.example','authorization_endpoint':'https://accounts.example/authorize','token_endpoint':'https://accounts.example/token','registration_endpoint':'https://accounts.example/register','code_challenge_methods_supported':['S256'],'response_types_supported':['code'],'token_endpoint_auth_methods_supported':['none']})
+        if request.url.path=='/.well-known/oauth-protected-resource':return httpx.Response(200,json={'resource':row.url,'authorization_servers':['https://accounts.example'],'scopes_supported':['read']})
+        if request.url.path=='/.well-known/oauth-authorization-server':return httpx.Response(200,json={'issuer':'https://accounts.example','authorization_endpoint':'https://accounts.example/authorize','token_endpoint':'https://accounts.example/token','registration_endpoint':'https://accounts.example/register','code_challenge_methods_supported':['S256'],'response_types_supported':['code'],'token_endpoint_auth_methods_supported':['none'],'client_id_metadata_document_supported':cimd})
+        if request.url.path=='/register' and cimd:return httpx.Response(400,json={'error':'invalid_redirect_uri','error_description':'Use the client_id_metadata_document flow for hosted callbacks.'})
         if request.url.path=='/register':return httpx.Response(201,json={'client_id':'test-client','redirect_uris':['https://grokbot.example/api/plugin-oauth/callback'],'token_endpoint_auth_method':'none'})
         return httpx.Response(404)
     with pytest.raises(SignInRequired):
@@ -82,6 +83,94 @@ async def test_real_sdk_discovers_registers_and_persists_pkce(db,monkeypatch):
     assert params['state'][0].startswith(row.id+'.')
     assert any(request.url.path=='/register' for request in requests)
     assert not any(request.url.path=='/token' for request in requests)
+
+
+@pytest.mark.asyncio
+async def test_hosted_client_metadata_avoids_rejected_dynamic_registration(db,monkeypatch):
+    row,_=await create_flow(db)
+    provider,saved,requests=await prepare_consent(db,row,monkeypatch,cimd=True)
+    params=parse_qs(urlsplit(saved['authorization_url']).query)
+    metadata_url='https://grokbot.example/api/plugin-oauth/client-metadata'
+    assert params['client_id']==[metadata_url]
+    assert params['redirect_uri']==['https://grokbot.example/api/plugin-oauth/callback']
+    assert saved['client_metadata_url']==metadata_url
+    assert not any(request.url.path=='/register' for request in requests)
+    restored=await make_provider(db,row)
+    assert restored.context.client_metadata_url==metadata_url
+    assert restored.context.client_metadata.redirect_uris==provider.context.client_metadata.redirect_uris
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize('client_secret',[None,'test-only-client-secret'])
+async def test_registered_lovable_client_uses_pkce_and_encrypted_credentials(db,monkeypatch,client_secret):
+    monkeypatch.setenv('LOVABLE_OAUTH_CLIENT_ID','registered-grokbot-client')
+    if client_secret:monkeypatch.setenv('LOVABLE_OAUTH_CLIENT_SECRET',client_secret)
+    else:monkeypatch.delenv('LOVABLE_OAUTH_CLIENT_SECRET',raising=False)
+    row,_=await create_flow(db);row.url='https://mcp.lovable.dev/mcp';await db.commit()
+    provider,saved,requests=await prepare_consent(db,row,monkeypatch,cimd=True)
+    params=parse_qs(urlsplit(saved['authorization_url']).query)
+    assert params['client_id']==['registered-grokbot-client']
+    assert params['code_challenge_method']==['S256']
+    assert provider.context.client_metadata_url is None
+    assert not any(request.url.path=='/register' for request in requests)
+    assert 'registered-grokbot-client' not in row.payload
+    if client_secret:assert client_secret not in row.payload
+    restored=await make_provider(db,row);await restored._initialize()
+    exchange=await restored._exchange_token_authorization_code('temporary-code',saved['verifier'])
+    form=parse_qs(exchange.content.decode())
+    assert form['client_id']==['registered-grokbot-client']
+    assert form.get('client_secret')==([client_secret] if client_secret else None)
+
+@pytest.mark.asyncio
+async def test_unregistered_lovable_keeps_approved_callback_registration_path(db,monkeypatch):
+    monkeypatch.delenv('LOVABLE_OAUTH_CLIENT_ID',raising=False)
+    row,_=await create_flow(db);row.url='https://mcp.lovable.dev';await db.commit()
+    provider=await make_provider(db,row,'https://grokbot.example/api/plugin-oauth/callback')
+    assert provider.context.client_metadata_url is None
+    assert await provider.context.storage.get_client_info() is None
+
+@pytest.mark.asyncio
+async def test_lovable_client_credentials_are_not_used_for_other_services(db,monkeypatch):
+    monkeypatch.setenv('LOVABLE_OAUTH_CLIENT_ID','registered-grokbot-client')
+    monkeypatch.setenv('LOVABLE_OAUTH_CLIENT_SECRET','test-only-client-secret')
+    row,_=await create_flow(db)
+    provider=await make_provider(db,row,'https://grokbot.example/api/plugin-oauth/callback')
+    assert await provider.context.storage.get_client_info() is None
+    assert provider.context.client_metadata_url=='https://grokbot.example/api/plugin-oauth/client-metadata'
+
+
+def test_callback_origin_is_restricted_to_configured_app_domains(monkeypatch):
+    monkeypatch.setenv('GROKBOT_PUBLIC_URL','https://canonical.example')
+    monkeypatch.setenv('GROKBOT_OAUTH_ALLOWED_ORIGINS','https://alternate.example')
+    assert plugin_auth.callback_url_for()=='https://canonical.example/api/plugin-oauth/callback'
+    assert plugin_auth.callback_url_for('https://alternate.example')=='https://alternate.example/api/plugin-oauth/callback'
+    for origin in ['https://attacker.example','https://canonical.example.attacker.example','https://canonical.example/path','http://canonical.example','https://canonical.example@attacker.example']:
+        with pytest.raises(ValueError):plugin_auth.callback_url_for(origin)
+
+@pytest.mark.asyncio
+async def test_authorize_uses_approved_request_origin_and_rejects_other_hosts(db,monkeypatch):
+    from fastapi import FastAPI
+    from app.api import device
+    monkeypatch.setenv('GROKBOT_PUBLIC_URL','https://canonical.example')
+    monkeypatch.setenv('GROKBOT_OAUTH_ALLOWED_ORIGINS','https://alternate.example')
+    async def allowed(*args):pass
+    monkeypatch.setattr(device,'require_device',allowed)
+    monkeypatch.setattr(catalog_api,'validate_endpoint',allowed)
+    callbacks=[]
+    async def provider(session,row,callback):
+        callbacks.append(callback)
+        return await make_provider(session,row,callback)
+    async def tools(*args,**kwargs):return [{'name':'lookup','schema':{}}]
+    monkeypatch.setattr(catalog_api,'make_provider',provider)
+    monkeypatch.setattr(catalog_api,'discover',tools)
+    app=FastAPI();app.include_router(catalog_api.router)
+    async def session():yield db
+    app.dependency_overrides[catalog_api.get_db]=session
+    async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app),base_url='http://test') as client:
+        rejected=await client.post('/authorize',json={'name':'Test','url':'https://service.example/mcp'},headers={'x-grokbot-public-origin':'https://attacker.example'})
+        assert rejected.status_code==422 and not callbacks
+        accepted=await client.post('/authorize',json={'name':'Test','url':'https://service.example/mcp'},headers={'x-grokbot-public-origin':'https://alternate.example'})
+        assert accepted.status_code==200
+    assert callbacks==['https://alternate.example/api/plugin-oauth/callback']
 
 @pytest.mark.asyncio
 async def test_callback_rejects_wrong_browser_and_expired_state(db,monkeypatch):
