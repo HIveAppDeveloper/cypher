@@ -1,5 +1,22 @@
 [
   {
+    "id": "03e4d05af2d714cf",
+    "name": "Atlas",
+    "url": "https://atlassolution.net/api/mcp",
+    "description": "Run Atlas outreach and reach Hive: prospects, campaign drafts, approvals, launches, replies and results. Connect with an Atlas bot key.",
+    "category": "Business",
+    "domains": [
+      "atlassolution.net"
+    ],
+    "source": "https://atlassolution.net",
+    "iconSource": "https://atlassolution.net/icon.svg",
+    "auth": "api_key",
+    "auth_header": "Authorization",
+    "featured": true,
+    "icon": "/connector-icons/03e4d05af2d714cf.svg",
+    "verification": "not_tested"
+  },
+  {
     "id": "4fe6ee93e7e1c94a",
     "name": "Lovable",
     "url": "https://mcp.lovable.dev",
