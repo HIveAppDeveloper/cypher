@@ -24,6 +24,8 @@ Curated connectors and the live MCP Registry can be searched from one panel. Reg
 
 The Connections panel also lists Hive/Atlas Vercel variable names and configuration states, never secret values. The current deployment preparation imported 43 available values (35 retrieved individually plus eight earlier) and inventories 177 names; protected variables that could not be exported remain Needs link. Inventory is not proof of service integration or credential validity.
 
+Model setup is reachable from the home composer and conversation settings. It opens the configured OmniRoute dashboard when available and includes a one-request Gemini model test. Gemini consumer subscriptions are not API credentials; the supported route uses a Gemini API key from AI Studio, with separate API quota and billing. The test never reads browser cookies or claims subscription OAuth access.
+
 ## Deployment and verification
 
 The active repository-root `vercel.json` defines a Next.js frontend, private Python container backend, internal service binding, and a persistent worker daemon. The authorized Atlas native PostgreSQL credential is configured for isolated `grokbot` state. Hive and Atlas configuration retain separate prefixes; secrets stay server-side and are not injected into sandboxes. The managed Vercel Sandbox adapter handles shell/files; Docker remains an alternative and Playwright browsing runs on the hosted backend.

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSessionFromCookieHeader } from '../../../lib/auth-server';
 export const dynamic = 'force-dynamic';
+export const maxDuration = 60;
 async function proxy(request: NextRequest, { params }: { params: { path: string[] } }) {
   const path = params.path.join('/');
   const publicAuthPath = path === 'auth/email/request' || path === 'auth/email/verify' || (request.method==='GET' && /^workspace\/templates\/shared\/[A-Za-z0-9_-]{24,64}$/.test(path));
@@ -18,7 +19,8 @@ async function proxy(request: NextRequest, { params }: { params: { path: string[
   const channelKey=request.headers.get('x-grokbot-channel-key');
   if(channelKey) headers['x-grokbot-channel-key']=channelKey;
   let response: Response;
-  try { response = await fetch(url, { method: request.method, headers, body: ['GET', 'HEAD'].includes(request.method) ? undefined : await request.text(), cache: 'no-store', signal: AbortSignal.timeout(params.path[0]==='plugins'?60000:25000) }); } catch { return NextResponse.json({ detail: 'The cloud API is starting or unavailable. Try again shortly.' }, { status: 503 }); }
+  const timeout = params.path.join('/') === 'runtime/models/test' || params.path[0] === 'plugins' ? 60000 : 25000;
+  try { response = await fetch(url, { method: request.method, headers, body: ['GET', 'HEAD'].includes(request.method) ? undefined : await request.text(), cache: 'no-store', signal: AbortSignal.timeout(timeout) }); } catch { return NextResponse.json({ detail: 'The cloud API is starting or unavailable. Try again shortly.' }, { status: 503 }); }
   if (params.path.join('/') === 'plugins/authorize' && response.ok) {
     const data=await response.json();
     const binding=data.binding; delete data.binding;

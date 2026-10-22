@@ -46,7 +46,7 @@ function find(tree, predicate) {
 }
 
 const presets = load('../src/lib/presets.ts');
-function quickStart(onStart, initialOptions = { routing: 'auto', provider: 'openai', model: 'gpt-6.1-sol' }, onOpenLounge = async () => {}) {
+function quickStart(onStart, initialOptions = { routing: 'auto', provider: 'openai', model: 'gpt-6.1-sol' }, onOpenLounge = async () => {}, onOpenSetup = () => {}) {
   const runtime = hooks();
   let options = initialOptions;
   const { QuickStart } = load('../src/components/QuickStart.tsx', {
@@ -54,7 +54,7 @@ function quickStart(onStart, initialOptions = { routing: 'auto', provider: 'open
   }, { React: runtime.react, localStorage: { setItem() {} } });
   return () => runtime.render(() => QuickStart({
     options, onOptions: next => { options = next; }, onStart,
-    onCreateBot() {}, onCreateRoom() {}, onOpenLounge,
+    onCreateBot() {}, onCreateRoom() {}, onOpenLounge, onOpenSetup,
   }));
 }
 
@@ -89,6 +89,15 @@ test('Auto retains automatic routing with a valid OpenAI Sol base pair', async (
   assert.equal(calls[0].options.routing, 'auto');
   assert.equal(calls[0].options.provider, 'openai');
   assert.equal(calls[0].options.model, 'gpt-6.1-sol');
+});
+
+test('home exposes model setup without leaving the task composer', () => {
+  let opened = 0;
+  const tree = quickStart(async () => {}, undefined, async () => {}, () => { opened++; })();
+  const setup = find(tree, node => node.type === 'button' && node.props.children?.includes('Connect models'));
+  assert.ok(setup);
+  setup.props.onClick();
+  assert.equal(opened, 1);
 });
 
 test('same-tick double submission starts once and an interruption retains the task for retry', async () => {

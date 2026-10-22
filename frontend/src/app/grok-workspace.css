@@ -148,6 +148,23 @@ body { color: var(--text-primary); }
 .sync-status button, .sync-status a { min-height: 40px; display: inline-flex; align-items: center; text-decoration: underline; text-underline-offset: 3px; }
 .quickstart .workspace-shortcuts button { min-height: 44px; font-size: 13px; }
 .quickstart .quickstart-footnote { font-size: 12px; line-height: 1.6; }
+.provider-setup { margin: 18px 0 8px; padding: 18px 0; border-top: 1px solid #e4dfd5; }
+.provider-setup h3 { margin: 0 0 6px; color: #292722; font-size: 15px; font-weight: 600; }
+.provider-setup > p { max-width: 68ch; margin: 0; color: #686258; font-size: 13px; line-height: 1.6; }
+.provider-setup-actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
+.provider-setup-actions a { display: inline-flex; align-items: center; min-height: 40px; padding: 8px 12px; border: 1px solid #d9d5ca; border-radius: 10px; background: #fff; color: #39352e; font-size: 13px; text-decoration: none; }
+.provider-setup-actions a:hover { background: #f0eee8; }
+.provider-setup-actions a:focus-visible { outline: 2px solid #5c574e; outline-offset: 2px; }
+.provider-setup .provider-setup-note { margin: 0 0 12px; color: #686258; font-size: 12px; }
+.provider-test { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; }
+.provider-test p { margin: 0; font-size: 12px; line-height: 1.5; }
+.provider-test p[data-state=passed] { color: #28644b; }
+.provider-test p[data-state=failed] { color: #883b2d; }
+.provider-setup .provider-test-cost { margin-top: 8px; color: #777168; font-size: 11px; }
+.provider-test button:focus-visible { outline: 2px solid #5c574e; outline-offset: 2px; }
+.model-connection-link { display: block; min-height: 44px; margin: 12px 0 0; color: #5e594f; font-size: 13px; text-decoration: underline; text-underline-offset: 3px; }
+.model-connection-link:hover { color: #292722; }
+.model-connection-link:focus-visible { outline: 2px solid #5c574e; outline-offset: 2px; border-radius: 3px; }
 .conversation-search { background: #f0ede7; border-bottom-color: #e4dfd5; }
 .conversation-search span, .conversation-search button { color: #686054; }
 .bot-dialog { border-radius: 20px; background: #faf9f7; }

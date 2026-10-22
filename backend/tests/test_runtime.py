@@ -4,14 +4,30 @@ import importlib.util
 from pathlib import Path
 from types import SimpleNamespace
 from uuid import uuid4
+import pytest
 
 os.environ['LITELLM_LOCAL_MODEL_COST_MAP'] = 'True'
 os.environ['GROKBOT_DATABASE_URL'] = 'sqlite+aiosqlite://'
+
+@pytest.mark.asyncio
+async def test_gemini_connection_check_uses_a_small_real_model_request(monkeypatch):
+    from app.api.runtime import ModelCheckRequest, verify_model_connection
+    from app.services.llm_gateway import LLMGateway
+    calls = []
+    async def complete(**kwargs):
+        calls.append(kwargs)
+        return SimpleNamespace(choices=[SimpleNamespace(message=SimpleNamespace(content='Connection verified.'))])
+    monkeypatch.setattr(LLMGateway, 'complete', complete)
+    result = await verify_model_connection(ModelCheckRequest(provider='gemini', model='gemini-3.8-flash'))
+    assert result['status'] == 'passed'
+    assert result['provider'] == 'gemini' and result['model'] == 'gemini-3.8-flash'
+    assert calls[0]['messages'][0]['content'] == 'Reply with exactly: Connection verified.'
+    assert calls[0]['max_tokens'] == 128
+    assert calls[0]['allow_fallback'] is False
 from app.db.connection import engine_options
 from app.config import Settings
 from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.schema import CreateTable
-import pytest
 
 def test_native_postgres_tls_and_prisma_parameters():
     url, options = engine_options('postgresql://user:p%40ss@db.example/test?sslmode=require&pgbouncer=true&connection_limit=1&schema=public')

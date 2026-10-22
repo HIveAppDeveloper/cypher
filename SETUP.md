@@ -19,6 +19,7 @@ Configure secret values through the project's Vercel environment settings, keepi
 | `GROKBOT_BACKEND_API_TOKEN` | Matching server-only frontend proxy token. |
 | `OMNIROUTE_URL` | Existing cloud OmniRoute origin. Model requests use this route when configured. |
 | `OMNIROUTE_API_KEY` | Server-only inference key reused from the authorized OmniRoute connection. |
+| `OMNIROUTE_DASHBOARD_URL` | Optional browser URL for provider setup; if omitted, GrokBot opens the configured OmniRoute origin without its API path or query. |
 | `OMNIROUTE_PROTECTION_BYPASS` | Server-only deployment access secret, when the OmniRoute deployment is protected. Redirects never receive it. |
 | `OMNIROUTE_MODEL_MAP` | Optional JSON map of GrokBot model IDs to native OmniRoute model IDs when names differ. Exact IDs are enabled only when they appear in OmniRoute's live catalog. |
 | `GROKBOT_VERIFY_CLOUD=true` | Opt-in model, agent-fleet, MCP, browser, and computer checks; stores timestamps, never secrets. |

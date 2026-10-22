@@ -70,15 +70,15 @@ def generation_options(options, provider, model):
 
 class LLMGateway:
     @staticmethod
-    async def complete(messages, tools=None, model=None, provider=None, options=None, fallback=None, **run_options):
+    async def complete(messages, tools=None, model=None, provider=None, options=None, fallback=None, allow_fallback=True, **run_options):
         from app.services import omniroute
         from app.services.usage import check_allowance,record
         await check_allowance()
         provider, model = model_selection(model, provider)
         routes = [(provider, model)]
-        if fallback and fallback not in routes:
+        if allow_fallback and fallback and fallback not in routes:
             routes.append(model_selection(fallback[1], fallback[0]))
-        if settings.LLM_FALLBACK_MODEL is not None:
+        if allow_fallback and settings.LLM_FALLBACK_MODEL is not None:
             backup = model_selection(settings.LLM_FALLBACK_MODEL, settings.LLM_FALLBACK_PROVIDER or provider)
             if backup not in routes:
                 routes.append(backup)

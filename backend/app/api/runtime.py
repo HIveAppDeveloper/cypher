@@ -1,11 +1,44 @@
+import asyncio
 from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
 from sqlalchemy import text
 from app.db.session import get_db
 from app.models.runtime import RuntimeHeartbeat, RuntimeCheck
 from app.config import settings
 from app.services.runtime_identity import runtime_identity, same_release
 router=APIRouter()
+
+class ModelCheckRequest(BaseModel):
+    provider: str
+    model: str
+
+@router.post('/models/test')
+async def verify_model_connection(body: ModelCheckRequest):
+    from app.services.llm_gateway import LLMGateway, model_selection
+    from app.services.model_routing import ModelConfigurationError, ModelNotConfiguredError, ModelCapabilityError, public_model_error
+    try:
+        provider, model = model_selection(body.model, body.provider)
+        async with asyncio.timeout(50):
+            result = await LLMGateway.complete(
+                messages=[{'role':'user','content':'Reply with exactly: Connection verified.'}],
+                provider=provider, model=model, max_tokens=128, allow_fallback=False,
+            )
+        choices = getattr(result, 'choices', None) or []
+        content = getattr(getattr(choices[0], 'message', None), 'content', None) if choices else None
+        if not content:
+            raise HTTPException(status_code=502, detail='The selected model returned no text. Check the route and try again.')
+    except HTTPException:
+        raise
+    except ModelNotConfiguredError as error:
+        raise HTTPException(status_code=422, detail='This model is not available on the configured route. Add the provider in OmniRoute or configure its backend key, then try again.') from error
+    except (ModelConfigurationError, ModelCapabilityError) as error:
+        raise HTTPException(status_code=422, detail=public_model_error(error)) from error
+    except Exception as error:
+        raise HTTPException(status_code=503, detail=public_model_error(error)) from error
+    from app.services import omniroute
+    return {'status':'passed','provider':provider,'model':model,'transport':'omniroute' if omniroute.enabled() else 'direct'}
+
 @router.get('')
 async def runtime(db=Depends(get_db)):
     await db.execute(text('SELECT 1'))
