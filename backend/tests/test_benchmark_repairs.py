@@ -132,6 +132,83 @@ async def test_bot_memory_survives_new_chat_and_is_not_visible_to_other_agents(w
     assert notes[0]['scope']=='bot:'+bid and 'Cobalt Finch' in notes[0]['content']
 
 
+@pytest.mark.asyncio
+async def test_forgetting_removes_only_requested_saved_records_and_survives_new_chat(workspace):
+    from app.db.tenancy import current_tenant_id
+    from app.services.workspace import knowledge_prompt
+    client,sessions=workspace
+    cid=await room(client,'benchmark-owner')
+    bid=(await client.get('/api/bots',headers=A)).json()[0]['id']
+    peer=(await client.post('/api/bots',headers=A,json={'name':'Peer agent','role':'Assistant','system_prompt':'Help the user.','llm_provider':'openai','llm_model':'gpt-6-luna','tools_enabled':[]})).json()['id']
+    other_cid=(await client.post('/api/conversations',headers=A,json={'title':'Peer chat','bot_ids':[peer]})).json()['id']
+    await room(client,'benchmark-other')
+    foreign=(await client.get('/api/bots',headers=B)).json()[0]['id']
+    registry=ToolRegistry();registry.register_default_tools()
+    await context.register_context_tools(registry,cid,sessions)
+    remember=registry._tools['remember_context']['handler']
+    listing=registry._tools['list_context']['handler']
+    forget=registry._tools['forget_context']['handler']
+    token=current_tenant_id.set('benchmark-owner')
+    try:
+        pref=await remember({'name':'Travel and diet','kind':'preference','content':'Aisle seats; no pork','scope':'bot'},bid)
+        keep=await remember({'name':'Tone','kind':'preference','content':'Concise answers','scope':'bot'},bid)
+        shared=await remember({'name':'Shared','kind':'fact','content':'Team launch is Friday','scope':'workspace'},bid)
+        peer_note=await remember({'name':'Peer','kind':'fact','content':'Private to peer','scope':'bot'},peer)
+        local=await remember({'name':'This chat','kind':'fact','content':'Local only'},bid)
+        assert len((await listing({},bid))['notes'])==2
+        assert [n['id'] for n in (await listing({'query':'pork'},bid))['notes']]==[pref['note_id']]
+        result=await forget({'note_ids':[pref['note_id'],peer_note['note_id'],shared['note_id']]},bid)
+        assert result['deleted_count']==1 and result['chat_history_retained']
+        assert set(result['absent_from_selected_scope'])=={peer_note['note_id'],shared['note_id']}
+        assert (await forget({'note_ids':[pref['note_id']]},bid))['deleted_count']==0
+        assert (await listing({},peer))['notes'][0]['id']==peer_note['note_id']
+        assert (await listing({'scope':'workspace'},bid))['notes'][0]['id']==shared['note_id']
+        async with sessions() as db:
+            text=await knowledge_prompt(db,bid)
+            assert 'pork' not in text and 'Aisle' not in text and 'Concise answers' in text
+            assert 'Local only' in await context.context_prompt(db,cid)
+        assert 'error' in await listing({},foreign)
+        assert 'error' in await forget({'note_ids':[keep['note_id']]},foreign)
+        assert 'error' in await forget({'scope':'conversation','note_ids':[local['note_id']]},peer)
+        assert 'error' in await forget({'scope':'bot','note_ids':[]},bid)
+        assert (await forget({'scope':'conversation','note_ids':[local['note_id']]},bid))['deleted_count']==1
+        assert (await listing({'scope':'conversation'},bid))['notes']==[]
+    finally:current_tenant_id.reset(token)
+    # A new conversation cannot restore a deleted saved note.
+    fresh=(await client.post('/api/conversations',headers=A,json={'title':'After forget','bot_ids':[bid]})).json()['id']
+    assert fresh not in {cid,other_cid}
+    token=current_tenant_id.set('benchmark-owner')
+    try:
+        async with sessions() as db:assert 'pork' not in await knowledge_prompt(db,bid)
+    finally:current_tenant_id.reset(token)
+    records=(await client.get('/api/workspace/knowledge',headers=A)).json()
+    assert pref['note_id'] not in {r['id'] for r in records}
+    assert {keep['note_id'],peer_note['note_id'],shared['note_id']} <= {r['id'] for r in records}
+
+
+@pytest.mark.asyncio
+async def test_memory_deletion_cannot_cross_tenants_even_with_exact_ids(workspace):
+    from app.db.tenancy import current_tenant_id
+    client,sessions=workspace
+    cid_a=await room(client,'benchmark-owner')
+    cid_b=await room(client,'benchmark-other')
+    bid_a=(await client.get('/api/bots',headers=A)).json()[0]['id']
+    bid_b=(await client.get('/api/bots',headers=B)).json()[0]['id']
+    registry=ToolRegistry();await context.register_context_tools(registry,cid_a,sessions)
+    token=current_tenant_id.set('benchmark-owner')
+    try:
+        note=await registry._tools['remember_context']['handler']({'name':'Private','kind':'fact','content':'Owner private preference','scope':'bot'},bid_a)
+    finally:current_tenant_id.reset(token)
+    other=ToolRegistry();await context.register_context_tools(other,cid_b,sessions)
+    token=current_tenant_id.set('benchmark-other')
+    try:
+        result=await other._tools['forget_context']['handler']({'note_ids':[note['note_id']]},bid_b)
+        assert result['deleted_count']==0
+        assert 'error' in await other._tools['forget_context']['handler']({'note_ids':[note['note_id']]},bid_a)
+    finally:current_tenant_id.reset(token)
+    assert any(r['id']==note['note_id'] for r in (await client.get('/api/workspace/knowledge',headers=A)).json())
+
+
 def test_plugin_search_keeps_service_and_exact_operation_in_scope():
     manifest=[{'service':'Linear','name':'list_projects','description':'list projects and deployments '*100},
               {'service':'Vercel','name':'search_vercel_documentation','description':'Search docs for projects and deployments'},
@@ -159,6 +236,62 @@ async def test_browser_extraction_preserves_full_titles_after_long_menu(monkeypa
         assert result['links'][0]['title']=='The full untruncated book title'
         assert result['links'][0]['href']=='https://example.test/book'
         assert len(result['links'])<=100
+    finally:await browser.close()
+
+
+@pytest.mark.asyncio
+async def test_browser_controls_disambiguate_identical_labels_without_clicking_twice(monkeypatch):
+    from app.services.tools.browser import BrowserTool
+    browser=BrowserTool()
+    async def save(*a):pass
+    monkeypatch.setattr(browser,'_save_state',save)
+    monkeypatch.setattr(browser,'_load_state',lambda *a: asyncio.sleep(0,result=None))
+    try:
+        page=await browser._get_page('controls-test')
+        await page.set_content('<button onclick="document.body.dataset.clicked=\'first\'">Book Now</button><button onclick="document.body.dataset.clicked=\'second\'">Book Now</button>')
+        result=await browser.click('Book Now','controls-test')
+        assert not result['success'] and result['matches']==2
+        assert await page.evaluate('document.body.dataset.clicked') is None
+        second=result['controls'][1]['selector']
+        result=await browser.click(second,'controls-test')
+        assert result['success']
+        assert await page.evaluate('document.body.dataset.clicked')=='second'
+        # A dispatched click failure must not trigger the fallback click.
+        class Target:
+            async def count(self):return 1
+            async def click(self,**kw):raise RuntimeError('post-dispatch failure')
+        class BrokenPage:
+            def locator(self,*a):return Target()
+            def get_by_text(self,*a,**kw):raise AssertionError('Retried dispatched click')
+        monkeypatch.setattr(browser,'_get_page',lambda *a: asyncio.sleep(0,result=BrokenPage()))
+        result=await browser.click('button','controls-test')
+        assert not result['success'] and 'post-dispatch' in result['error']
+    finally:await browser.close()
+
+
+@pytest.mark.asyncio
+async def test_navigation_waits_for_render_and_never_calls_blank_202_an_empty_result(monkeypatch):
+    from app.services.tools.browser import BrowserTool
+    browser=BrowserTool()
+    async def save(*a):pass
+    monkeypatch.setattr(browser,'_save_state',save)
+    monkeypatch.setattr(browser,'_load_state',lambda *a: asyncio.sleep(0,result=None))
+    try:
+        page=await browser._get_page('render-test')
+        async def route(req):
+            if req.request.url.endswith('/delayed'):
+                await req.fulfill(status=200,content_type='text/html',body='<body><script>setTimeout(()=>{document.body.innerHTML="<h1>Rooms available</h1><button>Choose room</button>"},100)</script></body>')
+            elif req.request.url.endswith('/missing'):
+                await req.fulfill(status=404,content_type='text/html',body='<h1>Not found</h1>')
+            else:await req.fulfill(status=202,content_type='text/html',body='<body></body>')
+        await page.route('https://render.example.test/**',route)
+        result=await browser.navigate_to('https://render.example.test/delayed','render-test')
+        assert result['success'] and 'Rooms available' in result['text_content']
+        assert result['controls'][0]['label']=='Choose room'
+        result=await browser.navigate_to('https://render.example.test/blank','render-test')
+        assert not result['success'] and result['render_pending'] and result['status']==202
+        result=await browser.navigate_to('https://render.example.test/missing','render-test')
+        assert not result['success'] and result['status']==404 and 'not found' in result['error']
     finally:await browser.close()
 
 

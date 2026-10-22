@@ -11,6 +11,7 @@ import base64
 import json
 from datetime import datetime
 import logging
+from uuid import uuid4
 from typing import Optional
 from urllib.parse import urlsplit
 
@@ -129,16 +130,27 @@ class BrowserTool:
             await self._save_state(session_id)
             title = await page.title()
             status = response.status if response else None
+            if status==404:
+                return {'success':False,'title':title,'url':page.url,'status':status,'error':'Page not found (HTTP 404). Do not invent content for this URL.'}
             blocked = status is not None and status >= 400
-            challenge = ("/sorry/" in page.url and "google." in urlsplit(page.url).hostname) or title.lower() in {"just a moment...", "attention required! | cloudflare"}
+            challenge = ("/sorry/" in page.url and "google." in (urlsplit(page.url).hostname or '')) or title.lower() in {"just a moment...", "attention required! | cloudflare", "bot or not?"}
             if blocked or challenge:
                 return {"success": False, "title": title, "url": page.url, "status": status, "error": "The website denied access or requires a browser challenge. Use search_web for research or another public source. Do not treat this as an empty search result."}
+            text=await page.inner_text('body',timeout=5000)
+            if not text.strip():
+                try:
+                    await page.wait_for_function("document.body && document.body.innerText.trim().length > 0",timeout=3000)
+                    text=await page.inner_text('body',timeout=5000)
+                    title=await page.title()
+                except Exception:
+                    return {'success':False,'title':title,'url':page.url,'status':status,'render_pending':True,'error':'No readable page content rendered within the bounded wait. This is not evidence of no results or no availability. Retry the rendered page or use another source.'}
             return {
                 "success": True,
                 "title": title,
                 "url": page.url,
                 "status": status,
-                "text_content": (await page.inner_text("body", timeout=5000))[:12000],
+                "text_content": text[:12000],
+                "controls": await self._controls(page),
             }
         except Exception as e:
             logger.error(f"Navigation to {url} failed: {e}")
@@ -159,18 +171,41 @@ class BrowserTool:
         """
         page = await self._get_page(session_id)
         try:
-            # Try CSS selector first, fall back to text-based
+            # Resolve before acting. Never retry a dispatched click as text:
+            # a post-click error may occur after a consequential action ran.
             try:
-                await page.click(selector, timeout=timeout)
+                target=page.locator(selector)
+                count=await target.count()
             except Exception:
-                await page.get_by_text(selector).click(timeout=timeout)
+                count=0
+            if count==0:
+                target=page.get_by_text(selector,exact=True)
+                count=await target.count()
+            if count!=1:
+                return {'success':False,'selector':selector,'matches':count,'error':'Choose one exact selector from controls; no click was performed.','controls':await self._controls(page)}
+            await target.click(timeout=timeout)
 
+            page=await self._get_page(session_id)
             await page.wait_for_load_state("domcontentloaded", timeout=5000)
             await self._save_state(session_id)
-            return {"success": True, "selector": selector}
+            return {"success": True, "selector": selector,'url':page.url,'title':await page.title(),'controls':await self._controls(page)}
         except Exception as e:
             logger.error(f"Click on '{selector}' failed: {e}")
             return {"success": False, "error": str(e), "selector": selector}
+
+    async def _controls(self,page):
+        """Return bounded, unambiguous selectors for currently visible controls."""
+        return await page.evaluate("""prefix => {
+            const nodes=[...document.querySelectorAll('a[href],button,input:not([type="hidden"]),textarea,select,[role="button"]')]
+                .filter(el=>el.getClientRects().length && getComputedStyle(el).visibility!=='hidden');
+            return nodes.slice(0,100).map((el,index)=>{
+                const id=prefix+'-'+index;el.setAttribute('data-grokbot-control',id);
+                return {selector:'[data-grokbot-control="'+id+'"]',tag:el.tagName.toLowerCase(),
+                    type:el.getAttribute('type')||'',name:el.getAttribute('name')||'',
+                    label:(el.getAttribute('aria-label')||el.getAttribute('title')||el.innerText||el.getAttribute('placeholder')||'').trim().slice(0,200),
+                    ...(el.tagName==='A'?{href:el.href}:{}),disabled:!!el.disabled};
+            });
+        }""",uuid4().hex[:12])
 
     async def type_text(
         self,
@@ -314,6 +349,7 @@ class BrowserTool:
                 "text_content": text_content[:10000],  # Limit size
                 "links": links,
                 "forms": forms,
+                "controls": await self._controls(page),
             }
         except Exception as e:
             logger.error(f"Content extraction failed: {e}")

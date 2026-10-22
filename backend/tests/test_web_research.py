@@ -98,7 +98,8 @@ async def test_browser_reads_page_without_waiting_for_networkidle(monkeypatch):
     async def goto(*args, **kwargs): return SimpleNamespace(status=200)
     async def title(): return "A source"
     async def text(*args, **kwargs): return "Evidence on the page"
-    async def page(*args): return SimpleNamespace(url="https://example.org", goto=goto, title=title, inner_text=text)
+    async def evaluate(*args): return []
+    async def page(*args): return SimpleNamespace(url="https://example.org", goto=goto, title=title, inner_text=text,evaluate=evaluate)
     async def save(*args): pass
     monkeypatch.setattr(browser, "_get_page", page)
     monkeypatch.setattr(browser, "_save_state", save)
