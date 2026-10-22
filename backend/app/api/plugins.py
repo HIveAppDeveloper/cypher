@@ -68,6 +68,10 @@ async def connect(data: ConnectPlugin, db: AsyncSession = Depends(get_db)):
     else:
         plugin=Plugin(name=data.name.strip(),url=data.url.strip(),credential=credential,tools=tools,enabled=True)
         db.add(plugin)
+    await db.flush()
+    from app.models.runtime import RuntimeCheck
+    stale=await db.get(RuntimeCheck,'plugin:'+plugin.id)
+    if stale:await db.delete(stale)
     await db.commit();await db.refresh(plugin)
     return public(plugin)
 
@@ -100,6 +104,9 @@ async def refresh_tools(id:UUID,db:AsyncSession=Depends(get_db)):
     except Exception:raise HTTPException(502,'Could not refresh tools. The saved connection was preserved.')
     previous={t['name']:t.get('enabled',True) for t in plugin.tools}
     plugin.tools=[{**t,'enabled':previous.get(t['name'],True)} for t in tools]
+    from app.models.runtime import RuntimeCheck
+    stale=await db.get(RuntimeCheck,'plugin:'+plugin.id)
+    if stale:await db.delete(stale)
     await db.commit();return public(plugin)
 
 @router.patch('/{id}/tools/{tool_name}')
