@@ -79,6 +79,24 @@ async def test_worker_persists_current_release_with_heartbeat(cloud_db):
 
 
 @pytest.mark.asyncio
+async def test_router_migration_invalidates_old_model_and_media_verification(cloud_db, monkeypatch):
+    client, sessions = cloud_db
+    monkeypatch.setattr(settings, 'OMNIROUTE_URL', 'https://router.example')
+    monkeypatch.setattr(settings, 'OMNIROUTE_API_KEY', 'private-key')
+    async with sessions() as db:
+        for name in ('gateway','fallback','media_openai'):
+            db.add(RuntimeCheck(name=name,status='passed',detail={},updated_at=datetime.utcnow()))
+        db.add(RuntimeCheck(name='fleet',status='failed',detail={'transport':'omniroute','message':'Current failure'},updated_at=datetime.utcnow()))
+        await db.commit()
+    result = (await client.get('/api/runtime')).json()
+    assert result['model_transport'] == 'omniroute' and result['model_configured']
+    assert not result['gateway_configured']
+    assert all(result['checks'][name]['status'] == 'not_checked' for name in ('gateway','fallback','media_openai'))
+    assert result['checks']['fleet']['status'] == 'failed'
+    assert 'private-key' not in str(result)
+
+
+@pytest.mark.asyncio
 async def test_local_runtime_does_not_require_platform_release_metadata(cloud_db, monkeypatch):
     client, _ = cloud_db
     monkeypatch.delenv('VERCEL_DEPLOYMENT_ID')

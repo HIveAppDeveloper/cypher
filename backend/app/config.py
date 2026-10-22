@@ -20,6 +20,16 @@ class Settings(BaseSettings):
     LLM_FALLBACK_PROVIDER: str | None = None
     RUN_EMBEDDED_WORKER: bool = True
     LLM_USE_GATEWAY: bool = False
+    OMNIROUTE_URL: str | None = None
+    OMNIROUTE_API_KEY: str = Field(default="", repr=False)
+    OMNIROUTE_PROTECTION_BYPASS: str = Field(default="", repr=False)
+    # Only verified, connected routes belong here; a catalog listing alone does
+    # not establish that a provider account can actually serve requests.
+    OMNIROUTE_MODEL_MAP: dict[str, str] = {
+        "openai/gpt-6.1-sol": "cx/gpt-6.1-sol",
+        "openai/gpt-6-astra": "cx/gpt-6-astra",
+        "openai/gpt-6-luna": "cx/gpt-6-luna-low",
+    }
     AUDIO_TRANSCRIPTION_MODEL: str = "openai/gpt-4o-mini-transcribe"
     IMAGE_MODEL: str = "openai/gpt-image-2"
     GOOGLE_IMAGE_MODEL: str = "google/gemini-3.1-flash-image-preview"

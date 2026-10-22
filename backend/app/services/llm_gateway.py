@@ -22,6 +22,10 @@ def model_selection(model=None, provider=None, *, specialist=False):
 
 def completion_options(model=None, provider=None, *, specialist=False, direct=False):
     provider, model = model_selection(model, provider, specialist=specialist)
+    from app.services import omniroute
+    if omniroute.enabled() and not direct:
+        return {'model': 'openai/' + omniroute.model_id(provider, model), 'api_base': omniroute.endpoint(), 'api_key': settings.OMNIROUTE_API_KEY,
+                'extra_headers': {k:v for k,v in omniroute.headers().items() if k != 'Authorization'}}
     if settings.LLM_USE_GATEWAY and not direct:
         gateway_provider = {"gemini": "google"}.get(provider, provider)
         model = {"claude-sonnet-4-5": "claude-sonnet-4.5"}.get(model, model)
@@ -85,6 +89,7 @@ def generation_options(options, provider, model):
 class LLMGateway:
     @staticmethod
     async def complete(messages, tools=None, model=None, provider=None, options=None, fallback=None, **run_options):
+        from app.services import omniroute
         from app.services.usage import check_allowance,record
         await check_allowance()
         provider, model = model_selection(model, provider)
@@ -112,7 +117,7 @@ class LLMGateway:
             try:
                 # Avoid forwarding sampling controls to models that only accept
                 # reasoning. Preserve the provider's supported effort levels.
-                if settings.LLM_USE_GATEWAY:
+                if omniroute.enabled() or settings.LLM_USE_GATEWAY:
                     from app.services.model_routing import gateway_catalog
                     from app.services.model_profiles import gateway_id
                     meta = (await gateway_catalog())[gateway_id(route_provider,route_model)]
@@ -126,13 +131,20 @@ class LLMGateway:
                         # unsupported level or let "medium" become maximum.
                         effort = requested if requested in efforts else ('low' if requested in {'none','low','medium'} and 'low' in efforts else 'high' if 'high' in efforts else efforts[0])
                         if route_provider == 'openai':generation['reasoning_effort']=effort
+                        elif omniroute.enabled():
+                            generation['reasoning_effort']=effort
                         else:
                             generation.pop('reasoning_effort',None)
                             generation['extra_body']={**generation.get('extra_body',{}),'reasoning':{'effort':effort}}
-                response = await litellm.acompletion(messages=messages, tools=tools, **generation, **connection, num_retries=0)
+                if omniroute.enabled():
+                    response = await omniroute.complete(messages, tools, route_provider, route_model, generation)
+                else:
+                    response = await litellm.acompletion(messages=messages, tools=tools, **generation, **connection, num_retries=0)
                 # Keep routing observable without changing the provider's result shape.
                 if isinstance(getattr(response, "_hidden_params", None), dict):
                     response._hidden_params["grokbot_route"] = {"provider": route_provider, "model": route_model, "fallback": bool(index)}
+                    if omniroute.enabled():
+                        response._hidden_params["grokbot_route"].update(transport='omniroute', transport_model=omniroute.model_id(route_provider, route_model))
                 logger.info("Model route succeeded provider=%s model=%s fallback=%s", route_provider, route_model, bool(index))
                 await record(route_provider,route_model,getattr(response,'usage',None))
                 return response
@@ -145,9 +157,26 @@ class LLMGateway:
 
     @staticmethod
     async def stream(messages, tools=None, model=None, provider=None, *, direct=False, deadline=None, **run_options):
+        from app.services import omniroute
+        if omniroute.enabled() and not direct:
+            from app.services.usage import check_allowance, record
+            await check_allowance()
+            provider, model = model_selection(model, provider)
+            await validate_capabilities(messages, tools, provider, model)
+            if deadline is not None and asyncio.get_running_loop().time() >= deadline:
+                raise TimeoutError()
+            async for chunk in omniroute.stream(messages, tools, provider, model, run_options):
+                if getattr(chunk, 'usage', None):
+                    await record(provider, model, chunk.usage)
+                yield chunk
+            return
         provider, model = model_selection(model, provider)
         connection = completion_options(model, provider, direct=direct)
-        await validate_capabilities(messages, tools, provider, model)
+        if direct:
+            from app.services.model_routing import validate_direct_capabilities
+            await validate_direct_capabilities(messages, tools, provider, model)
+        else:
+            await validate_capabilities(messages, tools, provider, model)
         if deadline is not None and asyncio.get_running_loop().time() >= deadline:
             raise TimeoutError()
         response = await litellm.acompletion(messages=messages, tools=tools, stream=True, num_retries=0, **run_options, **connection)
