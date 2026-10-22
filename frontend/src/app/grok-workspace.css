@@ -125,19 +125,32 @@ body { color: var(--text-primary); }
 .workspace-shortcuts { gap: 8px; margin-top: 4px; }
 .workspace-shortcuts button { font-size: 11px; min-height: 36px; color: #655e54; }
 .quickstart .quickstart-footnote { color: #6a645a; font-size: 10px; margin-top: 12px; }
+.quickstart-status { display: block; margin-top: 12px; font-size: 13px; line-height: 1.5; color: #6a645a; }
 .quickstart-error { width: min(var(--thread-width),100%); margin: 12px 0 !important; text-align: left !important; }
 .workspace-alert, .conversation-alert { background: #fff0ed; color: #883b2d; }
-.sync-status { background: #f2ebdb; color: #6d5528; }
+.sync-status { background: #f2ebdb; color: #6d5528; display: flex; align-items: center; flex-wrap: wrap; gap: 8px 16px; }
+.sync-status > span { flex: 1; min-width: 180px; }
+.sync-status button, .sync-status a { min-height: 40px; display: inline-flex; align-items: center; text-decoration: underline; text-underline-offset: 3px; }
+.quickstart .workspace-shortcuts button { min-height: 44px; font-size: 13px; }
+.quickstart .quickstart-footnote { font-size: 12px; line-height: 1.6; }
 .conversation-search { background: #f0ede7; border-bottom-color: #e4dfd5; }
 .conversation-search span, .conversation-search button { color: #686054; }
 .bot-dialog { border-radius: 20px; background: #faf9f7; }
 .bot-dialog .dialog-actions { flex-wrap: wrap; align-items: center; background: #faf9f7; }
 .bot-dialog .dialog-actions .form-error { flex: 0 0 100%; margin: 0 0 8px; padding: 10px 12px; background: #fff0ed; border-radius: 9px; color: #883b2d; font-size: 13px; line-height: 1.6; }
 .bot-dialog .dialog-intro { color: #69645a; }
+.agent-model-summary { margin: 14px 0; color: #69645a; font-size: 13px; line-height: 1.6; }
+.agent-model-summary strong { color: #39352e; font-weight: 550; }
+.agent-model-summary span { display: block; }
 .bot-dialog .glass-select-trigger { background: #fff; border-color: #dedad0; }
 .bot-dialog .glass-select-menu { background: #fff; }
-.login-page { background: var(--bg-main); }
-.login-card { background: transparent; box-shadow: none; }
+.login-page { background: var(--bg-main); grid-template-columns: minmax(0, 1fr); }
+.login-card { background: transparent; box-shadow: none; min-width: 0; max-width: 100%; }
+.google-login { min-width: 0; grid-template-columns: minmax(0, 1fr); }
+.google-login > .g_id_signin { min-width: 0; max-width: 100%; }
+/* Google's rendered button sets a fixed inline width; retain its native action
+   while allowing its container and label to fit a narrow login card. */
+.google-login .g_id_signin [role="button"] { min-width: 0 !important; max-width: 100% !important; }
 .login-mark { background: #292722; }
 @media(max-width:1000px) {
   .composer-model { display: none; }
@@ -176,16 +189,18 @@ body { color: var(--text-primary); }
   .composer-options .glass-select-trigger, .tools-toggle { min-height: 40px; }
   .active-work, .attachment-tray, .reply-preview { width: calc(100% - 32px); }
   .input-note { font-size: 9px; margin-bottom: max(10px,env(safe-area-inset-bottom)); }
-  .quickstart { padding: 17vh 18px 32px; }
+  .quickstart { padding: clamp(48px,10dvh,96px) 18px 24px; }
   .quickstart h1 { font-size: 24px; max-width: 320px; margin-bottom: 26px; }
   .task-composer { padding: 12px 10px 8px; border-radius: 22px; }
   .task-composer textarea { min-height: 64px; font-size: 16px; }
-  .task-composer-footer .glass-select-trigger { min-height: 40px; height: 40px; max-width: none; font-size: 10px; padding-inline: 6px; }
+  .task-composer-footer { display: grid; grid-template-columns: minmax(0,1fr) 44px; gap: 6px; }
+  .task-composer-footer .glass-select-trigger { min-height: 44px; height: 44px; max-width: 100%; font-size: 12px; padding-inline: 8px; }
+  .task-composer-footer > .glass-select-trigger:first-child { grid-column: 1 / -1; width: 100%; }
   .task-composer-footer .btn-primary { width: 44px; height: 44px; min-height: 44px; margin-top: 0; }
   .starter-prompts { max-width: 340px; justify-content: center; }
   .starter-prompts button { min-height: 40px; font-size: 10px; }
-  .workspace-shortcuts { flex-wrap: wrap; gap: 4px; }
-  .workspace-shortcuts button { min-height: 40px; font-size: 10px; }
+  .workspace-shortcuts { flex-wrap: wrap; justify-content: center; gap: 0 8px; }
+  .workspace-shortcuts > span { display: none; }
   .conversation-empty strong { font-size: 24px; }
 }
 
