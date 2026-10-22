@@ -254,6 +254,54 @@ def test_plugin_search_keeps_service_and_exact_operation_in_scope():
     assert rank_plugin_tools(manifest,'list_projects')[0]['name']=='list_projects'
 
 
+def test_plugin_brand_search_finds_account_variants_and_ranks_read_operations_first():
+    manifest=[{'service':'GitHub · Hive','name':'create_branch','description':'Create a branch'},
+              {'service':'GitHub · Hive','name':'list_branches','description':'List repository branches'},
+              {'service':'GitHub · Atlas','name':'list_branches','description':'List repository branches'},
+              {'service':'Supabase','name':'github_repo_shape','description':'GitHub branch repository '*100}]
+    result=rank_plugin_tools(manifest,'get_branch',service='GitHub')
+    assert result[0]['name']=='list_branches'
+    assert {t['service'] for t in result}=={'GitHub · Hive','GitHub · Atlas'}
+    assert all(t['service'].startswith('GitHub') for t in rank_plugin_tools(manifest,'GitHub'))
+    assert {t['service'] for t in rank_plugin_tools(manifest,'list_branches',service='GitHub · Hive')}=={'GitHub · Hive'}
+    assert {t['service'] for t in rank_plugin_tools(manifest,'GitHub Hive list_branches')}=={'GitHub · Hive'}
+
+
+@pytest.mark.asyncio
+async def test_existing_plugin_discovery_scopes_by_connection_and_normalizes_vercel_hostname(workspace,monkeypatch):
+    from app.db.tenancy import current_tenant_id
+    from app.models.plugin import Plugin
+    from app.services import plugins
+    client,sessions=workspace;cid=await room(client,'benchmark-owner')
+    bid=(await client.get('/api/bots',headers=A)).json()[0]['id'];seen=[]
+    async def invoke(pid,name,args):seen.append((pid,name,args));return {'success':True}
+    monkeypatch.setattr(plugins,'invoke',invoke)
+    token=current_tenant_id.set('benchmark-owner')
+    try:
+        async with sessions() as db:
+            schema={'type':'object','properties':{}}
+            github=Plugin(name='GitHub · Hive',url='https://github.example.test/mcp',credential='test-connection-grant',tools=[{'name':'list_branches','schema':schema,'description':'List repository branches'}])
+            vercel=Plugin(name='Vercel',url='https://mcp.vercel.com',credential='test-connection-grant',tools=[{'name':'get_deployment','schema':schema,'description':'Get a deployment'}])
+            public=Plugin(name='A public docs service',url='https://docs.example.test/mcp',tools=[{'name':'search_docs','schema':schema,'description':'Search docs'}])
+            db.add_all([public,github,vercel]);await db.commit()
+            registry=ToolRegistry();await registry.load_plugins(db,SimpleNamespace(tools_enabled=['plugins']))
+            search=registry._tools['plugin_search']['handler'];call=registry._tools['plugin_call']['handler']
+            inventory=await search({'query':''},bid)
+            assert inventory['services'][0]['authenticated'] and inventory['services'][-1]['service']==public.name
+            assert inventory['tools']==[]
+            result=await search({'query':'get_branch','service':'GitHub'},bid)
+            assert result['tools'][0]['plugin_id']==github.id
+            result=await search({'query':'list_branches','plugin_id':github.id},bid)
+            assert {t['plugin_id'] for t in result['tools']}=={github.id}
+            assert (await search({'query':'list_branches','plugin_id':'unknown'},bid))['tools']==[]
+            assert (await call({'plugin_id':vercel.id,'tool_name':'get_deployment','arguments':{'idOrUrl':'https://example.vercel.app/path?x=1'}},bid))['success']
+            assert seen[-1][2]['idOrUrl']=='example.vercel.app'
+            before=len(seen)
+            assert 'error' in await call({'plugin_id':vercel.id,'tool_name':'get_deployment','arguments':{'idOrUrl':'https://user:password@example.vercel.app'}},bid)
+            assert len(seen)==before
+    finally:current_tenant_id.reset(token)
+
+
 @pytest.mark.asyncio
 async def test_browser_extraction_preserves_full_titles_after_long_menu(monkeypatch):
     from app.services.tools.browser import BrowserTool

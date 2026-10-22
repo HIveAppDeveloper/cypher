@@ -18,28 +18,41 @@ logger = logging.getLogger(__name__)
 def rank_plugin_tools(manifest, query, service=None):
     """Keep a named service in scope and rank operation names before prose."""
     import re
-    words = lambda value: set(re.findall(r'[a-z0-9]+', value.casefold()))
+    singular={'teams':'team','projects':'project','issues':'issue','branches':'branch','repositories':'repository','deployments':'deployment','accounts':'account','users':'user','files':'file','commits':'commit'}
+    words = lambda value: {singular.get(w,w) for w in re.findall(r'[a-z0-9]+', value.casefold())}
     query_words = words(query)
     services = {item['service'] for item in manifest}
     normalized = lambda value: re.sub(r'[^a-z0-9]+', ' ', value.casefold()).strip()
+    base = lambda name: name.split('·',1)[0].strip()
     selected = None
     if service:
         selected = {name for name in services if normalized(name)==normalized(service)}
+        if not selected:selected={name for name in services if normalized(base(name))==normalized(service)}
     else:
         # A query such as "Vercel get deployment" must not return Linear tools
         # just because their long descriptions contain more generic words.
-        matches = [name for name in services if normalized(name) and re.search(r'\b'+re.escape(normalized(name))+r'\b',normalized(query))]
+        matches = [name for name in services if any(normalized(label) and re.search(r'\b'+re.escape(normalized(label))+r'\b',normalized(query)) for label in (name,base(name)))]
         if matches:
-            longest = max(len(normalized(name)) for name in matches)
-            selected = {name for name in matches if len(normalized(name))==longest}
+            # A qualified account wins when supplied; a bare brand includes its
+            # account variants so existing grants remain discoverable.
+            qualified=[name for name in matches if re.search(r'\b'+re.escape(normalized(name))+r'\b',normalized(query))]
+            chosen=qualified or matches
+            longest=max(len(normalized(name if qualified else base(name))) for name in chosen)
+            selected={name for name in chosen if len(normalized(name if qualified else base(name)))==longest}
     action_words = query_words - set().union(*(words(s) for s in selected)) if selected else query_words
+    operations={'get','list','search','fetch','read','find','inspect','lookup','create','update','save','delete','add','remove','the','a','an','my'}
+    topics=action_words-operations
+    read_intent=not action_words or bool(action_words & {'get','list','search','fetch','read','find','inspect','lookup'})
     ranked=[]
     for item in manifest:
         if selected is not None and item['service'] not in selected:continue
         name_words=words(item['name'])
         description_words=words(item.get('description',''))
+        parameter_words=words(' '.join((item.get('schema') or {}).get('properties',{})))
+        if topics and not topics & (name_words|description_words|parameter_words):continue
         exact=normalized(query)==normalized(item['name']) or normalized(' '.join(sorted(action_words)))==normalized(' '.join(sorted(name_words)))
-        score=(100 if exact else 0)+10*len(action_words & name_words)+len(action_words & description_words)
+        read_only=item.get('read_only',bool(re.match(r'^(get|list|search|fetch|read|inspect|lookup)_',item['name'])))
+        score=(100 if exact else 0)+30*len(topics & name_words)+5*len(action_words & name_words)+2*len(topics & (description_words|parameter_words))+(5 if read_intent and read_only else -20 if read_intent else 0)
         if score or selected or not query_words:
             ranked.append((score,item))
     ranked.sort(key=lambda pair:pair[0],reverse=True)
@@ -107,13 +120,26 @@ class ToolRegistry:
         if not manifest:
             return
         async def search(arguments, bot_id):
-            ranked=rank_plugin_tools(manifest,arguments.get('query',''),arguments.get('service'))
-            return {'tools': [{'plugin_id':t['plugin_id'], 'service':t['service'], 'name':t['name'], 'description':t.get('description',''), 'parameters':t['schema']} for t in ranked[:12]], 'total_matches':len(ranked), 'instruction':'Call plugin_call with the exact plugin_id, tool_name and arguments matching its parameters. Include service in follow-up searches to keep the correct connection in scope. Search is discovery, not evidence that an action ran.'}
+            query=str(arguments.get('query','')).strip()
+            scoped=[t for t in manifest if not arguments.get('plugin_id') or t['plugin_id']==arguments['plugin_id']]
+            if not scoped:return {'tools':[],'total_matches':0,'error':'No enabled tools for that plugin_id. Discover existing services first; do not search unrelated services as a fallback.'}
+            if not query and not arguments.get('service') and not arguments.get('plugin_id'):
+                services=sorted([{'plugin_id':p.id,'service':p.name,'authenticated':bool(p.credential),'tool_count':sum(t['plugin_id']==p.id for t in manifest)} for p in connections],key=lambda p:(not p['authenticated'],p['service'].casefold()))
+                return {'tools':[],'services':services[:30],'total_services':len(services),'instruction':'Existing account-backed connections are listed first. Search with the exact service/account name or its plugin_id and the desired operation. Connected grants are server-side; sandbox CLI authentication is separate and must not be used to rediscover credentials.'}
+            ranked=rank_plugin_tools(scoped,query,arguments.get('service'))
+            return {'tools': [{'plugin_id':t['plugin_id'], 'service':t['service'], 'name':t['name'], 'description':t.get('description',''), 'parameters':t['schema'],'read_only':t['read_only']} for t in ranked[:12]], 'total_matches':len(ranked), 'instruction':'Call plugin_call with the exact returned plugin_id, tool_name and parameters. Bare service names include existing account variants; select the correct account. Use service or plugin_id to keep follow-up discovery scoped. Search is discovery, not evidence that an action ran. If an exact operation is unavailable, use a relevant supported operation or report the limit; do not invent a tool or hunt for tokens in the sandbox.'}
         async def call(arguments, bot_id):
             if not any(t['plugin_id']==arguments.get('plugin_id') and t['name']==arguments.get('tool_name') for t in manifest):
                 return {'error':'Search enabled plugin tools first and use an exact returned service/tool.'}
-            return await invoke(arguments['plugin_id'], arguments['tool_name'], arguments.get('arguments', {}))
-        self.register('plugin_search', 'Find tools in connected services. Always set service to the known connection name (for example Vercel) and query to its operation (for example list_deployments). Exact tool names rank first. Only enabled connected tools are returned. Then call plugin_call with the exact schema.', {'type':'object','properties':{'query':{'type':'string'},'service':{'type':'string','description':'Connection name, such as Vercel or GitHub. Omit only to discover which service has a capability.'}},'required':['query']}, search)
+            values=dict(arguments.get('arguments', {}))
+            selected=next(t for t in manifest if t['plugin_id']==arguments['plugin_id'] and t['name']==arguments['tool_name'])
+            if selected['service'].casefold()=='vercel' and arguments['tool_name']=='get_deployment' and str(values.get('idOrUrl','')).startswith(('https://','http://')):
+                from urllib.parse import urlsplit
+                parsed=urlsplit(values['idOrUrl'])
+                if parsed.username or parsed.password:return {'error':'Use a deployment ID or hostname without embedded credentials.'}
+                values['idOrUrl']=parsed.hostname
+            return await invoke(arguments['plugin_id'], arguments['tool_name'], values)
+        self.register('plugin_search', 'Find tools in existing connected services. Set service (for example Vercel or GitHub) or plugin_id to scope operation discovery. Bare brand names also find account-qualified connections. Exact tool names rank first. Use an empty query without scope to discover existing connections; account-backed grants appear first. Then call plugin_call with the exact returned schema.', {'type':'object','properties':{'query':{'type':'string'},'service':{'type':'string','description':'Connection or brand name, such as Vercel, GitHub, or GitHub · Hive.'},'plugin_id':{'type':'string','description':'Existing connection ID to scope discovery, instead of service.'}},'required':['query']}, search)
         self.register('plugin_call', 'Run a connected service tool returned by plugin_search. Match its exact parameters. Verify the returned result before claiming success.', {'type':'object','properties':{'plugin_id':{'type':'string'},'tool_name':{'type':'string'},'arguments':{'type':'object','additionalProperties':True}},'required':['plugin_id','tool_name','arguments']}, call)
 
     def replay_safe(self, name, arguments):
