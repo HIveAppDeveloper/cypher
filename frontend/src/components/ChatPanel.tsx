@@ -1,89 +1,196 @@
-YªçŠx-®éÜj×¢ëiºÚ+Š§j[h‘éÜ¢éíóÎ÷N‹Z–‹­¦ëeŠw¬Õ¥µÁ½ÉĞì5=1}!=%Lô™É½´€œ¸¸½±¥ˆ½ÁÉ•Í•ÑÌœì)¥µÁ½ÉĞì½¹Ñ•áÑA…¹•°ô™É½´€œ¸½½¹Ñ•áÑA…¹•°œì)¥µÁ½ÉĞì]½É­A…¹•°ô™É½´€œ¸½]½É­A…¹•°œì)¥µÁ½ÉĞì±…ÍÍM•±•Ğô™É½´€œ¸½±…ÍÍM•±•Ğœì)¥µÁ½ÉĞI•…Ğ°ìÕÍ•™™•Ğ°ÕÍ•MÑ…Ñ”°ÕÍ•I•˜ô™É½´€É•…Ğœì)¥µÁ½ÉĞì	½Ğ°5•ÍÍ…”°5•ÍÍ…•QåÁ”°ÑÑ…¡µ•¹Ğ°½¹Ù•ÉÍ…Ñ¥½¸°)½ˆ°IÕ¹=ÁÑ¥½¹Ìô™É½´€œ¸¸½±¥ˆ½ÑåÁ•Ìœì)¥µÁ½ÉĞì…Á¤°Á¥ÉÉ½Èô™É½´€œ¸¸½±¥ˆ½…Á¤œì)¥µÁ½ÉĞì	½ÑÙ…Ñ…Èô™É½´€œ¸½	½ÑÙ…Ñ…Èœì)¥µÁ½ÉĞì5•ÍÍ…•	Õ‰‰±”ô™É½´€œ¸½5•ÍÍ…•	Õ‰‰±”œì)¥µÁ½ÉĞìEÕ¥­MÑ…ÉĞô™É½´€œ¸½EÕ¥­MÑ…ÉĞœì)¥µÁ½ÉĞìIÕ¹½¹ÑÉ½±Ì°U1Q}=AQ%=9Lô™É½´€œ¸½IÕ¹½¹ÑÉ½±Ìœì)¥µÁ½ÉĞìµ½‘•±A½±¥äô™É½´€œ¸¸½±¥ˆ½µ½‘•±A½±¥äœì)¥µÁ½ÉĞìÉ•…‘ÑÑ…¡µ•¹Ğô™É½´€œ¸¸½±¥ˆ½…ÑÑ…¡µ•¹ÑÌœì)½¹ÍĞA=11}5L€ô€ÄÔÀÀì)½¹ÍĞ5a}	eQL€ô€Ì€¨€ÄÀÈĞ€¨€ÄÀÈĞì)•áÁ½ÉĞ™Õ¹Ñ¥½¸¡…ÑA…¹•°¡ì‰½Ğ°É½½´°‰½ÑÌ°½¹É•…Ñ•	½Ğ°½¹É•…Ñ•I½½´°½¹EÕ¥­MÑ…ÉĞ°½¹=Á•¹1½Õ¹”°‘É…™ÑM½Á”ôèì‘É…™ÑM½Á”üèÍÑÉ¥¹œì‰½Ğè	½Ğğ¹Õ±°ìÉ½½´è½¹Ù•ÉÍ…Ñ¥½¸ğ¹Õ±°ì‰½ÑÌè	½Ñmtì½¹É•…Ñ•	½Ğè€ ¤€ôøÙ½¥ì½¹É•…Ñ•I½½´è€ ¤€ôøÙ½¥ì½¹EÕ¥­MÑ…ÉĞè€¡ÁÉ½µÁĞèÍÑÉ¥¹œ°½ÁÑ¥½¹ÌèA…ÉÑ¥…°ñ¥µÁ½ÉĞ œ¸¸½±¥ˆ½ÑåÁ•Ìœ¤¹IÕ¹=ÁÑ¥½¹Ìø¤€ôøAÉ½µ¥Í”ñÙ½¥øì½¹=Á•¹1½Õ¹”è€ ¤€ôøAÉ½µ¥Í”ñ½¹Ù•ÉÍ…Ñ¥½¸øô¤ì(€½¹ÍĞm½¹Ù•ÉÍ…Ñ¥½¹%°Í•Ñ½¹Ù•ÉÍ…Ñ¥½¹%‘t€ôÕÍ•MÑ…Ñ” œœ¤ì(€½¹ÍĞmµ•ÍÍ…•Ì°Í•Ñ5•ÍÍ…•Ít€ôÕÍ•MÑ…Ñ”ñ5•ÍÍ…•mtø¡mt¤ì(€½¹ÍĞm©½‰Ì°Í•Ñ)½‰Ít€ôÕÍ•MÑ…Ñ”ñ)½‰mtø¡mt¤ì(€½¹ÍĞm¥¹ÁÕĞ°Í•Ñ%¹ÁÕÑt€ôÕÍ•MÑ…Ñ” œœ¤ì(€½¹ÍĞmÉ•Á±åQ¼±Í•ÑI•Á±åQ½tõÕÍ•MÑ…Ñ”ñ5•ÍÍ…•ñ¹Õ±°ø¡¹Õ±°¤ì(€½¹ÍĞm‘É…™ÑI•…‘ä°Í•ÑÉ…™ÑI•…‘åt€ôÕÍ•MÑ…Ñ”¡™…±Í”¤ì(€½¹ÍĞm±½…‘¥¹œ°Í•Ñ1½…‘¥¹t€ôÕÍ•MÑ…Ñ” „…‰½Ğñğ€„…É½½´¤ì(€½¹ÍĞmÍå¹ÉÉ½È°Í•ÑMå¹ÉÉ½Ét€ôÕÍ•MÑ…Ñ” œœ¤ì(€½¹ÍĞmÍå¹ÑÑ•µÁĞ±Í•ÑMå¹ÑÑ•µÁÑt€ôÕÍ•MÑ…Ñ” À¤ì(€½¹ÍĞmÉ•™É•Í¡¥¹œ±Í•ÑI•™É•Í¡¥¹t€ôÕÍ•MÑ…Ñ”¡™…±Í”¤ì(€½¹ÍĞmÍ•ÍÍ¥½¹áÁ¥É•±Í•ÑM•ÍÍ¥½¹áÁ¥É•‘t€ôÕÍ•MÑ…Ñ”¡™…±Í”¤ì(€½¹ÍĞmÉ•ÑÉåĞ±Í•ÑI•ÑÉåÑt€ôÕÍ•MÑ…Ñ” À¤ì(€½¹ÍĞÉ•ÑÉå9½Ñ	•™½É”€ôÕÍ•I•˜ À¤ì(€½¹ÍĞÉ•ÑÉå=Á•¹¥¹œ€ôÕÍ•I•˜¡™…±Í”¤ì(€ÕÍ•™™•Ğ  ¤ôùí¥˜ …É•ÑÉåĞ¥É•ÑÕÉ¸í½¹ÍĞÑ¥µ•ÈõÍ•ÑQ¥µ•½ÕĞ  ¤ôùíÉ•ÑÉå9½Ñ	•™½É”¹ÕÉÉ•¹ĞôÀíÍ•ÑI•ÑÉåĞ À¤íô±5…Ñ ¹µ…à À±É•ÑÉåĞµ…Ñ”¹¹½Ü ¤¤¤íÉ•ÑÕÉ¸ ¤ôù±•…ÉQ¥µ•½ÕĞ¡Ñ¥µ•È¤íô±mÉ•ÑÉåÑt¤ì(€½¹ÍĞm…İ…åÉ½µ1…Ñ•ÍĞ°Í•Ñİ…åÉ½µ1…Ñ•ÍÑt€ôÕÍ•MÑ…Ñ”¡™…±Í”¤ì(€½¹ÍĞmÍÑ½ÁÁ¥¹œ°Í•ÑMÑ½ÁÁ¥¹t€ôÕÍ•MÑ…Ñ”¡™…±Í”¤ì(€½¹ÍĞmİ½É­=Á•¸°Í•Ñ]½É­=Á•¹t€ôÕÍ•MÑ…Ñ”¡™…±Í”¤ì(€½¹ÍĞmµ•ÍÍ…•EÕ•Éä°Í•Ñ5•ÍÍ…•EÕ•Éåt€ôÕÍ•MÑ…Ñ” œœ¤ì(€½¹ÍĞmÍ•…É¡=Á•¸°Í•ÑM•…É¡=Á•¹t€ôÕÍ•MÑ…Ñ”¡™…±Í”¤ì(€½¹ÍĞÍ•…É¡QÉ¥•ÈõÕÍ•I•˜ñ!Q51	ÕÑÑ½¹±•µ•¹Ğø¡¹Õ±°¤ì(€™Õ¹Ñ¥½¸±½Í•M•…É  ¥íÍ•ÑM•…É¡=Á•¸¡™…±Í”¤íÍ•Ñ5•ÍÍ…•EÕ•Éä œœ¤íÍ•…É¡QÉ¥•È¹ÕÉÉ•¹Ğü¹™½ÕÌ ¤íô(€½¹ÍĞÍ•ÑÑ¥¹Ì€ôÕÍ•I•˜ñ!Q51•Ñ…¥±Í±•µ•¹Ğø¡¹Õ±°¤ì(€½¹ÍĞ‘É…™Ñ-•ä€ô€É½­‰½Ğµ‘É…™Ğ´œ€¬€¡É½½´ü¹¥ñğ‰½Ğü¹¥ñğ€¡½µ”œ¤ì(€ÕÍ•™™•Ğ  ¤€ôøìÑÉäìÍ•Ñ%¹ÁÕĞ¡Í•ÍÍ¥½¹MÑ½É…”¹•Ñ%Ñ•´¡‘É…™Ñ-•ä¤ñğ€œœ¤ìô…Ñ íôÍ•ÑÉ…™ÑI•…‘ä¡ÑÉÕ”¤ìô°m‘É…™Ñ-•åt¤ì(€ÕÍ•™™•Ğ  ¤€ôøì¥˜¡‘É…™ÑI•…‘ä¤ÑÉäì¥˜¡¥¹ÁÕĞ¤Í•ÍÍ¥½¹MÑ½É…”¹Í•Ñ%Ñ•´¡‘É…™Ñ-•ä°¥¹ÁÕĞ¤ì•±Í”Í•ÍÍ¥½¹MÑ½É…”¹É•µ½Ù•%Ñ•´¡‘É…™Ñ-•ä¤ìô…Ñ íôô°m‘É…™Ñ-•ä°¥¹ÁÕĞ°‘É…™ÑI•…‘åt¤ì(€ÕÍ•™™•Ğ  ¤€ôøì(€€€™Õ¹Ñ¥½¸±½Í”¡•Ù•¹Ğè-•å‰½…É‘Ù•¹Ğğ±½‰…±Q¡¥Ì¹A½¥¹Ñ•ÉÙ•¹Ğ¤ì(€€€€€¥˜€ …Í•ÑÑ¥¹Ì¹ÕÉÉ•¹Ğü¹½Á•¸¤É•ÑÕÉ¸ì(€€€€€¥˜¡•Ù•¹Ğ¹ÑåÁ”€ôôô€­•å‘½İ¸œ€˜˜€…•Ù•¹Ğ¹‘•™…Õ±ÑAÉ•Ù•¹Ñ•€˜˜€¡•Ù•¹Ğ…Ì-•å‰½…É‘Ù•¹Ğ¤¹­•ä€ôôô€Í…Á”œ¤ìÍ•ÑÑ¥¹Ì¹ÕÉÉ•¹Ğ¹½Á•¸õ™…±Í”ìÍ•ÑÑ¥¹Ì¹ÕÉÉ•¹Ğ¹ÅÕ•ÉåM•±•Ñ½È ÍÕµµ…Éäœ¤ü¹™½ÕÌ ¤ìô(€€€€€•±Í”¥˜¡•Ù•¹Ğ¹ÑåÁ”€ôôô€Á½¥¹Ñ•É‘½İ¸œ€˜˜€…Í•ÑÑ¥¹Ì¹ÕÉÉ•¹Ğ¹½¹Ñ…¥¹Ì¡•Ù•¹Ğ¹Ñ…É•Ğ…Ì9½‘”¤€˜˜€„¡•Ù•¹Ğ¹Ñ…É•Ğ…Ì!Q51±•µ•¹Ğ¤¹±½Í•ÍĞ mÉ½±”õ±¥ÍÑ‰½át±mÉ½±”õ½ÁÑ¥½¹tœ¤¤Í•ÑÑ¥¹Ì¹ÕÉÉ•¹Ğ¹½Á•¸õ™…±Í”ì(€€€ô(€€€‘½Õµ•¹Ğ¹…‘‘Ù•¹Ñ1¥ÍÑ•¹•È ­•å‘½İ¸œ±±½Í”¤ì‘½Õµ•¹Ğ¹…‘‘Ù•¹Ñ1¥ÍÑ•¹•È Á½¥¹Ñ•É‘½İ¸œ±±½Í”¤ì(€€€É•ÑÕÉ¸€ ¤€ôøì‘½Õµ•¹Ğ¹É•µ½Ù•Ù•¹Ñ1¥ÍÑ•¹•È ­•å‘½İ¸œ±±½Í”¤í‘½Õµ•¹Ğ¹É•µ½Ù•Ù•¹Ñ1¥ÍÑ•¹•È Á½¥¹Ñ•É‘½İ¸œ±±½Í”¤ìôì(€ô°mt¤ì(€½¹ÍĞm…ÑÑ…¡µ•¹ÑÌ°Í•ÑÑÑ…¡µ•¹ÑÍt€ôÕÍ•MÑ…Ñ”ñÑÑ…¡µ•¹Ñmtø¡mt¤ì(€½¹ÍĞmÉ•…‘¥¹¥±•Ì±Í•ÑI•…‘¥¹¥±•ÍtõÕÍ•MÑ…Ñ”¡™…±Í”¤ì(€½¹ÍĞm‘É…¥¹¥±•Ì±Í•ÑÉ…¥¹¥±•ÍtõÕÍ•MÑ…Ñ”¡™…±Í”¤ì(€½¹ÍĞm•ÉÉ½È°Í•ÑÉÉ½Ét€ôÕÍ•MÑ…Ñ” œœ¤ì(€½¹ÍĞmÍ•¹‘¥¹œ°Í•ÑM•¹‘¥¹t€ôÕÍ•MÑ…Ñ”¡™…±Í”¤ì(€½¹ÍĞÍ•¹‘¥¹I•˜€ôÕÍ•I•˜¡™…±Í”¤ì(€½¹ÍĞÕ¹½¹™¥Éµ•‘É…™Ğ€ôÕÍ•I•˜ñí¥éÍÑÉ¥¹œíÑ•áĞéÍÑÉ¥¹œí™¥±•ÌéÑÑ…¡µ•¹ÑmtíÉ•Á±äüéÍÑÉ¥¹ôğ¹Õ±°ø¡¹Õ±°¤ì(€½¹ÍĞm½µÁÕÑ•É	½Ñ%°Í•Ñ½µÁÕÑ•É	½Ñ%‘t€ôÕÍ•MÑ…Ñ”ñÍÑÉ¥¹œğ¹Õ±°ø¡¹Õ±°¤ì(€½¹ÍĞm½µÁÕÑ•É	ÕÍä°Í•Ñ½µÁÕÑ•É	ÕÍåt€ôÕÍ•MÑ…Ñ”¡™…±Í”¤ì(€½¹ÍĞm½µÁÕÑ•ÉÉÉ½È°Í•Ñ½µÁÕÑ•ÉÉÉ½Ét€ôÕÍ•MÑ…Ñ” œœ¤ì(€½¹ÍĞm½ÁÑ¥½¹Ì°Í•Ñ=ÁÑ¥½¹Ít€ôÕÍ•MÑ…Ñ”ñIÕ¹=ÁÑ¥½¹Ìø  ¤€ôø€¡ì€¸¸¹U1Q}=AQ%=9L°ÁÉ½Ù¥‘•Èè€½Á•¹…¤œ°µ½‘•°è€ÁĞ´Ø¸ÄµÍ½°œ°€¸¸¹‰½Ğü¹‘•™…Õ±Ñ=ÁÑ¥½¹Ìô¤¤ì(€½¹ÍĞm½ÁÑ¥½¹ÍI•ÍÑ½É•°Í•Ñ=ÁÑ¥½¹ÍI•ÍÑ½É•‘t€ôÕÍ•MÑ…Ñ”¡™…±Í”¤ì(€ÕÍ•™™•Ğ  ¤€ôøì(€€€ÑÉäìÍ•Ñ=ÁÑ¥½¹Ì¡ì€¸¸¹U1Q}=AQ%=9L°ÁÉ½Ù¥‘•Èè€½Á•¹…¤œ°µ½‘•°è±½…±MÑ½É…”¹•Ñ%Ñ•´ É½­‰½Ğµµ…¹…•Èœ¤€ôôô€ÁĞ´Øµ±Õ¹„œ€ü€ÁĞ´Øµ±Õ¹„œ€è€ÁĞ´Ø¸ÄµÍ½°œ°€¸¸¹‰½Ğü¹‘•™…Õ±Ñ=ÁÑ¥½¹Ì°€¸¸¹µ½‘•±A½±¥ä¡)M=8¹Á…ÉÍ”¡±½…±MÑ½É…”¹•Ñ%Ñ•´ É½­‰½Ğµ½ÁÑ¥½¹Ì´œ€¬‰½Ğü¹¥¤ñğ€íôœ¤¤ô¤ìô(€€€…Ñ ì€¼¨-••ÀÑ¡”‘•Ñ•Éµ¥¹¥ÍÑ¥Œ‘•™…Õ±ÑÌİ¡•¸‰É½İÍ•ÈÍÑ½É…”¥ÌÕ¹…Ù…¥±…‰±”¸€¨¼ô(€€€Í•Ñ=ÁÑ¥½¹ÍI•ÍÑ½É•¡ÑÉÕ”¤ì(€ô°m‰½Ğü¹¥‘t¤ì(€ÕÍ•™™•Ğ  ¤€ôøì¥˜€¡½ÁÑ¥½¹ÍI•ÍÑ½É•€˜˜‰½Ğ¤ìÑÉäì±½…±MÑ½É…”¹Í•Ñ%Ñ•´ É½­‰½Ğµ½ÁÑ¥½¹Ì´œ€¬‰½Ğ¹¥°)M=8¹ÍÑÉ¥¹¥™ä¡½ÁÑ¥½¹Ì¤¤ìô…Ñ íôôô°m½ÁÑ¥½¹Ì°‰½Ğü¹¥°½ÁÑ¥½¹ÍI•ÍÑ½É•‘t¤ì(€½¹ÍĞm™½¹Ğ°Í•Ñ½¹Ñt€ôÕÍ•MÑ…Ñ” ¥¹Ñ•Èœ¤ì(€½¹ÍĞm¡…Í…É±¥•È°Í•Ñ!…Í…É±¥•Ét€ôÕÍ•MÑ…Ñ”¡™…±Í”¤ì(€½¹ÍĞm±½…‘¥¹…É±¥•È°Í•Ñ1½…‘¥¹…É±¥•Ét€ôÕÍ•MÑ…Ñ”¡™…±Í”¤ì(€½¹ÍĞÁÉ•Á•¹‘=™™Í•Ğ€ôÕÍ•I•˜ñ¹Õµ‰•Èğ¹Õ±°ø¡¹Õ±°¤ì(€½¹ÍĞ™¥ÉÍÑA…”€ôÕÍ•I•˜¡ÑÉÕ”¤ì(€½¹ÍĞÍÑÉ•…´€ôÕÍ•I•˜ñ!Q51¥Ù±•µ•¹Ğø¡¹Õ±°¤ì(€½¹ÍĞ™¥±•%¹ÁÕĞ€ôÕÍ•I•˜ñ!Q51%¹ÁÕÑ±•µ•¹Ğø¡¹Õ±°¤ì(€½¹ÍĞ™½±±½İ1…Ñ•ÍĞ€ôÕÍ•I•˜¡ÑÉÕ”¤ì(€½¹ÍĞÑ¥Ñ±”€ôÉ½½´ü¹Ñ¥Ñ±”€ôôô€•¹Ğ±½Õ¹”œ€ü€e½ÕÈÑ•…´œ€èÉ½½´ü¹Ñ¥Ñ±”ñğ‰½Ğü¹¹…µ”ñğ€]½É­ÍÁ…”œì(€ÕÍ•™™•Ğ  ¤€ôøì½¹ÍĞ•°€ôÍÑÉ•…´¹ÕÉÉ•¹Ğì¥˜€ …•°¤É•ÑÕÉ¸ì¥˜€¡ÁÉ•Á•¹‘=™™Í•Ğ¹ÕÉÉ•¹Ğ€„ôô¹Õ±°¤ì•°¹ÍÉ½±±Q½À€ô•°¹ÍÉ½±±!•¥¡Ğ€´ÁÉ•Á•¹‘=™™Í•Ğ¹ÕÉÉ•¹ĞìÁÉ•Á•¹‘=™™Í•Ğ¹ÕÉÉ•¹Ğ€ô¹Õ±°ìô•±Í”¥˜€¡™½±±½İ1…Ñ•ÍĞ¹ÕÉÉ•¹Ğ¤•°¹ÍÉ½±±Q½À€ô•°¹ÍÉ½±±!•¥¡Ğìô°mµ•ÍÍ…•Ì¹±•¹Ñ °µ•ÍÍ…•Ímµ•ÍÍ…•Ì¹±•¹Ñ €´€Åtü¹¥‘t¤ì(€ÕÍ•™™•Ğ  ¤ôùí™½±±½İ1…Ñ•ÍĞ¹ÕÉÉ•¹ĞõÑÉÕ”íÍ•Ñ½¹Ù•ÉÍ…Ñ¥½¹% œœ¤íÍ•Ñ5•ÍÍ…•Ì¡mt¤íÍ•Ñ)½‰Ì¡mt¤íÍ•ÑÑÑ…¡µ•¹ÑÌ¡mt¤íÍ•ÑÉÉ½È œœ¤íÍ•Ñ1½…‘¥¹œ „…‰½Ğñğ€„…É½½´¤íÍ•ÑMå¹ÉÉ½È œœ¤íÍ•ÑM•ÍÍ¥½¹áÁ¥É•¡™…±Í”¤íÉ•ÑÉå9½Ñ	•™½É”¹ÕÉÉ•¹ĞôÀíÍ•ÑI•ÑÉåĞ À¤í™¥ÉÍÑA…”¹ÕÉÉ•¹ĞõÑÉÕ”íô±m‰½Ğü¹¥±É½½´ü¹¥‘t¤ì(€ÕÍ•™™•Ğ  ¤€ôøì(€€€±•Ğ…Ñ¥Ù”€ôÑÉÕ”ì±•ĞÑ¥µ•ÈèI•ÑÕÉ¹QåÁ”ñÑåÁ•½˜Í•ÑQ¥µ•½ÕĞøì±•Ğ™…¥±ÕÉ•ÌôÀì±•ĞÁ•¹‘¥¹œõ™…±Í”ì(€€€½¹ÍĞ½¹ÑÉ½±±•Èõ¹•Ü‰½ÉÑ½¹ÑÉ½±±•È ¤ì(€€€¥˜€ …‰½Ğ€˜˜€…É½½´¤É•ÑÕÉ¸ì(€€€É•ÑÉå=Á•¹¥¹œ¹ÕÉÉ•¹ĞõÑÉÕ”íÍ•ÑI•™É•Í¡¥¹œ¡ÑÉÕ”¤ì(€€€±•ĞÕÉÉ•¹Ñ%ôœœí±•Ğ±…Ñ•ÍÑ5•ÍÍ…•%éÍÑÉ¥¹ñÕ¹‘•™¥¹•ì(€€€½¹ÍĞÁ½±°€ô…Íå¹Œ€ ¤€ôøì(€€€€€¥˜ ……Ñ¥Ù”ñğÁ•¹‘¥¹œñğ€…ÕÉÉ•¹Ñ%ñğ…Ñ”¹¹½Ü ¤ñÉ•ÑÉå9½Ñ	•™½É”¹ÕÉÉ•¹Ğ¥É•ÑÕÉ¸ì(€€€€€Á•¹‘¥¹œõÑÉÕ”ì±•…ÉQ¥µ•½ÕĞ¡Ñ¥µ•È¤ì±•Ğ‘•±…äôÄÀÀÀÀì(€€€€€ÑÉäì½¹ÍĞíµ•ÍÍ…•Ìé‘…Ñ„±Ñ…Í­Íôõ…İ…¥Ğ…Á¤¹Íå¹½¹Ù•ÉÍ…Ñ¥½¸¡ÕÉÉ•¹Ñ%±±…Ñ•ÍÑ5•ÍÍ…•%±½¹ÑÉ½±±•È¹Í¥¹…°¤ì¥˜¡…Ñ¥Ù”¥í™…¥±ÕÉ•ÌôÀí¥˜¡‘…Ñ„¹±•¹Ñ ¥±…Ñ•ÍÑ5•ÍÍ…•%õ‘…Ñ…m‘…Ñ„¹±•¹Ñ ´Åt¹¥í¥˜¡™¥ÉÍÑA…”¹ÕÉÉ•¹Ğ¥íÍ•Ñ!…Í…É±¥•È¡‘…Ñ„¹±•¹Ñ ôôôÔÀ¤í™¥ÉÍÑA…”¹ÕÉÉ•¹Ğõ™…±Í”íõÍ•Ñ5•ÍÍ…•Ì¡ÁÉ•Ù¥½ÕÌôùµ•É•5•ÍÍ…•Ì¡ÁÉ•Ù¥½ÕÌ±‘…Ñ„¤¤íÍ•Ñ)½‰Ì¡Ñ…Í­Ì¤íÍ•Ñ1½…‘¥¹œ¡™…±Í”¤íÍ•ÑMå¹ÉÉ½È œœ¤íÍ•ÑM•ÍÍ¥½¹áÁ¥É•¡™…±Í”¤í‘•±…äõÑ…Í­Ì¹Í½µ”¡ĞôùlÁ•¹‘¥¹œœ°ÉÕ¹¹¥¹œœ°…¹•±}É•ÅÕ•ÍÑ•t¹¥¹±Õ‘•Ì¡Ğ¹ÍÑ…ÑÕÌ¤¤ıA=11}5LèÄÀÀÀÀíôô(€€€€€…Ñ ¡”¥í¥˜¡…Ñ¥Ù”¥í™…¥±ÕÉ•Ì¬¬íÍ•Ñ1½…‘¥¹œ¡™…±Í”¤íÍ•ÑM•ÍÍ¥½¹áÁ¥É•¡”¥¹ÍÑ…¹•½˜Á¥ÉÉ½È€˜˜”¹ÍÑ…ÑÕÌôôôĞÀÄ¤í½¹ÍĞİ…¥Ğõ”¥¹ÍÑ…¹•½˜Á¥ÉÉ½Èı5…Ñ ¹µ…à À±”¹É•ÑÉå™Ñ•È¨ÄÀÀÀ¤èÀíÉ•ÑÉå9½Ñ	•™½É”¹ÕÉÉ•¹Ğõİ…¥Ğı…Ñ”¹¹½Ü ¤­İ…¥ĞèÀíÍ•ÑI•ÑÉåĞ¡É•ÑÉå9½Ñ	•™½É”¹ÕÉÉ•¹Ğ¤íÍ•ÑMå¹ÉÉ½È¡”¥¹ÍÑ…¹•½˜Á¥ÉÉ½È€˜˜”¹½‘”ôôô‘…Ñ…‰…Í•}ÅÕ½Ñ„œı”¹µ•ÍÍ…”é”¥¹ÍÑ…¹•½˜Á¥ÉÉ½È€˜˜”¹ÍÑ…ÑÕÌôôôĞÀÄüe½ÕÈÍ•ÍÍ¥½¸•áÁ¥É•¸M¥¸¥¸……¥¸Ñ¼É•½¹¹•Ğ¸œè½Õ±‘»ŠeĞÉ•™É•Í Ñ¡¥Ì½¹Ù•ÉÍ…Ñ¥½¸¸e½ÕÈµ•ÍÍ…•Ì…É”Í…Ù•ìÉ•½¹¹•Ñ¥¹œ…ÕÑ½µ…Ñ¥…±±çŠ˜œ¤í‘•±…äõ5…Ñ ¹µ…à¡”¥¹ÍÑ…¹•½˜Á¥ÉÉ½Èı”¹É•ÑÉå™Ñ•È¨ÄÀÀÀèÀ±5…Ñ ¹µ¥¸ ØÀÀÀÀ°ÈÀÀÀ¨È¨©5…Ñ ¹µ¥¸¡™…¥±ÕÉ•Ì°Ô¤¤¤íõô(€€€€€™¥¹…±±åíÁ•¹‘¥¹œõ™…±Í”í¥˜¡…Ñ¥Ù”¥íÉ•ÑÉå=Á•¹¥¹œ¹ÕÉÉ•¹Ğõ™…±Í”íÍ•ÑI•™É•Í¡¥¹œ¡™…±Í”¤íõ¥˜¡…Ñ¥Ù”¥Ñ¥µ•ÈõÍ•ÑQ¥µ•½ÕĞ¡Á½±°±‘½Õµ•¹Ğ¹¡¥‘‘•¸ı5…Ñ ¹µ…à¡‘•±…ä°ØÀÀÀÀ¤é‘•±…ä¤íô(€€€ôì(€€€½¹ÍĞÉ•™É•Í ô ¤ôùí¥˜¡‘½Õµ•¹Ğ¹¡¥‘‘•¸ñğÁ•¹‘¥¹œñğÉ•ÑÉå=Á•¹¥¹œ¹ÕÉÉ•¹Ğñğ…Ñ”¹¹½Ü ¤ñÉ•ÑÉå9½Ñ	•™½É”¹ÕÉÉ•¹Ğ¥É•ÑÕÉ¸í¥˜¡ÕÉÉ•¹Ñ%¥íÍ•ÑI•™É•Í¡¥¹œ¡ÑÉÕ”¤íÙ½¥Á½±° ¤íõ•±Í•íÉ•ÑÉå=Á•¹¥¹œ¹ÕÉÉ•¹ĞõÑÉÕ”íÍ•ÑMå¹ÑÑ•µÁĞ¡Ù…±Õ”ôùÙ…±Õ”¬Ä¤íõôì(€€€‘½Õµ•¹Ğ¹…‘‘Ù•¹Ñ1¥ÍÑ•¹•È Ù¥Í¥‰¥±¥Ñå¡…¹”œ±É•™É•Í ¤íİ¥¹‘½Ü¹…‘‘Ù•¹Ñ1¥ÍÑ•¹•È É½­‰½ĞéÉ•™É•Í œ±É•™É•Í ¤íİ¥¹‘½Ü¹…‘‘Ù•¹Ñ1¥ÍÑ•¹•È ½¹±¥¹”œ±É•™É•Í ¤ì(€€€½¹ÍĞ±½…€ôÉ½½´€üAÉ½µ¥Í”¹É•Í½±Ù”¡É½½´¹¥¤€è…Á¤¹½¹Ù•ÉÍ…Ñ¥½¹½É	½Ğ¡‰½Ğ„¤ì(€€€±½…¹Ñ¡•¸¡¥ôùí¥˜¡…Ñ¥Ù”¥íÕÉÉ•¹Ñ%õ¥íÍ•Ñ½¹Ù•ÉÍ…Ñ¥½¹%¡¥¤íÙ½¥Á½±° ¤íõô¤¹…Ñ ¡”ôùí¥˜¡…Ñ¥Ù”¥íÉ•ÑÉå=Á•¹¥¹œ¹ÕÉÉ•¹Ğõ™…±Í”íÍ•ÑI•™É•Í¡¥¹œ¡™…±Í”¤íÍ•Ñ1½…‘¥¹œ¡™…±Í”¤íÍ•ÑM•ÍÍ¥½¹áÁ¥É•¡”¥¹ÍÑ…¹•½˜Á¥ÉÉ½È€˜˜”¹ÍÑ…ÑÕÌôôôĞÀÄ¤í½¹ÍĞİ…¥Ğõ”¥¹ÍÑ…¹•½˜Á¥ÉÉ½Èı5…Ñ ¹µ…à À±”¹É•ÑÉå™Ñ•È¨ÄÀÀÀ¤èÀíÉ•ÑÉå9½Ñ	•™½É”¹ÕÉÉ•¹Ğõİ…¥Ğı…Ñ”¹¹½Ü ¤­İ…¥ĞèÀíÍ•ÑI•ÑÉåĞ¡É•ÑÉå9½Ñ	•™½É”¹ÕÉÉ•¹Ğ¤íÍ•ÑMå¹ÉÉ½È¡”¥¹ÍÑ…¹•½˜Á¥ÉÉ½È€˜˜”¹ÍÑ…ÑÕÌôôôĞÀÄüe½ÕÈÍ•ÍÍ¥½¸•áÁ¥É•¸M¥¸¥¸……¥¸Ñ¼É•½¹¹•Ğ¸œè¡”¥¹ÍÑ…¹•½˜Á¥ÉÉ½Èı”¹µ•ÍÍ…”è½Õ±‘»ŠeĞ½Á•¸Ñ¡¥Ì½¹Ù•ÉÍ…Ñ¥½¸¸œ¤¬œe½ÕÈ‘É…™Ğ¥Ì­•ÁĞ¡•É”¸I•½¹¹•ĞÑ¼ÑÉä……¥¸¸œ¤íõô¤ì(€€€É•ÑÕÉ¸ ¤ôùí…Ñ¥Ù”õ™…±Í”í½¹ÑÉ½±±•È¹…‰½ÉĞ ¤í±•…ÉQ¥µ•½ÕĞ¡Ñ¥µ•È¤í‘½Õµ•¹Ğ¹É•µ½Ù•Ù•¹Ñ1¥ÍÑ•¹•È Ù¥Í¥‰¥±¥Ñå¡…¹”œ±É•™É•Í ¤íİ¥¹‘½Ü¹É•µ½Ù•Ù•¹Ñ1¥ÍÑ•¹•È É½­‰½ĞéÉ•™É•Í œ±É•™É•Í ¤íİ¥¹‘½Ü¹É•µ½Ù•Ù•¹Ñ1¥ÍÑ•¹•È ½¹±¥¹”œ±É•™É•Í ¤íôì(€ô°m‰½Ğü¹¥°É½½´ü¹¥°Íå¹ÑÑ•µÁÑt¤ì(€™Õ¹Ñ¥½¸µ•É•5•ÍÍ…•Ì¡ÁÉ•Ù¥½ÕÌè5•ÍÍ…•mt°¥¹½µ¥¹œè5•ÍÍ…•mt¤ì(€€€½¹ÍĞµ…À€ô¹•Ü5…À¡ÁÉ•Ù¥½ÕÌ¹µ…À¡µ•ÍÍ…”€ôømµ•ÍÍ…”¹¥°µ•ÍÍ…•t¤¤ì¥¹½µ¥¹œ¹™½É… ¡µ•ÍÍ…”€ôøµ…À¹Í•Ğ¡µ•ÍÍ…”¹¥°ì¸¸¹µ•ÍÍ…”±‘•±¥Ù•Éäéµ•ÍÍ…”¹‘•±¥Ù•Éäñğ€Í•¹Ğô¤¤ì(€€€É•ÑÕÉ¸ÉÉ…ä¹™É½´¡µ…À¹Ù…±Õ•Ì ¤¤¹Í½ÉĞ ¡„±ˆ¤€ôø„¹É•…Ñ•‘Ğ¹±½…±•½µÁ…É”¡ˆ¹É•…Ñ•‘Ğ¤ñğ„¹¥¹±½…±•½µÁ…É”¡ˆ¹¥¤¤ì(€ô(€…Íå¹Œ™Õ¹Ñ¥½¸±½…‘…É±¥•È ¤ì(€€€¥˜€ …½¹Ù•ÉÍ…Ñ¥½¹%ñğ€…µ•ÍÍ…•Ì¹±•¹Ñ ñğ±½…‘¥¹…É±¥•È¤É•ÑÕÉ¸ì(€€€Í•Ñ1½…‘¥¹…É±¥•È¡ÑÉÕ”¤ì(€€€ÑÉäì(€€€€€½¹ÍĞ½±‘•È€ô…İ…¥Ğ…Á¤¹•Ñ5•ÍÍ…•Ì¡½¹Ù•ÉÍ…Ñ¥½¹%°µ•ÍÍ…•ÍlÁt¹¥¤ì(€€€€€¥˜€¡ÍÑÉ•…´¹ÕÉÉ•¹Ğ¤ÁÉ•Á•¹‘=™™Í•Ğ¹ÕÉÉ•¹Ğ€ôÍÑÉ•…´¹ÕÉÉ•¹Ğ¹ÍÉ½±±!•¥¡Ğ€´ÍÑÉ•…´¹ÕÉÉ•¹Ğ¹ÍÉ½±±Q½Àì(€€€€€™½±±½İ1…Ñ•ÍĞ¹ÕÉÉ•¹Ğ€ô™…±Í”ì(€€€€€Í•Ñ5•ÍÍ…•Ì¡ÁÉ•Ù¥½ÕÌ€ôøµ•É•5•ÍÍ…•Ì¡ÁÉ•Ù¥½ÕÌ°½±‘•È¤¤ìÍ•Ñ!…Í…É±¥•È¡½±‘•È¹±•¹Ñ €ôôô€ÔÀ¤ì(€€€ô…Ñ €¡”¤ìÍ•ÑÉÉ½È¡MÑÉ¥¹œ¡”¤¤ìô™¥¹…±±äìÍ•Ñ1½…‘¥¹…É±¥•È¡™…±Í”¤ìô(€ô(€…Íå¹Œ™Õ¹Ñ¥½¸…‘‘¥±•Ì¡™¥±•Ìè¥±•1¥ÍĞğ¹Õ±°¤ì(€€€¥˜€ …™¥±•Ì¤É•ÑÕÉ¸ì(€€€Í•ÑÉÉ½È œœ¤ìÍ•ÑI•…‘¥¹¥±•Ì¡ÑÉÕ”¤ì(€€€ÑÉäì(€€€€€½¹ÍĞ±¥ÍĞ€ôÉÉ…ä¹™É½´¡™¥±•Ì¤ì(€€€€€¥˜€¡…ÑÑ…¡µ•¹ÑÌ¹±•¹Ñ €¬±¥ÍĞ¹±•¹Ñ €ø€Ğ¤Ñ¡É½Ü¹•ÜÉÉ½È ÑÑ… ÕÀÑ¼™½ÕÈ™¥±•ÌÁ•Èµ•ÍÍ…”¸œ¤ì(€€€€€½¹ÍĞ•á¥ÍÑ¥¹	åÑ•Ì€ô…ÑÑ…¡µ•¹ÑÌ¹É•‘Õ” ¡ÍÕ´°„¤€ôøÍÕ´€¬5…Ñ ¹™±½½È¡„¹‘…Ñ„¹±•¹Ñ €¨€¸ÜÔ¤°€À¤ì(€€€€€¥˜€¡•á¥ÍÑ¥¹	åÑ•Ì€¬±¥ÍĞ¹É•‘Õ” ¡ÍÕ´°˜¤€ôøÍÕ´€¬˜¹Í¥é”°€À¤€ø5a}	eQL¤Ñ¡É½Ü¹•ÜÉÉ½È -••À½µ‰¥¹•…ÑÑ…¡µ•¹ÑÌ‰•±½Ü€Ì5¸œ¤ì(€€€€€½¹ÍĞ…±±½İ•€ôl¥µ…”½Á¹œœ°¥µ…”½©Á•œœ°¥µ…”½İ•‰Àœ°…ÁÁ±¥…Ñ¥½¸½Á‘˜œ°Ñ•áĞ½Á±…¥¸œ°…Õ‘¥¼½İ…Øœ°…Õ‘¥¼½µÁ•œœ°…Õ‘¥¼½µÀĞœ°…Õ‘¥¼½½œœ°…Õ‘¥¼½İ•‰´œ°…Õ‘¥¼½™±…Œœ°Ù¥‘•¼½µÀĞœ°Ù¥‘•¼½İ•‰´œ°Ù¥‘•¼½ÅÕ¥­Ñ¥µ”tì(€€€€€½¹ÍĞ±½…‘•€ô…İ…¥ĞAÉ½µ¥Í”¹…±°¡±¥ÍĞ¹µ…À¡™¥±”€ôøì(€€€€€€€½¹ÍĞ•áÑ•¹Í¥½¹ÌéI•½ÉñÍÑÉ¥¹œ±ÍÑÉ¥¹œøõíÁ¹œè¥µ…”½Á¹œœ±©Áœè¥µ…”½©Á•œœ±©Á•œè¥µ…”½©Á•œœ±İ•‰Àè¥µ…”½İ•‰Àœ±Á‘˜è…ÁÁ±¥…Ñ¥½¸½Á‘˜œ±ÑáĞèÑ•áĞ½Á±…¥¸œ±µèÑ•áĞ½Á±…¥¸œ±ÍØèÑ•áĞ½Á±…¥¸œ±©Í½¸èÑ•áĞ½Á±…¥¸œ±İ…Øè…Õ‘¥¼½İ…Øœ±µÀÌè…Õ‘¥¼½µÁ•œœ±´Ñ„è…Õ‘¥¼½µÀĞœ±½œè…Õ‘¥¼½½œœ±™±…Œè…Õ‘¥¼½™±…Œœ±µÀĞèÙ¥‘•¼½µÀĞœ±İ•‰´èÙ¥‘•¼½İ•‰´œ±µ½ØèÙ¥‘•¼½ÅÕ¥­Ñ¥µ”ôì(€€€€€€€½¹ÍĞµ¥µ”õ…±±½İ•¹¥¹±Õ‘•Ì¡™¥±”¹ÑåÁ”¤ı™¥±”¹ÑåÁ”é•áÑ•¹Í¥½¹Ím™¥±”¹¹…µ”¹ÍÁ±¥Ğ œ¸œ¤¹Á½À ¤ü¹Ñ½1½İ•É…Í” ¥ñğœtì(€€€€€€€¥˜€ …µ¥µ”¤Ñ¡É½Ü¹•ÜÉÉ½È¡€‘í™¥±”¹¹…µ•ôèÕÍ”¥µ…•Ì°A°Ñ•áĞ°…Õ‘¥¼°5@Ğ°]•‰4°½È5=X¹€¤ì(€€€€€€€É•ÑÕÉ¸É•…‘ÑÑ…¡µ•¹Ğ¡™¥±”°µ¥µ”¤ì(€€€€€ô¤¤ì(€€€€€Í•ÑÑÑ…¡µ•¹ÑÌ¡ÁÉ•Ø€ôøl¸¸¹ÁÉ•Ø°€¸¸¹±½…‘•‘t¤ì(€€€€€Í•Ñ=ÁÑ¥½¹Ì¡ÕÉÉ•¹Ğôø¡ì¸¸¹ÕÉÉ•¹Ğ±½ÕÑÁÕĞèÑ•áĞô¤¤ì(€€€ô…Ñ €¡”¤ìÍ•ÑÉÉ½È¡MÑÉ¥¹œ¡”¤¤ìô(€€€™¥¹…±±äìÍ•ÑI•…‘¥¹¥±•Ì¡™…±Í”¤ì¥˜€¡™¥±•%¹ÁÕĞ¹ÕÉÉ•¹Ğ¤™¥±•%¹ÁÕĞ¹ÕÉÉ•¹Ğ¹Ù…±Õ”€ô€œœìô(€ô(€…Íå¹Œ™Õ¹Ñ¥½¸Ñ½±•½µÁÕÑ•È ¤ì(€€€¥˜€ …‰½Ğñğ½µÁÕÑ•É	ÕÍä¤É•ÑÕÉ¸ì(€€€½¹ÍĞ¥€ô‰½Ğ¹¥ì(€€€Í•Ñ½µÁÕÑ•É	ÕÍä¡ÑÉÕ”¤ìÍ•Ñ½µÁÕÑ•ÉÉÉ½È œœ¤ì(€€€ÑÉäì(€€€€ƒÎ÷¶‰ËkºwµçIÑÙ[Ü™ÚXKÙ\šY‰Èˆ›ÛOOH	ÜŞ\İ[IÈÈ	ÜŞ\İ[K]ZKØ[œË\Ù\šY‰Èˆ	È’[\ˆ˜\šXX›H‹Ø[œË\Ù\šY‰ÎÂˆ™]\›ˆXZ[ˆÛ\ÜÓ˜[YO^ØXZ[‹XÛÛ[	Ù˜YÙÚ[™Ñš[\ÈÈ	Ùš[\ËY˜YÙÚ[™ÉÈˆ	ÉßXHİ[O^ŞÈ›Û˜[Z[H_HÛ‘˜YÓİ™\^ÙOOÚYŠK™]U˜[œÙ™\‹\\Ëš[˜ÛY\Ê	Ñš[\ÉÊJ^ÙKœ™]™[Y˜][
+import { MODEL_CHOICES } from '../lib/presets';
+import { ContextPanel } from './ContextPanel';
+import { WorkPanel } from './WorkPanel';
+import { GlassSelect } from './GlassSelect';
+import React, { useEffect, useState, useRef } from 'react';
+import { Bot, Message, MessageType, Attachment, Conversation, Job, RunOptions } from '../lib/types';
+import { api, ApiError } from '../lib/api';
+import { BotAvatar } from './BotAvatar';
+import { MessageBubble } from './MessageBubble';
+import { QuickStart } from './QuickStart';
+import { RunControls, DEFAULT_OPTIONS } from './RunControls';
+import { modelPolicy } from '../lib/modelPolicy';
+import { readAttachment } from '../lib/attachments';
+const POLL_MS = 1500;
+const MAX_BYTES = 3 * 1024 * 1024;
+export function ChatPanel({ bot, room, bots, onCreateBot, onCreateRoom, onQuickStart, onOpenLounge, draftScope }: { draftScope?: string; bot: Bot | null; room: Conversation | null; bots: Bot[]; onCreateBot: () => void; onCreateRoom: () => void; onQuickStart: (prompt: string, options: Partial<import('../lib/types').RunOptions>) => Promise<void>; onOpenLounge: () => Promise<Conversation> }) {
+  const [conversationId, setConversationId] = useState('');
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [jobs, setJobs] = useState<Job[]>([]);
+  const [input, setInput] = useState('');
+  const [replyTo,setReplyTo]=useState<Message|null>(null);
+  const [draftReady, setDraftReady] = useState(false);
+  const [loading, setLoading] = useState(!!bot || !!room);
+  const [syncError, setSyncError] = useState('');
+  const [syncAttempt,setSyncAttempt] = useState(0);
+  const [refreshing,setRefreshing] = useState(false);
+  const [sessionExpired,setSessionExpired] = useState(false);
+  const [retryAt,setRetryAt] = useState(0);
+  const retryNotBefore = useRef(0);
+  const retryOpening = useRef(false);
+  useEffect(()=>{if(!retryAt)return;const timer=setTimeout(()=>{retryNotBefore.current=0;setRetryAt(0);},Math.max(0,retryAt-Date.now()));return()=>clearTimeout(timer);},[retryAt]);
+  const [awayFromLatest, setAwayFromLatest] = useState(false);
+  const [stopping, setStopping] = useState(false);
+  const [workOpen, setWorkOpen] = useState(false);
+  const [messageQuery, setMessageQuery] = useState('');
+  const [searchOpen, setSearchOpen] = useState(false);
+  const searchTrigger=useRef<HTMLButtonElement>(null);
+  function closeSearch(){setSearchOpen(false);setMessageQuery('');searchTrigger.current?.focus();}
+  const settings = useRef<HTMLDetailsElement>(null);
+  const draftKey = 'grokbot-draft-' + (room?.id || bot?.id || 'home');
+  useEffect(() => { try { setInput(sessionStorage.getItem(draftKey) || ''); } catch {} setDraftReady(true); }, [draftKey]);
+  useEffect(() => { if(draftReady) try { if(input) sessionStorage.setItem(draftKey, input); else sessionStorage.removeItem(draftKey); } catch {} }, [draftKey, input, draftReady]);
+  useEffect(() => {
+    function close(event: KeyboardEvent | globalThis.PointerEvent) {
+      if (!settings.current?.open) return;
+      if(event.type === 'keydown' && !event.defaultPrevented && (event as KeyboardEvent).key === 'Escape') { settings.current.open=false; settings.current.querySelector('summary')?.focus(); }
+      else if(event.type === 'pointerdown' && !settings.current.contains(event.target as Node) && !(event.target as HTMLElement).closest('[role=listbox],[role=option]')) settings.current.open=false;
+    }
+    document.addEventListener('keydown',close); document.addEventListener('pointerdown',close);
+    return () => { document.removeEventListener('keydown',close);document.removeEventListener('pointerdown',close); };
+  }, []);
+  const [attachments, setAttachments] = useState<Attachment[]>([]);
+  const [readingFiles,setReadingFiles]=useState(false);
+  const [draggingFiles,setDraggingFiles]=useState(false);
+  const [error, setError] = useState('');
+  const [sending, setSending] = useState(false);
+  const sendingRef = useRef(false);
+  const unconfirmedDraft = useRef<{id:string;text:string;files:Attachment[];reply?:string} | null>(null);
+  const [computerBotId, setComputerBotId] = useState<string | null>(null);
+  const [computerBusy, setComputerBusy] = useState(false);
+  const [computerError, setComputerError] = useState('');
+  const [options, setOptions] = useState<RunOptions>(() => ({ ...DEFAULT_OPTIONS, provider: 'openai', model: 'gpt-6.1-sol', ...bot?.defaultOptions }));
+  const [optionsRestored, setOptionsRestored] = useState(false);
+  useEffect(() => {
+    try { setOptions({ ...DEFAULT_OPTIONS, provider: 'openai', model: localStorage.getItem('grokbot-manager') === 'gpt-6-luna' ? 'gpt-6-luna' : 'gpt-6.1-sol', ...bot?.defaultOptions, ...modelPolicy(JSON.parse(localStorage.getItem('grokbot-options-' + bot?.id) || '{}')) }); }
+    catch { /* Keep the deterministic defaults when browser storage is unavailable. */ }
+    setOptionsRestored(true);
+  }, [bot?.id]);
+  useEffect(() => { if (optionsRestored && bot) { try { localStorage.setItem('grokbot-options-' + bot.id, JSON.stringify(options)); } catch {} } }, [options, bot?.id, optionsRestored]);
+  const [font, setFont] = useState('inter');
+  const [hasEarlier, setHasEarlier] = useState(false);
+  const [loadingEarlier, setLoadingEarlier] = useState(false);
+  const prependOffset = useRef<number | null>(null);
+  const firstPage = useRef(true);
+  const stream = useRef<HTMLDivElement>(null);
+  const fileInput = useRef<HTMLInputElement>(null);
+  const followLatest = useRef(true);
+  const title = room?.title === 'Agent lounge' ? 'Your team' : room?.title || bot?.name || 'Workspace';
+  useEffect(() => { const el = stream.current; if (!el) return; if (prependOffset.current !== null) { el.scrollTop = el.scrollHeight - prependOffset.current; prependOffset.current = null; } else if (followLatest.current) el.scrollTop = el.scrollHeight; }, [messages.length, messages[messages.length - 1]?.id]);
+  useEffect(()=>{followLatest.current=true;setConversationId('');setMessages([]);setJobs([]);setAttachments([]);setError('');setLoading(!!bot || !!room);setSyncError('');setSessionExpired(false);retryNotBefore.current=0;setRetryAt(0);firstPage.current=true;},[bot?.id,room?.id]);
+  useEffect(() => {
+    let active = true; let timer: ReturnType<typeof setTimeout>; let failures=0; let pending=false;
+    const controller=new AbortController();
+    if (!bot && !room) return;
+    retryOpening.current=true;setRefreshing(true);
+    let currentId='';let latestMessageId:string|undefined;
+    const poll = async () => {
+      if(!active || pending || !currentId || Date.now()<retryNotBefore.current)return;
+      pending=true; clearTimeout(timer); let delay=10000;
+      try { const {messages:data,tasks}=await api.syncConversation(currentId,latestMessageId,controller.signal); if(active){failures=0;if(data.length)latestMessageId=data[data.length-1].id;if(firstPage.current){setHasEarlier(data.length===50);firstPage.current=false;}setMessages(previous=>mergeMessages(previous,data));setJobs(tasks);setLoading(false);setSyncError('');setSessionExpired(false);delay=tasks.some(t=>['pending','running','cancel_requested'].includes(t.status))?POLL_MS:10000;} }
+      catch(e){if(active){failures++;setLoading(false);setSessionExpired(e instanceof ApiError && e.status===401);const wait=e instanceof ApiError?Math.max(0,e.retryAfter*1000):0;retryNotBefore.current=wait?Date.now()+wait:0;setRetryAt(retryNotBefore.current);setSyncError(e instanceof ApiError && e.code==='database_quota'?e.message:e instanceof ApiError && e.status===401?'Your session expired. Sign in again to reconnect.':'Couldnâ€™t refresh this conversation. Your messages are saved; reconnecting automaticallyâ€¦');delay=Math.max(e instanceof ApiError?e.retryAfter*1000:0,Math.min(60000,2000*2**Math.min(failures,5)));}}
+      finally{pending=false;if(active){retryOpening.current=false;setRefreshing(false);}if(active)timer=setTimeout(poll,document.hidden?Math.max(delay,60000):delay);}
+    };
+    const refresh=()=>{if(document.hidden || pending || retryOpening.current || Date.now()<retryNotBefore.current)return;if(currentId){setRefreshing(true);void poll();}else{retryOpening.current=true;setSyncAttempt(value=>value+1);}};
+    document.addEventListener('visibilitychange',refresh);window.addEventListener('grokbot:refresh',refresh);window.addEventListener('online',refresh);
+    const load = room ? Promise.resolve(room.id) : api.conversationForBot(bot!);
+    load.then(id=>{if(active){currentId=id;setConversationId(id);void poll();}}).catch(e=>{if(active){retryOpening.current=false;setRefreshing(false);setLoading(false);setSessionExpired(e instanceof ApiError && e.status===401);const wait=e instanceof ApiError?Math.max(0,e.retryAfter*1000):0;retryNotBefore.current=wait?Date.now()+wait:0;setRetryAt(retryNotBefore.current);setSyncError(e instanceof ApiError && e.status===401?'Your session expired. Sign in again to reconnect.':(e instanceof ApiError?e.message:'Couldnâ€™t open this conversation.')+' Your draft is kept here. Reconnect to try again.');}});
+    return()=>{active=false;controller.abort();clearTimeout(timer);document.removeEventListener('visibilitychange',refresh);window.removeEventListener('grokbot:refresh',refresh);window.removeEventListener('online',refresh);};
+  }, [bot?.id, room?.id, syncAttempt]);
+  function mergeMessages(previous: Message[], incoming: Message[]) {
+    const map = new Map(previous.map(message => [message.id, message])); incoming.forEach(message => map.set(message.id, {...message,delivery:message.delivery || 'sent'}));
+    return Array.from(map.values()).sort((a,b) => a.createdAt.localeCompare(b.createdAt) || a.id.localeCompare(b.id));
+  }
+  async function loadEarlier() {
+    if (!conversationId || !messages.length || loadingEarlier) return;
+    setLoadingEarlier(true);
+    try {
+      const older = await api.getMessages(conversationId, messages[0].id);
+      if (stream.current) prependOffset.current = stream.current.scrollHeight - stream.current.scrollTop;
+      followLatest.current = false;
+      setMessages(previous => mergeMessages(previous, older)); setHasEarlier(older.length === 50);
+    } catch (e) { setError(String(e)); } finally { setLoadingEarlier(false); }
+  }
+  async function addFiles(files: FileList | null) {
+    if (!files) return;
+    setError(''); setReadingFiles(true);
+    try {
+      const list = Array.from(files);
+      if (attachments.length + list.length > 4) throw new Error('Attach up to four files per message.');
+      const existingBytes = attachments.reduce((sum, a) => sum + Math.floor(a.data.length * .75), 0);
+      if (existingBytes + list.reduce((sum, f) => sum + f.size, 0) > MAX_BYTES) throw new Error('Keep combined attachments below 3 MB.');
+      const allowed = ['image/png','image/jpeg','image/webp','application/pdf','text/plain','audio/wav','audio/mpeg','audio/mp4','audio/ogg','audio/webm','audio/flac','video/mp4','video/webm','video/quicktime'];
+      const loaded = await Promise.all(list.map(file => {
+        const extensions:Record<string,string>={png:'image/png',jpg:'image/jpeg',jpeg:'image/jpeg',webp:'image/webp',pdf:'application/pdf',txt:'text/plain',md:'text/plain',csv:'text/plain',json:'text/plain',wav:'audio/wav',mp3:'audio/mpeg',m4a:'audio/mp4',ogg:'audio/ogg',flac:'audio/flac',mp4:'video/mp4',webm:'video/webm',mov:'video/quicktime'};
+        const mime=allowed.includes(file.type)?file.type:extensions[file.name.split('.').pop()?.toLowerCase()||''];
+        if (!mime) throw new Error(`${file.name}: use images, PDF, text, audio, MP4, WebM, or MOV.`);
+        return readAttachment(file, mime);
+      }));
+      setAttachments(prev => [...prev, ...loaded]);
+      setOptions(current=>({...current,output:'text'}));
+    } catch (e) { setError(String(e)); }
+    finally { setReadingFiles(false); if (fileInput.current) fileInput.current.value = ''; }
+  }
+  async function toggleComputer() {
+    if (!bot || computerBusy) return;
+    const id = bot.id;
+    setComputerBusy(true); setComputerError('');
+    try {
+      if (computerBotId === id) { await api.stopBot(id); setComputerBotId(null); }
+      else { await api.startBot(id); setComputerBotId(id); }
+    } catch (e) { setComputerError(e instanceof Error ? e.message : String(e)); }
+    finally { setComputerBusy(false); }
+  }
+  async function send() {
+    if ((!input.trim() && !attachments.length) || !conversationId || readingFiles || sendingRef.current) return;
+    sendingRef.current = true;
+    const text = input;
+    const files = attachments;
+    const previousDraft=unconfirmedDraft.current;
+    const messageId=previousDraft?.text===text && JSON.stringify(previousDraft.files)===JSON.stringify(files) && previousDraft.reply===replyTo?.id?previousDraft.id:crypto.randomUUID();
+    followLatest.current = true;
+    setSending(true); setError(''); setInput(''); setAttachments([]);
+    const composerInput=document.getElementById("message"); if(composerInput)composerInput.style.height="auto";
+    setMessages(previous => mergeMessages(previous, [{id:messageId,conversationId,senderType:'user',content:text,messageType:MessageType.TEXT,createdAt:new Date().toISOString(),attachments:files,threadRootId:replyTo?.threadRootId||replyTo?.id,replyToId:replyTo?.id,delivery:'sending'}]));
+    try {
+      const accepted = await api.sendMessage(conversationId, text, files, options, messageId,replyTo?.id);
+      setReplyTo(null);
+      unconfirmedDraft.current=null;
+      window.dispatchEvent(new Event('grokbot:refresh'));
+      setMessages(previous=>previous.map(message=>message.id===messageId?{...message,delivery:'sent'}:message));
+      setJobs(previous=>previous.some(job=>job.id===accepted.task_id)?previous:[{id:accepted.task_id,title:text.slice(0,100),status:'pending',created_at:new Date().toISOString()},...previous]);
+    } catch (e) {
+      unconfirmedDraft.current={id:messageId,text,files,reply:replyTo?.id};
+      setMessages(previous=>previous.map(message=>message.id===messageId?{...message,delivery:'failed'}:message));
+      setInput(current=>current || text);setAttachments(current=>current.length?current:files);
+      setError(`Message was not confirmed. ${String(e).replace(/^Error: /,'')} Your message is kept in this thread; resend from the composer to retry.`);
+    } finally { sendingRef.current=false;setSending(false); }
+  }
+  const visibleMessages = messages.filter(m => !m.internal && (!messageQuery.trim() || m.content.toLowerCase().includes(messageQuery.trim().toLowerCase())));
+  const activeJobs = jobs.filter(j => j.status === 'pending' || j.status === 'running' || j.status === 'cancel_requested');
+  const fontFamily = font === 'serif' ? 'Georgia, serif' : font === 'system' ? 'system-ui, sans-serif' : '"Inter Variable", sans-serif';
+  return <main className={`main-content ${draggingFiles ? 'files-dragging' : ''}`} style={{ fontFamily }} onDragOver={e=>{if(e.dataTransfer.types.includes('Files')){e.preventDefault();setDraggingFiles(true);}}} onDragLeave={e=>{if(!e.currentTarget.contains(e.relatedTarget as Node))setDraggingFiles(false);}} onDrop={e=>{e.preventDefault();setDraggingFiles(false);if(!readingFiles && conversationId)void addFiles(e.dataTransfer.files);}}>
+    {draggingFiles?<div className="file-drop-hint">Drop files into this conversation</div>:null}
+    <header className="workspace-toolbar"><div className="toolbar-location"><strong>{title}</strong></div><div className="toolbar-actions">{conversationId?<><button ref={searchTrigger} className="toolbar-button" aria-label="Search this conversation" aria-pressed={searchOpen} onClick={()=>{if(searchOpen)closeSearch();else setSearchOpen(true);}}><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4 4"/></svg><span>Search</span></button><button className="toolbar-button" aria-expanded={workOpen} onClick={()=>setWorkOpen(true)}>Work <span className="work-count">{activeJobs.length||jobs.length}</span></button></>:null}<details ref={settings} className="thread-settings"><summary>Conversation settings</summary><div className="thread-settings-sheet"><h2>Conversation settings</h2><RunControls options={options} onChange={setOptions} font={font} onFont={setFont} group={!!room?.is_group} model={bot ? { provider: bot.llmProvider, model: bot.llmModel } : undefined}/>    {jobs.length ? <details className="job-tray"><summary>{activeJobs.length ? `${activeJobs.length} job${activeJobs.length === 1 ? '' : 's'} in progress` : 'Recent work'}</summary>{jobs.slice(0,6).map(job => <div key={job.id}><span>{job.title}</span><strong data-status={job.status}>{job.status === 'cancel_requested' ? 'Stoppingâ€¦' : job.status}</strong>{['pending','running'].includes(job.status) ? <button aria-label={`Cancel ${job.title}`} onClick={() => api.cancelJob(conversationId, job.id).catch(e => setError(e.message))}>Cancel</button> : null}</div>)}</details> : null}
+    {conversationId ? <ContextPanel key={'context-'+conversationId} conversationId={conversationId}/> : null}
 
-NÜÙ]˜YÙÚ[™Ñš[\ÊYJNß__HÛ‘˜YÓX]™O^ÙOOÚYŠYK˜İ\œ™[\™Ù]˜ÛÛZ[œÊKœ™[]Y\™Ù]\È›ÙJJ\Ù]˜YÙÚ[™Ñš[\Ê˜[ÙJNß_HÛ‘›Ü^ÙOOÙKœ™]™[Y˜][
-
-NÜÙ]˜YÙÚ[™Ñš[\Ê˜[ÙJNÚYŠ\™XY[™Ñš[\È	‰ˆÛÛ™\œØ][Û’Y
-]›ÚYYš[\ÊK™]U˜[œÙ™\‹™š[\ÊNß_O‚ˆÙ˜YÙÚ[™Ñš[\ÏÏ]ˆÛ\ÜÓ˜[YOH™š[KY›ÜZ[‘›Üš[\È[È\ÈÛÛ™\œØ][ÛÙ]›[BˆXY\ˆÛ\ÜÓ˜[YOHÛÜšÜÜXÙK]ÛÛ˜\ˆ]ˆÛ\ÜÓ˜[YOHÛÛ˜\‹[ØØ][Ûˆİ›Û™Ïİ]_OÜİ›Û™ÏÙ]]ˆÛ\ÜÓ˜[YOHÛÛ˜\‹XXİ[ÛœÈØÛÛ™\œØ][Û’YÏ]Ûˆ™Y^ÜÙX\˜ÚšYÙÙ\ŸHÛ\ÜÓ˜[YOHÛÛ˜\‹X]Ûˆˆ\šXK[X™[H”ÙX\˜Ú\ÈÛÛ™\œØ][Ûˆˆ\šXK\™\ÜÙY^ÜÙX\˜ÚÜ[ŸHÛÛXÚÏ^Ê
-OOÚYŠÙX\˜ÚÜ[ŠXÛÜÙTÙX\˜Ú
-
-NÙ[ÙHÙ]ÙX\˜ÚÜ[ŠYJNß_Oİ™ÈšY]Ğ›ŞHŒˆ\šXKZY[HYHÚ\˜ÛHŞHŒLHˆŞOHŒLHˆH‹H‹Ï]H›LMˆMˆ‹ÏÜİ™ÏÜ[”ÙX\˜ÚÜÜ[Ø]Û]ÛˆÛ\ÜÓ˜[YOHÛÛ˜\‹X]Ûˆˆ\šXKY^[™Y^İÛÜšÓÜ[ŸHÛÛXÚÏ^Ê
-OOœÙ]ÛÜšÓÜ[ŠYJ_O•ÛÜšÈÜ[ˆÛ\ÜÓ˜[YOHÛÜšËXÛİ[ØXİ]™R›ØœË›[™İ›ØœË›[™İOÜÜ[Ø]ÛÏ›[O]Z[È™Y^ÜÙ][™ÜßHÛ\ÜÓ˜[YOH™XY\Ù][™ÜÈİ[[X\OÛÛ™\œØ][ÛˆÙ][™ÜÏÜİ[[X\O]ˆÛ\ÜÓ˜[YOH™XY\Ù][™ÜË\ÚY]ÛÛ™\œØ][ÛˆÙ][™ÜÏÚ[ÛÛ›ÛÈÜ[ÛœÏ^ÛÜ[ÛœßHÛÚ[™ÙO^ÜÙ]Ü[ÛœßH›Û^Ù›ÛHÛ‘›Û^ÜÙ]›ÛHÜ›İ\^ÈH\›ÛÛOËš\×ÙÜ›İ\H[Ù[^Ø›İÈÈ›İšY\ˆ›İ›T›İšY\‹[Ù[ˆ›İ›S[Ù[Hˆ[™Yš[™YKÏˆÚ›ØœË›[™İÈ]Z[ÈÛ\ÜÓ˜[YOHš›Ø‹]˜^Hİ[[X\OØXİ]™R›ØœË›[™İÈ	ØXİ]™R›ØœË›[™İH›Ø‰ØXİ]™R›ØœË›[™İOOHHÈ	ÉÈˆ	ÜÉßH[ˆ›ÙÜ™\ÜØˆ	Ô™XÙ[ÛÜšÉßOÜİ[[X\OÚ›ØœËœÛXÙJŠK›X\
-›ØˆOˆ]ˆÙ^O^Ú›Ø‹šYOÜ[Ú›Ø‹]_OÜÜ[İ›Û™È]K\İ]\Ï^Ú›Ø‹œİ]\ßOÚ›Ø‹œİ]\ÈOOH	ØØ[˜Ù[Ü™\]Y\İY	ÈÈ	ÔİÜ[™ø )‰Èˆ›Ø‹œİ]\ßOÜİ›Û™ÏÖÉÜ[™[™ÉË	Ü[›š[™É×Kš[˜ÛY\Ê›Ø‹œİ]\ÊHÈ]Ûˆ\šXK[X™[^ØØ[˜Ù[	Ú›Ø‹]_XHÛÛXÚÏ^Ê
-HOˆ\K˜Ø[˜Ù[›ØŠÛÛ™\œØ][Û’Y›Ø‹šY
-K˜Ø]Ú
-HOˆÙ]\œ›ÜŠK›Y\ÜØYÙJJ_OØ[˜Ù[Ø]Ûˆˆ[OÙ]Š_OÙ]Z[Ïˆˆ[BˆØÛÛ™\œØ][Û’YÈÛÛ^[™[Ù^O^ÉØÛÛ^IÊØÛÛ™\œØ][Û’YHÛÛ™\œØ][Û’Y^ØÛÛ™\œØ][Û’YKÏˆˆ[B‚ˆ]Z[ÈÛ\ÜÓ˜[YOH™XY[Ü[ÛœÈİ[[X\O“Y\ÜØYÙHÜ[ÛœÈÜ[ÛÜ[ÛœË›İ]]OOH	Ú[XYÙIÈÈ	Ò[XYÙIÈˆ	Ğ]]ÛX]XÉßH0­ÈÛÜ[ÛœËœ›İ][™ÈOOIÛX[X[	ÏÉĞ]]ÈÜXÚX[\İÉÎ›Ü[ÛœË›[Ù[OÜÜ[Üİ[[X\O]ˆÛ\ÜÓ˜[YOH›İ]]XÛÛ›ÛÈX™[“X[˜YÙ\Û\ÜÔÙ[Xİ\šXK[X™[H“X[˜YÙ\ˆ[Ù[ˆ˜[YO^ÛÜ[ÛœËœ›İ][™ÈOOIÛX[X[	ÏÉØ]]ÉÎ›Ü[ÛœË›[Ù[›İË›S[Ù[	ÙÜM‹ŒK\ÛÛ	ßHÛÚ[™ÙO^ÙHOˆÈÙ]Ü[ÛœÊË‹‹›Ü[ÛœË›İ][™Î™K\™Ù]˜[YOOOIØ]]ÉÏÉØ]]ÉÎ‰ÛX[X[	Ë›İšY\“SÑSĞÒÒPÑTË™š[™
-OO›K›[Ù[OOYK\™Ù]˜[YJOËœ›İšY\Ÿ	ÛÜ[˜ZIË[Ù[™K\™Ù]˜[YOOOIØ]]ÉÏÉÙÜM‹ŒK\ÛÛ	Î™K\™Ù]˜[Y_JNÈHÈØØ[İÜ˜YÙKœÙ]][J	ÙÜ›ÚØ›İ[X[˜YÙ\‰ËK\™Ù]˜[YJNÈHØ]ÚßH_OÜ[Ûˆ˜[YOH˜]]È]]È0­È\ÚÈÜXÚX[\İÏÛÜ[ÛÓSÑSĞÒÒPÑTË›X\
-OOÜ[ÛˆÙ^O^ÛKšYH˜[YO^ÛK›[Ù[OÛK›X™[OÛÜ[ÛŠ_OÑÛ\ÜÔÙ[XİÛX™[X™[“İ]]Û\ÜÔÙ[Xİ\šXK[X™[H“İ]]\Hˆ˜[YO^ÛÜ[ÛœË›İ]]	İ^	ßHÛÚ[™ÙO^ÙHOˆÙ]Ü[ÛœÊÈ‹‹›Ü[ÛœËİ]]ˆK\™Ù]˜[YH\È	İ^	È	Ú[XYÙIË\ÜXİÜ˜][Îˆ	ÌMIÈJ_OÜ[Ûˆ˜[YOH^]]ÛX]XÏÛÜ[ÛÜ[Ûˆ˜[YOHš[XYÙHÜ™X]H[ˆ[XYÙOÛÜ[ÛÑÛ\ÜÔÙ[XİÛX™[ÛÜ[ÛœË›İ]]	‰ˆÜ[ÛœË›İ]]OOH	İ^	ÈÈX™[”Ú\OÛ\ÜÔÙ[Xİ\šXK[X™[H“YYXHÚ\Hˆ˜[YO^ÛÜ[ÛœË˜\ÜXİÜ˜][È	ÌMIßHÛÚ[™ÙO^ÙHOˆÙ]Ü[ÛœÊÈ‹‹›Ü[ÛœË\ÜXİÜ˜][ÎˆK\™Ù]˜[YHJ_OÜ[Ûˆ˜[YOHŒMH“[™ØØ\OÛÜ[ÛÜ[Ûˆ˜[YOHNŒMˆ”Ü˜Z]ÛÜ[ÛÛÜ[ÛœË›İ]]OOH	Ú[XYÙIÈÈÜ[Ûˆ˜[YOHŒNŒH”Ü]X\™OÛÜ[Ûˆˆ[OÑÛ\ÜÔÙ[XİÛX™[Ü[ˆÛ\ÜÓ˜[YOH›YYXKXÛÜİ[›İH•\Ù\ÈÙ[™\˜][ÛˆÜ™Y]ÏÜÜ[Ïˆˆ[OÙ]Ù]Z[Ï‚Ù]Ù]Z[ÏÙ]ÚXY\‚ˆÜÙX\˜ÚÜ[Ï]ˆÛ\ÜÓ˜[YOH˜ÛÛ™\œØ][Û‹\ÙX\˜Ú[œ]]]Ñ›Øİ\È\OHœÙX\˜Úˆ\šXK[X™[H”ÙX\˜ÚØYYY\ÜØYÙ\ÈˆXÙZÛ\H”ÙX\˜ÚØYYY\ÜØYÙ\ø )ˆˆ˜[YO^ÛY\ÜØYÙT]Y\_HÛÚ[™ÙO^Ù]™[OœÙ]Y\ÜØYÙT]Y\J]™[\™Ù]˜[YJ_HÛ’Ù^QİÛ^Ù]™[OÚYŠ]™[šÙ^OOOIÑ\ØØ\IÊXÛÜÙTÙX\˜Ú
-
-Nß_KÏÜ[ˆ›ÛOHœİ]\Èİš\ÚX›SY\ÜØYÙ\Ë›[™İH™\İ[ÏÜÜ[]ÛˆÛÛXÚÏ^ØÛÜÙTÙX\˜ÚOÛÜÙOØ]ÛÙ]›[BˆØÛÛ™\œØ][Û’YÏÛÜšÔ[™[Ü[^İÛÜšÓÜ[ŸHÛÛÜÙO^Ê
-OOœÙ]ÛÜšÓÜ[Š˜[ÙJ_HÛÛ™\œØ][Û’Y^ØÛÛ™\œØ][Û’YH›ØœÏ^Ú›ØœßHÜ[ÛœÏ^ÛÜ[ÛœßHÛÚ[™ÙO^ÜÙ]Ü[ÛœßHÛ”™Yœ™\Ú^Ø\Ş[˜Ê
-OOœÙ]›ØœÊ]ØZ]\K™Ù]›ØœÊÛÛ™\œØ][Û’Y
-J_KÏ›[BˆÈX›İ	‰ˆ\›ÛÛHÈ]ZXÚÔİ\Ù^O^Ù˜YØÛÜH	ÛØØ[	ßH˜YØÛÜO^Ù˜YØÛÜ_HÜ[ÛœÏ^ÛÜ[ÛœßHÛ“Ü[ÛœÏ^ÜÙ]Ü[ÛœßHÛ”İ\^ÛÛ”]ZXÚÔİ\HÛÜ™X]P›İ^ÛÛÜ™X]P›İHÛÜ™X]T›ÛÛO^ÛÛÜ™X]T›ÛÛ_HÛ“Ü[“İ[™ÙO^ÛÛ“Ü[“İ[™Ù_KÏˆˆ‚ˆØ›İÈ]ˆÛ\ÜÓ˜[YOH˜ÛÛ™\œØ][Û‹XÛÛ\]\ˆÜ[ØÛÛ\]\›İYOOH›İšYÈ	ĞÛÛ\]\ˆÛÛ›™XİY	Èˆ	ĞÛÛ\]\ˆÛÛÉßOÜÜ[]Ûˆ\ØX›Y^ØÛÛ\]\\Ş_HÛÛXÚÏ^Ê
-HOˆ›ÚYÙÙÛPÛÛ\]\Š
-_OØÛÛ\]\\ŞHÈ	ĞÛÛ›™Xİ[™ø )‰ÈˆÛÛ\]\›İYOOH›İšYÈ	ÔİÜÛÛ\]\‰Èˆ	Ôİ\ÛÛ\]\‰ßOØ]ÛÙ]ˆˆ[BˆÜ›ÛÛOËš\×ÙÜ›İ\È]Z[ÈÛ\ÜÓ˜[YOH™XY[Y[X™\œÈİ[[X\OÜ›ÛÛK˜›İÚYË›[™İHX[[X]\ÏÜİ[[X\O]ˆÛ\ÜÓ˜[YOHX[K[Y[X™\œÈØ›İË™š[\ŠˆOˆ›ÛÛK˜›İÚYËš[˜ÛY\Ê‹šY
-JK›X\
-ˆOˆÜ[ˆÙ^O^Ø‹šYH]O^Ø	Ø‹›T›İšY\ŸH0­È	Ø‹›S[Ù[XO›İ]˜]\ˆ˜[YO^Ø‹›˜[Y_HÛX[ÏØ‹›˜[Y_OÜÜ[Š_OÙ]Ù]Z[Ïˆˆ[BˆØÛÛ\]\‘\œ›ÜˆÈ›ÛOH˜[\ØÛÛ\]\‘\œ›ÜŸOÜˆˆ[BˆÙ\œ›ÜˆÈ]ˆÛ\ÜÓ˜[YOH˜ÛÛ™\œØ][Û‹X[\ˆ›ÛOH˜[\Ü[Ù\œ›Ü‹œ™\XÙJ×‘\œ›ÜˆË	ÉÊ_OÜÜ[]Ûˆ\šXK[X™[H‘\ÛZ\ÜÈ\œ›ÜˆˆÛÛXÚÏ^Ê
-HOˆÙ]\œ›ÜŠ	ÉÊ_O‘\ÛZ\ÜÏØ]ÛÙ]ˆˆ[^ÜŞ[˜Ñ\œ›ÜˆÈ]ˆÛ\ÜÓ˜[YOHœŞ[˜Ë\İ]\Èˆ›ÛOHœİ]\ÈÜ[ÜŞ[˜Ñ\œ›ÜŸOÜÜ[ÜÙ\ÜÚ[Û‘^\™YÏH™YH‹ÛÙÚ[ˆ”ÚYÛˆ[ØO]Ûˆ\ØX›Y^Ü™Yœ™\Ú[™È™]P]‘]K››İÊ
-_HÛÛXÚÏ^Ê
-OOÚ[™İË™\Ü]Ú]™[
-™]È]™[
-	ÙÜ›ÚØ›İœ™Yœ™\Ú	ÊJ_OÜ™Yœ™\Ú[™ÏÉÔ™XÛÛ›™Xİ[™ø )‰Îœ™]P]‘]K››İÊ
-OÉÕØZ][™ÈÈ™]x )‰Î‰Ô™XÛÛ›™Xİ	ßOØ]ÛŸOÙ]ˆˆ[Bˆ]ˆ™Y^Üİ™X[_HÛ”ØÜ›Û^Ê
-HOˆÈÛÛœİ[Hİ™X[K˜İ\œ™[ÈYˆ
-[
-H›ÛİÓ]\İ˜İ\œ™[H[œØÜ›ÛZYÚH[œØÜ›ÛÜH[˜ÛY[ZYÚLÈÙ]]Ø^Qœ›ÛS]\İ
-Y›ÛİÓ]\İ˜İ\œ™[
-NÈ_HÛ\ÜÓ˜[YOH›Y\ÜØYÙK\İ™X[Hˆİ[O^ŞÈ›^ŒKİ™\™›İÖN‰Ø]]ÉË\Ü^N‰Ù›^	Ë›^\™Xİ[Û‰ØÛÛ[[‰È_OÚ\ÑX\›Y\ˆÈ]ÛˆÛ\ÜÓ˜[YOH›ØYYX\›Y\ˆˆ\ØX›Y^ÛØY[™ÑX\›Y\ŸHÛÛXÚÏ^ÛØYX\›Y\ŸOÛØY[™ÑX\›Y\ˆÈ	ÓØY[™ø )‰Èˆ	ÓØYX\›Y\ˆY\ÜØYÙ\ÉßOØ]Ûˆˆ[^ÛY\ÜØYÙ\ËœÛÛYJHOˆKš[\›˜[
-HÈ]Z[ÈÛ\ÜÓ˜[YOH™›Y]XXİ]š]Hİ[[X\O˜XÚÙÜ›İ[™Xİ]š]OÜİ[[X\OÛY\ÜØYÙ\Ë™š[\ŠHOˆKš[\›˜[
-K›X\
-HOˆY\ÜØYÙPX˜›HÙ^O^ÛKšYHY\ÜØYÙO^Û_H›İ^Ø›İË™š[™
-ˆOˆ‹šYOOHKœÙ[™\›İY
-_KÏŠ_OÙ]Z[Ïˆˆ[^İš\ÚX›SY\ÜØYÙ\Ë›X\
-
-K[™^
-HOˆÈÛÛœİ™]š[İ\Ï]š\ÚX›SY\ÜØYÙ\ÖÚ[™^LWNÈÛÛœİÜ›İ\YHH\™]š[İ\È	‰ˆ™]š[İ\ËœÙ[™\•\OOO[KœÙ[™\•\H	‰ˆ™]š[İ\ËœÙ[™\›İYOO[KœÙ[™\›İY	‰ˆ™]È]JK˜Ü™X]Y]
-K™Ù][YJ
-K[™]È]J™]š[İ\Ë˜Ü™X]Y]
-K™Ù][YJ
-OÌÈ™]\›ˆY\ÜØYÙPX˜›HÙ^O^ÛKšYHY\ÜØYÙO^Û_HÛ”™\O^ÛY\ÜØYÙOOÜÙ]™\UÊY\ÜØYÙJNÙØİ[Y[™Ù][[Y[RY
-›Y\ÜØYÙHŠOË™›Øİ\Ê
-Nß_HÜ›İ\Y^ÙÜ›İ\YH›İ^Ø›İË™š[™
-ˆOˆ‹šYOOHKœÙ[™\›İY
-_KÏÈJ_^È[ØY[™È	‰ˆY\ÜØYÙT]Y\Kš[J
-H	‰ˆ]š\ÚX›SY\ÜØYÙ\Ë›[™İÈ]ˆÛ\ÜÓ˜[YOHÛÜšËY[\HÏ“›ÈX]Ú[™ÈY\ÜØYÙ\ÏÚÏ•HHY™™\™[ÙX\˜ÚˆÛ›HØYYY\ÜØYÙ\È\™H[˜ÛYYÜÙ]ˆˆ[^ÛØY[™ÈÈ]ˆÛ\ÜÓ˜[YOH˜ÛÛ™\œØ][Û‹[ØY[™Èˆ›ÛOHœİ]\È“ØY[™ÈÛÛ™\œØ][Û¸ )Ù]ˆˆ[^È[ØY[™È	‰ˆ\Ş[˜Ñ\œ›Üˆ	‰ˆY\œ›Üˆ	‰ˆ]š\ÚX›SY\ÜØYÙ\Ë›[™İ	‰ˆ[Y\ÜØYÙT]Y\Kš[J
-HÈ]ˆÛ\ÜÓ˜[YOH˜ÛÛ™\œØ][Û‹Y[\Hİ›Û™ÏÜ›ÛÛHÈ	ÕÚ]Úİ[ÙHZÙHØ\™HÙÉÈˆ	ÕÚ]Úİ[HZÙHØ\™HÙÉßOÜİ›Û™Ï”Ù[™Hİ]ÛÛYH[İHØ[Üˆ›Ü[ˆHš[KÜÜ[•ÛÜšÈÛÛ[Y\È[ˆHÛİYÚ[ˆ[İHÛÜÙH\ÈX‹ÜÜ[Ù]ˆˆ[OÙ]‚ˆØ]Ø^Qœ›ÛS]\İÈ]ÛˆÛ\ÜÓ˜[YOHš[\[]\İˆÛÛXÚÏ^Ê
-HOˆÈ›ÛİÓ]\İ˜İ\œ™[]YNÈÙ]]Ø^Qœ›ÛS]\İ
-˜[ÙJNÈİ™X[K˜İ\œ™[ËœØÜ›ÛÊİÜœİ™X[K˜İ\œ™[œØÜ›ÛZYÚ™Z]š[Ü™Øİ[Y[™Øİ[Y[[[Y[™]\Ù]›[İ[ÛOOIÙ˜[ÙIÈÚ[™İË›X]ÚYYXJ	Ê™Y™\œË\™YXÙY[[İ[Ûˆ™YXÙJIÊK›X]Ú\ÏÉÚ[œİ[	Î‰ÜÛ[Ûİ	ßJNÈ_O’[\È]\İØ]Ûˆˆ[BˆØXİ]™R›ØœË›[™İÈ]ˆÛ\ÜÓ˜[YOH˜Xİ]™K]ÛÜšÈˆ›ÛOHœİ]\ÈÜ[ØXİ]™R›ØœËœÛÛYJ›ØˆOˆ›Ø‹œİ]\ÈOOH	Ü[›š[™ÉÊHÈ	ÕÛÜšÚ[™ÈÛˆ[İ\ˆ™\]Y\İ	ÈˆXİ]™R›ØœËœÛÛYJ›ØˆOˆ›Ø‹œİ]\ÈOOH	ØØ[˜Ù[Ü™\]Y\İY	ÊHÈ	ÔİÜ[™ø )‰Èˆ	Ô™\]Y\İ]Y]YY	ß^ØXİ]™R›ØœË›[™İˆHÈ0­È	ØXİ]™R›ØœË›[™İH\ÚÜØˆ	ÉßOÜÜ[]Ûˆ\ØX›Y^ÜİÜ[™ÈXİ]™R›ØœË™]™\J›ØˆOˆ›Ø‹œİ]\ÈOOH	ØØ[˜Ù[Ü™\]Y\İY	Ê_HÛÛXÚÏ^Ø\Ş[˜È
-
-HOˆÈÙ]İÜ[™ÊYJNÈÛÛœİØ[˜Ù[X›OXXİ]™R›ØœË™š[\Š›ØˆOˆ›Ø‹œİ]\ÈOOH	ØØ[˜Ù[Ü™\]Y\İY	ÊNÈÛÛœİ™\İ[ÏX]ØZ]›ÛZ\ÙK˜[Ù]Y
-Ø[˜Ù[X›K›X\
-›ØˆOˆ\K˜Ø[˜Ù[›ØŠÛÛ™\œØ][Û’Y›Ø‹šY
-JJNÈYŠ™\İ[ËœÛÛYJ™\İ[Oˆ™\İ[œİ]\ÈOOH	Ü™Z™XİY	ÊJHÙ]\œ›ÜŠ	ÔÛÛYHÛÜšÈÛİ[›İ™HİÜYˆHYØZ[‹‰ÊNÈÙ]›ØœÊ]ØZ]\K™Ù]›ØœÊÛÛ™\œØ][Û’Y
-K˜Ø]Ú
-
-
-HOˆ›ØœÊJNÈÙ]İÜ[™Ê˜[ÙJNÈ_O”İÜØ]ÛÙ]ˆˆ[BˆØ]XÚY[Ë›[™İÈ]ˆÛ\ÜÓ˜[YOH˜]XÚY[]˜^HØ]XÚY[Ë›X\
-
-KJHOˆÜ[ˆÙ^O^Ø	ØK›˜[Y_KIÚ_XOØK›Z[YKœİ\ÕÚ]
-	Ú[XYÙKÉÊHÈ[YÈÜ˜Ï^Ø]N‰ØK›Z[Y_NØ˜\ÙM	ØK™]_XH[Hˆ‹Ïˆˆ[^ØK›˜[Y_O]Ûˆ\šXK[X™[^Ø™[[İ™H	ØK›˜[Y_XHÛÛXÚÏ^Ê
-HOˆÙ]]XÚY[Ê™]ˆOˆ™]‹™š[\Š
-Ë[™^
-HOˆ[™^OOHJJ_O”™[[İ™OØ]ÛÜÜ[Š_OÙ]ˆˆ[BˆÜ™\UÏÏ]ˆÛ\ÜÓ˜[YOHœ™\K\™]šY]ÈÜ[”™\Z[™È[ˆ[ˆ\ÛÛ]Y™XYˆÜ™\UË˜ÛÛ[œÛXÙJLL
-_OÜÜ[]ÛˆÛÛXÚÏ^Ê
-OOœÙ]™\UÊ[
-_OØ[˜Ù[™\OØ]ÛÙ]›[Bˆ]ˆÛ\ÜÓ˜[YOH˜ÛÛ\ÜÙ\ˆ[œ]Û\ÜÓ˜[YOHš\İX[KZY[ˆˆ™Y^Ùš[R[œ]H\OH™š[Hˆ][\HXØÙ\H‹œ™ËšœËšœYËÙXœœ‹›Y˜Üİ‹šœÛÛ‹›\ËØ]‹›MK›ÙÙË™›XË›\ÙX›K›[İˆˆÛÚ[™ÙO^ÙHOˆ›ÚYYš[\ÊK\™Ù]™š[\Ê_KÏX™[Û\ÜÓ˜[YOHš\İX[KZY[ˆˆ[›ÜH›Y\ÜØYÙH“Y\ÜØYÙHİ]_OÛX™[^\™XHYH›Y\ÜØYÙHˆ›İÜÏ^Ì_HX^[™İ^ÌŒH˜[YO^Ú[œ]HXÙZÛ\^ØY\ÜØYÙH	İ]_XHÛÚ[™ÙO^ÙHOˆÈÙ][œ]
-K\™Ù]˜[YJNÈK˜İ\œ™[\™Ù]œİ[KšZYÚH˜]]ÈÈK˜İ\œ™[\™Ù]œİ[KšZYÚSX]›Z[ŠK˜İ\œ™[\™Ù]œØÜ›ÛZYÚML
-JÈœÈ_HÛ’Ù^QİÛ^ÙHOˆÈYˆ
-KšÙ^HOOH	Ñ[\‰È	‰ˆYKœÚYÙ^H	‰ˆYK›˜]]™Q]™[š\ĞÛÛ\ÜÚ[™ÊHÈKœ™]™[Y˜][
-
-NÈ›ÚYÙ[™
-
-NÈH_KÏ]ˆÛ\ÜÓ˜[YOH˜ÛÛ\ÜÙ\‹Y›Ûİ\ˆ]ÛˆÛ\ÜÓ˜[YOH˜]XÚX]Ûˆˆ\šXK[X™[H]XÚš[\Èˆ\ØX›Y^Ü™XY[™Ñš[\ÈXÛÛ™\œØ][Û’YHÛÛXÚÏ^Ê
-HOˆš[R[œ]˜İ\œ™[Ë˜ÛXÚÊ
-_Oİ™ÈšY]Ğ›ŞHŒ]H“LLˆŒM“MLšMˆ‹ÏÜİ™ÏØ]Û]ˆÛ\ÜÓ˜[YOH˜ÛÛ\ÜÙ\‹[Ü[ÛœÈÜ[”™\ÜÛœÙOÜÜ[Û\ÜÔÙ[Xİ\šXK[X™[H”™\ÜÛœÙH›Ü›X]ˆ˜[YO^ÛÜ[ÛœË›İ]]	İ^	ßHÛÚ[™ÙO^Ù]™[OœÙ]Ü[ÛœÊİ\œ™[OŠË‹‹˜İ\œ™[İ]]™]™[\™Ù]˜[YH\È	İ^	ß	Ú[XYÙIË\ÜXİÜ˜][Î‰ÌMIßJJ_OÜ[Ûˆ˜[YOH^•^ÛÜ[ÛÜ[Ûˆ˜[YOHš[XYÙH’[XYÙOÛÜ[ÛÑÛ\ÜÔÙ[Xİ]ÛˆÛ\ÜÓ˜[YOHÛÛË]ÙÙÛHˆ\šXK\™\ÜÙY^ÛÜ[ÛœË˜[İ×İÛÛÈOOY˜[Ù_HÛÛXÚÏ^Ê
-OOœÙ]Ü[ÛœÊİ\œ™[OŠË‹‹˜İ\œ™[[İ×İÛÛÎ˜İ\œ™[˜[İ×İÛÛÏOOY˜[Ù_JJ_OÛÜ[ÛœË˜[İ×İÛÛÏOOY˜[ÙOÉÕÛÛÈÙ™‰Î‰ÕÛÛÈÛ‰ßOØ]ÛÜ[ˆÛ\ÜÓ˜[YOH˜ÛÛ\ÜÙ\‹[[Ù[ÛÜ[ÛœËœ›İ][™ÏOOIÛX[X[	ÏÊÜ[ÛœË›[Ù[›İË›S[Ù[
-N‰Ğ]]È0­È\ÚÈÜXÚX[\İÉßOÜÜ[Ù]]ÛˆÛ\ÜÓ˜[YOHœÙ[™X]Ûˆˆ\šXK[X™[H”Ù[™Y\ÜØYÙHˆ\ØX›Y^ÈXÛÛ™\œØ][Û’YÙ[™[™È™XY[™Ñš[\È
-Z[œ]š[J
-H	‰ˆX]XÚY[Ë›[™İ
-_HÛÛXÚÏ^ÜÙ[™Oİ™ÈšY]Ğ›ŞHŒ]H“LLˆNU[KMˆˆ‹Mˆˆˆ‹ÏÜİ™ÏØ]ÛÙ]Ù]‚ˆÜ™XY[™Ñš[\ÏÏÛ\ÜÓ˜[YOHš[œ][›İHˆ›ÛOHœİ]\È”™XY[™Èš[\ø )Ü›[BˆÛ\ÜÓ˜[YOHš[œ][›İHÛÜ[ÛœË›İ]]	‰ˆÜ[ÛœË›İ]]OOH	İ^	ÈÈ	ÓYYXH[ÙH\Ù\È[İ\ˆ^›Û\ˆÚÛÜÙH^È\Øİ\ÜÈ]XÚYš[\Ë‰Èˆ	Ñ[\ˆÈÙ[™0­ÈÚY
-È[\ˆ›ÜˆH™]È[™H0­È^˜YÈØ]™Y[ˆ\ÈX‰ßOÜ‚ˆÏŸBˆÛXZ[ÂŸB
+    <details className="thread-options"><summary>Message options <span>{options.output === 'image' ? 'Image' : 'Automatic'} Â· {options.routing!=='manual'?'Auto specialists':options.model}</span></summary><div className="output-controls"><label>Manager<GlassSelect aria-label="Manager model" value={options.routing!=='manual'?'auto':options.model || bot?.llmModel || 'gpt-6.1-sol'} onChange={e => { setOptions({...options,routing:e.target.value==='auto'?'auto':'manual',provider:MODEL_CHOICES.find(m=>m.model===e.target.value)?.provider||'openai',model:e.target.value==='auto'?'gpt-6.1-sol':e.target.value}); try { localStorage.setItem('grokbot-manager',e.target.value); } catch {} }}><option value="auto">Auto Â· task specialists</option>{MODEL_CHOICES.map(m=><option key={m.id} value={m.model}>{m.label}</option>)}</GlassSelect></label><label>Output<GlassSelect aria-label="Output type" value={options.output || 'text'} onChange={e => setOptions({ ...options, output: e.target.value as 'text' | 'image', aspect_ratio: '16:9' })}><option value="text">Automatic</option><option value="image">Create an image</option></GlassSelect></label>{options.output && options.output !== 'text' ? <><label>Shape<GlassSelect aria-label="Media shape" value={options.aspect_ratio || '16:9'} onChange={e => setOptions({ ...options, aspect_ratio: e.target.value })}><option value="16:9">Landscape</option><option value="9:16">Portrait</option>{options.output === 'image' ? <option value="1:1">Square</option> : null}</GlassSelect></label><span className="media-cost-note">Uses generation credits</span></> : null}</div></details>
+</div></details></div></header>
+    {searchOpen?<div className="conversation-search"><input autoFocus type="search" aria-label="Search loaded messages" placeholder="Search loaded messagesâ€¦" value={messageQuery} onChange={event=>setMessageQuery(event.target.value)} onKeyDown={event=>{if(event.key==='Escape')closeSearch();}}/><span role="status">{visibleMessages.length} results</span><button onClick={closeSearch}>Close</button></div>:null}
+    {conversationId?<WorkPanel open={workOpen} onClose={()=>setWorkOpen(false)} conversationId={conversationId} jobs={jobs} options={options} onChange={setOptions} onRefresh={async()=>setJobs(await api.getJobs(conversationId))}/>:null}
+    {!bot && !room ? <QuickStart key={draftScope || 'local'} draftScope={draftScope} options={options} onOptions={setOptions} onStart={onQuickStart} onCreateBot={onCreateBot} onCreateRoom={onCreateRoom} onOpenLounge={onOpenLounge}/> : <>
+    {bot ? <div className="conversation-computer"><span>{computerBotId === bot.id ? 'Computer connected' : 'Computer tools'}</span><button disabled={computerBusy} onClick={() => void toggleComputer()}>{computerBusy ? 'Connectingâ€¦' : computerBotId === bot.id ? 'Stop computer' : 'Start computer'}</button></div> : null}
+    {room?.is_group ? <details className="thread-members"><summary>{room.bot_ids.length} teammates</summary><div className="team-members">{bots.filter(b => room.bot_ids.includes(b.id)).map(b => <span key={b.id} title={`${b.llmProvider} Â· ${b.llmModel}`}><BotAvatar name={b.name} small/>{b.name}</span>)}</div></details> : null}
+    {computerError ? <p role="alert">{computerError}</p> : null}
+    {error ? <div className="conversation-alert" role="alert"><span>{error.replace(/^Error: /, '')}</span><button aria-label="Dismiss error" onClick={() => setError('')}>Dismiss</button></div> : null}{syncError ? <div className="sync-status" role="status"><span>{syncError}</span>{sessionExpired?<a href="/login">Sign in</a>:<button disabled={refreshing || retryAt>Date.now()} onClick={()=>window.dispatchEvent(new Event('grokbot:refresh'))}>{refreshing?'Reconnectingâ€¦':retryAt>Date.now()?'Waiting to retryâ€¦':'Reconnect'}</button>}</div> : null}
+    <div ref={stream} onScroll={() => { const el = stream.current; if (el) followLatest.current = el.scrollHeight - el.scrollTop - el.clientHeight < 100; setAwayFromLatest(!followLatest.current); }} className="message-stream" style={{ flex:1,overflowY:'auto',display:'flex',flexDirection:'column' }}>{hasEarlier ? <button className="load-earlier" disabled={loadingEarlier} onClick={loadEarlier}>{loadingEarlier ? 'Loadingâ€¦' : 'Load earlier messages'}</button> : null}{messages.some(m => m.internal) ? <details className="fleet-activity"><summary>Background activity</summary>{messages.filter(m => m.internal).map(m => <MessageBubble key={m.id} message={m} bot={bots.find(b => b.id === m.senderBotId)}/>)}</details> : null}{visibleMessages.map((m,index) => { const previous=visibleMessages[index-1]; const grouped=!!previous && previous.senderType===m.senderType && previous.senderBotId===m.senderBotId && new Date(m.createdAt).getTime()-new Date(previous.createdAt).getTime()<300000; return <MessageBubble key={m.id} message={m} onReply={message=>{setReplyTo(message);document.getElementById("message")?.focus();}} grouped={grouped} bot={bots.find(b => b.id === m.senderBotId)}/>; })}{!loading && messageQuery.trim() && !visibleMessages.length ? <div className="work-empty"><h3>No matching messages</h3><p>Try a different search. Only loaded messages are included.</p></div> : null}{loading ? <div className="conversation-loading" role="status">Loading conversationâ€¦</div> : null}{!loading && !syncError && !error && !visibleMessages.length && !messageQuery.trim() ? <div className="conversation-empty"><strong>{room ? 'What should we take care of?' : 'What should I take care of?'}</strong><p>Send the outcome you want, or drop in a file.</p><span>Work continues in the cloud when you close this tab.</span></div> : null}</div>
+    {awayFromLatest ? <button className="jump-latest" onClick={() => { followLatest.current=true; setAwayFromLatest(false); stream.current?.scrollTo({top:stream.current.scrollHeight, behavior:document.documentElement.dataset.motion==='false' || window.matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'}); }}>Jump to latest</button> : null}
+    {activeJobs.length ? <div className="active-work" role="status"><span>{activeJobs.some(job => job.status === 'running') ? 'Working on your request' : activeJobs.some(job => job.status === 'cancel_requested') ? 'Stoppingâ€¦' : 'Request queued'}{activeJobs.length > 1 ? ` Â· ${activeJobs.length} tasks` : ''}</span><button disabled={stopping || activeJobs.every(job => job.status === 'cancel_requested')} onClick={async () => { setStopping(true); const cancellable=activeJobs.filter(job => job.status !== 'cancel_requested'); const results=await Promise.allSettled(cancellable.map(job => api.cancelJob(conversationId,job.id))); if(results.some(result => result.status === 'rejected')) setError('Some work could not be stopped. Try again.'); setJobs(await api.getJobs(conversationId).catch(() => jobs)); setStopping(false); }}>Stop</button></div> : null}
+    {attachments.length ? <div className="attachment-tray">{attachments.map((a,i) => <span key={`${a.name}-${i}`}>{a.mime.startsWith('image/') ? <img src={`data:${a.mime};base64,${a.data}`} alt=""/> : null}{a.name}<button aria-label={`Remove ${a.name}`} onClick={() => setAttachments(prev => prev.filter((_,index) => index !== i))}>Remove</button></span>)}</div> : null}
+    {replyTo?<div className="reply-preview"><span>Replying in an isolated thread: {replyTo.content.slice(0,110)}</span><button onClick={()=>setReplyTo(null)}>Cancel reply</button></div>:null}
+    <div className="composer"><input className="visually-hidden" ref={fileInput} type="file" multiple accept=".png,.jpg,.jpeg,.webp,.pdf,.txt,.md,.csv,.json,.mp3,.wav,.m4a,.ogg,.flac,.mp4,.webm,.mov" onChange={e => void addFiles(e.target.files)}/><label className="visually-hidden" htmlFor="message">Message {title}</label><textarea id="message" rows={1} maxLength={20000} value={input} placeholder={`Message ${title}`} onChange={e => { setInput(e.target.value); e.currentTarget.style.height="auto"; e.currentTarget.style.height=Math.min(e.currentTarget.scrollHeight,150)+"px"; }} onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); void send(); } }}/><div className="composer-footer"><button className="attach-button" aria-label="Attach files" disabled={readingFiles || !conversationId} onClick={() => fileInput.current?.click()}><svg viewBox="0 0 24 24"><path d="M12 4v16M4 12h16"/></svg></button><div className="composer-options"><span>Response</span><GlassSelect aria-label="Response format" value={options.output||'text'} onChange={event=>setOptions(current=>({...current,output:event.target.value as 'text'|'image',aspect_ratio:'16:9'}))}><option value="text">Text</option><option value="image">Image</option></GlassSelect><button className="tools-toggle" aria-pressed={options.allow_tools!==false} onClick={()=>setOptions(current=>({...current,allow_tools:current.allow_tools===false}))}>{options.allow_tools===false?'Tools off':'Tools on'}</button><span className="composer-model">{options.routing==='manual'?(options.model || bot?.llmModel):'Auto Â· task specialists'}</span></div><button className="send-button" aria-label="Send message" disabled={!conversationId || sending || readingFiles || (!input.trim() && !attachments.length)} onClick={send}><svg viewBox="0 0 24 24"><path d="M12 19V5m-6 6 6-6 6 6"/></svg></button></div></div>
+    {readingFiles?<p className="input-note" role="status">Reading filesâ€¦</p>:null}
+    <p className="input-note">{options.output && options.output !== 'text' ? 'Media mode uses your text prompt. Choose Text to discuss attached files.' : 'Enter to send Â· Shift + Enter for a new line Â· Text drafts saved in this tab'}</p>
+    </>}
+  </main>;
+}
