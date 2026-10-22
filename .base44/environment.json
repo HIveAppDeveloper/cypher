@@ -1,0 +1,22 @@
+{
+  "previewPort": 3000,
+  "healthPath": "/",
+  "startCommand": "docker compose -f docker-compose.base44.yml up -d",
+  "secrets": [
+    {
+      "name": "LLM_API_KEY",
+      "description": "Direct model provider key (OpenAI by default). Optional for browsing; required before agents can answer. Get it from your provider's API keys page.",
+      "requiredAtBoot": false
+    },
+    {
+      "name": "OMNIROUTE_URL",
+      "description": "Optional OmniRoute model-transport origin, if you use one instead of a direct provider key.",
+      "requiredAtBoot": false
+    },
+    {
+      "name": "OMNIROUTE_API_KEY",
+      "description": "Optional OmniRoute inference key, used together with OMNIROUTE_URL.",
+      "requiredAtBoot": false
+    }
+  ]
+}

@@ -63,3 +63,6 @@ minio_data/
 .pytest_cache/
 
 *.tsbuildinfo
+
+# Base44 local defaults are committed on purpose (placeholders only)
+!.env.base44-defaults
