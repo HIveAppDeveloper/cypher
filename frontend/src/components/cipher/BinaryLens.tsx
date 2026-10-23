@@ -44,20 +44,33 @@ export default function BinaryLens({ cols = 41, rows = 17, active = false, class
       }
       ctx.globalAlpha = 1;
     };
+    let motionEnabled = document.documentElement.dataset.motion !== 'false';
+    const shouldAnimate = () => activeRef.current && motionEnabled && !reduce.matches && !document.hidden;
     const tick = (t: number) => {
-      if (activeRef.current && !reduce.matches) {
+      if (shouldAnimate()) {
         if (t - last > 70) { for (let i = 0; i < Math.ceil(digits.length / 18); i++) { const k = Math.floor(Math.random() * digits.length); digits[k] = digits[k] === '0' ? '1' : '0'; } last = t; }
         draw(t); frame = 1;
-      } else if (frame) { draw(0); frame = 0; }
-      raf = requestAnimationFrame(tick);
+        raf = requestAnimationFrame(tick);
+      } else {
+        if (frame) { draw(0); frame = 0; }
+        raf = 0;
+      }
     };
+    const syncMotion = () => {
+      motionEnabled = document.documentElement.dataset.motion !== 'false';
+      if (shouldAnimate() && !raf) raf = requestAnimationFrame(tick);
+      else if (!shouldAnimate() && raf) { cancelAnimationFrame(raf); raf = 0; if (frame) { draw(0); frame = 0; } }
+    };
+    const onVisibility = () => syncMotion();
     const observer = new ResizeObserver(resize); observer.observe(canvas);
     const scheme = window.matchMedia('(prefers-color-scheme: dark)'); const recolor = () => requestAnimationFrame(resize);
     scheme.addEventListener('change', recolor);
-    const themeObserver = new MutationObserver(recolor); themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme', 'class'] });
-    resize(); raf = requestAnimationFrame(tick);
-    return () => { cancelAnimationFrame(raf); observer.disconnect(); themeObserver.disconnect(); scheme.removeEventListener('change', recolor); };
-  }, [cols, rows]);
+    const themeObserver = new MutationObserver(() => { recolor(); syncMotion(); }); themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme', 'class', 'data-motion'] });
+    reduce.addEventListener('change', syncMotion);
+    document.addEventListener('visibilitychange', onVisibility);
+    resize(); syncMotion();
+    return () => { if (raf) cancelAnimationFrame(raf); observer.disconnect(); themeObserver.disconnect(); scheme.removeEventListener('change', recolor); reduce.removeEventListener('change', syncMotion); document.removeEventListener('visibilitychange', onVisibility); };
+  }, [active, cols, rows]);
 
   return <canvas ref={canvasRef} className={className} role="img" aria-label={label} />;
 }
