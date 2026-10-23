@@ -13,7 +13,7 @@ FINISH: The final correction batch still requires final verification and a finis
 
 ## Current visual and asset rules
 
-Use DESIGN.md's light/dark neutral roles for catalog cards, dialog backgrounds, counts, tabs, search fields, notices, sidebar controls, and focus. Primary actions invert their text against the neutral action. Preserve explicit semantic error/run-state text; do not turn status colors into brand accents. Provider-logo assets retain their provenance and display in grayscale. The original Cypher asset SHA-256 is `f85c60f5dabf119a6aa23e77cdea13310cfa71efb386634bb5e37ec7cccfa94e`.
+Use DESIGN.md's light/dark neutral roles for catalog cards, dialog backgrounds, counts, tabs, search fields, notices, sidebar controls, and focus. Primary actions invert their text against the neutral action. Preserve explicit semantic error/run-state text; do not turn status colors into brand accents. Provider-logo assets retain their provenance and display in grayscale. The original Cypher asset SHA-256 is `11143e325ca3ac26ffd640e89a88fbf7fb0cd7a7a45b80a9bd7b6ced49351c69`.
 
 Appearance retains browser-local text size, message width, density, and interface motion. Legacy accent data cannot restore colored actions; accent and blur selectors are removed. These preferences do not imply account synchronization. Existing Inter remains an optional conversation face, not the workspace brand default.
 

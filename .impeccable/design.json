@@ -341,7 +341,7 @@
       "originalLogo": {
         "path": "frontend/public/cipher-logo.png",
         "dimensions": "2000×2000",
-        "sha256": "f85c60f5dabf119a6aa23e77cdea13310cfa71efb386634bb5e37ec7cccfa94e",
+        "sha256": "11143e325ca3ac26ffd640e89a88fbf7fb0cd7a7a45b80a9bd7b6ced49351c69",
         "viewport": "188 597 1624 806",
         "rule": "Direct SVG image reference; no optimizer, redrawing, recompression, or lettering changes. The embedded Cipher spelling is preserved."
       }

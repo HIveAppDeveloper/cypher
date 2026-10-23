@@ -199,7 +199,7 @@ Navigation yields space to the task: New task is prominent, actual agents and gr
 
 ### Home Task and Brand
 
-Render the unchanged BinaryLens canvas above one Cypher title, the working task composer, and Research/Write/Build starter choices. The model/provider and output selections remain real inputs to the backend request. Preserve pending state, error detail, task text after failure, and account-scoped tab-local drafts. Use CypherMark for navigation and sign-in: its SVG viewport references the unoptimized original `/cipher-logo.png` (2000×2000), preserving the embedded Cipher lettering and all source bytes. SHA-256: `f85c60f5dabf119a6aa23e77cdea13310cfa71efb386634bb5e37ec7cccfa94e`. Dark appearance inverts display ink without changing the PNG. The sign-in card preserves Google/email authentication.
+Render the unchanged BinaryLens canvas above one Cypher title, the working task composer, and Research/Write/Build starter choices. The model/provider and output selections remain real inputs to the backend request. Preserve pending state, error detail, task text after failure, and account-scoped tab-local drafts. Use CypherMark for navigation and sign-in: its SVG viewport references the unoptimized original `/cipher-logo.png` (2000×2000), preserving the embedded Cipher lettering and all source bytes. SHA-256: `11143e325ca3ac26ffd640e89a88fbf7fb0cd7a7a45b80a9bd7b6ced49351c69`. Dark appearance inverts display ink without changing the PNG. The sign-in card preserves Google/email authentication.
 
 ### Conversation, Appearance, Goals, and Channels
 
