@@ -89,6 +89,7 @@
  .connectors-header {padding:20px 18px 16px}
  .connectors-body {padding:20px 18px}
  .connector-tabs {padding-inline:12px}
+ .plugin-tab-count {display:none}
  .plugin-tab-marker {left:12px;width:calc((100% - 24px)/4)}
  .lovable-connect {grid-template-columns:minmax(0,1fr) auto;gap:10px}
  .lovable-connect-actions {grid-column:auto;padding:0}
