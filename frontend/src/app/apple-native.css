@@ -617,3 +617,160 @@ input, textarea { caret-color: var(--accent-blue); }
     width: calc(100% - 32px);
   }
 }
+
+/* Cypher task start: clear prompt, then fast paths for the work around it. */
+.quickstart {
+  min-height: 100%;
+  padding: clamp(40px, 8vh, 88px) 24px 42px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.quickstart .cipher-home-mark {
+  width: 164px;
+  height: 62px;
+  margin: 0 0 14px;
+  color: color-mix(in srgb, var(--text-primary) 86%, #786be0);
+}
+
+.quickstart h1 {
+  max-width: 24ch;
+  margin: 0 0 8px;
+  font-size: clamp(27px, 2.8vw, 34px);
+  line-height: 1.1;
+  letter-spacing: -.035em;
+}
+
+.quickstart-intro {
+  width: min(100%, 58ch);
+  margin: 0 0 22px;
+  color: var(--text-secondary);
+  font-size: 14px;
+  line-height: 1.5;
+  text-align: center;
+  text-wrap: balance;
+}
+
+.quickstart .task-composer {
+  border: 1px solid var(--system-separator);
+  border-radius: 18px;
+  background: var(--bg-surface);
+  transition: border-color .18s ease, box-shadow .18s ease;
+}
+
+.quickstart .task-composer:focus-within {
+  border-color: color-mix(in srgb, #7568d8 44%, var(--system-separator));
+  box-shadow: 0 0 0 3px color-mix(in srgb, #7568d8 10%, transparent);
+}
+
+.quickstart .task-composer-footer .btn-primary {
+  transition: transform .15s ease, background-color .15s ease, opacity .15s ease;
+}
+
+.quickstart .task-composer-footer .btn-primary svg {
+  transition: transform .18s cubic-bezier(.16, 1, .3, 1);
+}
+
+.quickstart .task-composer-footer .btn-primary:hover:not(:disabled) svg { transform: translateX(3px); }
+.quickstart .task-composer-footer .btn-primary:active:not(:disabled) { transform: scale(.985); }
+
+.quickstart-section {
+  width: min(100%, 760px);
+  margin-top: 26px;
+}
+
+.quickstart-section h2 {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: -.005em;
+  text-align: left;
+}
+
+.quickstart .starter-prompts {
+  width: 100%;
+  justify-content: flex-start;
+  margin: 9px 0 0;
+  gap: 8px;
+}
+
+.quickstart .starter-prompts button,
+.quickstart .workspace-shortcuts button {
+  min-height: 42px;
+  border: 1px solid var(--system-separator);
+  border-radius: 11px;
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  font-size: 12px;
+  transition: background-color .15s ease, border-color .15s ease, color .15s ease, transform .15s ease;
+}
+
+.quickstart .starter-prompts button { padding-inline: 14px; }
+.quickstart .workspace-shortcuts { width: 100%; justify-content: flex-start; flex-wrap: wrap; margin-top: 9px; gap: 8px; }
+.quickstart .workspace-shortcuts button { padding-inline: 14px; }
+.quickstart .starter-prompts button:hover:not(:disabled),
+.quickstart .workspace-shortcuts button:hover:not(:disabled) {
+  border-color: color-mix(in srgb, #7568d8 32%, var(--system-separator));
+  background: color-mix(in srgb, #eeecff 72%, var(--bg-surface));
+  color: var(--text-primary);
+  transform: translateY(-1px);
+}
+.quickstart .starter-prompts button:active:not(:disabled),
+.quickstart .workspace-shortcuts button:active:not(:disabled) { transform: scale(.985); }
+.quickstart .quickstart-footnote { margin: 20px 0 0; font-size: 12px; text-align: center; }
+
+.sidebar-shell .workspace-destinations { margin: 0 0 17px; }
+.sidebar-shell .workspace-tools { margin-top: 9px; }
+.roster-group-label {
+  display: block;
+  padding: 0 9px 5px;
+  color: var(--text-secondary);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .025em;
+}
+.sidebar-shell .workspace-destinations .preferences-nav,
+.sidebar-shell .workspace-tools .preferences-nav,
+.sidebar-shell .workspace-tools .plugins-nav {
+  transition: background-color .15s ease, color .15s ease;
+}
+.sidebar-shell[data-collapsed="true"] .roster-group-label { display: none; }
+.sidebar-shell[data-collapsed="true"] .workspace-destinations .preferences-nav,
+.sidebar-shell[data-collapsed="true"] .workspace-tools .preferences-nav,
+.sidebar-shell[data-collapsed="true"] .workspace-tools .plugins-nav {
+  justify-content: center;
+  padding-inline: 7px;
+}
+.sidebar-shell[data-collapsed="true"] .workspace-destinations .preferences-nav span,
+.sidebar-shell[data-collapsed="true"] .workspace-tools .preferences-nav span,
+.sidebar-shell[data-collapsed="true"] .workspace-tools .plugins-nav span { display: none; }
+
+.bot-dialog[open] { animation: cypher-dialog-arrive .2s cubic-bezier(.16, 1, .3, 1) both; }
+@keyframes cypher-dialog-arrive { from { opacity: .78; transform: translateY(5px) scale(.99); } to { opacity: 1; transform: none; } }
+
+@media (max-width: 640px) {
+  .quickstart { padding: clamp(28px, 5vh, 44px) 16px 28px; }
+  .quickstart .cipher-home-mark { width: 132px; height: 50px; margin-bottom: 12px; }
+  .quickstart h1 { margin-bottom: 7px; }
+  .quickstart-intro { margin-bottom: 18px; }
+  .quickstart-section { margin-top: 22px; }
+  .quickstart .starter-prompts { flex-wrap: nowrap; overflow-x: auto; padding: 1px 1px 4px; scrollbar-width: none; }
+  .quickstart .starter-prompts::-webkit-scrollbar { display: none; }
+  .quickstart .starter-prompts button { flex: 0 0 auto; }
+  .quickstart .workspace-shortcuts button { flex: 1 1 calc(50% - 8px); }
+  .quickstart .quickstart-footnote { margin-top: 16px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .quickstart .task-composer,
+  .quickstart .task-composer-footer .btn-primary,
+  .quickstart .task-composer-footer .btn-primary svg,
+  .quickstart .starter-prompts button,
+  .quickstart .workspace-shortcuts button,
+  .sidebar-shell .workspace-destinations .preferences-nav,
+  .sidebar-shell .workspace-tools .preferences-nav,
+  .sidebar-shell .workspace-tools .plugins-nav { transition: none; }
+  .bot-dialog[open] { animation: none; }
+}

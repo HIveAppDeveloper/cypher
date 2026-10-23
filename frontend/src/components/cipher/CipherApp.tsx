@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
+import { useEffect, useMemo, useRef, useState, type CSSProperties, type FormEvent } from 'react';
 import { MARKETS, PERSONAS, type Company } from '../../lib/cipher/markets';
 import BinaryLens from './BinaryLens';
 import ProspectBrain from './ProspectBrain';
@@ -281,7 +281,7 @@ export default function CipherApp() {
           ) : null}
           <button className="cx-run" type="submit" disabled={running || !offering.trim()}>{running ? 'Running…' : 'Run Outbound'}</button>
           <div className="cx-progress">
-            <div className="cx-track" aria-hidden="true"><span style={{ width: `${territory.length ? Math.round(leads.length / territory.length * 100) : 0}%` }} /></div>
+            <div className="cx-track" aria-hidden="true"><span style={{ '--cx-progress': `${territory.length ? leads.length / territory.length : 0}` } as CSSProperties} /></div>
             <span className={running ? 'cx-status live' : 'cx-status'} role="status">{running ? status : ''}</span>
           </div>
         </form>
