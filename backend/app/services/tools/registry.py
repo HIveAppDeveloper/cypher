@@ -26,19 +26,18 @@ def rank_plugin_tools(manifest, query, service=None):
     base = lambda name: name.split('·',1)[0].strip()
     selected = None
     if service:
-        selected = {name for name in services if normalized(name)==normalized(service)}
-        if not selected:selected={name for name in services if normalized(base(name))==normalized(service)}
+        # Include saved account variants even when a public connection also has
+        # the bare brand name. Account labels need not use a middle dot.
+        selected={name for name in services if normalized(name)==normalized(service) or normalized(base(name))==normalized(service) or normalized(name).startswith(normalized(service)+' ')}
     else:
         # A query such as "Vercel get deployment" must not return Linear tools
         # just because their long descriptions contain more generic words.
-        matches = [name for name in services if any(normalized(label) and re.search(r'\b'+re.escape(normalized(label))+r'\b',normalized(query)) for label in (name,base(name)))]
+        matches = [(name,normalized(label)) for name in services for label in (name,base(name)) if normalized(label) and re.search(r'\b'+re.escape(normalized(label))+r'\b',normalized(query))]
         if matches:
             # A qualified account wins when supplied; a bare brand includes its
             # account variants so existing grants remain discoverable.
-            qualified=[name for name in matches if re.search(r'\b'+re.escape(normalized(name))+r'\b',normalized(query))]
-            chosen=qualified or matches
-            longest=max(len(normalized(name if qualified else base(name))) for name in chosen)
-            selected={name for name in chosen if len(normalized(name if qualified else base(name)))==longest}
+            longest=max(len(label) for _,label in matches)
+            selected={name for name,label in matches if len(label)==longest}
     action_words = query_words - set().union(*(words(s) for s in selected)) if selected else query_words
     operations={'get','list','search','fetch','read','find','inspect','lookup','create','update','save','delete','add','remove','the','a','an','my'}
     topics=action_words-operations
@@ -109,11 +108,12 @@ class ToolRegistry:
         if "plugins" not in (bot.tools_enabled or []):
             return
         from sqlalchemy import select
-        from app.models.plugin import Plugin
+        from app.models.plugin import Plugin, PluginAuthorization
         from app.services.plugins import invoke
         # Do not accumulate schemas or stale tools across turns. Two small routing
         # tools keep model context bounded even with hundreds of connections.
         connections = list((await db.execute(select(Plugin).where(Plugin.enabled == True))).scalars())
+        oauth_connections=set((await db.execute(select(PluginAuthorization.plugin_id).where(PluginAuthorization.status=='connected',PluginAuthorization.payload.is_not(None)))).scalars())
         from app.services.plugins import is_read_only
         manifest = [{**tool, 'plugin_id':p.id, 'service':p.name, 'read_only':is_read_only(p.url, tool)} for p in connections for tool in p.tools if tool.get('enabled', True)]
         self._plugin_manifest = manifest
@@ -124,9 +124,11 @@ class ToolRegistry:
             scoped=[t for t in manifest if not arguments.get('plugin_id') or t['plugin_id']==arguments['plugin_id']]
             if not scoped:return {'tools':[],'total_matches':0,'error':'No enabled tools for that plugin_id. Discover existing services first; do not search unrelated services as a fallback.'}
             if not query and not arguments.get('service') and not arguments.get('plugin_id'):
-                services=sorted([{'plugin_id':p.id,'service':p.name,'authenticated':bool(p.credential),'tool_count':sum(t['plugin_id']==p.id for t in manifest)} for p in connections],key=lambda p:(not p['authenticated'],p['service'].casefold()))
+                services=sorted([{'plugin_id':p.id,'service':p.name,'authenticated':bool(p.credential) or p.id in oauth_connections,'tool_count':sum(t['plugin_id']==p.id for t in manifest)} for p in connections],key=lambda p:(not p['authenticated'],p['service'].casefold()))
                 return {'tools':[],'services':services[:30],'total_services':len(services),'instruction':'Existing account-backed connections are listed first. Search with the exact service/account name or its plugin_id and the desired operation. Connected grants are server-side; sandbox CLI authentication is separate and must not be used to rediscover credentials.'}
-            ranked=rank_plugin_tools(scoped,query,arguments.get('service'))
+            # An exact connection ID is authoritative. A shortened or outdated
+            # display label must not hide tools in that already selected account.
+            ranked=rank_plugin_tools(scoped,query,None if arguments.get('plugin_id') else arguments.get('service'))
             return {'tools': [{'plugin_id':t['plugin_id'], 'service':t['service'], 'name':t['name'], 'description':t.get('description',''), 'parameters':t['schema'],'read_only':t['read_only']} for t in ranked[:12]], 'total_matches':len(ranked), 'instruction':'Call plugin_call with the exact returned plugin_id, tool_name and parameters. Bare service names include existing account variants; select the correct account. Use service or plugin_id to keep follow-up discovery scoped. Search is discovery, not evidence that an action ran. If an exact operation is unavailable, use a relevant supported operation or report the limit; do not invent a tool or hunt for tokens in the sandbox.'}
         async def call(arguments, bot_id):
             if not any(t['plugin_id']==arguments.get('plugin_id') and t['name']==arguments.get('tool_name') for t in manifest):
