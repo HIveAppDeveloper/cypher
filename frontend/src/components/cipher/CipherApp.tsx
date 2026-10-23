@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { MARKETS, PERSONAS, type Company } from '../../lib/cipher/markets';
 import BinaryLens from './BinaryLens';
 import ProspectBrain from './ProspectBrain';
+import CipherIntro from './CipherIntro';
 import { GREETING, SUGGESTIONS, localReply } from '../../lib/cipher/assistant';
 import { SIGNAL_MAX, leadsToCsv, type Lead, type RunEvent, type SignalKind, type Stage } from '../../lib/cipher/engine';
 
@@ -237,6 +238,7 @@ export default function CipherApp() {
 
   return (
     <div className="cipher">
+      <CipherIntro />
       <header className="cx-toolbar">
         <a className="cx-word" href="/"><span aria-hidden="true"><BinaryLens className="cx-mark" cols={15} rows={7} /></span>Cipher</a>
         <nav className="cx-nav" aria-label="Cipher">
