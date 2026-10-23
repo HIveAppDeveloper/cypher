@@ -69,7 +69,8 @@ async def validate_capabilities(messages, tools, provider, model, *, direct=Fals
     if missing:
         label = ", ".join(sorted(missing))
         raise ModelCapabilityError(f"The selected model cannot read this request's {label} input. Choose a model that supports these files, or remove them and send a text-only request. The files were kept; no input was discarded.")
-    if tools and not supports_tools:
+    tool_context = tools or any(message.get('role') == 'tool' or message.get('tool_calls') for message in messages)
+    if tool_context and not supports_tools:
         raise ModelCapabilityError("The selected model does not support tool calls. Choose a model with tool support before running this agent.")
 
 

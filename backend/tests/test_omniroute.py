@@ -83,6 +83,38 @@ async def test_unsupported_input_is_preserved_and_never_sent(router):
 
 
 @pytest.mark.asyncio
+async def test_text_only_model_cannot_silently_drop_past_tool_receipts(router,monkeypatch):
+    seen,install=router
+    from app.services import model_routing
+    async def catalog():
+        return {'openai/gpt-6.1-sol':{'type':'language','modalities':{'input':['text']},'supported_parameters':[]}}
+    monkeypatch.setattr(model_routing,'route_catalog',catalog)
+    install(lambda request: pytest.fail('Tool receipt reached a text-only provider'))
+    messages=[{'role':'assistant','content':None,'tool_calls':[{'id':'read-1','type':'function','function':{'name':'get_record','arguments':'{}'}}]}, {'role':'tool','tool_call_id':'read-1','content':'original receipt'}]
+    with pytest.raises(ModelCapabilityError,match='tool calls'):
+        await llm_gateway.LLMGateway.complete(messages,provider='openai',model='gpt-6.1-sol',allow_fallback=False)
+    assert not seen and messages[1]['content']=='original receipt'
+
+
+@pytest.mark.asyncio
+async def test_new_free_thinking_route_uses_saved_omniroute_transport_without_fallback(router,monkeypatch):
+    seen,install=router
+    monkeypatch.setattr(settings,'OMNIROUTE_MODEL_MAP',{'deepseek/deepseek-v4-pro-think':'ds-web/deepseek-v4-pro-think'})
+    monkeypatch.setattr(settings,'OMNIROUTE_CONTROL_KEY','')
+    messages=[{'role':'system','content':'Return the completed answer.'},{'role':'user','content':'How much is 17 plus 25?'}]
+    def respond(request):
+        body=json.loads(request.content)
+        assert body['model']=='ds-web/deepseek-v4-pro-think' and body['messages']==messages
+        return httpx.Response(200,json={'model':'deepseek-v4-pro-think','choices':[{'message':{'role':'assistant','content':'42'}}]})
+    install(respond)
+    response=await llm_gateway.LLMGateway.complete(messages,provider='deepseek',model='deepseek-v4-pro-think',allow_fallback=False)
+    assert response.choices[0].message.content=='42'
+    assert response._hidden_params['grokbot_route']['fallback'] is False
+    assert response._hidden_params['grokbot_route']['transport_model']=='ds-web/deepseek-v4-pro-think'
+    assert len([r for r in seen if r.method=='POST'])==1
+
+
+@pytest.mark.asyncio
 @pytest.mark.parametrize('status', [302,401,403,413,429])
 async def test_redirects_and_provider_errors_do_not_leak_keys_or_retry_elsewhere(router, status):
     seen, install = router

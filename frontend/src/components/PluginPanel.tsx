@@ -66,7 +66,9 @@ export function PluginPanel({onClose}:{onClose:()=>void}){
     api.accountStatus().then(s=>{if(active)setAccountState(s);}).catch(()=>{});
     fetch('/api/connections').then(r=>r.json()).then(data=>{if(active)setVariables(data.variables||[]);}).catch(()=>{});
     const result=new URLSearchParams(window.location.search).get('plugins');
-    if(result){setView('connected');if(result==='connected')setNotice('Connected. Your team can now use this service.');else setError(result==='cancelled'?'Sign-in was cancelled. Nothing was connected.':'Sign-in could not be completed. Try connecting again.');}
+    if(result==='connected'){setView('connected');setNotice('Connected. Your team can now use this service.');}
+    else if(result==='cancelled'){setView('browse');setError('Provider sign-in was cancelled. Nothing was connected. Choose a service to try again.');}
+    else if(result==='error'){setView('browse');setError('Provider sign-in did not finish. Nothing was connected. Choose a service to retry.');}
     return()=>{active=false;dialog.current?.close();popup.current?.close();previous?.focus();};
   },[]);
   useEffect(()=>{
@@ -198,7 +200,7 @@ export function PluginPanel({onClose}:{onClose:()=>void}){
     <nav className="connector-tabs" aria-label="Plugin pages">{([['browse','Browse'],['connected',`Connected${plugins.length?' · '+plugins.length:''}`],['custom','Advanced'],['settings','Settings']] as const).map(([id,label])=><button key={id} aria-pressed={view===id} onClick={()=>chooseView(id)}>{label}</button>)}</nav>
     <div ref={body} className="connectors-body" aria-busy={loading}>
       {notice?<div className="connector-notice" role="status">{notice}{flow?<div className="connector-login-actions"><button onClick={()=>{popup.current?.focus();}}>Open sign-in window</button><button onClick={()=>void cancelSignIn()}>Cancel sign-in</button></div>:null}</div>:null}
-      {error?<div className="connector-error" role="alert">{error}{refreshableError?<button type="button" className="connector-retry" disabled={loading||busy} onClick={()=>void retryLoad()}>Refresh connections</button>:null}</div>:null}
+      {error?<div className="connector-error" role="alert">{error}{refreshableError?<button type="button" className="connector-retry" disabled={loading||busy} onClick={()=>void retryLoad()}>Refresh connections</button>:<button type="button" className="btn-secondary" onClick={()=>chooseView('browse')}>Browse services</button>}</div>:null}
       {view==='browse'?<>
         <section className="connector-discovery" aria-label="Find a service">
           <div className="discovery-heading"><h3>Connect a service</h3><p>Search the catalog or enter a provider website.</p></div>

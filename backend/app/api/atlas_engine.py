@@ -2,8 +2,8 @@
 
 Atlas authenticates people and authorizes every tool locally. This boundary
 accepts only that trusted service's signed, bounded text/function protocol.
-Only hash admission metadata is persisted. It selects one configured direct
-model recipient; neither the body nor the global fallback pool picks a route.
+Only hash admission metadata is persisted. It selects one configured model
+and explicit transport; neither the body nor the global fallback pool picks a route.
 """
 import asyncio
 import hashlib
@@ -93,7 +93,7 @@ class ChatInput(StrictModel):
     version: Literal[1]
     requestId: str = Field(min_length=36, max_length=36)
     principal: Principal
-    recipient: Literal["gemini", "openai", "anthropic", "deepseek"]
+    recipient: Literal["gemini", "openai", "anthropic", "deepseek", "omniroute"]
     messages: list[Message] = Field(min_length=1, max_length=100)
     tools: list[ToolSpec] | None = Field(default=None, max_length=160)
     maxTokens: int = Field(default=1200, ge=1, le=4096)
@@ -248,7 +248,9 @@ async def events(body: ChatInput, deadline: float | None = None):
         allowed = {tool.function.name for tool in body.tools or []}
         if loop.time() >= deadline:
             raise TimeoutError()
-        source = LLMGateway.stream(messages, tools=tools, provider=provider, model=model, direct=True, deadline=deadline, max_tokens=body.maxTokens)
+        source = LLMGateway.stream(messages, tools=tools, provider=provider, model=model,
+                                   direct=settings.GROKBOT_ATLAS_ENGINE_TRANSPORT == "direct",
+                                   deadline=deadline, max_tokens=body.maxTokens)
         text = ""
         calls: dict[int, dict[str, Any]] = {}
         finished = None
@@ -342,6 +344,11 @@ async def chat(request: Request):
         return failure(503, "engine_not_configured", "The Atlas inference integration is not configured.")
     try:
         model_selection(model, provider)
+        if settings.GROKBOT_ATLAS_ENGINE_TRANSPORT == "omniroute":
+            from app.services import omniroute
+            if not omniroute.enabled():
+                raise ModelConfigurationError("The pinned cloud transport is unavailable.")
+            omniroute.endpoint()
     except ModelConfigurationError:
         return failure(503, "engine_not_configured", "The Atlas inference route is not configured.")
     if request.headers.get("content-type", "").split(";", 1)[0].strip().lower() != "application/json" or request.headers.get("content-encoding"):
@@ -376,7 +383,8 @@ async def chat(request: Request):
         body = ChatInput.model_validate(data)
     except (ValidationError, ValueError, TypeError, UnicodeDecodeError, RecursionError):
         return failure(400, "invalid_request", "The inference request does not match contract version 1.")
-    if body.recipient != provider:
+    recipient = "omniroute" if settings.GROKBOT_ATLAS_ENGINE_TRANSPORT == "omniroute" else provider
+    if body.recipient != recipient:
         return failure(409, "recipient_mismatch", "The configured inference recipient does not match the request.")
     # Count admission/queue time and any process pause against the original
     # inference budget. A delayed worker must not start under an expired lease.
