@@ -429,3 +429,191 @@ input, textarea { caret-color: var(--accent-blue); }
     scroll-behavior: auto !important; transition-duration: .01ms !important;
   }
 }
+.quickstart {
+  width: 100%;
+  padding: clamp(68px, 11vh, 112px) 24px 48px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.quickstart h1 {
+  max-width: 18ch;
+  margin: 0 0 24px;
+  text-align: center;
+  text-wrap: balance;
+  letter-spacing: -0.035em;
+  line-height: 1.12;
+}
+
+.quickstart .cipher-home-mark {
+  width: 104px;
+  height: 40px;
+  margin: 0 0 8px;
+  color: var(--text-primary);
+  opacity: 1;
+}
+
+.quickstart .task-composer {
+  width: min(100%, 760px);
+  margin-inline: auto;
+}
+
+.quickstart .task-composer textarea {
+  min-height: 112px;
+  padding: 20px 22px;
+  line-height: 1.55;
+}
+
+.quickstart .task-composer-footer {
+  gap: 10px;
+  padding: 12px 14px;
+}
+
+.quickstart .task-composer-footer .btn-primary {
+  display: inline-flex;
+  width: auto;
+  height: 48px;
+  min-height: 48px;
+  flex-basis: auto;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  margin-left: auto;
+  padding: 0 20px;
+  border-radius: 999px;
+  background: var(--text-primary);
+  color: var(--bg-main);
+  gap: 10px;
+}
+
+.quickstart .task-composer-footer .btn-primary > span {
+  position: static;
+  display: inline;
+  width: auto;
+  height: auto;
+  clip-path: none;
+  overflow: visible;
+}
+
+.quickstart .task-composer-footer .btn-primary > svg {
+  width: 18px;
+  height: 18px;
+  transform: none;
+}
+
+.quickstart .task-composer-footer .btn-primary:disabled {
+  opacity: 0.48;
+}
+
+.quickstart .task-composer-footer .glass-select,
+.quickstart .task-composer-footer select {
+  min-height: 42px;
+  border-radius: 999px;
+}
+
+.quickstart .task-composer-footer .glass-select-trigger {
+  min-height: 42px;
+  height: 42px;
+  padding-inline: 12px;
+  font-size: 12px;
+}
+
+.quickstart .starter-prompts {
+  width: min(100%, 760px);
+  margin: 18px auto 0;
+  gap: 8px;
+}
+
+.quickstart .starter-prompts button,
+.quickstart .starter-prompts [role="button"] {
+  min-height: 38px;
+  padding-inline: 14px;
+  border-color: var(--border-subtle);
+  border-radius: 999px;
+}
+
+.quickstart .workspace-shortcuts {
+  margin-top: 24px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.quickstart :focus-visible,
+.composer :focus-visible {
+  outline: 2px solid var(--text-primary);
+  outline-offset: 3px;
+}
+
+.thread-members,
+.conversation-computer {
+  width: min(760px, calc(100% - 48px));
+  margin-inline: auto;
+}
+
+.thread-members {
+  margin-bottom: 18px;
+}
+
+.conversation-computer {
+  margin-top: 12px;
+}
+
+::selection {
+  background: #dcd9f5;
+  color: #17171b;
+}
+
+@media (max-width: 640px) {
+  .quickstart {
+    padding: 48px 16px 32px;
+  }
+
+  .quickstart .cipher-home-mark {
+    width: 88px;
+    height: 34px;
+    margin-bottom: 10px;
+  }
+
+  .quickstart h1 {
+    max-width: 20ch;
+    margin-bottom: 20px;
+    font-size: clamp(24px, 7vw, 30px);
+  }
+
+  .quickstart .task-composer textarea {
+    min-height: 104px;
+    padding: 16px;
+  }
+
+  .quickstart .task-composer-footer {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    padding: 10px;
+  }
+
+  .quickstart .task-composer-footer > .glass-select-trigger:first-child {
+    grid-column: 1;
+    width: 100%;
+  }
+
+  .quickstart .task-composer-footer .glass-select-trigger {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .quickstart .task-composer-footer .btn-primary {
+    grid-column: 1 / -1;
+    width: 100%;
+    height: 46px;
+    min-height: 46px;
+    margin-left: 0;
+    padding-inline: 16px;
+  }
+
+  .thread-members,
+  .conversation-computer {
+    width: calc(100% - 32px);
+  }
+}
