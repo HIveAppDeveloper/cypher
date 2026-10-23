@@ -77,6 +77,27 @@ async def validate_endpoint(url):
     if not addresses or any(not ipaddress.ip_address(a[4][0]).is_global for a in addresses):
         raise ValueError('Plugins must use a public server address.')
 
+
+async def validate_public_web_url(url):
+    """Reject private-network destinations before cloud browser requests."""
+    try:
+        parsed = urlsplit(url)
+        hostname = parsed.hostname
+        port = parsed.port or (443 if parsed.scheme == 'https' else 80)
+    except (TypeError, ValueError):
+        raise ValueError('Use a valid public HTTP or HTTPS website URL.')
+    if parsed.scheme not in {'http', 'https'} or not hostname or parsed.username or parsed.password:
+        raise ValueError('Cloud browsing is limited to public HTTP or HTTPS websites.')
+    try:
+        addresses = await asyncio.wait_for(
+            asyncio.to_thread(socket.getaddrinfo, hostname, port, type=socket.SOCK_STREAM),
+            timeout=5,
+        )
+    except (OSError, asyncio.TimeoutError):
+        raise ValueError('This website could not be resolved as a public address.')
+    if not addresses or any(not ipaddress.ip_address(address[4][0].split('%', 1)[0]).is_global for address in addresses):
+        raise ValueError('Cloud browsing is limited to public network addresses.')
+
 def cipher():
     secret = settings.BACKEND_API_TOKEN or settings.SECRET_KEY
     if not secret or secret == "local-only-change-before-exposure" or len(secret) < 32:
