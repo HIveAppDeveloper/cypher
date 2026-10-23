@@ -9,6 +9,8 @@ export interface PluginSync {id:string;status:string;checked:number;total:number
 type View='browse'|'connected'|'custom'|'settings';
 type CatalogFilter='all'|'connected'|'sign_in'|'key'|'public';
 const AUTH_POLL_MS=2000;
+const LOVABLE_MCP_URL='https://mcp.lovable.dev';
+const LOVABLE_SOURCE='https://docs.lovable.dev/integrations/lovable-mcp-server';
 function normalizeHost(value:string){
   try{return new URL(/^[a-z][a-z\d+.-]*:\/\//i.test(value.trim())?value.trim():`https://${value.trim()}`).hostname.toLocaleLowerCase().replace(/^www\./,'');}
   catch{return '';}
@@ -52,6 +54,7 @@ export function PluginPanel({onClose}:{onClose:()=>void}){
   useEffect(()=>setVisibleCount(12),[search,catalogFilter]);
   const [url,setUrl]=useState('');const [name,setName]=useState('');const [token,setToken]=useState('');const [authHeader,setAuthHeader]=useState('Authorization');
   const [busy,setBusy]=useState(false);const [flow,setFlow]=useState<PluginSignIn|null>(null);
+  const [connectingName,setConnectingName]=useState('');
   const [flowError,setFlowError]=useState('');const [checkingSignIn,setCheckingSignIn]=useState(false);
   const [cancellingSignIn,setCancellingSignIn]=useState(false);
   const checkSignIn=useRef<()=>Promise<void>>(async()=>{});
@@ -132,9 +135,28 @@ export function PluginPanel({onClose}:{onClose:()=>void}){
   function clearSignIn(){try{sessionStorage.removeItem(PLUGIN_SIGN_IN_KEY);}catch{}setFlow(null);setFlowError('');setNotice('');setRefreshableError(false);}
   async function cancelSignIn(){if(!flow||cancellingSignIn)return;setCancellingSignIn(true);try{await api.cancelPluginAuth(flow.id);popup.current?.close();clearSignIn();setBusy(false);setNotice('Sign-in cancelled. You can choose another service or try again.');setError('');}catch(e){setError(e instanceof Error?e.message:'Could not cancel sign-in.');setRefreshableError(false);}finally{setCancellingSignIn(false);}}
   function chooseView(next:View){setView(next);setError('');setRefreshableError(false);if(!flow)setNotice('');}
-  function preparePopup(){
+  function preparePopup(provider='service'){
     const opened=window.open('about:blank','grokbot-service-login','popup,width=620,height=760');
-    if(opened){opened.opener=null;opened.document.title='Connect a service';const p=opened.document.createElement('p');p.textContent='Finding the secure sign-in page…';p.style.cssText='font:16px system-ui;padding:32px;color:#45434c';opened.document.body.appendChild(p);}
+    if(opened){
+      opened.opener=null;opened.document.title=`Connect ${provider}`;
+      const doc=opened.document;let brandedSplash=false;
+      try{
+        if(doc.body?.style&&doc.head?.append&&doc.body.appendChild){
+          const viewport=doc.createElement('meta');viewport.name='viewport';viewport.content='width=device-width, initial-scale=1';
+          const style=doc.createElement('style');style.textContent='@keyframes cypher-wait{to{transform:rotate(360deg)}}@keyframes cypher-breathe{50%{transform:scale(1.06);opacity:.72}}@media(prefers-reduced-motion:reduce){.ring,.mark{animation:none!important}}';doc.head.append(viewport,style);
+          doc.body.style.cssText='margin:0;min-height:100vh;display:grid;place-items:center;background:#f8f8fa;color:#24242b;font:14px system-ui,-apple-system,sans-serif';
+          const stage=doc.createElement('main');stage.style.cssText='display:grid;justify-items:center;gap:18px;padding:32px;text-align:center';
+          const emblem=doc.createElement('div');emblem.style.cssText='width:84px;height:84px;position:relative;display:grid;place-items:center';
+          const ring=doc.createElement('span');ring.className='ring';ring.style.cssText='position:absolute;inset:0;border:1px solid #d4d2dc;border-top-color:#575161;border-radius:50%;animation:cypher-wait 1.5s linear infinite';
+          const logoWindow=doc.createElement('span');logoWindow.style.cssText='position:absolute;inset:14px;border-radius:50%;overflow:hidden';
+          const logo=doc.createElement('img');logo.className='mark';logo.alt='Cypher';logo.src=new URL('/cipher-logo.png',window.location.origin).href;logo.style.cssText='position:absolute;top:50%;left:50%;width:220px;height:220px;max-width:none;object-fit:contain;transform:translate(-50%,-50%);animation:cypher-breathe 1.8s ease-in-out infinite';
+          const title=doc.createElement('strong');title.textContent=`Opening ${provider}`;title.style.cssText='font-size:16px;font-weight:600';
+          const detail=doc.createElement('p');detail.textContent='Finding the secure sign-in page…';detail.style.cssText='margin:-12px 0 0;color:#686572;line-height:1.5';
+          if([stage,emblem,logoWindow].every(element=>typeof element.appendChild==='function')){logoWindow.appendChild(logo);emblem.appendChild(ring);emblem.appendChild(logoWindow);stage.appendChild(emblem);stage.appendChild(title);stage.appendChild(detail);doc.body.appendChild(stage);brandedSplash=true;}
+        }
+      }catch{/* Keep provider consent available if the browser isolates the splash document. */}
+      if(!brandedSplash){const message=doc.createElement('p');message.textContent='Finding the secure sign-in page…';if(message.style)message.style.cssText='font:16px system-ui;padding:32px;color:#45434c';doc.body?.appendChild?.(message);}
+    }
     popup.current=opened;
   }
   async function begin(item:CatalogEntry,reconnect=false){
@@ -142,7 +164,7 @@ export function PluginPanel({onClose}:{onClose:()=>void}){
     if(existing && !reconnect){setBusy(false);setView('connected');setNotice(`${existing.name} is already in your workspace. ${existing.enabled?'Its enabled tools are available to agents.':'Enable it below to let agents use its tools.'}`);popup.current?.close();return;}
     if(item.setup_note){popup.current?.close();setBusy(false);setNotice(item.setup_note+' Source: '+(item.source||item.url));return;}
     if(item.auth==='api_key'){popup.current?.close();setView('custom');setUrl(item.url);setName(item.name);setAuthHeader(item.auth_header||'Authorization');setNotice(`${item.name} uses an API key. Get it from the service, then paste it below.`);setBusy(false);return;}
-    setNotice(`Checking ${item.name}…`);
+    setNotice(item.name.toLocaleLowerCase()==='lovable'?'':`Checking ${item.name}…`);
     const approval_id=await approveConnection('connect_plugin:'+item.url);
     const result=await api.authorizePlugin({name:item.name.slice(0,80),url:item.url,approval_id,reconnect,connection_id:item.connection_id});
     if(result.status==='connected'){
@@ -165,14 +187,15 @@ export function PluginPanel({onClose}:{onClose:()=>void}){
       return;
     }
     const connectionItem=!connected&&result?.status==='key_required'?{...item,auth:'api_key'}:item;
-    connecting.current=true;setBusy(true);setError('');setRefreshableError(false);
-    if(connectionItem.auth!=='api_key')preparePopup();
-    try{await begin(connectionItem,reconnect);}catch(e){popup.current?.close();setBusy(false);setNotice('');setError(e instanceof Error?e.message:'Connection failed.');}finally{connecting.current=false;}
+    connecting.current=true;setBusy(true);setConnectingName(item.name);setError('');setRefreshableError(false);
+    if(connectionItem.auth!=='api_key')preparePopup(item.name);
+    try{await begin(connectionItem,reconnect);}catch(e){popup.current?.close();setBusy(false);setNotice('');setError(e instanceof Error?e.message:'Connection failed.');}finally{connecting.current=false;setConnectingName('');}
   }
   async function submitSearch(event:FormEvent){
     event.preventDefault();
     const query=search.trim();if(!query)return;
     if(connecting.current||flow)return;
+    if(query.toLocaleLowerCase()==='lovable'||normalizeHost(query)==='lovable.dev'||normalizeHost(query)==='mcp.lovable.dev'){await connectItem(lovableItem);return;}
     const match=exactCatalogMatch(query,catalog);
     if(match){await connectItem(match);return;}
     if(!isWebsiteQuery(query)){
@@ -211,6 +234,9 @@ export function PluginPanel({onClose}:{onClose:()=>void}){
     .sort((a,b)=>Number(isCatalogConnected(b))-Number(isCatalogConnected(a))||a.name.localeCompare(b.name));
   const curatedUrls=new Set(catalog.map(item=>item.url).filter(Boolean));
   const registryVisible=registryItems.filter(item=>!item.url||!curatedUrls.has(item.url));
+  const lovableItem:CatalogEntry={id:'lovable-mcp',name:'Lovable',url:LOVABLE_MCP_URL,description:'Connect Lovable through its official MCP server and provider consent flow.',category:'Development',domains:['lovable.dev','mcp.lovable.dev'],source:LOVABLE_SOURCE,auth:'oauth',transport:'streamable-http'};
+  const lovableConnection=plugins.find(plugin=>normalizeHost(plugin.url)==='mcp.lovable.dev');
+  const lovableActive=connectingName.toLocaleLowerCase()==='lovable'||flow?.name.toLocaleLowerCase()==='lovable';
   function connectorCard(item:CatalogEntry,keyPrefix='curated'){
     const connected=isCatalogConnected(item);
     const result=sync?.results[item.id];
@@ -222,10 +248,16 @@ export function PluginPanel({onClose}:{onClose:()=>void}){
     <header className="connectors-header"><div><h2 id="plugins-title">Plugins</h2><p>Connect services, then let Cypher use their tools.</p></div><button className="connector-close" aria-label="Close plugins" onClick={onClose}><svg viewBox="0 0 24 24"><path d="m6 6 12 12M6 18 18 6"/></svg></button></header>
     <nav className="connector-tabs" aria-label="Plugin pages">{([['browse','Browse'],['connected',`Connected${plugins.length?' · '+plugins.length:''}`],['custom','Advanced'],['settings','Settings']] as const).map(([id,label])=><button key={id} aria-pressed={view===id} onClick={()=>chooseView(id)}>{label}</button>)}</nav>
     <div ref={body} className="connectors-body" aria-busy={loading}>
-      {flow?<section className="connector-authorization" aria-labelledby="plugin-sign-in-title"><h3 id="plugin-sign-in-title">Allow access to {flow.name}</h3><ol><li>Sign in on {flow.name}’s page.</li><li>Review the permissions and choose Allow or Authorize.</li><li>Return here. We’ll verify the connection and load its tools.</li></ol><div className="connector-login-actions"><a className="btn-primary" href={flow.url} target="_blank" rel="noopener noreferrer" onClick={event=>{try{if(popup.current&&!popup.current.closed){event.preventDefault();popup.current.focus();}}catch{}}}>Continue to {flow.name}</a><button className="btn-secondary" type="button" disabled={checkingSignIn} onClick={()=>void checkSignIn.current()}>{checkingSignIn?'Checking…':'Check connection'}</button><button type="button" disabled={cancellingSignIn} onClick={()=>void cancelSignIn()}>{cancellingSignIn?'Cancelling…':'Cancel sign-in'}</button></div><p role="status">{flowError||'Waiting for provider approval. You can close this panel and continue later in this tab.'}</p></section>:null}
+      {connectingName.toLocaleLowerCase()==='lovable'&&!flow?<div className="lovable-connect-progress" role="status"><div className="lovable-cypher-mark" data-active="true"><span className="lovable-cypher-logo-window"><img src="/cipher-logo.png" alt=""/></span><span/></div><div><strong>Opening Lovable</strong><p>Cypher is preparing Lovable’s secure sign-in. You’ll review access on Lovable before anything connects.</p></div></div>:null}
+      {flow?<section className={`connector-authorization${lovableActive?' lovable-authorization':''}`} aria-labelledby="plugin-sign-in-title">{lovableActive?<div className="lovable-auth-heading"><div className="lovable-cypher-mark" data-active="true"><span className="lovable-cypher-logo-window"><img src="/cipher-logo.png" alt=""/></span><span/></div><div><h3 id="plugin-sign-in-title">Connect Lovable</h3><p>Sign in, review access, then press Allow.</p></div></div>:<h3 id="plugin-sign-in-title">Allow access to {flow.name}</h3>}<ol>{lovableActive?<><li>Sign in to Lovable in the secure window.</li><li>Review the permissions Lovable lists and press <strong>Allow</strong>.</li><li>Return here while Cypher verifies the available tools.</li></>:<><li>Sign in on {flow.name}’s page.</li><li>Review the permissions and choose Allow or Authorize.</li><li>Return here. We’ll verify the connection and load its tools.</li></>}</ol><div className="connector-login-actions"><a className="btn-primary" href={flow.url} target="_blank" rel="noopener noreferrer" onClick={event=>{try{if(popup.current&&!popup.current.closed){event.preventDefault();popup.current.focus();}}catch{}}}>Continue to {flow.name}</a><button className="btn-secondary" type="button" disabled={checkingSignIn} onClick={()=>void checkSignIn.current()}>{checkingSignIn?'Checking…':'Check connection'}</button><button type="button" disabled={cancellingSignIn} onClick={()=>void cancelSignIn()}>{cancellingSignIn?'Cancelling…':'Cancel sign-in'}</button></div><p role="status">{flowError||'Waiting for provider approval. You can close this panel and continue later in this tab.'}{lovableActive?' Cypher can use only the tools Lovable authorizes; some Lovable actions may consume plan credits.':''}</p></section>:null}
       {notice?<div className="connector-notice" role="status">{notice}</div>:null}
       {error?<div className="connector-error" role="alert">{error}{refreshableError?<button type="button" className="connector-retry" disabled={loading||busy} onClick={()=>void retryLoad()}>Refresh connections</button>:null}</div>:null}
       {view==='browse'?<>
+        <section className="lovable-connect" data-active={lovableActive} aria-label="Connect Lovable">
+          <div className="lovable-cypher-mark" data-active={lovableActive} aria-hidden="true"><span className="lovable-cypher-logo-window"><img src="/cipher-logo.png" alt=""/></span><span/></div>
+          <div className="lovable-connect-copy"><div className="lovable-title-row"><h3>Lovable</h3><span>Development</span></div><p>Use the official Lovable MCP connection in Cypher.</p><small>Sign in with Lovable and approve the access shown on its consent screen. Cypher checks the tools before marking it connected.</small></div>
+          <div className="lovable-connect-actions"><button type="button" className="connector-connect" disabled={busy||Boolean(flow)} onClick={()=>{if(lovableConnection){setSearch('lovable');setView('connected');setNotice('Lovable is connected. Review its enabled tools below.');}else void connectItem(lovableItem);}}>{lovableConnection?'Manage connection':busy&&lovableActive?'Opening…':'Connect Lovable'}<svg viewBox="0 0 24 24"><path d="M5 12h14m-5-5 5 5-5 5"/></svg></button><a href={LOVABLE_SOURCE} target="_blank" rel="noreferrer">Provider details</a></div>
+        </section>
         <section className="connector-discovery" aria-label="Find a service">
           <div className="discovery-heading"><h3>Connect a service</h3><p>Search the catalog or enter a provider website.</p></div>
           <form className="website-connect" onSubmit={event=>void submitSearch(event)}>

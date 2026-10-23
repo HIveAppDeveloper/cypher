@@ -28,6 +28,18 @@ test('blocked popup leaves a working provider link and the conversation in place
   assert.match(textOf(p.view.tree),/Review the permissions and choose Allow or Authorize/);
   assert.ok(button(p.view.tree,'Check connection'));p.view.unmount();
 });
+test('Lovable opens its official MCP OAuth flow and waits for verified tools after Allow',async()=>{
+  let request,status='awaiting_login';
+  const p=panel({api:{authorizePlugin:async input=>{request=input;return {status:'awaiting_login',flow_id:id,authorization_url:'https://lovable.example/authorize?state=synthetic',name:'Lovable'};},pluginAuthStatus:async()=>({status,name:'Lovable'})}});
+  await p.view.flush();button(p.view.tree,'Connect Lovable').props.onClick();await p.view.flush();await p.view.flush();
+  assert.equal(request.url,'https://mcp.lovable.dev');assert.equal(request.name,'Lovable');
+  assert.match(textOf(p.view.tree),/review the permissions Lovable lists and press Allow/i);
+  assert.match(textOf(p.view.tree),/only the tools Lovable authorizes/i);
+  assert.ok(find(p.view.tree,n=>n.type==='a'&&textOf(n)==='Continue to Lovable'));
+  assert.ok(p.session.getItem(auth.PLUGIN_SIGN_IN_KEY));
+  status='connected';p.env.time.advance(4000);await p.view.flush();
+  assert.match(textOf(p.view.tree),/Lovable connected/);assert.equal(p.session.getItem(auth.PLUGIN_SIGN_IN_KEY),null);p.view.unmount();
+});
 test('a closed provider window can be reopened through the real link',async()=>{
   const p=panel();await connect(p);p.popup.closed=true;let prevented=false;
   find(p.view.tree,n=>n.type==='a'&&textOf(n)==='Continue to Fixture Service').props.onClick({preventDefault(){prevented=true;}});

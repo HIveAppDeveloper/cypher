@@ -58,7 +58,7 @@ export function SidebarShell({ children }: { children: ReactNode }) {
     dockStart.current = null; setPreview(null);
   }
   const tools = <div className="sidebar-layout-tools" aria-label="Navigation layout">
-    <span className="sidebar-brand"><Image src="/cipher-logo.png" alt="" aria-hidden="true" className="brand-symbol" width={26} height={26} priority unoptimized/><span>Cypher</span></span>
+    <a className="sidebar-brand" href="/" aria-label="Cypher prospecting home"><Image src="/cipher-logo.png" alt="" aria-hidden="true" className="brand-symbol" width={26} height={26} priority unoptimized/><span>Cypher</span></a>
     <button aria-label={layout.collapsed ? 'Expand sidebar' : 'Collapse sidebar'} aria-expanded={!layout.collapsed} title="Toggle sidebar (⌘/Ctrl B)" onClick={() => setLayout(current => ({ ...current, collapsed: !current.collapsed }))}>{panelIcon}</button>
 
     <details className="sidebar-layout-menu"><summary aria-label="Sidebar layout options" title="Sidebar layout options"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></svg></summary><div>
@@ -70,7 +70,7 @@ export function SidebarShell({ children }: { children: ReactNode }) {
   if (mobile) return <>
     <button className="mobile-menu-button" aria-label="Open navigation" aria-haspopup="dialog" aria-expanded={mobileOpen} onClick={() => setMobileOpen(true)}>{panelIcon}</button>
     <dialog ref={mobileDialog} className="mobile-navigation" aria-label="Workspace navigation" onCancel={() => setMobileOpen(false)} onClose={() => setMobileOpen(false)} onClick={event => { if (event.target === event.currentTarget) setMobileOpen(false); }}>
-      <div className="mobile-nav-header"><strong><Image src="/cipher-logo.png" alt="" aria-hidden="true" width={22} height={22} unoptimized/>Cypher</strong><button aria-label="Close navigation" onClick={() => setMobileOpen(false)}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M6 18 18 6"/></svg></button></div>
+      <div className="mobile-nav-header"><strong><a href="/" aria-label="Cypher prospecting home"><Image src="/cipher-logo.png" alt="" aria-hidden="true" width={22} height={22} unoptimized/>Cypher</a></strong><button aria-label="Close navigation" onClick={() => setMobileOpen(false)}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M6 18 18 6"/></svg></button></div>
       <div className="mobile-nav-content" onClickCapture={event => { if ((event.target as HTMLElement).closest('.command-launcher,.bot-row,.workspace-name,.new-task-button,.preferences-nav,.plugins-nav,.workspace-label,.roster-toolbar button[aria-label="Create agent"],.rooms-label button')) { mobileDialog.current?.close(); setMobileOpen(false); } }}>{children}</div>
     </dialog>
   </>;
