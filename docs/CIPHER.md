@@ -41,7 +41,7 @@ The email opener is chosen from the strongest signal (hiring push, recent raise,
 
 ## Features
 
-- **Prospect Brain**: a 3D view of the territory. Each account is a node; the closer it sits to the core, the higher its score. Each signal (Hiring, Raising, Spending, Momentum) is a hub on the outer shell, and accounts lean toward the hubs driving them, with links drawn from a focused account to its hubs. Drag to rotate, zoom with the buttons or Ctrl/Cmd + scroll, hover for a summary, click to open the dossier.
+- **Prospect Brain**: a 3D X/Y/Z scatter of the territory on a plain white canvas. X is the hiring signal, Y is the overall score, Z is capital and momentum (raising, spending and 8-K activity). Drop lines to a floor grid show where each account sits; nodes are shaded by tier (Hot black, Warm grey, Watch light grey) and the tier filter dims the rest. It fills in live during a run. Drag to rotate, zoom with the buttons or Ctrl/Cmd + scroll, hover for a summary, click to open the dossier.
 - **Ranked ledger** (Accounts tab): every account ranked by score, with a cell per signal shaded by strength, a live marker on live data, tier and pipeline stage. Filter by Hot, Warm or Watch.
 - **Pipeline board**: four lanes (Ready to send, In sequence, Replied, Meeting booked), each card showing the reason to reach out and the next touch.
 - **Run log**: timestamped record of every source checked, score, draft and send. Tickers in the log open that account.
@@ -61,7 +61,7 @@ The email opener is chosen from the strongest signal (hiring push, recent raise,
 1. **(0:00) Open `/cipher`.** "The question is: how does your team find the right buyer and act first? Cipher does it with one button."
 2. **(0:08) Pick Fintech & Payments, leave the offer as is, set Buyer to VP of Sales.** "Twenty public fintech companies. I tell it what I sell and who I sell to."
 3. **(0:15) Click Run Outbound.** Point at the run log on the right. "It's reading each company's SEC filings and public job board right now. Every check is logged, and it says when it's using live data and when it falls back to estimates."
-4. **(0:30) Watch the Prospect Brain fill in. Drag to rotate.** "Each dot is an account. Closer to the centre means more buying signals. The four hubs are hiring, raising, spending and momentum; accounts lean toward what's driving them."
+4. **(0:30) Watch the Prospect Brain fill in. Drag to rotate.** "Each dot is an account plotted in 3D: hiring on X, overall score on Y, capital and momentum on Z. The ones high up and out front are who we call first."
 5. **(0:42) Click the Accounts tab.** "Same thing as a ranked list. Hot is 70 and up. You can see which signal earned the points."
 6. **(0:50) Click the top Hot account.** "The dossier shows why now, with links to the actual filings and job postings. Here's the buyer: one click to find the VP of Sales on LinkedIn or Apollo."
 7. **(1:02) Scroll to the email, edit one line.** "The first email is written from the strongest signal. It's editable, and there's a 4-touch sequence across email, LinkedIn and phone."
