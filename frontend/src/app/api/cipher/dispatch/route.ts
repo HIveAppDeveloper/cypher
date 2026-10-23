@@ -21,7 +21,7 @@ export async function POST(req: Request) {
   const payload = JSON.stringify(body?.payload ?? {});
   if (payload.length > 400_000) return Response.json({ ok: false, detail: 'Too many leads in one send.' }, { status: 413 });
   try {
-    const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json', 'User-Agent': 'Cipher/1.0' }, body: payload, redirect: 'manual', signal: AbortSignal.timeout(8000) });
+    const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json', 'User-Agent': 'Cypher/1.0' }, body: payload, redirect: 'manual', signal: AbortSignal.timeout(8000) });
     return Response.json({ ok: res.ok, status: res.status, detail: res.ok ? 'Delivered' : `Your sending tool answered ${res.status}.` }, { status: res.ok ? 200 : 502 });
   } catch {
     return Response.json({ ok: false, detail: 'Your sending tool could not be reached.' }, { status: 502 });

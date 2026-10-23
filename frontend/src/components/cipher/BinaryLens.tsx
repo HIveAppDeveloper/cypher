@@ -1,9 +1,9 @@
 'use client';
 import { useEffect, useRef } from 'react';
 
-// The Cipher mark: a lens of 0/1 digits that grow toward the centre.
+// The Cypher mark: a lens of 0/1 digits that grow toward the centre.
 // While `active`, digits flip and a pulse sweeps across the lens.
-export default function BinaryLens({ cols = 41, rows = 17, active = false, className, label = 'Cipher' }: { cols?: number; rows?: number; active?: boolean; className?: string; label?: string }) {
+export default function BinaryLens({ cols = 41, rows = 17, active = false, className, label = 'Cypher' }: { cols?: number; rows?: number; active?: boolean; className?: string; label?: string }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const activeRef = useRef(active);
   activeRef.current = active;

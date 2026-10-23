@@ -50,7 +50,7 @@ export function WorkspaceSetup({ onClose }: { onClose: () => void }) {
       <div className="connection-state" data-state={status}><span className="connection-dot"/><div><strong>{status === 'checking' ? 'Checking connection…' : detail.connected ? detail.worker ? 'Cloud workspace connected' : 'Cloud API connected · worker not ready' : 'Cloud runtime not connected'}</strong><p>{detail.connected ? 'Database and worker readiness are separate from model and tool access.' : 'Agents need a reachable hosted runtime before they can work.'}</p></div></div>
       {detail.model_transport !== 'omniroute' ? <section className="provider-setup" aria-labelledby="gemini-setup-title">
         <h3 id="gemini-setup-title">Connect Gemini</h3>
-        <p>Add your Gemini API key in Model access below. GrokBot verifies it with a short model request and uses it directly for Gemini calls.</p>
+        <p>Add your Gemini API key in Model access below. Cypher verifies it with a short model request and uses it directly for Gemini calls.</p>
         <div className="provider-setup-actions">
           <a href="https://aistudio.google.com/api-keys" target="_blank" rel="noreferrer">Get a Gemini API key</a>
         </div>

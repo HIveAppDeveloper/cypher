@@ -1,10 +1,10 @@
 import type { Lead, SignalKind } from './engine';
 
-// Cipher's built-in assistant: answers common questions instantly from the accounts on screen.
+// Cypher's built-in assistant: answers common questions instantly from the accounts on screen.
 // Returns null when it has no grounded answer, so the caller can ask a model instead.
 export type Reply = { text: string; tickers: string[] };
 
-export const GREETING = "Hey, it's Cipher, your sales assistant. Ask me who to call first, why an account is hot, who's hiring or raising, or to pull up a draft email. Run Outbound and I'll work from your territory.";
+export const GREETING = "Hey, it's Cypher, your sales assistant. Ask me who to call first, why an account is hot, who's hiring or raising, or to pull up a draft email. Run Outbound and I'll work from your territory.";
 export const SUGGESTIONS = ['Who should we call first?', "Who's hiring?", 'What should I do today?', 'How is the pipeline?'];
 
 const KIND_WORDS: [SignalKind, RegExp, string][] = [

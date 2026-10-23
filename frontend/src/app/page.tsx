@@ -8,13 +8,12 @@ import './cipher/cipher.css';
 export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
-  title: 'Cipher',
-  description: 'Find the right buyer and act first: one-button prospecting and outbound.',
+  title: 'Cypher',
+  description: 'Your workspace for conversations, agents, and connected tools.',
   icons: { icon: '/cipher-logo.png', apple: '/cipher-logo.png' },
 };
 
-// Keep the Cipher identity while sending the home page through Open GrokBot's
-// authenticated workspace and real agent/backend capabilities.
+// The Cypher home page opens the authenticated agent workspace.
 export default function Page() {
   let session: AppSession | null = null;
   try { session = readSignedPayload<AppSession>(cookies().get('grokbot_session')?.value); } catch { session = null; }

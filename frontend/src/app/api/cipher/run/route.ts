@@ -4,7 +4,7 @@ import { buildLead, buildSignals, isGtmRole, type Evidence, type RawSignals, typ
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
 
-const SEC_UA = process.env.CIPHER_SEC_USER_AGENT || 'Cipher Territory Pulse support@cipher.app';
+const SEC_UA = process.env.CIPHER_SEC_USER_AGENT || 'Cypher Territory Pulse support@cipher.app';
 let tickerMap: Promise<Map<string, number>> | null = null;
 
 async function fetchJson(url: string, ms = 4500, headers: Record<string, string> = {}) {
