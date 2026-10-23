@@ -9,6 +9,8 @@ type Step = Extract<RunEvent, { type: 'step' }>;
 type View = 'brain' | 'accounts' | 'pipeline';
 type Tier = Lead['tier'];
 const STORE = 'cipher-territory-v2';
+const KEY_STORE = 'cipher-openrouter-key';
+const shortModel = (id: string) => id.split('/').pop() || id;
 const KINDS: { id: SignalKind; label: string }[] = [
   { id: 'hiring', label: 'Hiring' }, { id: 'raising', label: 'Raising' }, { id: 'spending', label: 'Spending' }, { id: 'news', label: 'Momentum' },
 ];
@@ -39,6 +41,15 @@ export default function CipherApp() {
   const [view, setView] = useState<View>('brain');
   const [filter, setFilter] = useState<'All' | Tier>('All');
   const [toast, setToast] = useState('');
+  const [orKey, setOrKey] = useState('');
+  const [serverAi, setServerAi] = useState(false);
+  const [aiBusy, setAiBusy] = useState<string[]>([]);
+  const [aiProgress, setAiProgress] = useState<{ done: number; total: number } | null>(null);
+  const [question, setQuestion] = useState('Who should we call first this week, and why?');
+  const [answer, setAnswer] = useState<{ text: string; tickers: string[]; model: string; error?: boolean } | null>(null);
+  const [asking, setAsking] = useState(false);
+  const leadsRef = useRef<Lead[]>([]);
+  leadsRef.current = leads;
   const logRef = useRef<HTMLOListElement>(null);
   const ready = useRef(false);
 
@@ -55,8 +66,11 @@ export default function CipherApp() {
       if (Array.isArray(s.steps)) setSteps(s.steps as Step[]);
       if (typeof s.finishedAt === 'string') setFinishedAt(s.finishedAt);
     }
+    try { setOrKey(localStorage.getItem(KEY_STORE) || ''); } catch {}
+    fetch('/api/cipher/ai').then(r => r.json()).then((d: { serverKey?: boolean }) => setServerAi(Boolean(d.serverKey))).catch(() => {});
     ready.current = true;
   }, []);
+  useEffect(() => { if (!ready.current) return; try { if (orKey.trim()) localStorage.setItem(KEY_STORE, orKey.trim()); else localStorage.removeItem(KEY_STORE); } catch {} }, [orKey]);
   useEffect(() => { if (ready.current && !running) save({ marketId, offering, persona, senderName, tickers, webhook, leads, steps: steps.slice(-300), finishedAt }); }, [marketId, offering, persona, senderName, tickers, webhook, leads, steps, finishedAt, running]);
   useEffect(() => { const el = logRef.current; if (el) el.scrollTop = el.scrollHeight; }, [steps.length]);
   useEffect(() => { if (!toast) return; const t = setTimeout(() => setToast(''), 2800); return () => clearTimeout(t); }, [toast]);
@@ -81,11 +95,60 @@ export default function CipherApp() {
   const readyHot = leads.filter(l => l.tier === 'Hot' && l.stage === 'drafted');
 
   const log = (text: string, tone: Step['tone'] = 'info', ticker?: string) => setSteps(s => [...s, { type: 'step', at: new Date().toISOString(), text, tone, ticker }]);
+  const aiReady = serverAi || orKey.trim().length >= 20;
+  const aiHeaders = (): Record<string, string> => ({ 'Content-Type': 'application/json', ...(orKey.trim() ? { 'x-openrouter-key': orKey.trim() } : {}) });
+
+  async function research(targets: Lead[]) {
+    if (!targets.length || aiProgress) return;
+    if (!aiReady) { setSetupOpen(true); setToast('Add an OpenRouter key in Setup to research with AI'); return; }
+    const queue = [...targets]; let done = 0, stop = '';
+    setAiProgress({ done: 0, total: targets.length });
+    log(`AI research started on ${targets.length} account${targets.length > 1 ? 's' : ''} with live web search`);
+    const worker = async () => {
+      for (let t = queue.shift(); t && !stop; t = queue.shift()) {
+        const target = t; const current = leadsRef.current.find(l => l.id === target.id) ?? target;
+        setAiBusy(b => [...b, target.id]);
+        try {
+          const res = await fetch('/api/cipher/research', { method: 'POST', headers: aiHeaders(), body: JSON.stringify({ lead: current, offering, persona, senderName }) });
+          const data = await res.json().catch(() => ({})) as { lead?: Lead; model?: string; web?: boolean; detail?: string };
+          if (!res.ok || !data.lead) { if (res.status === 401 || res.status === 402) stop = data.detail || 'The AI key was rejected.'; throw new Error(data.detail || `Research answered ${res.status}.`); }
+          const next = data.lead;
+          setLeads(ls => ls.map(l => (l.id === next.id ? { ...next, stage: l.stage, sentAt: l.sentAt, email: l.stage === 'drafted' ? next.email : l.email } : l)));
+          log(`${next.company.name}: score ${current.score} → ${next.score} (${next.tier}) from ${shortModel(data.model || '')}${data.web ? ' with web search' : ''}. ${next.why}`, next.tier === 'Hot' ? 'good' : 'info', next.id);
+        } catch (e) {
+          log(`${target.company.name}: AI research failed. ${e instanceof Error ? e.message : ''}`, 'warn', target.id);
+        } finally {
+          done++; setAiProgress({ done, total: targets.length }); setAiBusy(b => b.filter(id => id !== target.id));
+        }
+      }
+    };
+    await Promise.all([worker(), worker(), worker(), worker()]);
+    setAiProgress(null);
+    if (stop) { setToast(stop); log(stop, 'warn'); } else log(`AI research finished on ${done} account${done > 1 ? 's' : ''}`, 'good');
+  }
+
+  async function ask(event?: FormEvent) {
+    event?.preventDefault();
+    if (!question.trim() || asking) return;
+    if (!leads.length) { setToast('Run Outbound first'); return; }
+    if (!aiReady) { setSetupOpen(true); setToast('Add an OpenRouter key in Setup to ask the brain'); return; }
+    setAsking(true);
+    try {
+      const res = await fetch('/api/cipher/ask', { method: 'POST', headers: aiHeaders(), body: JSON.stringify({ question, offering, persona, leads: ranked.map(l => ({ ticker: l.id, name: l.company.name, score: l.score, tier: l.tier, stage: stageLabel(l.stage), why: l.why, signals: l.signals.map(x => `${x.kind}: ${x.headline}`) })) }) });
+      const data = await res.json().catch(() => ({})) as { answer?: string; tickers?: string[]; model?: string; detail?: string };
+      if (!res.ok || !data.answer) throw new Error(data.detail || `The brain answered ${res.status}.`);
+      setAnswer({ text: data.answer, tickers: data.tickers ?? [], model: data.model || '' });
+      log(`Asked the brain: ${question.trim()}`);
+    } catch (e) {
+      setAnswer({ text: e instanceof Error ? e.message : 'The brain could not answer.', tickers: [], model: '', error: true });
+    } finally { setAsking(false); }
+  }
 
   async function run(event?: FormEvent) {
     event?.preventDefault();
     if (running) return;
-    setRunning(true); setError(''); setLeads([]); setSelected(null); setFinishedAt(null); setScanning([]); if (view === 'pipeline') setView('brain');
+    setRunning(true); setError(''); setLeads([]); setSelected(null); setFinishedAt(null); setScanning([]); setAnswer(null); if (view === 'pipeline') setView('brain');
+    const got: Lead[] = []; let completed = false;
     setSteps([{ type: 'step', at: new Date().toISOString(), text: `Run started for ${customTickers.length ? 'a custom list' : market.label}` }]);
     try {
       const res = await fetch('/api/cipher/run', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ marketId, offering, persona, senderName, tickers: customTickers }) });
@@ -99,14 +162,16 @@ export default function CipherApp() {
           if (!line.trim()) continue;
           const ev = JSON.parse(line) as RunEvent;
           if (ev.type === 'step') { setSteps(s => [...s, ev]); if (ev.ticker && ev.text.startsWith('Scanning')) setScanning(s => [...s, ev.ticker!]); }
-          else if (ev.type === 'lead') setLeads(l => [...l.filter(x => x.id !== ev.lead.id), ev.lead]);
-          else setFinishedAt(ev.at);
+          else if (ev.type === 'lead') { got.push(ev.lead); setLeads(l => [...l.filter(x => x.id !== ev.lead.id), ev.lead]); }
+          else { setFinishedAt(ev.at); completed = true; }
         }
       }
     } catch (e) {
       const message = e instanceof Error ? e.message : 'The run stopped before finishing.';
       setError(message); log(`Run stopped: ${message}`, 'warn');
     } finally { setRunning(false); setScanning([]); }
+    if (completed && aiReady && got.length) void research([...got].sort((a, b) => b.score - a.score));
+    else if (completed && !aiReady) log('Add an OpenRouter key in Setup to have AI research every account on the live web.');
   }
 
   const update = (id: string, patch: Partial<Lead>) => setLeads(ls => ls.map(l => (l.id === id ? { ...l, ...patch } : l)));
@@ -180,6 +245,7 @@ export default function CipherApp() {
             <div className="cx-group" id="cx-setup">
               <label className="cx-field" htmlFor="cx-sender"><span>Sign as</span><input id="cx-sender" value={senderName} placeholder="Alex, Cipher" onChange={e => setSenderName(e.target.value)} /></label>
               <label className="cx-field" htmlFor="cx-tickers"><span>Own list</span><input id="cx-tickers" value={tickers} placeholder="Tickers, e.g. HOOD, SOFI, NET" onChange={e => setTickers(e.target.value)} disabled={running} /></label>
+              <label className="cx-field" htmlFor="cx-orkey"><span>AI key</span><input id="cx-orkey" type="password" autoComplete="off" spellCheck={false} value={orKey} placeholder={serverAi ? 'Using the server key' : 'OpenRouter key, kept in this browser'} onChange={e => setOrKey(e.target.value)} /></label>
               <label className="cx-field" htmlFor="cx-hook"><span>Send via</span><input id="cx-hook" type="url" value={webhook} placeholder="Webhook from Zapier, Make, Clay or Base44" onChange={e => setWebhook(e.target.value)} /></label>
             </div>
           ) : null}
@@ -216,11 +282,32 @@ export default function CipherApp() {
                 <div className="cx-filter" role="group" aria-label="Filter by tier">
                   {(['All', 'Hot', 'Warm', 'Watch'] as const).map(f => <button type="button" key={f} aria-pressed={filter === f} onClick={() => setFilter(f)}>{f}</button>)}
                 </div>
-                <button type="button" className="cx-act" disabled={running || !readyHot.length} onClick={() => void launch(readyHot)}>
-                  {readyHot.length ? `Start ${readyHot.length} hot sequence${readyHot.length > 1 ? 's' : ''}` : count('Hot') ? 'Hot sequences started' : 'Start hot sequences'}
-                </button>
+                <div className="cx-tools-right">
+                  <button type="button" className="cx-btn cx-ai-btn" disabled={running || !!aiProgress || !leads.length} onClick={() => void research(ranked)}>
+                    {aiProgress ? `Researching ${aiProgress.done}/${aiProgress.total}…` : 'Research with AI'}
+                  </button>
+                  <button type="button" className="cx-act" disabled={running || !readyHot.length} onClick={() => void launch(readyHot)}>
+                    {readyHot.length ? `Start ${readyHot.length} hot sequence${readyHot.length > 1 ? 's' : ''}` : count('Hot') ? 'Hot sequences started' : 'Start hot sequences'}
+                  </button>
+                </div>
               </div>
-              {view === 'brain' ? <ProspectBrain leads={leads} running={running} selected={selected} filter={filter} onSelect={setSelected} /> : (
+              {view === 'brain' ? (
+                <>
+                  <ProspectBrain leads={leads} running={running} selected={selected} filter={filter} onSelect={setSelected} highlight={answer?.tickers ?? []} busy={aiBusy} />
+                  <form className="cx-ask" onSubmit={ask}>
+                    <label className="cx-sr" htmlFor="cx-question">Ask the brain</label>
+                    <input id="cx-question" value={question} onChange={e => setQuestion(e.target.value)} placeholder="Ask the brain about these accounts" maxLength={500} />
+                    <button type="submit" className="cx-act" disabled={asking || !question.trim()}>{asking ? 'Thinking…' : 'Ask'}</button>
+                  </form>
+                  {answer ? (
+                    <div className={`cx-answer${answer.error ? ' error' : ''}`} role="status">
+                      <p>{answer.text}</p>
+                      {answer.tickers.length ? <div className="cx-answer-chips">{answer.tickers.map(t => <button type="button" key={t} className="cx-tk" onClick={() => setSelected(t)}>{t}</button>)}</div> : null}
+                      {answer.model ? <small>Answered by {shortModel(answer.model)} from this territory&rsquo;s accounts</small> : null}
+                    </div>
+                  ) : null}
+                </>
+              ) : (
               <div className="cx-table" role="table" aria-label="Ranked accounts">
                 <div className="cx-row cx-th" role="row">
                   <span role="columnheader">#</span><span role="columnheader">Account</span>
@@ -234,13 +321,13 @@ export default function CipherApp() {
                     {KINDS.map(k => {
                       const s = l.signals.find(x => x.kind === k.id);
                       return (
-                        <span key={k.id} className={`cx-cell${s ? (s.strength / SIGNAL_MAX[k.id] >= .85 ? ' hit strong' : ' hit') : ''}`} style={s ? { ['--heat' as string]: String(Math.max(.18, s.strength / SIGNAL_MAX[k.id])) } : undefined} title={s ? `${s.headline} (${s.source === 'live' ? 'live' : 'demo estimate'})` : `No ${k.label.toLowerCase()} signal`}>
-                          <em>{k.label}</em>{s ? s.metric : '—'}{s?.source === 'live' ? <i aria-label="live" /> : null}
+                        <span key={k.id} className={`cx-cell${s ? (s.strength / SIGNAL_MAX[k.id] >= .85 ? ' hit strong' : ' hit') : ''}`} style={s ? { ['--heat' as string]: String(Math.max(.18, s.strength / SIGNAL_MAX[k.id])) } : undefined} title={s ? `${s.headline} (${s.source === 'live' ? 'live' : s.source === 'ai' ? 'AI research' : 'demo estimate'})` : `No ${k.label.toLowerCase()} signal`}>
+                          <em>{k.label}</em>{s ? s.metric : '—'}{s?.source === 'live' ? <i aria-label="live" /> : s?.source === 'ai' ? <i className="ai" aria-label="AI research" /> : null}
                         </span>
                       );
                     })}
                     <span className="cx-score num"><b>{l.score}</b><span className={`cx-tier ${l.tier.toLowerCase()}`}>{l.tier}</span></span>
-                    <span className={`cx-stage ${l.stage}`}>{stageLabel(l.stage)}</span>
+                    <span className={`cx-stage ${l.stage}`}>{aiBusy.includes(l.id) ? 'Researching…' : stageLabel(l.stage)}</span>
                   </button>
                 ))}
                 {pending.map(c => (
@@ -309,6 +396,7 @@ export default function CipherApp() {
             </header>
 
             <p className="cx-why"><span className="cx-label">Why now</span>{lead.why}</p>
+            {lead.ai ? <p className="cx-ai-note">Researched by {shortModel(lead.ai.model)}{lead.ai.web ? ' with live web search' : ''} · {new Date(lead.ai.at).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</p> : null}
 
             <h3 className="cx-label">Evidence</h3>
             <ul className="cx-evidence">
@@ -317,7 +405,7 @@ export default function CipherApp() {
                   <div className="row">
                     <span className="k">{KINDS.find(k => k.id === s.kind)?.label}</span>
                     <b>{s.headline}</b>
-                    <span className={`src ${s.source}`}>{s.source === 'live' ? 'Live' : 'Demo estimate'}</span>
+                    <span className={`src ${s.source}`}>{s.source === 'live' ? 'Live' : s.source === 'ai' ? 'AI research' : 'Demo estimate'}</span>
                     <span className="pts num">+{s.strength}</span>
                   </div>
                   <ul>{s.evidence.map((ev, i) => <li key={i}>{ev.url ? <a href={ev.url} target="_blank" rel="noreferrer">{ev.label}</a> : ev.label}{ev.date && !ev.label.includes(ev.date) ? <span> · {ev.date}</span> : null}</li>)}</ul>
@@ -327,7 +415,7 @@ export default function CipherApp() {
 
             <h3 className="cx-label">Buyer</h3>
             <div className="cx-buyer">
-              <span><b>{lead.buyer.persona}</b>, {lead.company.name}</span>
+              <span>{lead.buyer.name ? <><b>{lead.buyer.name}</b>, {lead.buyer.title || lead.buyer.persona}{lead.buyer.source ? <> · <a className="cx-inline" href={lead.buyer.source} target="_blank" rel="noreferrer">source</a></> : null}</> : <><b>{lead.buyer.persona}</b>, {lead.company.name}</>}</span>
               <a href={lead.buyer.linkedin} target="_blank" rel="noreferrer">Search LinkedIn</a>
               <a href={lead.buyer.apollo} target="_blank" rel="noreferrer">Search Apollo</a>
             </div>
@@ -348,6 +436,7 @@ export default function CipherApp() {
             </ol>
 
             <footer>
+              <button type="button" className="cx-btn" disabled={!!aiProgress} onClick={() => void research([lead])}>{aiBusy.includes(lead.id) ? 'Researching…' : lead.ai ? 'Research again' : 'Research with AI'}</button>
               {lead.stage === 'drafted' ? <button type="button" className="cx-act" onClick={() => void launch([lead])}>Start sequence</button> : null}
               {lead.stage === 'drafted' ? <a className="cx-btn" href={`https://mail.google.com/mail/?view=cm&fs=1&su=${encodeURIComponent(lead.email.subject)}&body=${encodeURIComponent(lead.email.body)}`} target="_blank" rel="noreferrer" onClick={() => move(lead, 'sent')}>Open in Gmail</a> : null}
               <button type="button" className="cx-btn" onClick={() => void copyEmail(lead)}>Copy email</button>

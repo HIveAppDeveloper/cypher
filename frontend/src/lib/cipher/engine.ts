@@ -1,15 +1,16 @@
 import type { Company } from './markets';
 
 export type SignalKind = 'hiring' | 'raising' | 'spending' | 'news';
-export type Source = 'live' | 'snapshot';
+export type Source = 'live' | 'snapshot' | 'ai';
 export interface Evidence { label: string; url?: string; date?: string }
 export interface Signal { kind: SignalKind; strength: number; metric: string; headline: string; source: Source; evidence: Evidence[] }
 export type Stage = 'found' | 'researched' | 'drafted' | 'sent' | 'replied' | 'meeting';
 export interface Touch { day: number; channel: 'Email' | 'LinkedIn' | 'Call'; action: string; due: string }
 export interface Lead {
   id: string; company: Company; signals: Signal[]; score: number; tier: 'Hot' | 'Warm' | 'Watch';
-  why: string; buyer: { persona: string; linkedin: string; apollo: string };
+  why: string; buyer: { persona: string; linkedin: string; apollo: string; name?: string; title?: string; source?: string };
   email: { subject: string; body: string }; sequence: Touch[]; stage: Stage; sentAt?: string;
+  ai?: { model: string; web: boolean; at: string };
 }
 export interface RunConfig { marketId: string; offering: string; persona: string; senderName: string; tickers?: string[] }
 export type RunEvent =
@@ -104,4 +105,35 @@ export function leadsToCsv(leads: Lead[]) {
   const rows = [['Company', 'Ticker', 'Domain', 'Score', 'Tier', 'Why now', 'Buyer persona', 'Subject', 'Body', 'Stage', 'Next touch'].map(esc).join(',')];
   for (const l of leads) rows.push([l.company.name, l.company.ticker, l.company.domain, l.score, l.tier, l.why, l.buyer.persona, l.email.subject, l.email.body, l.stage, `${l.sequence[1]?.channel} ${l.sequence[1]?.due}`].map(esc).join(','));
   return rows.join('\n');
+}
+
+// Model research (see app/api/cipher/research) folded back into a lead.
+export interface Research {
+  signals: Partial<Record<SignalKind, { level: number; detail: string; sources: Evidence[] }>>;
+  buyer?: { name?: string; title?: string; source?: string };
+  whyNow?: string;
+  email?: { subject: string; body: string };
+  citations?: Evidence[];
+}
+const KIND_ORDER: SignalKind[] = ['hiring', 'raising', 'spending', 'news'];
+const LEVEL_WORD = ['None', 'Low', 'Med', 'High'];
+
+export function applyResearch(lead: Lead, research: Research, meta: { model: string; web: boolean }, now = new Date()): Lead {
+  const signals: Signal[] = [];
+  const spare = [...(research.citations ?? [])];
+  for (const kind of KIND_ORDER) {
+    const existing = lead.signals.find(s => s.kind === kind);
+    const found = research.signals[kind];
+    if (existing?.source === 'live') { signals.push(found?.detail ? { ...existing, headline: `${existing.headline}. ${found.detail}`.slice(0, 220) } : existing); continue; }
+    if (!found) { if (existing) signals.push(existing); continue; }
+    const level = Math.max(0, Math.min(3, Math.round(found.level)));
+    if (!level) continue;
+    const evidence = found.sources.length ? found.sources.slice(0, 4) : spare.splice(0, 2);
+    signals.push({ kind, source: 'ai', strength: Math.round(level / 3 * SIGNAL_MAX[kind]), metric: LEVEL_WORD[level], headline: found.detail.slice(0, 200) || `${LEVEL_WORD[level]} ${kind} signal`, evidence });
+  }
+  const { score, tier } = scoreLead(signals);
+  const buyer = { ...lead.buyer, ...(research.buyer?.name ? { name: research.buyer.name, title: research.buyer.title || lead.buyer.persona, source: research.buyer.source } : {}) };
+  const email = lead.stage === 'drafted' && research.email?.subject && research.email.body ? research.email : lead.email;
+  const why = research.whyNow?.trim() || (signals.length ? [...signals].sort((a, b) => b.strength - a.strength).slice(0, 2).map(s => s.headline).join(' + ') : 'No strong buying signal found');
+  return { ...lead, signals, score, tier, why: why.slice(0, 240), buyer, email, ai: { ...meta, at: now.toISOString() } };
 }

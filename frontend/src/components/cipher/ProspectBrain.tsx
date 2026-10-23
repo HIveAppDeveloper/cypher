@@ -6,7 +6,7 @@ import { SIGNAL_MAX } from '../../lib/cipher/engine';
 // Prospect Brain: a rotating 3D scatter of every account in the territory.
 // X = hiring signal, Y = overall score, Z = capital and momentum (raising, spending, 8-K activity).
 type V3 = [number, number, number];
-type Node = { id: string; lead: Lead; pos: V3; born: number };
+type Node = { id: string; lead: Lead; pos: V3; target: V3; born: number };
 type Projected = { x: number; y: number; z: number; f: number };
 
 function hash(s: string) { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return (h >>> 0) / 4294967295; }
@@ -20,19 +20,19 @@ function placeLead(lead: Lead): V3 {
   return [x * .92 + j('x'), y * .92 + j('y'), z * .92 + j('z')];
 }
 
-export default function ProspectBrain({ leads, running, selected, filter, onSelect }: { leads: Lead[]; running: boolean; selected: string | null; filter: 'All' | Lead['tier']; onSelect: (id: string) => void }) {
+export default function ProspectBrain({ leads, running, selected, filter, onSelect, highlight = [], busy = [] }: { leads: Lead[]; running: boolean; selected: string | null; filter: 'All' | Lead['tier']; onSelect: (id: string) => void; highlight?: string[]; busy?: string[] }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const state = useRef({ yaw: -.62, pitch: -.38, zoom: 1, hover: null as string | null, drag: null as null | { x: number; y: number; moved: number }, nodes: new Map<string, Node>(), running, selected, filter, onSelect });
+  const state = useRef({ yaw: -.62, pitch: -.38, zoom: 1, hover: null as string | null, drag: null as null | { x: number; y: number; moved: number }, nodes: new Map<string, Node>(), running, selected, filter, onSelect, highlight, busy });
   const [hoverLead, setHoverLead] = useState<Lead | null>(null);
-  state.current.running = running; state.current.selected = selected; state.current.filter = filter; state.current.onSelect = onSelect;
+  state.current.running = running; state.current.selected = selected; state.current.filter = filter; state.current.onSelect = onSelect; state.current.highlight = highlight; state.current.busy = busy;
 
   useEffect(() => {
     const st = state.current; const now = performance.now(); const ids = new Set(leads.map(l => l.id));
     for (const id of Array.from(st.nodes.keys())) if (!ids.has(id)) st.nodes.delete(id);
     leads.forEach((lead, i) => {
       const existing = st.nodes.get(lead.id);
-      if (existing) existing.lead = lead;
-      else st.nodes.set(lead.id, { id: lead.id, lead, pos: placeLead(lead), born: leads.length > 6 && !running ? now - 2000 + i * 40 : now });
+      if (existing) { existing.lead = lead; existing.target = placeLead(lead); }
+      else { const pos = placeLead(lead); st.nodes.set(lead.id, { id: lead.id, lead, pos, target: pos, born: leads.length > 6 && !running ? now - 2000 + i * 40 : now }); }
     });
   }, [leads, running]);
 
@@ -84,6 +84,7 @@ export default function ProspectBrain({ leads, running, selected, filter, onSele
       projected = new Map();
       const nodes = Array.from(st.nodes.values());
       for (const n of nodes) {
+        n.pos = [n.pos[0] + (n.target[0] - n.pos[0]) * .07, n.pos[1] + (n.target[1] - n.pos[1]) * .07, n.pos[2] + (n.target[2] - n.pos[2]) * .07];
         const q = project(n.pos); const grow = Math.min(1, Math.max(0, (t - n.born) / 600)); const e = 1 - Math.pow(1 - grow, 3);
         projected.set(n.id, { ...q, r: (3.5 + n.lead.score / 100 * 5.5) * q.f * zs * e });
       }
@@ -109,15 +110,17 @@ export default function ProspectBrain({ leads, running, selected, filter, onSele
         ctx.globalAlpha = on ? 1 : .18; ctx.fillStyle = tierColor(n.lead.tier);
         ctx.beginPath(); ctx.arc(q.x, q.y, q.r, 0, Math.PI * 2); ctx.fill();
         ctx.strokeStyle = colors.card; ctx.lineWidth = 1.5; ctx.stroke();
-        if (isFocus) { ctx.globalAlpha = 1; ctx.strokeStyle = colors.ink; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(q.x, q.y, q.r + 4, 0, Math.PI * 2); ctx.stroke(); }
+        if (isFocus || st.highlight.includes(n.id)) { ctx.globalAlpha = 1; ctx.strokeStyle = colors.ink; ctx.lineWidth = isFocus ? 2 : 1.5; ctx.beginPath(); ctx.arc(q.x, q.y, q.r + 4, 0, Math.PI * 2); ctx.stroke(); }
+        if (st.busy.includes(n.id)) { const k = (t / 900) % 1; ctx.globalAlpha = 1 - k; ctx.strokeStyle = colors.ink; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(q.x, q.y, q.r + 4 + k * 14, 0, Math.PI * 2); ctx.stroke(); }
       }
       // labels, highest score first, skipping collisions
       const placed: { x: number; y: number; w: number }[] = [];
       const fits = (x: number, y: number, tw: number) => placed.every(r => x + tw + 4 < r.x || x - 4 > r.x + r.w || Math.abs(y - r.y) > 14);
-      const labelOrder = nodes.slice().sort((a, b) => (b.id === focus ? 1 : 0) - (a.id === focus ? 1 : 0) || b.lead.score - a.lead.score);
+      const rank = (n: Node) => (n.id === focus ? 2 : st.highlight.includes(n.id) ? 1 : 0);
+      const labelOrder = nodes.slice().sort((a, b) => rank(b) - rank(a) || b.lead.score - a.lead.score);
       for (const n of labelOrder) {
         const q = projected.get(n.id)!; if (q.r <= .2 || (!matches(n.lead) && n.id !== focus)) continue;
-        const isFocus = n.id === focus;
+        const isFocus = n.id === focus || st.highlight.includes(n.id);
         ctx.font = `${isFocus || n.lead.tier === 'Hot' ? 600 : 400} ${isFocus ? 13 : 11.5}px ${FONT}`;
         const tw = ctx.measureText(n.lead.company.name).width, lx = q.x + q.r + 6;
         if (!isFocus && !fits(lx, q.y, tw)) continue;
