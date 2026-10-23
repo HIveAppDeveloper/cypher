@@ -273,6 +273,57 @@
   to { opacity: 1; filter: blur(0); transform: none; }
 }
 
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg-main: #1c1c1e;
+    --bg-panel: #1c1c1e;
+    --system-sidebar: #232326;
+    --system-subtle: #2c2c2e;
+    --system-hover: rgba(118, 118, 128, .28);
+    --system-selected: rgba(153, 133, 240, .2);
+    --system-separator: rgba(84, 84, 88, .65);
+    --border-light: rgba(84, 84, 88, .65);
+    --text-primary: #f5f5f7;
+    --text-secondary: #aeaeb2;
+    --text-muted: #aeaeb2;
+    --accent-blue: #9885f0;
+    --focus-color: #b3a5f6;
+  }
+}
+:root[data-theme="dark"] {
+  --bg-main: #1c1c1e;
+  --bg-panel: #1c1c1e;
+  --system-sidebar: #232326;
+  --system-subtle: #2c2c2e;
+  --system-hover: rgba(118, 118, 128, .28);
+  --system-selected: rgba(153, 133, 240, .2);
+  --system-separator: rgba(84, 84, 88, .65);
+  --border-light: rgba(84, 84, 88, .65);
+  --text-primary: #f5f5f7;
+  --text-secondary: #aeaeb2;
+  --text-muted: #aeaeb2;
+  --accent-blue: #9885f0;
+  --focus-color: #b3a5f6;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .quickstart h1,
+  :root[data-theme="dark"] .quickstart h1 { color: #f5f4f9; }
+  :root:not([data-theme="light"]) .quickstart .task-composer,
+  :root[data-theme="dark"] .quickstart .task-composer { border-color: #45434d; background: #28272c; }
+}
+:root[data-theme="dark"] .quickstart h1 { color: #f5f4f9; }
+:root[data-theme="dark"] .quickstart .task-composer { border-color: #45434d; background: #28272c; }
+:root[data-theme="dark"] .quickstart .task-composer:focus-within { border-color: #a696f3; }
+:root[data-theme="dark"] .quickstart .task-composer textarea::placeholder { color: #a4a0ae; }
+:root[data-theme="dark"] .quickstart .task-composer-footer .glass-select-trigger { color: #c5c2cf; }
+:root[data-theme="dark"] .quickstart .task-composer-footer .btn-primary:disabled { background: #3b3942; color: #aaa6b4; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .quickstart .task-composer:focus-within { border-color: #a696f3; }
+  :root:not([data-theme="light"]) .quickstart .task-composer textarea::placeholder { color: #a4a0ae; }
+  :root:not([data-theme="light"]) .quickstart .task-composer-footer .glass-select-trigger { color: #c5c2cf; }
+  :root:not([data-theme="light"]) .quickstart .task-composer-footer .btn-primary:disabled { background: #3b3942; color: #aaa6b4; }
+}
+
 @media (max-width: 760px) {
   .sidebar-shell .sidebar { padding: 10px 12px 16px; }
   .quickstart { padding: 24px 18px max(44px, env(safe-area-inset-bottom)); }
