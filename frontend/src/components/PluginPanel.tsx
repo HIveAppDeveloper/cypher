@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { approveConnection, enrollDevice } from '../lib/device';
 import { api } from '../lib/api';
+import { PLUGIN_SIGN_IN_KEY, PLUGIN_SIGN_IN_TTL, readPluginSignIn, type PluginSignIn } from '../lib/pluginAuthorization';
 export interface PluginConnection { connection_id?:string; id:string;name:string;url:string;enabled:boolean;authenticated:boolean;verification?:{status:string;checked_at?:string;detail?:{tool?:string;latency_ms?:number;message?:string}};tools:{name:string;description:string;enabled?:boolean}[]; }
 export interface CatalogEntry { id:string;name:string;url:string;description:string;category:string;domains:string[];icon?:string;source?:string;auth?:string;auth_header?:string;setup_note?:string;connection_id?:string;transport?:string; }
 export interface AvailableConnection {id:string;name:string;url:string;domains:string[];reuse_available:boolean;method:string;}
@@ -50,7 +51,11 @@ export function PluginPanel({onClose}:{onClose:()=>void}){
   const [visibleCount,setVisibleCount]=useState(12);
   useEffect(()=>setVisibleCount(12),[search,catalogFilter]);
   const [url,setUrl]=useState('');const [name,setName]=useState('');const [token,setToken]=useState('');const [authHeader,setAuthHeader]=useState('Authorization');
-  const [busy,setBusy]=useState(false);const [flow,setFlow]=useState('');
+  const [busy,setBusy]=useState(false);const [flow,setFlow]=useState<PluginSignIn|null>(null);
+  const [flowError,setFlowError]=useState('');const [checkingSignIn,setCheckingSignIn]=useState(false);
+  const [cancellingSignIn,setCancellingSignIn]=useState(false);
+  const checkSignIn=useRef<()=>Promise<void>>(async()=>{});
+  const connecting=useRef(false);
   const [notice,setNotice]=useState('');const [error,setError]=useState('');
   const [refreshableError,setRefreshableError]=useState(false);
   const [device,setDevice]=useState(false);
@@ -65,9 +70,16 @@ export function PluginPanel({onClose}:{onClose:()=>void}){
     api.pluginSyncStatus().then(s=>{if(active)setSync(s);}).catch(()=>{});
     api.accountStatus().then(s=>{if(active)setAccountState(s);}).catch(()=>{});
     fetch('/api/connections').then(r=>r.json()).then(data=>{if(active)setVariables(data.variables||[]);}).catch(()=>{});
-    const result=new URLSearchParams(window.location.search).get('plugins');
-    if(result){setView('connected');if(result==='connected')setNotice('Connected. Your team can now use this service.');else setError(result==='cancelled'?'Sign-in was cancelled. Nothing was connected.':'Sign-in could not be completed. Try connecting again.');}
-    return()=>{active=false;dialog.current?.close();popup.current?.close();previous?.focus();};
+    const params=new URLSearchParams(window.location.search);const result=params.get('plugins');
+    let saved:PluginSignIn|null=null;
+    try{saved=readPluginSignIn(sessionStorage);}catch{}
+    if(result&&['connected','cancelled','failed'].includes(result)){
+      if(!params.get('plugin_flow')||params.get('plugin_flow')===saved?.id){try{sessionStorage.removeItem(PLUGIN_SIGN_IN_KEY);}catch{}saved=null;}
+      setView('connected');if(result==='connected')setNotice('Connected. Your team can now use this service.');else setError(result==='cancelled'?'Access was not allowed. Choose Connect to try again.':'Sign-in could not be verified. Choose Connect to try again.');
+      const clean=new URL(window.location.href);clean.searchParams.delete('plugins');clean.searchParams.delete('plugin_flow');window.history.replaceState(window.history.state,'',clean.pathname+clean.search+clean.hash);
+    }
+    if(saved){setFlow(saved);setBusy(true);setNotice('Finish signing in and allow access on the provider’s page. Your progress is saved in this tab.');}
+    return()=>{active=false;dialog.current?.close();previous?.focus();};
   },[]);
   useEffect(()=>{
     const term=search.trim();
@@ -96,21 +108,29 @@ export function PluginPanel({onClose}:{onClose:()=>void}){
   },[syncing]);
   async function syncAll(){setBusy(true);setError('');setRefreshableError(false);try{const approval=await approveConnection('connect_plugin:catalog');setSync(await api.syncPlugins(approval));}catch(e){setError(e instanceof Error?e.message:'Could not start catalog sync.');}finally{setBusy(false);}}
   useEffect(()=>{
-    if(!flow)return;let active=true;const started=Date.now();let timer:ReturnType<typeof setTimeout>;
+    if(!flow)return;let active=true;let pending=false;let failures=0;let timer:ReturnType<typeof setTimeout>;
+    function finish(message:string,failed=false){clearSignIn();setBusy(false);popup.current?.close();if(failed)setError(message);else setNotice(message);}
     async function poll(){
+      if(!active||pending)return;clearTimeout(timer);pending=true;setCheckingSignIn(true);
       try{
-        const state=await api.pluginAuthStatus(flow);if(!active)return;
+        if(Date.now()-flow!.startedAt>=PLUGIN_SIGN_IN_TTL){finish('This sign-in link expired. Choose Connect to start again.',true);return;}
+        const state=await api.pluginAuthStatus(flow!.id);if(!active)return;
         if(state.status==='connected'){
           const connections=await api.getPlugins();if(!active)return;
-          setPlugins(connections);setView('connected');setNotice(`${state.name} connected. Your team can use its tools.`);setFlow('');setBusy(false);popup.current?.close();return;
+          setPlugins(connections);setView('connected');finish(`${state.name} connected. Your team can use its tools.`);return;
         }
-        if(['failed','cancelled','expired'].includes(state.status)||Date.now()-started>600000){setError('Sign-in did not finish. Reconnect the service to try again.');setRefreshableError(false);setFlow('');setBusy(false);popup.current?.close();return;}
-      }catch(e){if(active){setError(e instanceof Error?e.message:'Could not check sign-in.');setRefreshableError(false);setFlow('');setBusy(false);}return;}
-      if(active)timer=setTimeout(poll,AUTH_POLL_MS);
+        if(['failed','cancelled','expired'].includes(state.status)){finish(state.status==='cancelled'?'Access was not allowed. Choose Connect to try again.':state.status==='expired'?'This sign-in link expired. Choose Connect to start again.':'The provider returned, but its tools could not be verified. Choose Connect to try again.',true);return;}
+        failures=0;setFlowError('');
+      }catch{if(active){failures++;setFlowError('Could not check the connection yet. We’ll retry automatically; you can continue on the provider’s page.');}}
+      finally{pending=false;if(active)setCheckingSignIn(false);}
+      if(active)timer=setTimeout(poll,Math.min(15000,AUTH_POLL_MS*2**failures));
     }
-    void poll();return()=>{active=false;clearTimeout(timer);};
+    const resume=()=>{if(!document.hidden)void poll();};checkSignIn.current=poll;
+    window.addEventListener('focus',resume);window.addEventListener('online',resume);document.addEventListener('visibilitychange',resume);
+    void poll();return()=>{active=false;clearTimeout(timer);checkSignIn.current=async()=>{};window.removeEventListener('focus',resume);window.removeEventListener('online',resume);document.removeEventListener('visibilitychange',resume);};
   },[flow]);
-  async function cancelSignIn(){try{await api.cancelPluginAuth(flow);popup.current?.close();setFlow('');setBusy(false);setNotice('Sign-in cancelled. You can choose another service or try again.');setError('');}catch(e){setError(e instanceof Error?e.message:'Could not cancel sign-in.');setRefreshableError(false);}}
+  function clearSignIn(){try{sessionStorage.removeItem(PLUGIN_SIGN_IN_KEY);}catch{}setFlow(null);setFlowError('');setNotice('');setRefreshableError(false);}
+  async function cancelSignIn(){if(!flow||cancellingSignIn)return;setCancellingSignIn(true);try{await api.cancelPluginAuth(flow.id);popup.current?.close();clearSignIn();setBusy(false);setNotice('Sign-in cancelled. You can choose another service or try again.');setError('');}catch(e){setError(e instanceof Error?e.message:'Could not cancel sign-in.');setRefreshableError(false);}finally{setCancellingSignIn(false);}}
   function chooseView(next:View){setView(next);setError('');setRefreshableError(false);if(!flow)setNotice('');}
   function preparePopup(){
     const opened=window.open('about:blank','grokbot-service-login','popup,width=620,height=760');
@@ -128,12 +148,15 @@ export function PluginPanel({onClose}:{onClose:()=>void}){
     if(result.status==='connected'){
       setPlugins(await api.getPlugins());setView('connected');setNotice(`${result.name} connected. Your team can now use it.`);popup.current?.close();setBusy(false);
     }else if(result.authorization_url && result.flow_id){
-      setFlow(result.flow_id);setNotice(`Finish signing in to ${result.name} in the new window. Review its permissions and press Allow.`);
-      if(popup.current)popup.current.location.replace(result.authorization_url);else window.location.assign(result.authorization_url);
+      const next={id:result.flow_id,name:result.name,url:result.authorization_url,startedAt:Date.now()};
+      try{sessionStorage.setItem(PLUGIN_SIGN_IN_KEY,JSON.stringify(next));}catch{}
+      setFlow(next);setNotice('');setFlowError('');
+      try{if(popup.current&&!popup.current.closed)popup.current.location.replace(result.authorization_url);}catch{/* The visible link can reopen a closed or isolated provider window. */}
     }else throw new Error('This service did not provide a sign-in page. Try its advanced setup.');
   }
   function isConnected(item:CatalogEntry){return plugins.some(plugin=>plugin.url===item.url&&(!item.connection_id||plugin.connection_id===item.connection_id));}
   async function connectItem(item:CatalogEntry,reconnect=false){
+    if(connecting.current||flow)return;
     const connected=isConnected(item);
     const result=sync?.results[item.id];
     if(!connected&&(item.setup_note||result?.status==='setup_required')){
@@ -142,25 +165,27 @@ export function PluginPanel({onClose}:{onClose:()=>void}){
       return;
     }
     const connectionItem=!connected&&result?.status==='key_required'?{...item,auth:'api_key'}:item;
-    setBusy(true);setError('');setRefreshableError(false);
+    connecting.current=true;setBusy(true);setError('');setRefreshableError(false);
     if(connectionItem.auth!=='api_key')preparePopup();
-    try{await begin(connectionItem,reconnect);}catch(e){popup.current?.close();setBusy(false);setNotice('');setError(e instanceof Error?e.message:'Connection failed.');}
+    try{await begin(connectionItem,reconnect);}catch(e){popup.current?.close();setBusy(false);setNotice('');setError(e instanceof Error?e.message:'Connection failed.');}finally{connecting.current=false;}
   }
   async function submitSearch(event:FormEvent){
     event.preventDefault();
     const query=search.trim();if(!query)return;
+    if(connecting.current||flow)return;
     const match=exactCatalogMatch(query,catalog);
     if(match){await connectItem(match);return;}
     if(!isWebsiteQuery(query)){
       setRefreshableError(false);setNotice(filtered.length?`Choose a service below to connect${filtered.length===1?`: ${filtered[0].name}`:'.'}`:'No matching service. Enter a provider website to check for a published connector.');
       setError('');return;
     }
-    setBusy(true);setError('');setRefreshableError(false);setNotice('');preparePopup();
+    connecting.current=true;setBusy(true);setError('');setRefreshableError(false);setNotice('');preparePopup();
     try{const item=await api.resolvePlugin(query);await begin(item);}
-    catch(e){popup.current?.close();setBusy(false);setNotice('');setError(e instanceof Error?e.message:'Could not find a published connector for this website.');}
+    catch(e){popup.current?.close();setBusy(false);setNotice('');setError(e instanceof Error?e.message:'Could not find a published connector for this website.');}finally{connecting.current=false;}
   }
   async function connectCustom(event:FormEvent){
-    event.preventDefault();setBusy(true);setError('');setRefreshableError(false);setNotice('');
+    event.preventDefault();if(connecting.current||flow)return;connecting.current=true;setBusy(true);setError('');setRefreshableError(false);setNotice('');
+    if(!token.trim())preparePopup();
     try{
       const parsed=new URL(url.trim());
       if(parsed.protocol!=='https:')throw new Error('Use the HTTPS server address supplied by the company.');
@@ -169,8 +194,8 @@ export function PluginPanel({onClose}:{onClose:()=>void}){
       const item={id:'custom',name:name.trim()||parsed.hostname,url:url.trim(),description:'',category:'Custom',domains:[parsed.hostname]};
       if(token.trim()){
         const approval_id=await approveConnection('connect_plugin:'+item.url);const connection=await api.connectPlugin({name:item.name,url:item.url,token:token.trim(),auth_header:authHeader,approval_id});setPlugins(current=>[...current,connection]);setView('connected');setToken('');setNotice(`${connection.name} connected.`);setBusy(false);
-      }else{preparePopup();await begin(item);}
-    }catch(e){popup.current?.close();setBusy(false);setError(e instanceof Error?e.message:'Connection failed.');}
+      }else{await begin(item);}
+    }catch(e){popup.current?.close();setBusy(false);setError(e instanceof Error?e.message:'Connection failed.');}finally{connecting.current=false;}
   }
   async function connectionAction(action:()=>Promise<unknown>){setBusy(true);setError('');setRefreshableError(false);try{await action();setPlugins(await api.getPlugins());}catch(e){setError(e instanceof Error?e.message:'Could not update this connection.');}finally{setBusy(false);}}
   async function enableDevice(){setBusy(true);setError('');setRefreshableError(false);try{await enrollDevice();setDevice(true);setNotice('Device approval enabled.');}catch(e){setError(e instanceof Error?e.message:String(e));}finally{setBusy(false);}}
@@ -197,7 +222,8 @@ export function PluginPanel({onClose}:{onClose:()=>void}){
     <header className="connectors-header"><div><h2 id="plugins-title">Plugins</h2><p>Connect services, then let Cypher use their tools.</p></div><button className="connector-close" aria-label="Close plugins" onClick={onClose}><svg viewBox="0 0 24 24"><path d="m6 6 12 12M6 18 18 6"/></svg></button></header>
     <nav className="connector-tabs" aria-label="Plugin pages">{([['browse','Browse'],['connected',`Connected${plugins.length?' · '+plugins.length:''}`],['custom','Advanced'],['settings','Settings']] as const).map(([id,label])=><button key={id} aria-pressed={view===id} onClick={()=>chooseView(id)}>{label}</button>)}</nav>
     <div ref={body} className="connectors-body" aria-busy={loading}>
-      {notice?<div className="connector-notice" role="status">{notice}{flow?<div className="connector-login-actions"><button onClick={()=>{popup.current?.focus();}}>Open sign-in window</button><button onClick={()=>void cancelSignIn()}>Cancel sign-in</button></div>:null}</div>:null}
+      {flow?<section className="connector-authorization" aria-labelledby="plugin-sign-in-title"><h3 id="plugin-sign-in-title">Allow access to {flow.name}</h3><ol><li>Sign in on {flow.name}’s page.</li><li>Review the permissions and choose Allow or Authorize.</li><li>Return here. We’ll verify the connection and load its tools.</li></ol><div className="connector-login-actions"><a className="btn-primary" href={flow.url} target="_blank" rel="noopener noreferrer" onClick={event=>{try{if(popup.current&&!popup.current.closed){event.preventDefault();popup.current.focus();}}catch{}}}>Continue to {flow.name}</a><button className="btn-secondary" type="button" disabled={checkingSignIn} onClick={()=>void checkSignIn.current()}>{checkingSignIn?'Checking…':'Check connection'}</button><button type="button" disabled={cancellingSignIn} onClick={()=>void cancelSignIn()}>{cancellingSignIn?'Cancelling…':'Cancel sign-in'}</button></div><p role="status">{flowError||'Waiting for provider approval. You can close this panel and continue later in this tab.'}</p></section>:null}
+      {notice?<div className="connector-notice" role="status">{notice}</div>:null}
       {error?<div className="connector-error" role="alert">{error}{refreshableError?<button type="button" className="connector-retry" disabled={loading||busy} onClick={()=>void retryLoad()}>Refresh connections</button>:null}</div>:null}
       {view==='browse'?<>
         <section className="connector-discovery" aria-label="Find a service">
