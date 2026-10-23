@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from 'react';
 import { ModelConnection, ModelConnections } from './ModelConnections';
 type CloudCheck = { status: string; detail?: { message?: string }; checked_at?: string };
 type Runtime = { worker?: boolean; worker_version_matches?: boolean | null; database?: boolean; model_configured?: boolean; model_transport?: string; connected?: boolean; checks?: Record<string, CloudCheck>; can_manage_model_connections?: boolean; model_connections?: ModelConnection[] };
-type ConnectionInfo = { models?: { transport?: string; configured?: boolean; manageUrl?: string } };
 const CHECK_LABELS: Record<string, string> = { starter_plugins: 'Starter plugin connections', media_openai: 'OpenAI image generation', fleet: 'Agent orchestration', model: 'GPT-6.1 Sol', fallback: 'GPT-6 Luna', mcp: 'MCP tool call', browser: 'Hosted browser', computer: 'Cloud computer' };
 export function WorkspaceSetup({ onClose }: { onClose: () => void }) {
   const dialog = useRef<HTMLDialogElement>(null);
@@ -10,7 +9,6 @@ export function WorkspaceSetup({ onClose }: { onClose: () => void }) {
   const [status, setStatus] = useState('checking');
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  const [connections, setConnections] = useState<ConnectionInfo>({});
   const [geminiTest, setGeminiTest] = useState<'idle'|'running'|'passed'|'failed'>('idle');
   const [geminiMessage, setGeminiMessage] = useState('');
   const requestStatus = detail.checks?.check_request?.status;
@@ -41,7 +39,7 @@ export function WorkspaceSetup({ onClose }: { onClose: () => void }) {
       setGeminiTest('failed'); setGeminiMessage(failure instanceof Error ? failure.message : 'Gemini could not be verified. Check the provider connection and try again.');
     }
   }
-  useEffect(() => { const previous = document.activeElement as HTMLElement; dialog.current?.showModal(); void check(); void fetch('/api/connections', { cache: 'no-store' }).then(response => response.ok ? response.json() : null).then(data => { if (data) setConnections(data); }).catch(() => {}); return () => { dialog.current?.close(); previous?.focus(); }; }, []);
+  useEffect(() => { const previous = document.activeElement as HTMLElement; dialog.current?.showModal(); void check(); return () => { dialog.current?.close(); previous?.focus(); }; }, []);
   useEffect(() => { const timer = setInterval(() => void check(), pending ? 3000 : 5000); return () => clearInterval(timer); }, [pending]);
   const workerUpdating = detail.worker_version_matches === false;
   const modelPassed = detail.checks?.model?.status === 'passed';
@@ -52,12 +50,11 @@ export function WorkspaceSetup({ onClose }: { onClose: () => void }) {
       <div className="connection-state" data-state={status}><span className="connection-dot"/><div><strong>{status === 'checking' ? 'Checking connection…' : detail.connected ? detail.worker ? 'Cloud workspace connected' : 'Cloud API connected · worker not ready' : 'Cloud runtime not connected'}</strong><p>{detail.connected ? 'Database and worker readiness are separate from model and tool access.' : 'Agents need a reachable hosted runtime before they can work.'}</p></div></div>
       {detail.model_transport !== 'omniroute' ? <section className="provider-setup" aria-labelledby="gemini-setup-title">
         <h3 id="gemini-setup-title">Connect Gemini</h3>
-        <p>{detail.model_transport === 'omniroute' ? 'In OmniRoute, open Providers → Add provider → Gemini and paste the AI Studio key. Return here to verify the same route GrokBot uses.' : 'Add a Gemini API key to OmniRoute or the backend, then test the configured route here.'}</p>
+        <p>Add your Gemini API key in Model access below. GrokBot verifies it with a short model request and uses it directly for Gemini calls.</p>
         <div className="provider-setup-actions">
-          {connections.models?.manageUrl ? <a href={connections.models.manageUrl} target="_blank" rel="noreferrer">Open OmniRoute</a> : null}
-          <a href="https://aistudio.google.com/apikey" target="_blank" rel="noreferrer">Get a Gemini API key</a>
+          <a href="https://aistudio.google.com/api-keys" target="_blank" rel="noreferrer">Get a Gemini API key</a>
         </div>
-        <p className="provider-setup-note">A Google AI Pro or Gemini subscription is not an API key for this app. Use a Gemini API key from AI Studio; API quota and billing are separate.</p>
+        <p className="provider-setup-note">A Google AI Pro or Gemini subscription is not an API key for this app. Gemini API usage has separate quota and billing.</p>
         <div className="provider-test">
           <button type="button" className="btn-secondary" disabled={geminiTest === 'running'} onClick={() => void testGemini()}>{geminiTest === 'running' ? 'Testing Gemini…' : geminiTest === 'passed' ? 'Test again' : 'Test Gemini connection'}</button>
           {geminiMessage ? <p data-state={geminiTest} role={geminiTest === 'failed' ? 'alert' : 'status'}>{geminiMessage}</p> : null}
@@ -69,7 +66,7 @@ export function WorkspaceSetup({ onClose }: { onClose: () => void }) {
         <li><strong>{modelPassed ? 'Model response verified' : detail.model_configured ? 'Model connection configured' : 'Enable model access'}</strong><p>{detail.model_transport === 'omniroute' ? modelFailed ? 'The OmniRoute check failed. Your saved tasks remain available; verify the connection again to see its current state.' : 'Model requests use your existing OmniRoute connection. Provider account limits still apply.' : modelFailed ? 'The last model check failed. Check the configured provider connection, then verify again.' : 'Model requests use your configured provider connection.'}</p></li>
         <li><strong>{detail.worker ? 'Cloud worker responding' : workerUpdating ? 'Cloud worker updating' : 'Cloud worker not ready'}</strong><p>{workerUpdating ? 'The worker is still on an earlier release. This status updates automatically when the current release starts.' : 'A running cloud worker continues queued tasks when this page closes or your laptop is off.'}</p></li>
       </ol>
-      {detail.model_transport === 'omniroute' ? <ModelConnections items={detail.model_connections || []} canManage={!!detail.can_manage_model_connections} workerReady={!!detail.worker} onQueued={check}/> : null}
+      {detail.can_manage_model_connections ? <ModelConnections items={(detail.model_connections || []).filter(item => detail.model_transport === 'omniroute' || item.id === 'gemini' || item.id === 'xai')} canManage workerReady={!!detail.worker} onQueued={check}/> : null}
       <details className="advanced-settings"><summary>Live check results</summary><p className="field-help">Run checks makes small model requests, reads public documentation, opens a test page, and starts then stops a test computer. It can use provider credits and cloud compute.</p><ul className="setup-steps">{Object.entries(CHECK_LABELS).map(([name, label]) => { const result = detail.checks?.[name]; return <li key={name}><strong>{label}: {result?.status || 'Not checked'}</strong>{result?.checked_at ? <p>Last checked {new Date(result.checked_at).toLocaleString()}</p> : null}{result?.detail?.message ? <p>{result.detail.message}</p> : null}</li>; })}</ul></details>
       <details className="advanced-settings"><summary>Host in your AWS account</summary><p className="field-help">Sign in to AWS and create a private workspace you own. The template provisions one EC2 host, an encrypted 60 GB disk, PostgreSQL, Redis, HTTPS, and an owner login. AWS bills these resources to your account.</p><ol className="setup-steps"><li><strong>Prepare your account</strong><p>Choose a domain you control. Save your OpenAI API key as an SSM SecureString named /grokbot/openai-api-key in the AWS region you will use.</p></li><li><strong>Review and launch</strong><p>Download the template. In CloudFormation choose Create stack → Upload a template file. Select your VPC and public subnet, enter your domain, review the resources and IAM permissions, then create the stack.</p></li><li><strong>Open your private workspace</strong><p>Point your domain to the HostAddress stack output. Sign in as owner using the password in the LoginPasswordParameter SSM SecureString. Credentials stay in your AWS account. Stack creation waits for the API and database to respond.</p></li></ol><a className="setup-doc-link" href="/setup/aws-workspace.json" download>Download AWS template</a><a className="setup-doc-link" href="https://console.aws.amazon.com/cloudformation/home#/stacks/create/template" target="_blank" rel="noreferrer">Sign in to AWS and create workspace</a><p className="field-help">This is a single-host deployment. Configure backups before relying on it. Creating a stack is the approval step; downloading this template creates no resources.</p></details>
       <details className="advanced-settings"><summary>Use your ChatGPT plan</summary><p className="field-help">A ChatGPT plan can fund eligible AI requests; it does not host this server. OpenAI supports an account consent flow for open-source local installations and self-hosted VMs. This hosted website does not currently have an approved OpenAI sign-in client, so ChatGPT connection is unavailable here.</p><a className="setup-doc-link" href="https://developers.openai.com/siwc/token-sharing-open-source" target="_blank" rel="noreferrer">Open ChatGPT plan setup requirements</a><a className="setup-doc-link" href="https://chatgpt.com/settings/usage" target="_blank" rel="noreferrer">Manage ChatGPT plan usage</a></details>

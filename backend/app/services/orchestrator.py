@@ -371,7 +371,7 @@ class AgentOrchestrator:
                 self.event_key = f'{scope_key}:iteration:{iteration}'
                 async def infer():
                     async with asyncio.timeout(300):
-                        response = await LLMGateway.complete(messages=messages, tools=tools if tools else None, model=model, provider=provider, options=run, fallback=profile.fallback if run.routing=='auto' else None)
+                        response = await LLMGateway.complete(messages=messages, tools=tools if tools else None, model=model, provider=provider, options=run, fallback=profile.fallback)
                     item = response.choices[0].message
                     if getattr(item, 'tool_calls', None) and not run.allow_tools:
                         from app.services.model_routing import ModelConfigurationError

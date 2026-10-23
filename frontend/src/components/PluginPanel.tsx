@@ -132,7 +132,20 @@ export function PluginPanel({onClose}:{onClose:()=>void}){
       if(popup.current)popup.current.location.replace(result.authorization_url);else window.location.assign(result.authorization_url);
     }else throw new Error('This service did not provide a sign-in page. Try its advanced setup.');
   }
-  async function connectItem(item:CatalogEntry,reconnect=false){setBusy(true);setError('');setRefreshableError(false);preparePopup();try{await begin(item,reconnect);}catch(e){popup.current?.close();setBusy(false);setNotice('');setError(e instanceof Error?e.message:'Connection failed.');}}
+  function isConnected(item:CatalogEntry){return plugins.some(plugin=>plugin.url===item.url&&(!item.connection_id||plugin.connection_id===item.connection_id));}
+  async function connectItem(item:CatalogEntry,reconnect=false){
+    const connected=isConnected(item);
+    const result=sync?.results[item.id];
+    if(!connected&&(item.setup_note||result?.status==='setup_required')){
+      popup.current?.close();setBusy(false);setError('');setRefreshableError(false);
+      setNotice(`${item.name} needs setup before it can connect. ${item.setup_note||result?.message||'Follow the provider setup instructions, then try again.'}`);
+      return;
+    }
+    const connectionItem=!connected&&result?.status==='key_required'?{...item,auth:'api_key'}:item;
+    setBusy(true);setError('');setRefreshableError(false);
+    if(connectionItem.auth!=='api_key')preparePopup();
+    try{await begin(connectionItem,reconnect);}catch(e){popup.current?.close();setBusy(false);setNotice('');setError(e instanceof Error?e.message:'Connection failed.');}
+  }
   async function submitSearch(event:FormEvent){
     event.preventDefault();
     const query=search.trim();if(!query)return;
@@ -163,22 +176,22 @@ export function PluginPanel({onClose}:{onClose:()=>void}){
   async function enableDevice(){setBusy(true);setError('');setRefreshableError(false);try{await enrollDevice();setDevice(true);setNotice('Device approval enabled.');}catch(e){setError(e instanceof Error?e.message:String(e));}finally{setBusy(false);}}
   async function setupAccount(){setBusy(true);setError('');setRefreshableError(false);try{const approval_id=await approveConnection('setup_account:'+accountUrl.trim());await api.setupPluginAccount({name:'New service',signup_url:accountUrl.trim(),email:accountEmail.trim(),approval_id});setNotice('Account setup is queued in Your team. Creating an account does not automatically connect its tools.');}catch(e){setError(e instanceof Error?e.message:String(e));}finally{setBusy(false);}}
   const query=search.trim().toLocaleLowerCase();
-  const connectedUrls=new Set(plugins.map(plugin=>plugin.url));
+  const isCatalogConnected=(item:CatalogEntry)=>isConnected(item);
   const filterMatches=(item:CatalogEntry)=>catalogFilter==='all'||
-    (catalogFilter==='connected'&&connectedUrls.has(item.url))||
-    (catalogFilter==='sign_in'&&!connectedUrls.has(item.url)&&item.auth!=='api_key'&&!item.setup_note&&sync?.results[item.id]?.status!=='unavailable'&&sync?.results[item.id]?.status!=='setup_required')||
-    (catalogFilter==='key'&&!connectedUrls.has(item.url)&&(item.auth==='api_key'||sync?.results[item.id]?.status==='key_required'))||
-    (catalogFilter==='public'&&!connectedUrls.has(item.url)&&sync?.results[item.id]?.status==='connected');
+    (catalogFilter==='connected'&&isCatalogConnected(item))||
+    (catalogFilter==='sign_in'&&!isCatalogConnected(item)&&item.auth!=='api_key'&&!item.setup_note&&sync?.results[item.id]?.status!=='unavailable'&&sync?.results[item.id]?.status!=='setup_required'&&sync?.results[item.id]?.status!=='key_required')||
+    (catalogFilter==='key'&&!isCatalogConnected(item)&&(item.auth==='api_key'||sync?.results[item.id]?.status==='key_required'))||
+    (catalogFilter==='public'&&!isCatalogConnected(item)&&sync?.results[item.id]?.status==='connected');
   const filtered=catalog.filter(item=>filterMatches(item)&&[item.name,item.description,...item.domains].join(' ').toLocaleLowerCase().includes(query))
-    .sort((a,b)=>Number(connectedUrls.has(b.url))-Number(connectedUrls.has(a.url))||a.name.localeCompare(b.name));
+    .sort((a,b)=>Number(isCatalogConnected(b))-Number(isCatalogConnected(a))||a.name.localeCompare(b.name));
   const curatedUrls=new Set(catalog.map(item=>item.url).filter(Boolean));
   const registryVisible=registryItems.filter(item=>!item.url||!curatedUrls.has(item.url));
   function connectorCard(item:CatalogEntry,keyPrefix='curated'){
-    const connected=plugins.some(plugin=>plugin.url===item.url);
+    const connected=isCatalogConnected(item);
     const result=sync?.results[item.id];
     const needsEndpoint=!!item.setup_note&&!item.url;
-    const action=connected?'Manage':needsEndpoint?'Endpoint needed':item.auth==='api_key'||result?.status==='key_required'?'Add key':result?.status==='setup_required'?'View setup':result?.status==='connected'?'Add public tool':result?.status==='sign_in_required'?'Sign in':'Connect';
-    return <article className="connector-entry" key={`${keyPrefix}:${item.id}`}><div className="connector-entry-title"><Logo item={item}/><div><h4>{item.name}</h4><span>{item.category}</span></div>{connected?<span className="connector-state">In workspace</span>:null}</div><p>{item.description}</p>{item.setup_note?<p className="connector-detail">{item.setup_note}</p>:result&&!connected&&(result.status==='unavailable'||result.status==='setup_required')?<p className="connector-detail">{result.message}</p>:null}<div className="connector-entry-footer">{item.source?<a href={item.source} target="_blank" rel="noreferrer">Provider details</a>:<span/>}<button disabled={busy||needsEndpoint||!item.url} className="connector-connect" aria-label={`${action} ${item.name}`} onClick={()=>void connectItem(item)}>{action}<svg viewBox="0 0 24 24"><path d="M5 12h14m-5-5 5 5-5 5"/></svg></button></div></article>;
+    const action=connected?'Manage':needsEndpoint?'Endpoint needed':item.auth==='api_key'||result?.status==='key_required'?'Add key':item.setup_note||result?.status==='setup_required'?'View setup':result?.status==='connected'?'Add public tool':result?.status==='sign_in_required'?'Sign in':'Connect';
+    return <article className="connector-entry" key={`${keyPrefix}:${item.id}`}><div className="connector-entry-title"><Logo item={item}/><div><h4>{item.name}</h4><span>{item.category}</span></div>{connected?<span className="connector-state">In workspace</span>:null}</div><p>{item.description}</p>{item.setup_note?<p className="connector-detail">{item.setup_note}</p>:result&&!connected&&['unavailable','setup_required','key_required'].includes(result.status)?<p className="connector-detail">{result.message}</p>:null}<div className="connector-entry-footer">{item.source?<a href={item.source} target="_blank" rel="noreferrer">Provider details</a>:<span/>}<button disabled={busy||needsEndpoint||!item.url} className="connector-connect" aria-label={`${action} ${item.name}`} onClick={()=>void connectItem(item)}>{action}<svg viewBox="0 0 24 24"><path d="M5 12h14m-5-5 5 5-5 5"/></svg></button></div></article>;
   }
   return <dialog ref={dialog} className="connectors-dialog" aria-labelledby="plugins-title" onCancel={event=>{event.preventDefault();onClose();}}>
     <header className="connectors-header"><div><h2 id="plugins-title">Plugins</h2><p>Connect services, then let GrokBot use their tools.</p></div><button className="connector-close" aria-label="Close plugins" onClick={onClose}><svg viewBox="0 0 24 24"><path d="m6 6 12 12M6 18 18 6"/></svg></button></header>
@@ -196,7 +209,7 @@ export function PluginPanel({onClose}:{onClose:()=>void}){
           </form>
         </section>
         {available.some(c=>c.reuse_available)?<section className="website-connect"><h3>Use existing connections</h3><p>Reuse access already linked to this workspace. No API keys to copy.</p><div className="connected-service-actions">{available.filter(c=>c.reuse_available).map(c=><button type="button" key={c.id} disabled={busy} onClick={()=>void connectItem({id:c.id,name:c.name,url:c.url,domains:c.domains,category:'Development',description:'',connection_id:c.id},true)}>Use {c.name}</button>)}</div></section>:null}
-        <div className="catalog-heading"><div><h3>Find a service <span>{catalog.length} curated</span></h3><p>Search curated connectors and the live MCP Registry.</p></div><input type="search" aria-label="Search plugins and MCP servers" value={search} onChange={event=>setSearch(event.target.value)} placeholder="Search services, tools, or companies…"/></div>
+        <div className="catalog-heading"><div><h3>Find a service <span>{catalog.length} curated</span></h3><p>Search curated connectors and the live MCP Registry.</p></div></div>
         <div className="catalog-toolbar"><label htmlFor="plugin-setup-filter">Show</label><select id="plugin-setup-filter" value={catalogFilter} onChange={event=>setCatalogFilter(event.target.value as CatalogFilter)}><option value="all">All services</option><option value="connected">Connected</option><option value="sign_in">Can sign in</option><option value="key">Needs an API key</option><option value="public">Public tools</option></select></div>
         {!loading?<p className="catalog-results" role="status">{filtered.length} curated {filtered.length===1?'match':'matches'}{query ? ` for “${search}”` : ' ready to browse'}</p>:null}{loading?<p className="connector-empty" role="status">Loading curated connectors…</p>:<div className="connector-catalog">{filtered.slice(0,visibleCount).map(item=>connectorCard(item))}</div>}
         {!loading && !filtered.length?<div className="connector-empty"><p>No curated services match. Search below for MCP Registry results.</p><button className="btn-secondary" onClick={()=>{setSearch('');setCatalogFilter('all');}}>Clear search</button></div>:null}
