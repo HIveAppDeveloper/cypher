@@ -1,13 +1,13 @@
 import type { Metadata } from 'next';
-import CipherApp from '../../components/cipher/CipherApp';
-import './cipher.css';
+import { redirect } from 'next/navigation';
 
 export const metadata: Metadata = {
   title: 'Cypher',
-  description: 'Find the right buyer and act first: one-button prospecting and outbound.',
+  description: 'Your workspace for conversations, agents, and connected tools.',
   icons: { icon: '/cipher-logo.png', apple: '/cipher-logo.png' },
 };
 
 export default function CipherPage() {
-  return <CipherApp />;
+  // Keep the legacy URL on the real Cypher-branded Open GrokBot workspace.
+  redirect('/');
 }
