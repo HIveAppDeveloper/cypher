@@ -101,7 +101,8 @@ export function buildLead(company: Company, signals: Signal[], cfg: RunConfig, n
 }
 
 export function leadsToCsv(leads: Lead[]) {
-  const esc = (v: string | number) => `"${String(v).replace(/"/g, '""')}"`;
+  // Quoting alone does not stop spreadsheet formulas, so formula-leading cells get a ' prefix.
+  const esc = (v: string | number) => { const t = String(v); const safe = /^[\s\u0000-\u001f]*[=+\-@]/.test(t) ? `'${t}` : t; return `"${safe.replace(/"/g, '""')}"`; };
   const rows = [['Company', 'Ticker', 'Domain', 'Score', 'Tier', 'Why now', 'Buyer persona', 'Subject', 'Body', 'Stage', 'Next touch'].map(esc).join(',')];
   for (const l of leads) rows.push([l.company.name, l.company.ticker, l.company.domain, l.score, l.tier, l.why, l.buyer.persona, l.email.subject, l.email.body, l.stage, `${l.sequence[1]?.channel} ${l.sequence[1]?.due}`].map(esc).join(','));
   return rows.join('\n');
