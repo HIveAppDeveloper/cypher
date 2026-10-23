@@ -199,7 +199,6 @@ export default function ProspectBrain({ leads, running, selected, filter, onSele
       <canvas ref={canvasRef} role="img" aria-label={`3D prospect map of ${leads.length} accounts: hiring on X, score on Y, capital and momentum on Z. ${tiers('Hot')} hot accounts. Use the Accounts tab for a list.`} />
       <div className="cx-brain-title">
         <h2>Prospect Brain</h2>
-        <p>X is hiring, Y is the overall score, Z is capital and momentum. Top right and front is where to act first. Drag to rotate, click any account for details.</p>
       </div>
       <div className="cx-brain-zoom" role="group" aria-label="Zoom">
         <button type="button" aria-label="Zoom out" onClick={() => zoom(1 / 1.2)}>−</button>
