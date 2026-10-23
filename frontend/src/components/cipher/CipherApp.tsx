@@ -5,7 +5,7 @@ import BinaryLens from './BinaryLens';
 import ProspectBrain from './ProspectBrain';
 import CipherIntro from './CipherIntro';
 import { GREETING, SUGGESTIONS, localReply } from '../../lib/cipher/assistant';
-import { SIGNAL_MAX, leadsToCsv, type Lead, type RunEvent, type SignalKind, type Stage } from '../../lib/cipher/engine';
+import { SIGNAL_MAX, accountIntel, leadsToCsv, type Lead, type RunEvent, type SignalKind, type Stage } from '../../lib/cipher/engine';
 
 type Step = Extract<RunEvent, { type: 'step' }>;
 type View = 'brain' | 'accounts' | 'pipeline';
@@ -446,6 +446,50 @@ export default function CipherApp() {
                 </li>
               )) : <li>No strong signals yet. Keep this account on watch.</li>}
             </ul>
+
+            {(() => {
+              const intel = accountIntel(lead);
+              const activity = steps.filter(x => x.ticker === lead.id).slice(-6);
+              return (
+                <>
+                  <h3 className="cx-label">Account intelligence</h3>
+                  <div className="cx-intel">
+                    <div><span>Est. deal size</span><b>{intel.dealSize}</b><small>{intel.seats} seats</small></div>
+                    <div><span>Buying window</span><b>{intel.window}</b><small>{lead.tier} tier</small></div>
+                    <div><span>Confidence</span><b>{intel.confidence}</b><small>{lead.signals.filter(x => x.source !== 'snapshot').length} verified signals</small></div>
+                    <div><span>Fit score</span><b>{lead.score}/100</b><small>{intel.fit.filter(f => f.points).length} of 4 signals firing</small></div>
+                  </div>
+                  <ul className="cx-fit">
+                    {intel.fit.map(f => <li key={f.label}><span>{f.label}</span><i><em style={{ width: `${Math.round(f.points / f.max * 100)}%` }} /></i><b className="num">{f.points}/{f.max}</b></li>)}
+                  </ul>
+                  <p className="cx-intel-note">Cipher estimates from the signals above.</p>
+
+                  <h3 className="cx-label">Buying committee</h3>
+                  <ul className="cx-committee">
+                    {intel.committee.map(m => <li key={m.role}><span className="r">{m.role}</span><b>{m.title}</b><small>{m.why}</small></li>)}
+                  </ul>
+
+                  <h3 className="cx-label">Recommended play</h3>
+                  <div className="cx-play">
+                    <b>{intel.play.name}</b>
+                    <ol>{intel.play.talkTrack.map((t, i) => <li key={i}>{t}</li>)}</ol>
+                    <div className="cx-reach"><span><em>Channel</em>{intel.channel}</span><span><em>Best time</em>{intel.timing}</span></div>
+                  </div>
+
+                  <h3 className="cx-label">Objection prep</h3>
+                  <ul className="cx-objections">
+                    {intel.play.objections.map(o => <li key={o.objection}><b>&ldquo;{o.objection}&rdquo;</b><span>{o.answer}</span></li>)}
+                  </ul>
+
+                  {activity.length ? (
+                    <>
+                      <h3 className="cx-label">Activity</h3>
+                      <ol className="cx-activity">{activity.map((a, i) => <li key={i}><time>{clock(a.at)}</time><span>{a.text}</span></li>)}</ol>
+                    </>
+                  ) : null}
+                </>
+              );
+            })()}
 
             <h3 className="cx-label">Buyer</h3>
             <div className="cx-buyer">
