@@ -125,8 +125,16 @@ requires that flag on both frontend and backend, a backend-only
 `ATLAS_ENGINE_SIGNING_KEY` of at least 32 bytes, and dedicated
 `GROKBOT_ATLAS_ENGINE_PROVIDER` / `GROKBOT_ATLAS_ENGINE_MODEL` settings. Providers
 are restricted to Gemini, OpenAI, Anthropic and DeepSeek with reviewed Grokbot
-model IDs. Only the selected provider's corresponding existing server-side key
-is used. Generic gateway credentials and `LLM_API_KEY` are not reused here.
+model IDs. With `GROKBOT_ATLAS_ENGINE_TRANSPORT=direct` (the default), only the
+selected provider's corresponding existing server-side key is used. Generic
+gateway credentials and `LLM_API_KEY` are not reused in direct mode.
+
+For Atlas Companion's Cypher integration, the explicit `omniroute` transport
+uses this Cypher deployment's existing cloud OmniRoute connection and pinned
+model. The request must declare `recipient=omniroute`; a direct-provider
+recipient is rejected. The server validates the cloud connection before model
+I/O, keeps the selected model fixed, and fails closed when the transport is
+unavailable. It does not fall through to a direct key or the task fallback pool.
 
 `GROKBOT_ATLAS_ENGINE_ADMISSION=postgres` is the default. Missing schema,
 non-PostgreSQL runtime, unavailable storage or uncertain admission returns 503
@@ -135,7 +143,7 @@ before inference, with no memory fallback. Separate
 created by the existing locked bootstrap only when the backend engine flag is
 enabled in PostgreSQL mode, including when its workspace schema revision is
 already current. Disabled ordinary bootstrap does not create these tables. This
-work has not run production DDL.
+schema is confined to Cypher's existing configured database.
 
 After applicable activation approval, keep the frontend flag disabled while
 the opted-in private backend starts and applies its schema under the existing
@@ -150,8 +158,8 @@ Synthetic local fixtures may select `local-memory` with
 or production environment markers and non-loopback public origins. It has only
 process-local replay/concurrency behavior and is not a production option.
 
-Atlas's opt-in consumer uses `ATLAS_COMPANION_ENGINE=grokbot`,
-`GROKBOT_ENGINE_URL`, the matching `ATLAS_ENGINE_SIGNING_KEY`, and
+Atlas's opt-in consumer uses `ATLAS_COMPANION_ENGINE=cypher`,
+`CYPHER_ENGINE_URL`, the matching `ATLAS_ENGINE_SIGNING_KEY`, and
 `ATLAS_ENGINE_MODEL_RECIPIENT`. Do not put signing keys in client variables.
 The current Hive Gemini-only consent does not authorize adding Atlas, Grokbot
 or another provider. Real production activation requires explicit disclosure

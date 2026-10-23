@@ -134,6 +134,7 @@ function quickStart(env, onStart, initialScope = 'local') {
   const view = renderer(env);
   const { QuickStart } = load('../src/components/QuickStart.tsx', {
     react: view.react, '../lib/presets': presets, './GlassSelect': { GlassSelect: 'select' },
+    './cipher/BinaryLens': { __esModule: true, default: 'binary-lens' },
   }, { ...env.globals, React: view.react.default });
   view.mount(() => QuickStart({ draftScope, options: { routing: 'auto', provider: 'openai', model: 'gpt-6.1-sol' },
     onStart, onOptions() {}, onCreateBot() {}, onCreateRoom() {}, onOpenLounge: async () => {} }));

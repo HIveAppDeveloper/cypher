@@ -376,6 +376,13 @@ async def test_browser_controls_disambiguate_identical_labels_without_clicking_t
 @pytest.mark.asyncio
 async def test_navigation_waits_for_render_and_never_calls_blank_202_an_empty_result(monkeypatch):
     from app.services.tools.browser import BrowserTool
+    from app.services import plugins
+    resolve = plugins.socket.getaddrinfo
+    def public_fixture(host, port, *args, **kwargs):
+        if host == 'render.example.test':
+            return [(plugins.socket.AF_INET, plugins.socket.SOCK_STREAM, 6, '', ('93.184.216.34', port))]
+        return resolve(host, port, *args, **kwargs)
+    monkeypatch.setattr(plugins.socket, 'getaddrinfo', public_fixture)
     browser=BrowserTool()
     async def save(*a):pass
     monkeypatch.setattr(browser,'_save_state',save)

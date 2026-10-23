@@ -45,6 +45,7 @@ def config(monkeypatch):
     monkeypatch.setattr(settings, "ATLAS_ENGINE_SIGNING_KEY", KEY)
     monkeypatch.setattr(settings, "GROKBOT_ATLAS_ENGINE_PROVIDER", "gemini")
     monkeypatch.setattr(settings, "GROKBOT_ATLAS_ENGINE_MODEL", "gemini-3.8-flash")
+    monkeypatch.setattr(settings, "GROKBOT_ATLAS_ENGINE_TRANSPORT", "direct")
     monkeypatch.setattr(settings, "GROKBOT_ATLAS_ENGINE_ADMISSION", "local-memory")
     monkeypatch.setattr(settings, "GROKBOT_ATLAS_ENGINE_ALLOW_LOCAL_ADMISSION", True)
     monkeypatch.setattr(settings, "GROKBOT_PUBLIC_URL", "http://localhost:3000")
@@ -149,6 +150,48 @@ async def test_recipient_mismatch_never_uses_fallback(client, monkeypatch):
     response = await post(client, payload(recipient="openai"))
     assert response.status_code == 409
     assert response.json()["code"] == "recipient_mismatch"
+
+
+@pytest.mark.asyncio
+async def test_explicit_cloud_transport_preserves_the_pinned_model_and_scope(client, monkeypatch):
+    monkeypatch.setattr(settings, "GROKBOT_ATLAS_ENGINE_TRANSPORT", "omniroute")
+    monkeypatch.setattr(settings, "GROKBOT_ATLAS_ENGINE_PROVIDER", "openai")
+    monkeypatch.setattr(settings, "GROKBOT_ATLAS_ENGINE_MODEL", "gpt-6.1-sol")
+    monkeypatch.setattr(settings, "OMNIROUTE_URL", "https://router.example")
+    monkeypatch.setattr(settings, "OMNIROUTE_API_KEY", "synthetic-router-key")
+    captured = []
+    async def stream(messages, **kwargs):
+        captured.append((messages, kwargs, current_tenant_id.get()))
+        async for chunk in normal_stream():
+            yield chunk
+    monkeypatch.setattr(LLMGateway, "stream", stream)
+    response = await post(client, payload(recipient="omniroute", stream=True))
+    assert response.status_code == 200
+    frames = [json.loads(line) for line in response.text.splitlines()]
+    assert frames[-1]["model"] == "gpt-6.1-sol"
+    assert captured[0][1]["provider"] == "openai"
+    assert captured[0][1]["model"] == "gpt-6.1-sol"
+    assert captured[0][1]["direct"] is False
+    assert captured[0][2] == "atlas-engine:atlas-user:alice"
+    assert current_tenant_id.get() is None
+
+
+@pytest.mark.asyncio
+async def test_missing_cloud_transport_and_wrong_recipient_never_fall_through(client, monkeypatch):
+    monkeypatch.setattr(settings, "GROKBOT_ATLAS_ENGINE_TRANSPORT", "omniroute")
+    calls = []
+    async def forbidden(*args, **kwargs):
+        calls.append(True)
+        yield {}
+    monkeypatch.setattr(LLMGateway, "stream", forbidden)
+    monkeypatch.setattr(settings, "OMNIROUTE_URL", "")
+    assert (await post(client, payload(recipient="omniroute"))).status_code == 503
+    monkeypatch.setattr(settings, "OMNIROUTE_URL", "https://router.example")
+    monkeypatch.setattr(settings, "OMNIROUTE_API_KEY", "synthetic-router-key")
+    response = await post(client, payload(recipient="gemini"))
+    assert response.status_code == 409
+    assert response.json()["code"] == "recipient_mismatch"
+    assert calls == []
 
 
 @pytest.mark.asyncio
