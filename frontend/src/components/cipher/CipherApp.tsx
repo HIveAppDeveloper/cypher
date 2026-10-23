@@ -103,7 +103,7 @@ export default function CipherApp() {
     if (!aiReady) { setSetupOpen(true); setToast('Add an OpenRouter key in Setup to research with AI'); return; }
     const queue = [...targets]; let done = 0, stop = '';
     setAiProgress({ done: 0, total: targets.length });
-    log(`AI research started on ${targets.length} account${targets.length > 1 ? 's' : ''} with live web search`);
+    log(`AI research started on ${targets.length} account${targets.length > 1 ? 's' : ''}`);
     const worker = async () => {
       for (let t = queue.shift(); t && !stop; t = queue.shift()) {
         const target = t; const current = leadsRef.current.find(l => l.id === target.id) ?? target;
@@ -245,7 +245,7 @@ export default function CipherApp() {
             <div className="cx-group" id="cx-setup">
               <label className="cx-field" htmlFor="cx-sender"><span>Sign as</span><input id="cx-sender" value={senderName} placeholder="Alex, Cipher" onChange={e => setSenderName(e.target.value)} /></label>
               <label className="cx-field" htmlFor="cx-tickers"><span>Own list</span><input id="cx-tickers" value={tickers} placeholder="Tickers, e.g. HOOD, SOFI, NET" onChange={e => setTickers(e.target.value)} disabled={running} /></label>
-              <label className="cx-field" htmlFor="cx-orkey"><span>AI key</span><input id="cx-orkey" type="password" autoComplete="off" spellCheck={false} value={orKey} placeholder={serverAi ? 'Using the server key' : 'OpenRouter key, kept in this browser'} onChange={e => setOrKey(e.target.value)} /></label>
+              <label className="cx-field" htmlFor="cx-orkey"><span>AI key</span><input id="cx-orkey" type="password" autoComplete="off" spellCheck={false} value={orKey} placeholder={serverAi ? 'Using the server model gateway (optional OpenRouter key)' : 'OpenRouter key, kept in this browser'} onChange={e => setOrKey(e.target.value)} /></label>
               <label className="cx-field" htmlFor="cx-hook"><span>Send via</span><input id="cx-hook" type="url" value={webhook} placeholder="Webhook from Zapier, Make, Clay or Base44" onChange={e => setWebhook(e.target.value)} /></label>
             </div>
           ) : null}
