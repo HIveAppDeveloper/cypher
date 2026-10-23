@@ -347,6 +347,7 @@ async def test_nonstream_disconnect_cancels_inflight_model_and_releases(monkeypa
 
 @pytest.mark.asyncio
 async def test_gateway_stream_forwards_limit_and_closes_actual_wrapper(monkeypatch):
+    from app.services import model_routing
     closed, options = [], []
     class ProviderStream:
         def __aiter__(self): return self
@@ -356,6 +357,7 @@ async def test_gateway_stream_forwards_limit_and_closes_actual_wrapper(monkeypat
         options.append(kwargs)
         return ProviderStream()
     async def capable(*args): pass
+    monkeypatch.setattr(model_routing, "validate_direct_capabilities", capable)
     monkeypatch.setattr(llm_gateway.litellm, "acompletion", completion)
     monkeypatch.setattr(llm_gateway, "validate_capabilities", capable)
     monkeypatch.setattr(llm_gateway, "completion_options", lambda *args, **kwargs: {"model": "fixture", "api_key": "synthetic"})
@@ -399,11 +401,13 @@ async def test_admission_delay_consumes_inference_budget_before_first_model_call
 
 @pytest.mark.asyncio
 async def test_gateway_rechecks_original_deadline_after_capability_preflight(monkeypatch):
+    from app.services import model_routing
     called = []
     async def completion(**kwargs):
         called.append(True)
         raise AssertionError("Expired inference must not be submitted")
     async def capable(*args): pass
+    monkeypatch.setattr(model_routing, "validate_direct_capabilities", capable)
     monkeypatch.setattr(llm_gateway.litellm, "acompletion", completion)
     monkeypatch.setattr(llm_gateway, "validate_capabilities", capable)
     monkeypatch.setattr(llm_gateway, "completion_options", lambda *args, **kwargs: {"model": "fixture", "api_key": "synthetic"})

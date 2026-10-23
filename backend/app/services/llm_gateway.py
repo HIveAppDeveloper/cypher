@@ -84,10 +84,14 @@ class LLMGateway:
         await omniroute.refresh_model_routes()
         provider, model = model_selection(model, provider)
         routes = [(provider, model)]
+        from app.services.model_profiles import included_routing, INCLUDED_PROFILES, FREE_ROUTES
+        included_backups = {(p.provider,p.model) for p in INCLUDED_PROFILES.values()} | {p.fallback for p in INCLUDED_PROFILES.values()} | {tuple(public.split('/',1)) for public in FREE_ROUTES}
         def add_route(candidate):
             try:
                 selected = model_selection(candidate[1], candidate[0])
             except (TypeError, IndexError):
+                return
+            if included_routing() and selected not in included_backups:
                 return
             if selected not in routes:
                 routes.append(selected)
@@ -100,17 +104,15 @@ class LLMGateway:
         if allow_fallback:
             # Gemini and Grok are reciprocal backups when one account runs out
             # of API quota. Task-specific backups follow those first choices.
-            if provider == 'gemini':
+            if provider == 'gemini' and not included_routing():
                 add_route(('xai', 'grok-4.7'))
-            elif provider == 'xai':
+            elif provider == 'xai' and not included_routing():
                 add_route(('gemini', 'gemini-3.8-flash'))
             for candidate in declared:
                 add_route(candidate)
         if allow_fallback and settings.LLM_FALLBACK_MODEL is not None:
-            backup = model_selection(settings.LLM_FALLBACK_MODEL, settings.LLM_FALLBACK_PROVIDER or provider)
-            if backup not in routes:
-                routes.append(backup)
-        if allow_fallback:
+            add_route((settings.LLM_FALLBACK_PROVIDER or provider, settings.LLM_FALLBACK_MODEL))
+        if allow_fallback and not included_routing():
             for candidate in (('gemini', 'gemini-3.8-flash'), ('xai', 'grok-4.7')):
                 add_route(candidate)
         last_error = None
@@ -129,7 +131,7 @@ class LLMGateway:
                 # select a declared backup. Invalid selections and catalog
                 # outages still stop before any model request.
                 if isinstance(error, (ModelCapabilityError, ModelNotConfiguredError)) and index + 1 < len(routes):
-                    last_error = error
+                    last_error = last_error or error
                     continue
                 if index and last_error is not None:
                     raise last_error from error
@@ -176,9 +178,10 @@ class LLMGateway:
     @staticmethod
     async def stream(messages, tools=None, model=None, provider=None, *, direct=False, deadline=None, **run_options):
         from app.services import omniroute
-        await omniroute.refresh_model_routes()
         provider, model = model_selection(model, provider)
-        managed_key = omniroute.managed_api_key(provider) if provider in {'gemini', 'xai'} else None
+        if not direct:
+            await omniroute.refresh_model_routes()
+        managed_key = omniroute.managed_api_key(provider) if not direct and provider in {'gemini', 'xai'} else None
         direct_managed = bool(managed_key)
         if omniroute.enabled() and not direct and not direct_managed:
             from app.services.usage import check_allowance, record

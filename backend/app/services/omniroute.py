@@ -37,7 +37,11 @@ def managed_api_key(provider):
 
 def configured_model_map():
     from app.services.model_connections import model_map
-    return model_map(_managed_records) if settings.OMNIROUTE_CONTROL_KEY else settings.OMNIROUTE_MODEL_MAP
+    from app.services.model_profiles import included_routing, INCLUDED_ROUTES, FREE_ROUTES
+    result = dict(model_map(_managed_records) if settings.OMNIROUTE_CONTROL_KEY else settings.OMNIROUTE_MODEL_MAP)
+    result.update(FREE_ROUTES)
+    if included_routing(): result.update(INCLUDED_ROUTES)
+    return result
 
 
 def enabled():

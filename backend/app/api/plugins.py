@@ -163,6 +163,7 @@ async def test_connection(id:UUID,db:AsyncSession=Depends(get_db)):
         'mcp.vercel.com': [('list_teams',{})],
         'api.githubcopilot.com': [('search_repositories',{'query':'repo:HIveAppDeveloper/open-grokbot','perPage':1})],
         'jobherder.com': [('get_pricing',{})],
+        'mcp.windsor.ai': [('get_connectors',{'include_actions':False,'include_options':False})],
     }
     names={t['name'] for t in plugin.tools if t.get('enabled',True)}
     example=next(((name,args) for name,args in examples.get(host,[]) if name in names),None)
