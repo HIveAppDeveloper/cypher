@@ -71,6 +71,7 @@ class BrowserTool:
                     "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
                 ),
             )
+            await context.route("**/*", self._guard_public_request)
             page = await context.new_page()
             self._contexts[session_id] = context
             self._pages[session_id] = page
@@ -80,6 +81,18 @@ class BrowserTool:
             logger.info(f"Created new browser session: {session_id}")
 
         return self._pages[session_id]
+
+    async def _guard_public_request(self, route):
+        from app.services.plugins import validate_public_web_url
+        try:
+            await validate_public_web_url(route.request.url)
+            await route.continue_()
+        except Exception:
+            # Redirects and embedded resources must stay on public addresses too.
+            try:
+                await route.abort('blockedbyclient')
+            except Exception:
+                pass
 
     async def _load_state(self, session_id):
         from app.db.session import AsyncSessionLocal
@@ -121,9 +134,9 @@ class BrowserTool:
         Returns:
             Dict with title, url, and status.
         """
-        if urlsplit(url).scheme not in {"http", "https"}:
-            return {"success": False, "error": "Use an HTTP or HTTPS website URL.", "url": url}
         try:
+            from app.services.plugins import validate_public_web_url
+            await validate_public_web_url(url)
             page = await self._get_page(session_id)
             response = await page.goto(url, wait_until="domcontentloaded", timeout=30000)
             # Analytics/live connections may never become idle. DOM content is
