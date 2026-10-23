@@ -266,11 +266,26 @@ def test_plugin_brand_search_finds_account_variants_and_ranks_read_operations_fi
     assert {t['service'] for t in rank_plugin_tools(manifest,'list_branches',service='GitHub · Hive')}=={'GitHub · Hive'}
     assert {t['service'] for t in rank_plugin_tools(manifest,'GitHub Hive list_branches')}=={'GitHub · Hive'}
 
+def test_plugin_account_labels_without_middle_dot_preserve_brand_discovery():
+    manifest=[{'service':'Windsor.ai existing accounts','name':'get_connectors','description':'List connected accounts'},
+              {'service':'Windsor.ai existing accounts','name':'execute_action','description':'Write to an account'},
+              {'service':'Another service','name':'get_connectors','description':'Windsor account connector '*100}]
+    result=rank_plugin_tools(manifest,'get_connectors',service='Windsor.ai')
+    assert result[0]['name']=='get_connectors'
+    assert all(t['service']=='Windsor.ai existing accounts' for t in result)
+    assert rank_plugin_tools(manifest,'get_connectors',service='Windsor.ai missing account')==[]
+
+def test_public_brand_connection_does_not_hide_existing_account_variants():
+    manifest=[{'service':name,'name':'list_branches'} for name in ('GitHub','GitHub · Hive','GitHub · Atlas','Unrelated')]
+    for query,service in [('list_branches','GitHub'),('GitHub list_branches',None)]:
+        assert {t['service'] for t in rank_plugin_tools(manifest,query,service)}=={'GitHub','GitHub · Hive','GitHub · Atlas'}
+    assert {t['service'] for t in rank_plugin_tools(manifest,'GitHub Hive list_branches')}=={'GitHub · Hive'}
+
 
 @pytest.mark.asyncio
 async def test_existing_plugin_discovery_scopes_by_connection_and_normalizes_vercel_hostname(workspace,monkeypatch):
     from app.db.tenancy import current_tenant_id
-    from app.models.plugin import Plugin
+    from app.models.plugin import Plugin, PluginAuthorization
     from app.services import plugins
     client,sessions=workspace;cid=await room(client,'benchmark-owner')
     bid=(await client.get('/api/bots',headers=A)).json()[0]['id'];seen=[]
@@ -283,17 +298,25 @@ async def test_existing_plugin_discovery_scopes_by_connection_and_normalizes_ver
             github=Plugin(name='GitHub · Hive',url='https://github.example.test/mcp',credential='test-connection-grant',tools=[{'name':'list_branches','schema':schema,'description':'List repository branches'}])
             vercel=Plugin(name='Vercel',url='https://mcp.vercel.com',credential='test-connection-grant',tools=[{'name':'get_deployment','schema':schema,'description':'Get a deployment'}])
             public=Plugin(name='A public docs service',url='https://docs.example.test/mcp',tools=[{'name':'search_docs','schema':schema,'description':'Search docs'}])
-            db.add_all([public,github,vercel]);await db.commit()
+            oauth=Plugin(name='Windsor.ai existing accounts',url='https://mcp.windsor.ai/',tools=[{'name':'get_connectors','schema':schema,'description':'Read connected accounts'}])
+            db.add_all([public,github,vercel,oauth]);await db.flush()
+            db.add(PluginAuthorization(name=oauth.name,url=oauth.url,plugin_id=oauth.id,status='connected',created_at=1.0,payload='encrypted-test-oauth-grant'))
+            await db.commit()
             registry=ToolRegistry();await registry.load_plugins(db,SimpleNamespace(tools_enabled=['plugins']))
             search=registry._tools['plugin_search']['handler'];call=registry._tools['plugin_call']['handler']
             inventory=await search({'query':''},bid)
             assert inventory['services'][0]['authenticated'] and inventory['services'][-1]['service']==public.name
+            assert next(x for x in inventory['services'] if x['plugin_id']==oauth.id)['authenticated']
             assert inventory['tools']==[]
             result=await search({'query':'get_branch','service':'GitHub'},bid)
             assert result['tools'][0]['plugin_id']==github.id
             result=await search({'query':'list_branches','plugin_id':github.id},bid)
             assert {t['plugin_id'] for t in result['tools']}=={github.id}
+            result=await search({'query':'list_branches','plugin_id':github.id,'service':'A stale display label'},bid)
+            assert {t['plugin_id'] for t in result['tools']}=={github.id}
             assert (await search({'query':'list_branches','plugin_id':'unknown'},bid))['tools']==[]
+            result=await search({'query':'get_connectors','service':'Windsor.ai','plugin_id':oauth.id},bid)
+            assert result['tools'][0]['plugin_id']==oauth.id and result['tools'][0]['name']=='get_connectors'
             assert (await call({'plugin_id':vercel.id,'tool_name':'get_deployment','arguments':{'idOrUrl':'https://example.vercel.app/path?x=1'}},bid))['success']
             assert seen[-1][2]['idOrUrl']=='example.vercel.app'
             before=len(seen)
