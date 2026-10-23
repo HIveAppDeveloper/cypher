@@ -46,7 +46,7 @@ function find(tree, predicate) {
 }
 
 const presets = load('../src/lib/presets.ts');
-function quickStart(onStart, initialOptions = { routing: 'auto', provider: 'openai', model: 'gpt-6.1-sol' }, onOpenLounge = async () => {}, onOpenSetup = () => {}) {
+function quickStart(onStart, initialOptions = { routing: 'auto', provider: 'openai', model: 'gpt-6.1-sol' }) {
   const runtime = hooks();
   let options = initialOptions;
   const { QuickStart } = load('../src/components/QuickStart.tsx', {
@@ -55,7 +55,7 @@ function quickStart(onStart, initialOptions = { routing: 'auto', provider: 'open
   }, { React: runtime.react, localStorage: { setItem() {} } });
   return () => runtime.render(() => QuickStart({
     options, onOptions: next => { options = next; }, onStart,
-    onCreateBot() {}, onCreateRoom() {}, onOpenLounge, onOpenSetup,
+    onCreateBot() {}, onCreateRoom() {},
   }));
 }
 
@@ -92,13 +92,12 @@ test('Auto retains automatic routing with a valid OpenAI Sol base pair', async (
   assert.equal(calls[0].options.model, 'gpt-6.1-sol');
 });
 
-test('home exposes model setup without leaving the task composer', () => {
-  let opened = 0;
-  const tree = quickStart(async () => {}, undefined, async () => {}, () => { opened++; })();
-  const setup = find(tree, node => node.type === 'button' && node.props.children?.includes('Connect models'));
-  assert.ok(setup);
-  setup.props.onClick();
-  assert.equal(opened, 1);
+test('the calmer home keeps the task composer and model choice together', () => {
+  const tree = quickStart(async () => {})();
+  assert.ok(task(tree));
+  assert.ok(manager(tree));
+  assert.ok(find(tree, node => node.type === 'button' && node.props['aria-label'] === 'Start task'));
+  assert.equal(find(tree, node => node.type === 'button' && node.props['aria-label'] === 'Connect models'), undefined);
 });
 
 test('same-tick double submission starts once and an interruption retains the task for retry', async () => {
@@ -141,16 +140,17 @@ test('empty tasks never start; Enter submits while Shift+Enter and composition r
   assert.equal(submitted, 1);
 });
 
-// The keyboard submit path must honor the existing separate lounge-loading state.
-test('opening the lounge keeps keyboard task submission blocked until navigation resolves', async () => {
+// A pending backend start keeps keyboard submission from creating a duplicate task.
+test('keyboard task submission stays blocked until the start request resolves', async () => {
   let started = 0, release;
-  const render = quickStart(async () => { started++; }, undefined, () => new Promise(resolve => { release = resolve; }));
-  task(render()).props.onChange({ target: { value: 'Keep task during lounge navigation.' } });
-  const button = find(render(), node => node.type === 'button' && node.props.children.includes('Open agent lounge'));
-  button.props.onClick();
+  const render = quickStart(() => { started++; return new Promise(resolve => { release = resolve; }); });
+  task(render()).props.onChange({ target: { value: 'Keep task while start is pending.' } });
+  const first = submit(render());
+  assert.equal(started, 1);
+  assert.equal(task(render()).props.disabled, true);
   await submit(render());
-  assert.equal(started, 0);
+  assert.equal(started, 1);
   release();
-  await Promise.resolve();
-  await Promise.resolve();
+  await first;
+  assert.equal(task(render()).props.disabled, false);
 });

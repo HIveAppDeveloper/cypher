@@ -1,12 +1,15 @@
 'use client';
 
 import { useEffect, useRef, useState, type FormEvent } from 'react';
+import Image from 'next/image';
 import { request } from '../lib/api';
+import { CYPHER_VOICE_INTRO } from '../lib/cypher-voice';
 import BinaryLens from './cipher/BinaryLens';
 import CipherIntro from './cipher/CipherIntro';
 import './prospecting-workspace.css';
 
 type Draft = { subject: string; body: string; status: 'local_draft'; recipient: null; review_required: boolean; source_urls: string[] };
+type VoiceState = 'checking' | 'setup' | 'ready' | 'loading' | 'playing' | 'error';
 type Candidate = {
   id: string;
   name: string;
@@ -62,11 +65,28 @@ export default function ProspectingWorkspace() {
   const [retry, setRetry] = useState(0);
   const [draft, setDraft] = useState<Draft | null>(null);
   const [notice, setNotice] = useState('');
+  const [voiceState, setVoiceState] = useState<VoiceState>('checking');
+  const [voiceError, setVoiceError] = useState('');
   const inFlight = useRef(false);
   const operation = useRef<AbortController | null>(null);
+  const voiceAudio = useRef<HTMLAudioElement | null>(null);
+  const voiceObjectUrl = useRef('');
   const active = !!run && !terminal(run.status);
   const candidate = run?.results.find(item => item.id === selected) || run?.results[0];
   const runId = run?.id;
+
+  useEffect(() => {
+    let active = true;
+    fetch('/api/voice', { cache: 'no-store' }).then(response => response.json()).then(data => {
+      if (active) setVoiceState(data.configured ? 'ready' : 'setup');
+    }).catch(() => { if (active) setVoiceState('error'); });
+    return () => { active = false; };
+  }, []);
+
+  useEffect(() => () => {
+    voiceAudio.current?.pause();
+    if (voiceObjectUrl.current) URL.revokeObjectURL(voiceObjectUrl.current);
+  }, []);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -159,6 +179,49 @@ export default function ProspectingWorkspace() {
     });
   }
 
+  function stopVoice() {
+    voiceAudio.current?.pause();
+    voiceAudio.current = null;
+    if (voiceObjectUrl.current) URL.revokeObjectURL(voiceObjectUrl.current);
+    voiceObjectUrl.current = '';
+    setVoiceState('ready');
+  }
+
+  async function playVoice() {
+    if (voiceState === 'playing') { stopVoice(); return; }
+    if (voiceState !== 'ready' && voiceState !== 'error') return;
+    setVoiceState('loading'); setVoiceError('');
+    try {
+      const response = await fetch('/api/voice', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: CYPHER_VOICE_INTRO }) });
+      if (!response.ok) {
+        const detail = await response.json().catch(() => ({}));
+        if (response.status === 503) { setVoiceState('setup'); setVoiceError(''); return; }
+        throw new Error(typeof detail.detail === 'string' ? detail.detail : 'Voice could not be generated. Try again.');
+      }
+      const audioUrl = URL.createObjectURL(await response.blob());
+      voiceObjectUrl.current = audioUrl;
+      const audio = new Audio(audioUrl);
+      voiceAudio.current = audio;
+      audio.onended = () => {
+        if (voiceAudio.current !== audio) return;
+        voiceAudio.current = null; URL.revokeObjectURL(audioUrl); voiceObjectUrl.current = '';
+        setVoiceState('ready');
+      };
+      audio.onerror = () => {
+        if (voiceAudio.current !== audio) return;
+        voiceAudio.current = null; URL.revokeObjectURL(audioUrl); voiceObjectUrl.current = '';
+        setVoiceError('The audio could not play. Try again.'); setVoiceState('error');
+      };
+      setVoiceState('playing');
+      await audio.play();
+    } catch (failure) {
+      voiceAudio.current?.pause(); voiceAudio.current = null;
+      if (voiceObjectUrl.current) URL.revokeObjectURL(voiceObjectUrl.current);
+      voiceObjectUrl.current = '';
+      setVoiceError(errorText(failure)); setVoiceState('error');
+    }
+  }
+
   function selectRun(next: Run) {
     setRun(next); setSelected(''); setDraft(null); setPollError(''); setError('');
   }
@@ -174,9 +237,18 @@ export default function ProspectingWorkspace() {
     </header>
 
     <section className="cx-hero cx-prospect-hero">
-      <BinaryLens className="cx-lens" active={pending === 'profile' || active} label="Cypher lens"/>
+      <BinaryLens className="cx-lens" active={pending === 'profile' || active || voiceState === 'loading' || voiceState === 'playing'} label="Cypher lens"/>
       <h1>Cypher</h1>
       <p>Start with your website. Refine who you want to reach. Research real companies with public evidence.</p>
+      <div className="cx-voice-control">
+        <button type="button" className={`cx-voice-button is-${voiceState}`} onClick={() => void playVoice()} disabled={voiceState === 'checking' || voiceState === 'setup' || voiceState === 'loading'} aria-pressed={voiceState === 'playing'}>
+          <Image className="cx-voice-mark" src="/cipher-logo.png" alt="" aria-hidden="true" width={20} height={20} unoptimized/>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 9v6h3.7l4.8 4V5l-4.8 4H4.5z"/><path d="M16 9a4 4 0 010 6M18.5 6.5a7.5 7.5 0 010 11"/></svg>
+          {voiceState === 'checking' ? 'Checking voice…' : voiceState === 'setup' ? 'Voice setup needed' : voiceState === 'loading' ? 'Preparing voice…' : voiceState === 'playing' ? 'Stop voice' : voiceState === 'error' ? 'Try voice again' : 'Listen to Cypher'}
+        </button>
+        {voiceState === 'setup' ? <span className="cx-voice-note" role="status">Add your ElevenLabs API key and voice ID in Vercel to enable this.</span> : null}
+        {voiceError ? <span className="cx-voice-note" role="status">{voiceError}</span> : null}
+      </div>
       <form className="cx-command" onSubmit={understand}>
         <div className="cx-group">
           <label className="cx-field" htmlFor="prospecting-url"><span>Company site</span><input id="prospecting-url" type="url" required maxLength={2048} placeholder="https://yourcompany.com" value={url} onChange={event => { setUrl(event.target.value); setProfile(null); setConfirmed(false); }} disabled={!!pending}/></label>

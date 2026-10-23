@@ -9,6 +9,16 @@
 .cx-prospect-hero .cx-lens { width:min(420px, 82vw); aspect-ratio:560 / 210; }
 .cx-prospect-hero h1 { margin-top:0; }
 .cx-prospect-hero > p { max-width:54ch; font-size:16px; }
+.cx-voice-control { display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:8px 12px; margin-top:12px; }
+.cx-voice-button { display:inline-flex; align-items:center; justify-content:center; gap:8px; min-height:36px; padding:0 14px; border:.5px solid var(--cx-sep); border-radius:18px; background:var(--cx-card); color:var(--cx-label); font-size:12px; font-weight:600; transition:background .18s ease, transform .18s ease, opacity .18s ease; }
+.cx-voice-button:hover:not(:disabled) { background:var(--cx-fill-2); transform:translateY(-1px); }
+.cx-voice-button[aria-pressed='true'] { background:var(--cx-label); color:var(--cx-inverse); }
+.cx-voice-button:disabled { opacity:.58; cursor:not-allowed; }
+.cx-voice-mark { width:20px; height:20px; flex:none; object-fit:contain; border-radius:50%; }
+.cx-voice-button.is-loading .cx-voice-mark, .cx-voice-button.is-playing .cx-voice-mark { animation:cx-brand-pulse 1.6s ease-in-out infinite; }
+@keyframes cx-brand-pulse { 0%,100% { transform:scale(1); filter:brightness(1); box-shadow:0 0 0 0 color-mix(in srgb,var(--cx-label) 18%,transparent); } 50% { transform:scale(1.08); filter:brightness(1.12); box-shadow:0 0 0 5px color-mix(in srgb,var(--cx-label) 9%,transparent); } }
+.cx-voice-button svg { width:16px; height:16px; fill:none; stroke:currentColor; stroke-width:1.7; stroke-linecap:round; stroke-linejoin:round; }
+.cx-voice-note { max-width:55ch; color:var(--cx-label-2); font-size:11px; line-height:1.5; }
 .cx-command { margin-top:22px; }
 .cx-field { grid-template-columns:110px minmax(0,1fr); }
 .cx-run { gap:10px; }
@@ -177,6 +187,8 @@
   .cx-prospect-hero .cx-lens { width:min(320px,90vw); }
   .cx-prospect-hero h1 { font-size:48px; }
   .cx-prospect-hero > p { max-width:34ch; font-size:14px; }
+  .cx-voice-control { margin-top:10px; gap:7px; }
+  .cx-voice-note { flex-basis:100%; }
   .cx-command { margin-top:17px; gap:9px; }
   .cx-field { grid-template-columns:86px minmax(0,1fr); padding-left:12px; }
   .cx-field input { padding-right:10px; font-size:14px; }
