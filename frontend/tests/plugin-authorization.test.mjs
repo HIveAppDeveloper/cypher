@@ -87,3 +87,39 @@ test('restoring the callback conversation does not dismiss its plugin result pan
   const {default:WorkspaceApp}=load('../src/components/WorkspaceApp.tsx',{react:view.react,...imports},{...env.globals,URLSearchParams,setInterval:()=>1,clearInterval(){}});
   view.mount(()=>WorkspaceApp({}));await view.flush();assert.ok(find(view.tree,n=>n.type==='PluginPanel'),'callback result remains visible after conversation restoration');view.unmount();
 });
+
+test('provider registration errors open an actionable OAuth form without claiming connection',async()=>{
+  let calls=0,input;
+  const p=panel({api:{authorizePlugin:async data=>{input=data;if(++calls===1)throw Object.assign(Error('Registered client required'),{details:{code:'oauth_registration_required',callback_url:'https://app.example/api/plugin-oauth/callback'}});return {status:'awaiting_login',flow_id:id,authorization_url:pending.url,name:'Lovable'};}}});
+  await p.view.flush();button(p.view.tree,'Connect Lovable').props.onClick();await p.view.flush();
+  assert.match(textOf(p.view.tree),/Finish Lovable setup/);
+  assert.equal(find(p.view.tree,n=>n.props?.role==='alert'),undefined);
+  const field=label=>find(find(p.view.tree,n=>n.type==='label'&&textOf(n).startsWith(label)),n=>n.type==='input');
+  field('Client ID').props.onChange({target:{value:'fixture-own-client'}});
+  field('Client secret').props.onChange({target:{value:'fixture-private-secret'}});
+  await p.view.flush();
+  const section=find(p.view.tree,n=>n.props?.className==='plugin-registration');
+  await find(section,n=>n.type==='form').props.onSubmit({preventDefault(){}});await p.view.flush();
+  assert.equal(input.oauth_client.client_id,'fixture-own-client');
+  assert.equal(input.oauth_client.client_secret,'fixture-private-secret');
+  assert.ok(find(p.view.tree,n=>n.type==='a'&&textOf(n)==='Continue to Lovable'));
+  assert.doesNotMatch(textOf(p.view.tree),/Lovable connected/);
+  p.view.unmount();
+});
+
+test('connected tool descriptions are searchable and public tools have a separate view',async()=>{
+  const connections=[{id:'account',name:'Account fixture',url:'https://account.example/mcp',authenticated:true,enabled:true,tools:[{name:'lookup',description:'Find invoices'}]},{id:'public',name:'Public fixture',url:'https://public.example/mcp',authenticated:false,enabled:true,tools:[{name:'public_read',description:'Public documentation'}]}];
+  const p=panel({api:{getPlugins:async()=>connections}});await p.view.flush();
+  button(p.view.tree,'Connected · 2').props.onClick();await p.view.flush();
+  assert.match(textOf(p.view.tree),/Account fixture/);assert.doesNotMatch(textOf(p.view.tree),/Public fixture/);
+  button(p.view.tree,'Public tools · 1').props.onClick();await p.view.flush();assert.match(textOf(p.view.tree),/Public fixture/);
+  find(p.view.tree,n=>n.props?.['aria-label']==='Search connected plugins').props.onChange({target:{value:'invoices'}});await p.view.flush();
+  assert.match(textOf(p.view.tree),/Account fixture/);assert.doesNotMatch(textOf(p.view.tree),/Public fixture/);
+  p.view.unmount();
+});
+
+test('structured registration responses retain recovery fields and readable errors',async()=>{
+  const fields={message:'Provider registration needed',code:'oauth_registration_required',callback_url:'https://app.example/api/plugin-oauth/callback'};
+  const {request}=load('../src/lib/api.ts',{'./conversations':{}},{process:{env:{}},AbortSignal,fetch:async()=>({ok:false,status:422,headers:{get:()=>null},json:async()=>({detail:fields})})});
+  await assert.rejects(()=>request('/plugins/authorize'),error=>error.message===fields.message&&error.code===fields.code&&error.details.callback_url===fields.callback_url);
+});

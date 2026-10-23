@@ -547,3 +547,8 @@ Preserve the current Operate interface. All browser sign-ins use one permission 
 Callbacks retain the same-origin workspace/conversation and remove provider codes and state from the return URL. Restoring a conversation does not dismiss the permission result panel. Managed and direct denials both report cancellation. The existing optional Inter conversation font is retained; its documented use has a value-specific detector exception. Sixteen controlled flow and callback regression tests and the production build pass. Browser fixture checks and live deployment evidence are recorded separately from real provider grants.
 ~~~~
 </details>
+
+
+## Plugin motion refinement — October 23, 2026
+
+The plugin surface stays Operate and monochrome. Prefer compact list rows to elevated service cards, show account connections first, and put secondary management under disclosure. Original binary motion remains the signature; fast overlays, a moving tab underline, capped list arrivals and tactile controls explain interaction. Respect both OS reduced motion and the saved app preference. Callback registration failures reveal a bounded own-client setup form without printing a long callback error banner or claiming access. See verification/plugin-motion-release.md for exact evidence and provider limits.

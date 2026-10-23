@@ -327,3 +327,63 @@ async def test_500_connections_keep_model_tools_bounded_and_reject_disabled(db,m
     assert 'error' in invalid
     await registry.load_plugins(db,types.SimpleNamespace(tools_enabled=['browser']))
     assert not any(name.startswith('plugin_') for name in registry._tools)
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize('secret',[None,'fixture-private-client-secret'])
+async def test_user_registered_client_skips_registration_and_keeps_pkce(db,monkeypatch,secret):
+    row,_=await create_flow(db)
+    await plugin_auth.configure_client(DatabaseTokenStorage(db,row),'https://grokbot.example/api/plugin-oauth/callback','cypher-owned-client',secret,'read')
+    provider,saved,requests=await prepare_consent(db,row,monkeypatch,cimd=True)
+    params=parse_qs(urlsplit(saved['authorization_url']).query)
+    assert params['client_id']==['cypher-owned-client']
+    assert params['scope']==['read']
+    assert params['code_challenge_method']==['S256']
+    assert not any(request.url.path=='/register' for request in requests)
+    assert provider.context.client_metadata_url is None
+    assert 'cypher-owned-client' not in row.payload
+    if secret:assert secret not in row.payload and secret not in saved['authorization_url']
+    restored=await make_provider(db,row);await restored._initialize()
+    exchange=await restored._exchange_token_authorization_code('fixture-code',saved['verifier'])
+    form=parse_qs(exchange.content.decode())
+    assert form.get('client_secret')==([secret] if secret else None)
+
+@pytest.mark.asyncio
+async def test_registered_client_reconnect_reuses_config_without_copying_old_tokens(db,monkeypatch):
+    from app.api import device
+    async def allowed(*args):pass
+    monkeypatch.setattr(device,'require_device',allowed);monkeypatch.setattr(catalog_api,'validate_endpoint',allowed)
+    monkeypatch.setenv('GROKBOT_PUBLIC_URL','https://grokbot.example')
+    plugin=Plugin(name='Fixture',url='https://service.example/mcp',tools=[{'name':'read_fixture'}],enabled=True)
+    db.add(plugin);await db.flush()
+    old=PluginAuthorization(name=plugin.name,url=plugin.url,created_at=time.time(),status='connected',plugin_id=plugin.id)
+    db.add(old);await db.commit()
+    await plugin_auth.configure_client(DatabaseTokenStorage(db,old),'https://grokbot.example/api/plugin-oauth/callback','cypher-owned-client','fixture-client-secret','read')
+    await DatabaseTokenStorage(db,old).update(tokens={'access_token':'old-user-token','token_type':'Bearer'})
+    async def discover(url,auth):
+        saved=auth.context.storage.read()
+        assert saved['client_info']['client_id']=='cypher-owned-client'
+        assert 'tokens' not in saved and 'verifier' not in saved
+        auth.context.storage.row.status='awaiting_login'
+        await auth.context.storage.update(authorization_url='https://accounts.example/authorize')
+        raise SignInRequired('Sign in')
+    monkeypatch.setattr(catalog_api,'discover',discover)
+    result=await catalog_api.authorize(catalog_api.Begin(name=plugin.name,url=plugin.url,reconnect=True),db)
+    assert result['status']=='awaiting_login'
+    assert 'fixture-client-secret' not in json.dumps(result)
+    assert DatabaseTokenStorage(db,old).read()['tokens']['access_token']=='old-user-token'
+    assert (await db.get(Plugin,plugin.id)).enabled
+
+@pytest.mark.asyncio
+async def test_registration_rejection_returns_setup_fields_without_secrets_or_connection(db,monkeypatch):
+    from app.api import device
+    async def allowed(*args):pass
+    monkeypatch.setattr(device,'require_device',allowed);monkeypatch.setattr(catalog_api,'validate_endpoint',allowed)
+    monkeypatch.setenv('GROKBOT_PUBLIC_URL','https://grokbot.example')
+    async def rejected(*args,**kwargs):raise ValueError('invalid_redirect_uri')
+    monkeypatch.setattr(catalog_api,'discover',rejected)
+    with pytest.raises(HTTPException) as failure:
+        await catalog_api.authorize(catalog_api.Begin(name='Fixture',url='https://service.example/mcp'),db)
+    assert failure.value.status_code==422
+    assert failure.value.detail=={'code':'oauth_registration_required','message':'Fixture requires a registered OAuth client for this app.','provider':'Fixture','callback_url':'https://grokbot.example/api/plugin-oauth/callback'}
+    from sqlalchemy import select
+    assert not (await db.execute(select(Plugin))).scalars().all()

@@ -8,7 +8,7 @@ from pathlib import Path
 from urllib.parse import urlsplit
 from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, SecretStr
 from sqlalchemy import select, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.session import get_db
@@ -106,12 +106,18 @@ async def resolve(body:Website):
         pass
     raise HTTPException(404,'We could not find a published connector for this website. Search the catalog, or use Advanced to add a server URL supplied by the company.')
 
+class RegisteredClient(BaseModel):
+    client_id:str=Field(min_length=1,max_length=2000,pattern=r'\S')
+    client_secret:SecretStr|None=Field(default=None,max_length=4096)
+    scope:str=Field(default='',max_length=2000)
+
 class Begin(BaseModel):
     name:str=Field(min_length=1,max_length=80)
     url:str=Field(min_length=8,max_length=1000)
     approval_id:str|None=Field(default=None,max_length=36)
     reconnect:bool=False
     connection_id:str|None=Field(default=None,max_length=80)
+    oauth_client:RegisteredClient|None=None
 
 @router.post('/authorize')
 async def authorize(body:Begin,db:AsyncSession=Depends(get_db),request:Request=None):
@@ -134,6 +140,17 @@ async def authorize(body:Begin,db:AsyncSession=Depends(get_db),request:Request=N
     binding=secrets.token_urlsafe(32)
     row=PluginAuthorization(name=body.name.strip(),url=url,created_at=time.time(),binding_hash=hashlib.sha256(binding.encode()).hexdigest(),status='discovering',plugin_id=existing.id if existing else None)
     db.add(row);await db.commit();await db.refresh(row)
+    if body.oauth_client:
+        from app.services.plugin_auth import configure_client
+        client=body.oauth_client
+        await configure_client(DatabaseTokenStorage(db,row),callback_url,client.client_id.strip(),client.client_secret.get_secret_value() if client.client_secret else None,client.scope.strip())
+    elif existing:
+        previous=(await db.execute(select(PluginAuthorization).where(PluginAuthorization.plugin_id==existing.id,PluginAuthorization.status=='connected'))).scalars().first()
+        saved=DatabaseTokenStorage(db,previous).read() if previous else {}
+        if saved.get('custom_oauth_client') and saved.get('client_info'):
+            # Reconnect with the same user's client, but a fresh state and PKCE verifier.
+            metadata={**saved['client_metadata'],'redirect_uris':[callback_url]}
+            await DatabaseTokenStorage(db,row).update(client_metadata=metadata,client_info=saved['client_info'],custom_oauth_client=True)
     provider=await make_provider(db,row,callback_url)
     try:
         tools=await discover(url,auth=provider)
@@ -144,7 +161,7 @@ async def authorize(body:Begin,db:AsyncSession=Depends(get_db),request:Request=N
         def rejected_redirect(error):
             return 'invalid_redirect_uri' in str(error) or any(rejected_redirect(child) for child in getattr(error,'exceptions',[])) or bool(error.__cause__ and rejected_redirect(error.__cause__))
         if rejected_redirect(error):
-            raise HTTPException(422,'This provider requires approval for this app’s callback address before sign-in can work. Ask the provider to approve '+callback_url+'. The service has not been connected.')
+            raise HTTPException(422,{'code':'oauth_registration_required','message':row.name+' requires a registered OAuth client for this app.','provider':row.name,'callback_url':callback_url})
         raise HTTPException(422,'This service could not start automatic sign-in. It may require an API key, an administrator-installed app, or a different MCP endpoint. Your account has not been connected.')
     if not tools:
         row.status='failed';await db.commit();raise HTTPException(422,'The server connected but did not publish any tools.')

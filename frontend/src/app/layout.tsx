@@ -7,6 +7,7 @@ import './cypher-refined.css';
 import './cipher/cipher.css';
 import './cypher-brand.css';
 import './cypher-conversation.css';
+import './cypher-motion.css';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {

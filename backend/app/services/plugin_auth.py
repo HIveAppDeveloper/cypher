@@ -16,6 +16,17 @@ from app.services.plugins import seal, reveal, validate_endpoint
 FLOW_TTL = 600
 CLIENT_METADATA_PATH = '/api/plugin-oauth/client-metadata'
 
+async def configure_client(storage, callback_url, client_id, client_secret=None, scope=None):
+    """Store this user's registered client, never a token from another app."""
+    metadata = OAuthClientMetadata(
+        client_name='Cypher', redirect_uris=[callback_url],
+        grant_types=['authorization_code', 'refresh_token'], response_types=['code'],
+        token_endpoint_auth_method='client_secret_post' if client_secret else 'none',
+        scope=scope or None,
+    )
+    client = OAuthClientInformationFull(**metadata.model_dump(mode='json'), client_id=client_id, client_secret=client_secret)
+    await storage.update(client_metadata=metadata.model_dump(mode='json'), client_info=client.model_dump(mode='json'), custom_oauth_client=True)
+
 
 def callback_url_for(origin=None):
     configured = os.getenv('GROKBOT_PUBLIC_URL', 'https://open-grokbot-hiveapp.vercel.app').rstrip('/')
@@ -94,11 +105,13 @@ class BrowserOAuthProvider(OAuthClientProvider):
 async def make_provider(db, row, callback_url=None):
     storage=DatabaseTokenStorage(db,row); saved=storage.read()
     metadata=OAuthClientMetadata.model_validate(saved['client_metadata']) if saved.get('client_metadata') else OAuthClientMetadata(
-        client_name='GrokBot', redirect_uris=[callback_url], grant_types=['authorization_code','refresh_token'],
+        client_name='Cypher', redirect_uris=[callback_url], grant_types=['authorization_code','refresh_token'],
         response_types=['code'], token_endpoint_auth_method='none',
     )
     callback = urlsplit(str(metadata.redirect_uris[0]))
     metadata_url = saved.get('client_metadata_url') or (urlunsplit((callback.scheme, callback.netloc, CLIENT_METADATA_PATH, '', '')) if callback.scheme == 'https' else None)
+    if saved.get('custom_oauth_client'):
+        metadata_url = None
     # Lovable advertises CIMD but currently rejects unapproved client-ID domains.
     # Its supported alternatives are approved DCR callbacks or a workspace client.
     if urlsplit(row.url).hostname == 'mcp.lovable.dev':
