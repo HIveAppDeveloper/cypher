@@ -1,4 +1,4 @@
-// Standalone entry for the shareable Cipher demo: runs the territory scan in the browser
+// Standalone entry for the shareable Cypher demo: runs the territory scan in the browser
 // from built-in data (no server), so the page works anywhere as a single file.
 import { createRoot } from 'react-dom/client';
 import CipherApp from './CipherApp';
@@ -59,7 +59,7 @@ async function flush() {
   if (!sample) { batch.forEach(b => b.resolve(json({ detail: 'AI research runs on Claude. Open this page in Claude and allow it to research.' }, 401))); return; }
   const { offering, persona, sender } = batch[0];
   const list = batch.map(b => `- ${b.lead.company.ticker}: ${b.lead.company.name} (${b.lead.company.domain || 'public company'}, ${b.lead.company.hq})`).join('\n');
-  const prompt = `You are Cipher, a B2B sales research analyst. Today is ${new Date().toISOString().slice(0, 10)}. We sell: ${offering}. Our buyer is the ${persona}.
+  const prompt = `You are Cypher, a B2B sales research analyst. Today is ${new Date().toISOString().slice(0, 10)}. We sell: ${offering}. Our buyer is the ${persona}.
 For each public company below, use your most recent knowledge to rate buying signals from roughly the last year:
 hiring (headcount growth, especially sales and go-to-market), raising (equity or debt raises, offerings), spending (expansion, acquisitions, new products, capex), news (leadership changes, launches, results, restructuring).
 Level: 0 none, 1 weak, 2 clear, 3 strong. Be factual; if unsure use a lower level. Only include source URLs for official company pages you are confident exist (careers, investor relations, newsroom); otherwise use [].
@@ -87,7 +87,7 @@ async function ask(body: { question?: string; offering?: string; persona?: strin
   const leads = (body.leads ?? []).slice(0, 40);
   const table = leads.map(l => `${l.ticker} | ${l.name} | score ${l.score} ${l.tier} | ${l.stage} | ${l.why} | ${(l.signals ?? []).join('; ')}`).join('\n');
   try {
-    const { text } = await sample(`You are Cipher, the sales brain for a revenue team. Answer only from the accounts below. Be direct and specific, under 120 words, no preamble. Finish with a final line "TICKERS: X, Y" naming the accounts your answer is about (or "TICKERS: none").
+    const { text } = await sample(`You are Cypher, the sales brain for a revenue team. Answer only from the accounts below. Be direct and specific, under 120 words, no preamble. Finish with a final line "TICKERS: X, Y" naming the accounts your answer is about (or "TICKERS: none").
 We sell: ${body.offering || 'outbound for revenue teams'}. Buyer: ${body.persona || 'VP of Sales'}.
 Accounts (ticker | name | score | stage | why now | signals):
 ${table}
@@ -110,10 +110,10 @@ window.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
   if (url === '/api/cipher/ai') return json({ serverKey: true, provider: 'claude' });
   if (url === '/api/cipher/research') {
     const body = JSON.parse(String(init?.body || '{}')) as { lead: Lead; offering?: string; persona?: string; senderName?: string };
-    return new Promise<Response>(resolve => enqueue({ lead: body.lead, offering: body.offering || 'AI-driven outbound that books qualified meetings', persona: body.persona || 'VP of Sales', sender: body.senderName || 'The Cipher team', resolve }));
+    return new Promise<Response>(resolve => enqueue({ lead: body.lead, offering: body.offering || 'AI-driven outbound that books qualified meetings', persona: body.persona || 'VP of Sales', sender: body.senderName || 'The Cypher team', resolve }));
   }
   if (url === '/api/cipher/ask') return ask(JSON.parse(String(init?.body || '{}')));
-  if (url === '/api/cipher/dispatch') return json({ ok: false, detail: 'Add your sending webhook in the full Cipher app.' }, 400);
+  if (url === '/api/cipher/dispatch') return json({ ok: false, detail: 'Add your sending webhook in the full Cypher app.' }, 400);
   if (url === '/api/cipher/run') {
     const cfg = JSON.parse(String(init?.body || '{}')) as Partial<RunConfig> & { tickers?: string[] };
     const market = MARKETS.find(m => m.id === cfg.marketId) ?? MARKETS[0];

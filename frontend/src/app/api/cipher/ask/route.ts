@@ -24,7 +24,7 @@ export async function POST(req: Request) {
     const out = await chat(provider, {
       models: brain, maxTokens: 600, timeoutMs: 40_000,
       messages: [
-        { role: 'system', content: 'You are Cipher, the sales brain for a revenue team. Answer only from the accounts provided. Be direct and specific, under 120 words, no preamble. Finish with a final line "TICKERS: X, Y" naming the accounts your answer is about (or "TICKERS: none").' },
+        { role: 'system', content: 'You are Cypher, the sales brain for a revenue team. Answer only from the accounts provided. Be direct and specific, under 120 words, no preamble. Finish with a final line "TICKERS: X, Y" naming the accounts your answer is about (or "TICKERS: none").' },
         { role: 'user', content: `We sell: ${str(body?.offering, 200) || 'outbound for revenue teams'}. Buyer: ${str(body?.persona, 60) || 'VP of Sales'}.\nAccounts (ticker | name | score | stage | why now | signals):\n${table}\n\nQuestion: ${question}` },
       ],
     });

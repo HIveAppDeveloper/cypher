@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
 
-// Opening sequence: streams of binary fall, gather into the Cipher lens, the wordmark
+// Opening sequence: streams of binary fall, gather into the Cypher lens, the wordmark
 // appears, then the overlay lifts. About 2.7 s; click or any key skips it.
 const COLS = 41, ROWS = 17;
 const FLOW_END = 900, GATHER_END = 1650, WORD_AT = 1500, LIFT_AT = 2350, DONE_AT = 2750;
@@ -73,7 +73,7 @@ export default function CipherIntro() {
     <div className={`cx-intro is-${phase}`} onClick={() => { setPhase('lift'); setTimeout(() => setPhase('gone'), 320); }} role="presentation">
       <canvas ref={canvasRef} aria-hidden="true" />
       <div className="cx-intro-word" aria-hidden={phase === 'play'}>
-        <strong>Cipher</strong>
+        <strong>Cypher</strong>
       </div>
     </div>
   );

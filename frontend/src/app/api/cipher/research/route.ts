@@ -42,15 +42,15 @@ export async function POST(req: Request) {
   if (!provider) return Response.json({ detail: 'No model gateway is configured. Set OMNIROUTE_URL and OMNIROUTE_API_KEY (or OPENROUTER_API_KEY) on the server, or add an OpenRouter key in Setup.' }, { status: 401 });
   const body = await req.json().catch(() => null) as { lead?: Lead; offering?: string; persona?: string; senderName?: string } | null;
   const lead = body?.lead;
-  if (!lead?.company || typeof lead.company.name !== 'string' || typeof lead.company.ticker !== 'string' || !Array.isArray(lead.signals)) return Response.json({ detail: 'Send a lead from a Cipher run.' }, { status: 400 });
+  if (!lead?.company || typeof lead.company.name !== 'string' || typeof lead.company.ticker !== 'string' || !Array.isArray(lead.signals)) return Response.json({ detail: 'Send a lead from a Cypher run.' }, { status: 400 });
   const offering = str(body?.offering, 200) || 'AI-driven outbound that books qualified meetings';
   const persona = str(body?.persona, 60) || lead.buyer?.persona || 'VP of Sales';
-  const sender = str(body?.senderName, 60) || 'The Cipher team';
+  const sender = str(body?.senderName, 60) || 'The Cypher team';
   const known = lead.signals.filter(s => s.source === 'live').map(s => `- ${s.kind}: ${s.headline}`).join('\n') || '- none verified yet';
   const today = new Date().toISOString().slice(0, 10);
 
   const messages = [
-    { role: 'system' as const, content: 'You are Cipher, a B2B sales research analyst. Use web search results when available, otherwise your most recent knowledge of the company. Report only facts you can attribute; if you are unsure, give a lower level. Respond with a single JSON object and nothing else.' },
+    { role: 'system' as const, content: 'You are Cypher, a B2B sales research analyst. Use web search results when available, otherwise your most recent knowledge of the company. Report only facts you can attribute; if you are unsure, give a lower level. Respond with a single JSON object and nothing else.' },
     { role: 'user' as const, content: `Today is ${today}. Research ${str(lead.company.name, 80)} (ticker ${str(lead.company.ticker, 8)}${lead.company.domain ? `, ${str(lead.company.domain, 80)}` : ''}, ${str(lead.company.hq, 60)}).
 We sell: ${offering}. Our buyer is the ${persona}.
 Verified data we already have:
@@ -78,7 +78,7 @@ Level: 0 none, 1 weak, 2 clear, 3 strong.` },
     return Response.json({ lead: updated, model: out.model, web: out.web, provider: provider.kind });
   } catch (error) {
     const status = error instanceof AiError ? error.status : 502;
-    const detail = error instanceof AiError ? error.message : error instanceof SyntaxError ? 'The model returned research Cipher could not read.' : 'Research failed. Try again.';
+    const detail = error instanceof AiError ? error.message : error instanceof SyntaxError ? 'The model returned research Cypher could not read.' : 'Research failed. Try again.';
     return Response.json({ detail }, { status: status === 401 || status === 402 || status === 429 ? status : 502 });
   }
 }

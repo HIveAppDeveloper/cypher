@@ -1,7 +1,7 @@
 /* A quiet, system-native workspace: semantic colors, compact controls, clear hierarchy. */
 :root {
   color-scheme: light;
-  --bg-main: #fff;
+  --bg-main: #f2f2f7;
   --bg-panel: #f5f5f7;
   --bg-surface: #fff;
   --bg-card: #fff;
@@ -10,12 +10,12 @@
   --text-muted: #6e6e73;
   --border-light: rgba(60, 60, 67, .18);
   --system-separator: rgba(60, 60, 67, .18);
-  --system-sidebar: #f5f5f7;
+  --system-sidebar: #ebebf0;
   --system-subtle: #f2f2f7;
   --system-hover: rgba(116, 116, 128, .12);
-  --system-selected: rgba(0, 122, 255, .12);
-  --accent-blue: #007aff;
-  --focus-color: #007aff;
+  --system-selected: rgba(29, 29, 31, .09);
+  --accent-blue: #1d1d1f;
+  --focus-color: #66666d;
   --thread-width: 760px;
   --glass-blur: 0px;
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, "Segoe UI", sans-serif;
@@ -37,7 +37,8 @@ textarea:focus-visible, select:focus-visible, [role="button"]:focus-visible {
   outline: 3px solid color-mix(in srgb, var(--focus-color) 38%, transparent);
   outline-offset: 2px;
 }
-::selection { background: color-mix(in srgb, var(--accent-blue) 22%, transparent); }
+::selection { background: color-mix(in srgb, var(--accent-blue) 18%, transparent); }
+input, textarea { caret-color: var(--accent-blue); }
 
 .app-layout { min-height: 100dvh; padding: 0; gap: 0; background: var(--bg-main); }
 .workspace-main { min-width: 0; border: 0; border-radius: 0; background: var(--bg-main); overflow: hidden; }
@@ -52,6 +53,8 @@ textarea:focus-visible, select:focus-visible, [role="button"]:focus-visible {
 .sidebar-layout-tools { min-height: 52px; height: 52px; padding: 6px 10px; gap: 4px; }
 .sidebar-brand { gap: 9px; font-size: 13px; font-weight: 600; letter-spacing: -.01em; }
 .brand-symbol { width: 25px; height: 25px; border: 0; border-radius: 7px; background: var(--accent-blue); color: #fff; font-size: 14px; }
+.sidebar-brand .brand-symbol { padding: 2px; border: 1px solid var(--system-separator); background: #fff; object-fit: contain; }
+.mobile-nav-header strong img { flex: 0 0 auto; padding: 2px; border: 1px solid var(--system-separator); border-radius: 6px; background: #fff; object-fit: contain; }
 .sidebar-layout-tools > button, .sidebar-layout-menu > summary {
   width: 32px; height: 32px; min-height: 32px; border-radius: 7px; color: var(--text-secondary);
 }
@@ -348,7 +351,8 @@ textarea:focus-visible, select:focus-visible, [role="button"]:focus-visible {
   border: 1px solid var(--system-separator); border-radius: 16px;
   background: var(--bg-surface); box-shadow: 0 8px 28px rgba(0, 0, 0, .08);
 }
-.login-mark { border-radius: 10px; background: var(--accent-blue); }
+.login-mark { border: 1px solid var(--system-separator); border-radius: 12px; background: #fff; }
+.login-mark img { display: block; width: 100%; height: 100%; padding: 4px; object-fit: contain; }
 .login-card h1 { color: var(--text-primary); font-weight: 650; }
 .login-copy, .login-privacy { color: var(--text-secondary); }
 .login-email-form input { border-radius: 8px; background: var(--bg-surface); }
@@ -376,15 +380,17 @@ textarea:focus-visible, select:focus-visible, [role="button"]:focus-visible {
     --system-sidebar: #232326;
     --system-subtle: #2c2c2e;
     --system-hover: rgba(118, 118, 128, .28);
-    --system-selected: rgba(10, 132, 255, .25);
-    --accent-blue: #0a84ff;
-    --focus-color: #0a84ff;
+    --system-selected: rgba(255, 255, 255, .13);
+    --accent-blue: #f5f5f7;
+    --focus-color: #b7b7bd;
   }
   .sidebar-shell, .mobile-navigation { background: var(--system-sidebar); }
   .workspace-main, .main-content, .message-stream, .quickstart, .workspace-toolbar { background: var(--bg-main); }
   .sidebar-shell .bot-row.selected, .sidebar-shell .bot-row[aria-current="page"] { background: var(--system-selected); }
   .message.incoming .message-content { background: #2c2c2e; color: var(--text-primary); }
-  .message.outgoing .message-content { background: var(--accent-blue); color: #fff; }
+  .message.outgoing .message-content { background: var(--accent-blue); color: #1c1c1e; }
+  .new-task-button, .composer .send-button, .task-composer-footer .btn-primary,
+  .btn-primary, .connector-connect { color: #1c1c1e; }
   .bot-dialog .dialog-actions .form-error { background: rgba(255, 69, 58, .12); color: #ff6961; }
   .workspace-alert, .conversation-alert { border-color: rgba(255, 69, 58, .24); background: rgba(255, 69, 58, .12); color: #ff6961; }
   .provider-test p[data-state="passed"] { color: #30d158; }
@@ -421,5 +427,193 @@ textarea:focus-visible, select:focus-visible, [role="button"]:focus-visible {
   *, *::before, *::after {
     animation-duration: .01ms !important; animation-iteration-count: 1 !important;
     scroll-behavior: auto !important; transition-duration: .01ms !important;
+  }
+}
+.quickstart {
+  width: 100%;
+  padding: clamp(68px, 11vh, 112px) 24px 48px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.quickstart h1 {
+  max-width: 18ch;
+  margin: 0 0 24px;
+  text-align: center;
+  text-wrap: balance;
+  letter-spacing: -0.035em;
+  line-height: 1.12;
+}
+
+.quickstart .cipher-home-mark {
+  width: 104px;
+  height: 40px;
+  margin: 0 0 8px;
+  color: var(--text-primary);
+  opacity: 1;
+}
+
+.quickstart .task-composer {
+  width: min(100%, 760px);
+  margin-inline: auto;
+}
+
+.quickstart .task-composer textarea {
+  min-height: 112px;
+  padding: 20px 22px;
+  line-height: 1.55;
+}
+
+.quickstart .task-composer-footer {
+  gap: 10px;
+  padding: 12px 14px;
+}
+
+.quickstart .task-composer-footer .btn-primary {
+  display: inline-flex;
+  width: auto;
+  height: 48px;
+  min-height: 48px;
+  flex-basis: auto;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  margin-left: auto;
+  padding: 0 20px;
+  border-radius: 999px;
+  background: var(--text-primary);
+  color: var(--bg-main);
+  gap: 10px;
+}
+
+.quickstart .task-composer-footer .btn-primary > span {
+  position: static;
+  display: inline;
+  width: auto;
+  height: auto;
+  clip-path: none;
+  overflow: visible;
+}
+
+.quickstart .task-composer-footer .btn-primary > svg {
+  width: 18px;
+  height: 18px;
+  transform: none;
+}
+
+.quickstart .task-composer-footer .btn-primary:disabled {
+  opacity: 0.48;
+}
+
+.quickstart .task-composer-footer .glass-select,
+.quickstart .task-composer-footer select {
+  min-height: 42px;
+  border-radius: 999px;
+}
+
+.quickstart .task-composer-footer .glass-select-trigger {
+  min-height: 42px;
+  height: 42px;
+  padding-inline: 12px;
+  font-size: 12px;
+}
+
+.quickstart .starter-prompts {
+  width: min(100%, 760px);
+  margin: 18px auto 0;
+  gap: 8px;
+}
+
+.quickstart .starter-prompts button,
+.quickstart .starter-prompts [role="button"] {
+  min-height: 38px;
+  padding-inline: 14px;
+  border-color: var(--border-subtle);
+  border-radius: 999px;
+}
+
+.quickstart .workspace-shortcuts {
+  margin-top: 24px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.quickstart :focus-visible,
+.composer :focus-visible {
+  outline: 2px solid var(--text-primary);
+  outline-offset: 3px;
+}
+
+.thread-members,
+.conversation-computer {
+  width: min(760px, calc(100% - 48px));
+  margin-inline: auto;
+}
+
+.thread-members {
+  margin-bottom: 18px;
+}
+
+.conversation-computer {
+  margin-top: 12px;
+}
+
+::selection {
+  background: #dcd9f5;
+  color: #17171b;
+}
+
+@media (max-width: 640px) {
+  .quickstart {
+    padding: 48px 16px 32px;
+  }
+
+  .quickstart .cipher-home-mark {
+    width: 88px;
+    height: 34px;
+    margin-bottom: 10px;
+  }
+
+  .quickstart h1 {
+    max-width: 20ch;
+    margin-bottom: 20px;
+    font-size: clamp(24px, 7vw, 30px);
+  }
+
+  .quickstart .task-composer textarea {
+    min-height: 104px;
+    padding: 16px;
+  }
+
+  .quickstart .task-composer-footer {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    padding: 10px;
+  }
+
+  .quickstart .task-composer-footer > .glass-select-trigger:first-child {
+    grid-column: 1;
+    width: 100%;
+  }
+
+  .quickstart .task-composer-footer .glass-select-trigger {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .quickstart .task-composer-footer .btn-primary {
+    grid-column: 1 / -1;
+    width: 100%;
+    height: 46px;
+    min-height: 46px;
+    margin-left: 0;
+    padding-inline: 16px;
+  }
+
+  .thread-members,
+  .conversation-computer {
+    width: calc(100% - 32px);
   }
 }

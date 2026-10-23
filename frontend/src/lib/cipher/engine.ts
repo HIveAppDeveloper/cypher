@@ -84,7 +84,7 @@ export function buildLead(company: Company, signals: Signal[], cfg: RunConfig, n
   const body = [`Hi {{first_name}},`, '', opener, '',
     `We help teams like yours with ${cfg.offering}. ${raising ? 'Fresh capital plus a hiring push is exactly when this pays back fastest.' : 'It usually shows up in pipeline within the first month.'}`, '',
     `Worth a 15-minute look next week? Happy to share what's working for similar teams.`, '',
-    `— ${cfg.senderName || 'The Cipher team'}`].join('\n');
+    `— ${cfg.senderName || 'The Cypher team'}`].join('\n');
   const query = encodeURIComponent(`${cfg.persona} ${company.name}`);
   return {
     id: company.ticker, company, signals, score, tier, why,
@@ -139,7 +139,7 @@ export function applyResearch(lead: Lead, research: Research, meta: { model: str
   return { ...lead, signals, score, tier, why: why.slice(0, 240), buyer, email, ai: { ...meta, at: now.toISOString() } };
 }
 
-// Account intelligence: Cipher's estimates derived from a lead's signals (no external data).
+// Account intelligence: Cypher's estimates derived from a lead's signals (no external data).
 export interface Intel {
   dealSize: string; seats: number; window: string; confidence: 'High' | 'Medium' | 'Low'; fit: { label: string; points: number; max: number }[];
   committee: { role: string; title: string; why: string }[];
@@ -188,7 +188,7 @@ export function accountIntel(lead: Lead): Intel {
     play: {
       name: play.name, angle: play.angle, talkTrack,
       objections: [
-        { objection: 'We already have a tool for this.', answer: 'Most teams do. Cipher sits on top and decides who to work first, so the tool you have gets better leads.' },
+        { objection: 'We already have a tool for this.', answer: 'Most teams do. Cypher sits on top and decides who to work first, so the tool you have gets better leads.' },
         { objection: lead.tier === 'Hot' ? 'Bad timing, we are mid-quarter.' : 'Not a priority this quarter.', answer: lead.tier === 'Hot' ? `That is the point: the ${top?.kind ?? 'current'} signal says the window is now.` : 'Fair. Can I send a two-line note when a trigger shows up?' },
         { objection: 'Send me something.', answer: `Happy to. One page on how teams like ${lead.company.name} used the ${play.name.toLowerCase()} play, then 15 minutes to see if it fits.` },
       ],

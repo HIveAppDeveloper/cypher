@@ -247,8 +247,8 @@ export default function CipherApp() {
     <div className="cipher">
       <CipherIntro />
       <header className="cx-toolbar">
-        <a className="cx-word" href="/"><span aria-hidden="true"><BinaryLens className="cx-mark" cols={15} rows={7} /></span>Cipher</a>
-        <nav className="cx-nav" aria-label="Cipher">
+        <a className="cx-word" href="/"><span aria-hidden="true"><BinaryLens className="cx-mark" cols={15} rows={7} /></span>Cypher</a>
+        <nav className="cx-nav" aria-label="Cypher">
           <button type="button" onClick={() => setSetupOpen(v => !v)} aria-expanded={setupOpen} aria-controls="cx-setup">Setup</button>
           <button type="button" onClick={exportCsv} disabled={!leads.length}>Export CSV</button>
           <a href="/?workspace=1">Workspace</a>
@@ -256,8 +256,8 @@ export default function CipherApp() {
       </header>
 
       <section className="cx-hero">
-        <BinaryLens className="cx-lens" active={running} label="Cipher" />
-        <h1>Cipher</h1>
+        <BinaryLens className="cx-lens" active={running} label="Cypher" />
+        <h1>Cypher</h1>
         <form className="cx-command" onSubmit={run}>
           <div className="cx-segmented" role="radiogroup" aria-label="Territory">
             {MARKETS.map(m => (
@@ -273,7 +273,7 @@ export default function CipherApp() {
           </div>
           {setupOpen ? (
             <div className="cx-group" id="cx-setup">
-              <label className="cx-field" htmlFor="cx-sender"><span>Sign as</span><input id="cx-sender" value={senderName} placeholder="Alex, Cipher" onChange={e => setSenderName(e.target.value)} /></label>
+              <label className="cx-field" htmlFor="cx-sender"><span>Sign as</span><input id="cx-sender" value={senderName} placeholder="Alex, Cypher" onChange={e => setSenderName(e.target.value)} /></label>
               <label className="cx-field" htmlFor="cx-tickers"><span>Own list</span><input id="cx-tickers" value={tickers} placeholder="Tickers, e.g. HOOD, SOFI, NET" onChange={e => setTickers(e.target.value)} disabled={running} /></label>
               <label className="cx-field" htmlFor="cx-orkey"><span>AI key</span><input id="cx-orkey" type="password" autoComplete="off" spellCheck={false} value={orKey} placeholder={serverAi ? 'Using the server model gateway (optional OpenRouter key)' : 'OpenRouter key, kept in this browser'} onChange={e => setOrKey(e.target.value)} /></label>
               <label className="cx-field" htmlFor="cx-hook"><span>Send via</span><input id="cx-hook" type="url" value={webhook} placeholder="Webhook from Zapier, Make, Clay or Base44" onChange={e => setWebhook(e.target.value)} /></label>
@@ -324,13 +324,13 @@ export default function CipherApp() {
               {view === 'brain' ? (
                 <>
                   <ProspectBrain leads={leads} running={running} selected={selected} filter={filter} onSelect={setSelected} highlight={[...chat].reverse().find(m => m.role === 'assistant' && m.tickers?.length)?.tickers ?? []} busy={aiBusy} />
-                  <section className="cx-chat" aria-label="Cipher assistant">
+                  <section className="cx-chat" aria-label="Cypher assistant">
                     <ol className="cx-thread" ref={threadRef} aria-live="polite">
                       {chat.map((m, i) => (
                         <li key={i} className={`cx-msg ${m.role}`}>
                           {m.role === 'assistant' ? <span className="cx-avatar" aria-hidden="true">C</span> : null}
                           <div className="cx-bubble">
-                            {m.typing && !m.text ? <span className="cx-typing" aria-label="Cipher is typing"><i /><i /><i /></span> : <p>{m.text}</p>}
+                            {m.typing && !m.text ? <span className="cx-typing" aria-label="Cypher is typing"><i /><i /><i /></span> : <p>{m.text}</p>}
                             {!m.typing && m.tickers?.length ? <div className="cx-answer-chips">{m.tickers.map(t => <button type="button" key={t} className="cx-tk" onClick={() => setSelected(t)}>{byId.get(t)?.company.name ?? t}</button>)}</div> : null}
                             {!m.typing && m.via ? <small>via {m.via}</small> : null}
                           </div>
@@ -341,8 +341,8 @@ export default function CipherApp() {
                       {SUGGESTIONS.map(q => <button type="button" key={q} disabled={asking} onClick={() => void ask(undefined, q)}>{q}</button>)}
                     </div>
                     <form className="cx-ask" onSubmit={ask}>
-                      <label className="cx-sr" htmlFor="cx-question">Message Cipher</label>
-                      <input id="cx-question" value={question} onChange={e => setQuestion(e.target.value)} placeholder="Message Cipher" maxLength={500} autoComplete="off" />
+                      <label className="cx-sr" htmlFor="cx-question">Message Cypher</label>
+                      <input id="cx-question" value={question} onChange={e => setQuestion(e.target.value)} placeholder="Message Cypher" maxLength={500} autoComplete="off" />
                       <button type="submit" className="cx-act" disabled={asking || !question.trim()}>{asking ? '…' : 'Send'}</button>
                     </form>
                   </section>
@@ -418,7 +418,7 @@ export default function CipherApp() {
                 <time>{clock(s.at)}</time>
                 <span>{s.ticker ? <button type="button" className="cx-tk" onClick={() => byId.has(s.ticker!) && setSelected(s.ticker!)}>{s.ticker}</button> : null}{s.text}</span>
               </li>
-            )) : <li className="info empty"><span>Each source Cipher checks, every score, draft and send is written here as it happens.</span></li>}
+            )) : <li className="info empty"><span>Each source Cypher checks, every score, draft and send is written here as it happens.</span></li>}
           </ol>
         </aside>
       </main>
@@ -468,7 +468,7 @@ export default function CipherApp() {
                   <ul className="cx-fit">
                     {intel.fit.map(f => <li key={f.label}><span>{f.label}</span><i><em style={{ width: `${Math.round(f.points / f.max * 100)}%` }} /></i><b className="num">{f.points}/{f.max}</b></li>)}
                   </ul>
-                  <p className="cx-intel-note">Cipher estimates from the signals above.</p>
+                  <p className="cx-intel-note">Cypher estimates from the signals above.</p>
 
                   <h3 className="cx-label">Buying committee</h3>
                   <ul className="cx-committee">

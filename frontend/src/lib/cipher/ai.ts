@@ -1,6 +1,6 @@
 import type { Evidence } from './engine';
 
-// Server-side model access for Cipher.
+// Server-side model access for Cypher.
 // Order: an OpenRouter key typed into Setup (x-openrouter-key) → the deployment's OmniRoute
 // gateway (OMNIROUTE_URL + OMNIROUTE_API_KEY, the same one GrokBot uses) → OPENROUTER_API_KEY.
 const OPENROUTER = 'https://openrouter.ai/api/v1';
@@ -26,7 +26,7 @@ function omniroute(): Provider | null {
     return { kind: 'omniroute', base: `${url.origin}/v1`, headers };
   } catch { return null; }
 }
-const openrouter = (key: string): Provider => ({ kind: 'openrouter', base: OPENROUTER, headers: { Authorization: `Bearer ${key}`, 'HTTP-Referer': process.env.GROKBOT_PUBLIC_URL || 'https://open-grokbot-hiveapp.vercel.app', 'X-Title': 'Cipher' } });
+const openrouter = (key: string): Provider => ({ kind: 'openrouter', base: OPENROUTER, headers: { Authorization: `Bearer ${key}`, 'HTTP-Referer': process.env.GROKBOT_PUBLIC_URL || 'https://cypher-agent.vercel.app', 'X-Title': 'Cypher' } });
 
 export function serverProvider(): Provider['kind'] | null {
   return omniroute() ? 'omniroute' : process.env.OPENROUTER_API_KEY?.trim() ? 'openrouter' : null;

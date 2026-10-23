@@ -6,8 +6,8 @@ import './apple-native.css';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Open GrokBot',
-  description: 'Open-source, self-hosted alternative to Grok Bot',
+  title: 'Cypher',
+  description: 'Your workspace for conversations, agents, and connected tools.',
 };
 
 export default function RootLayout({
