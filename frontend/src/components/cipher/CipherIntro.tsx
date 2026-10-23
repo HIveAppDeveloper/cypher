@@ -74,7 +74,6 @@ export default function CipherIntro() {
       <canvas ref={canvasRef} aria-hidden="true" />
       <div className="cx-intro-word" aria-hidden={phase === 'play'}>
         <strong>Cipher</strong>
-        <p>Territory Pulse</p>
       </div>
     </div>
   );

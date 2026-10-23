@@ -54,6 +54,8 @@ export default function CipherApp() {
   const threadRef = useRef<HTMLOListElement>(null);
   const [asking, setAsking] = useState(false);
   const leadsRef = useRef<Lead[]>([]);
+  const researchGen = useRef(0);
+  const researching = useRef(false);
   leadsRef.current = leads;
   const logRef = useRef<HTMLOListElement>(null);
   const ready = useRef(false);
@@ -105,13 +107,15 @@ export default function CipherApp() {
   const aiHeaders = (): Record<string, string> => ({ 'Content-Type': 'application/json', ...(orKey.trim() ? { 'x-openrouter-key': orKey.trim() } : {}) });
 
   async function research(targets: Lead[]) {
-    if (!targets.length || aiProgress) return;
+    if (!targets.length || researching.current) return;
     if (!aiReady) { setSetupOpen(true); setToast('Add an OpenRouter key in Setup to research with AI'); return; }
+    researching.current = true;
+    const gen = researchGen.current; const live = () => gen === researchGen.current;
     const queue = [...targets]; let done = 0, stop = '';
     setAiProgress({ done: 0, total: targets.length });
     log(`AI research started on ${targets.length} account${targets.length > 1 ? 's' : ''}`);
     const worker = async () => {
-      for (let t = queue.shift(); t && !stop; t = queue.shift()) {
+      for (let t = queue.shift(); t && !stop && live(); t = queue.shift()) {
         const target = t; const current = leadsRef.current.find(l => l.id === target.id) ?? target;
         setAiBusy(b => [...b, target.id]);
         try {
@@ -119,17 +123,19 @@ export default function CipherApp() {
           const data = await res.json().catch(() => ({})) as { lead?: Lead; model?: string; web?: boolean; detail?: string };
           if (!res.ok || !data.lead) { if (res.status === 401 || res.status === 402) stop = data.detail || 'The AI key was rejected.'; throw new Error(data.detail || `Research answered ${res.status}.`); }
           const next = data.lead;
+          if (!live()) return;
           setLeads(ls => ls.map(l => (l.id === next.id ? { ...next, stage: l.stage, sentAt: l.sentAt, email: l.stage === 'drafted' ? next.email : l.email } : l)));
           log(`${next.company.name}: score ${current.score} → ${next.score} (${next.tier}) from ${shortModel(data.model || '')}${data.web ? ' with web search' : ''}. ${next.why}`, next.tier === 'Hot' ? 'good' : 'info', next.id);
         } catch (e) {
-          log(`${target.company.name}: AI research failed. ${e instanceof Error ? e.message : ''}`, 'warn', target.id);
+          if (live()) log(`${target.company.name}: AI research failed. ${e instanceof Error ? e.message : ''}`, 'warn', target.id);
         } finally {
-          done++; setAiProgress({ done, total: targets.length }); setAiBusy(b => b.filter(id => id !== target.id));
+          done++; if (live()) setAiProgress({ done, total: targets.length }); setAiBusy(b => b.filter(id => id !== target.id));
         }
       }
     };
     await Promise.all([worker(), worker(), worker(), worker()]);
-    setAiProgress(null);
+    if (!live()) return;
+    researching.current = false; setAiProgress(null);
     if (stop) { setToast(stop); log(stop, 'warn'); } else log(`AI research finished on ${done} account${done > 1 ? 's' : ''}`, 'good');
   }
 
@@ -166,6 +172,7 @@ export default function CipherApp() {
   async function run(event?: FormEvent) {
     event?.preventDefault();
     if (running) return;
+    researchGen.current++; researching.current = false; setAiProgress(null); setAiBusy([]);
     setRunning(true); setError(''); setLeads([]); setSelected(null); setFinishedAt(null); setScanning([]); if (view === 'pipeline') setView('brain');
     const got: Lead[] = []; let completed = false;
     setSteps([{ type: 'step', at: new Date().toISOString(), text: `Run started for ${customTickers.length ? 'a custom list' : market.label}` }]);
@@ -250,8 +257,7 @@ export default function CipherApp() {
 
       <section className="cx-hero">
         <BinaryLens className="cx-lens" active={running} label="Cipher" />
-        <h1>Territory Pulse</h1>
-        <p>Find the companies worth your team&rsquo;s time, reach the right buyer first, and see every step Cipher takes.</p>
+        <h1>Cipher</h1>
         <form className="cx-command" onSubmit={run}>
           <div className="cx-segmented" role="radiogroup" aria-label="Territory">
             {MARKETS.map(m => (
@@ -276,7 +282,7 @@ export default function CipherApp() {
           <button className="cx-run" type="submit" disabled={running || !offering.trim()}>{running ? 'Running…' : 'Run Outbound'}</button>
           <div className="cx-progress">
             <div className="cx-track" aria-hidden="true"><span style={{ width: `${territory.length ? Math.round(leads.length / territory.length * 100) : 0}%` }} /></div>
-            <span className={running ? 'cx-status live' : 'cx-status'} role="status">{status}</span>
+            <span className={running ? 'cx-status live' : 'cx-status'} role="status">{running ? status : ''}</span>
           </div>
         </form>
       </section>
@@ -405,7 +411,7 @@ export default function CipherApp() {
         </section>
 
         <aside className="cx-log" aria-label="Run log">
-          <div className="cx-log-head"><span className="cx-label">Run log</span><span className="cx-status">{steps.length} entries</span></div>
+          <div className="cx-log-head"><span className="cx-label">Run log</span></div>
           <ol ref={logRef} aria-live="polite">
             {steps.length ? steps.map((s, i) => (
               <li key={i} className={s.tone || 'info'}>

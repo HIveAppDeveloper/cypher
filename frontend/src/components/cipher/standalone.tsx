@@ -56,7 +56,7 @@ async function flush() {
   const batch = queue.splice(0, 8); timer = queue.length ? setTimeout(() => void flush(), 250) : null;
   if (!batch.length) return;
   const sample = await samplePromise;
-  if (!sample) { batch.forEach(b => b.resolve(json({ detail: 'AI research needs Claude, which is not available in this view.' }, 401))); return; }
+  if (!sample) { batch.forEach(b => b.resolve(json({ detail: 'AI research runs on Claude. Open this page in Claude and allow it to research.' }, 401))); return; }
   const { offering, persona, sender } = batch[0];
   const list = batch.map(b => `- ${b.lead.company.ticker}: ${b.lead.company.name} (${b.lead.company.domain || 'public company'}, ${b.lead.company.hq})`).join('\n');
   const prompt = `You are Cipher, a B2B sales research analyst. Today is ${new Date().toISOString().slice(0, 10)}. We sell: ${offering}. Our buyer is the ${persona}.
@@ -83,7 +83,7 @@ Reply with only a JSON object keyed by ticker, each value shaped like:
 
 async function ask(body: { question?: string; offering?: string; persona?: string; leads?: { ticker: string; name: string; score: number; tier: string; stage: string; why: string; signals: string[] }[] }) {
   const sample = await samplePromise;
-  if (!sample) return json({ detail: 'Asking the brain needs Claude, which is not available in this view.' }, 401);
+  if (!sample) return json({ detail: 'That one needs Claude. Open this page in Claude and allow it, or ask me who to call first.' }, 401);
   const leads = (body.leads ?? []).slice(0, 40);
   const table = leads.map(l => `${l.ticker} | ${l.name} | score ${l.score} ${l.tier} | ${l.stage} | ${l.why} | ${(l.signals ?? []).join('; ')}`).join('\n');
   try {
@@ -106,7 +106,8 @@ const jsonResponse = (body: unknown, status = 200) => new Response(JSON.stringif
 const realFetch = window.fetch.bind(window);
 window.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
   const url = typeof input === 'string' ? input : input instanceof URL ? input.pathname : input.url;
-  if (url === '/api/cipher/ai') return json({ serverKey: Boolean(await samplePromise), provider: 'claude' });
+  // Always report AI as available here; a view without Claude gets a clear message on first use.
+  if (url === '/api/cipher/ai') return json({ serverKey: true, provider: 'claude' });
   if (url === '/api/cipher/research') {
     const body = JSON.parse(String(init?.body || '{}')) as { lead: Lead; offering?: string; persona?: string; senderName?: string };
     return new Promise<Response>(resolve => enqueue({ lead: body.lead, offering: body.offering || 'AI-driven outbound that books qualified meetings', persona: body.persona || 'VP of Sales', sender: body.senderName || 'The Cipher team', resolve }));
