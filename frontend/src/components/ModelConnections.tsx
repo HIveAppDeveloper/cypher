@@ -44,7 +44,7 @@ export function ModelConnections({ items, canManage, workerReady, onQueued }: {
   }
   return <section className="model-connections" aria-labelledby="model-connections-title">
     <h3 id="model-connections-title">Model access</h3>
-    <p className="field-help">Add Gemini or Grok API keys here. Checks send a short request and can use API credits. Google AI Pro and SuperGrok subscriptions do not connect to third party apps; provider API usage is billed separately. If Gemini or Grok runs out of API quota, GrokBot tries the other connected provider and then its configured fallback.</p>
+    <p className="field-help">Codex and free models use your existing OmniRoute connections. Gemini and Grok API keys are optional; their API usage is billed separately from consumer subscriptions. Checks send a short model request.</p>
     {!canManage ? <p className="field-help">The installation owner manages these shared provider connections.</p> : <ul className="model-connection-list">
       {items.map(item => {
         const checking = item.state === 'checking' || busy === item.id;

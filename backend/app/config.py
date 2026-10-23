@@ -23,6 +23,7 @@ class Settings(BaseSettings):
     OMNIROUTE_API_KEY: str = Field(default="", repr=False)
     OMNIROUTE_PROTECTION_BYPASS: str = Field(default="", repr=False)
     OMNIROUTE_CONTROL_KEY: str = Field(default="", repr=False)
+    MODEL_ROUTING_POLICY: Literal["standard", "codex_and_free"] = "codex_and_free"
     # Only verified, connected routes belong here; a catalog listing alone does
     # not establish that a provider account can actually serve requests.
     OMNIROUTE_MODEL_MAP: dict[str, str] = {

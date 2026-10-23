@@ -112,6 +112,7 @@ async def test_control_auth_and_verified_route_are_separate_from_inference_and_r
     monkeypatch.setattr(settings,'OMNIROUTE_URL','https://router.example')
     monkeypatch.setattr(settings,'OMNIROUTE_API_KEY','inference-key')
     monkeypatch.setattr(settings,'OMNIROUTE_CONTROL_KEY','control-key')
+    monkeypatch.setattr(settings,'MODEL_ROUTING_POLICY','standard')
     real=httpx.AsyncClient;seen=[]
     def respond(request):
         seen.append(request);assert request.headers['authorization']=='Bearer control-key';assert request.url.path=='/api/internal/connections/check'
@@ -119,3 +120,40 @@ async def test_control_auth_and_verified_route_are_separate_from_inference_and_r
     monkeypatch.setattr(httpx,'AsyncClient',lambda **kwargs:real(transport=httpx.MockTransport(respond),**kwargs))
     with pytest.raises(RuntimeError,match='requested model'):await service.control_check({'provider':'claude','action':'check'})
     assert len(seen)==1
+
+@pytest.mark.asyncio
+async def test_included_claude_check_uses_free_route_and_preserves_model_identity(setup,monkeypatch):
+    client,sessions,owner,_=setup
+    monkeypatch.setattr(settings,'MODEL_ROUTING_POLICY','codex_and_free')
+    calls=[]
+    async def request(path,payload):
+        calls.append((path,payload))
+        return {'model':'claude-haiku-4-5','choices':[{'message':{'content':'42 balloons.'}}]}
+    monkeypatch.setattr(omniroute,'request',request)
+    await client.post('/api/runtime/model-connections/claude/verify',headers=owner)
+    await service.run_requested_check(sessions,AsyncMock())
+    assert len(calls)==1 and calls[0][1]['model']=='ddgw/claude-haiku-4-5'
+    runtime=(await client.get('/api/runtime',headers=owner)).json()
+    claude=next(x for x in runtime['model_connections'] if x['id']=='claude')
+    assert claude['state']=='ready' and claude['model']=='anthropic/claude-haiku-4.5'
+    assert claude['verification_url'] is None
+    async with sessions() as db:
+        row=await db.get(RuntimeCheck,service.PREFIX+'claude')
+        assert row.detail['blocked_models']==['anthropic/claude-sonnet-5.5']
+        assert service.model_map([row])['anthropic/claude-haiku-4.5']=='ddgw/claude-haiku-4-5'
+    async def wrong_model(*args):
+        return {'model':'gpt-6-luna','choices':[{'message':{'content':'42'}}]}
+    monkeypatch.setattr(omniroute,'request',wrong_model)
+    assert (await service.control_check({'provider':'claude','action':'check'}))['state']=='unavailable'
+
+def test_automatic_included_profiles_use_codex_and_free_routes(monkeypatch):
+    from app.services.model_profiles import routing_profiles,INCLUDED_ROUTES
+    monkeypatch.setattr(settings,'OMNIROUTE_URL','https://router.example')
+    monkeypatch.setattr(settings,'MODEL_ROUTING_POLICY','codex_and_free')
+    profiles=routing_profiles()
+    for profile in profiles.values():
+        route=INCLUDED_ROUTES.get(f'{profile.provider}/{profile.model}',f'cx/{profile.model}' if profile.provider=='openai' else '')
+        assert route.startswith(('cx/','ddgw/','ds-web/'))
+    assert profiles['vision'].provider=='openai' and profiles['coding'].provider=='openai'
+    monkeypatch.setattr(settings,'MODEL_ROUTING_POLICY','standard')
+    assert routing_profiles()['coding'].model=='claude-sonnet-5.5'

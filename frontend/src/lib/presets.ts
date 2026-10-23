@@ -1,6 +1,13 @@
 export const MODEL_CHOICES = [
  {id:'astra',label:'GPT-6 Astra',detail:'Complex planning and reasoning',provider:'openai',model:'gpt-6-astra'},
  {id:'claude55',label:'Claude Sonnet 5.5',detail:'Coding and polished writing',provider:'anthropic',model:'claude-sonnet-5.5'},
+ {id:'claude-free',label:'Claude Haiku 4.5 · Free',detail:'Free text through Duck.ai. Tool work falls back to Codex.',provider:'anthropic',model:'claude-haiku-4.5'},
+ {id:'deepseek-free',label:'DeepSeek V4 Flash · Free',detail:'Uses your existing DeepSeek web connection through OmniRoute.',provider:'deepseek',model:'deepseek-v4-flash'},
+ {id:'gpt54-free',label:'GPT-5.4 Mini · Free',detail:'Free Duck.ai model through OmniRoute. Tool work falls back to Codex.',provider:'auto',model:'free-gpt-5.4-mini'},
+ {id:'gpt56-free',label:'GPT-5.6 Luna · Free',detail:'Free Duck.ai model through OmniRoute. Tool work falls back to Codex.',provider:'auto',model:'free-gpt-5.6-luna'},
+ {id:'mistral-free',label:'Mistral Small 2603 · Free',detail:'Free Duck.ai model through OmniRoute. Tool work falls back to Codex.',provider:'auto',model:'free-mistral-small-2603'},
+ {id:'oss-free',label:'GPT-OSS 120B · Free',detail:'Free Duck.ai model through OmniRoute. Tool work falls back to Codex.',provider:'auto',model:'free-gpt-oss-120b'},
+ {id:'gemma-free',label:'Gemma 4 31B · Free',detail:'Free Duck.ai model through OmniRoute. Tool work falls back to Codex.',provider:'auto',model:'free-gemma4-31b'},
  {id:'gemini38',label:'Gemini 3.8 Flash',detail:'Research and visual understanding',provider:'gemini',model:'gemini-3.8-flash'},
  {id:'deepseek41',label:'DeepSeek V4.1 Flash',detail:'Mathematical and data analysis',provider:'deepseek',model:'deepseek-v4.1-flash'},
  {id:'grok47',label:'Grok 4.7',detail:'Independent review and verification',provider:'xai',model:'grok-4.7'},

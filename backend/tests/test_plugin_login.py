@@ -33,10 +33,13 @@ async def db(tmp_path,monkeypatch):
 @pytest.mark.asyncio
 async def test_website_resolution_and_catalog(monkeypatch):
     monkeypatch.setattr(catalog_api,'http_client',lambda:httpx.AsyncClient(transport=httpx.MockTransport(lambda request:httpx.Response(404))))
-    assert len(catalog_api.catalog())==500
-    assert len({item['url'] for item in catalog_api.catalog()})==500
+    entries=catalog_api.catalog()
+    assert len(entries)>=500
+    assert len({item['url'] for item in entries})==len(entries)
     result=await catalog_api.resolve(catalog_api.Website(website='https://vercel.com/hiveapp/open-grokbot'))
     assert result['url']=='https://mcp.vercel.com'
+    windsor=await catalog_api.resolve(catalog_api.Website(website='windsor.ai'))
+    assert windsor['url']=='https://mcp.windsor.ai/'
     for url in ['vercel.com','https://www.vercel.com/','notion.so','linear.app']:
         assert (await catalog_api.resolve(catalog_api.Website(website=url)))['url'].startswith('https://')
     with pytest.raises(HTTPException) as error:await catalog_api.resolve(catalog_api.Website(website='https://unlisted-company.invalid'))

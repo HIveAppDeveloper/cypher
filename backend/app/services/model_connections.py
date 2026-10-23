@@ -24,7 +24,10 @@ ROUTES = {
     'openai/gpt-6.1-sol': {'cx/gpt-6.1-sol'},
     'google/gemini-3.8-flash': {'gemini/gemini-3.8-flash', 'agy/gemini-3.8-flash-low'},
     'anthropic/claude-sonnet-5.5': {'anthropic/claude-sonnet-5-5', 'agy/claude-sonnet-5-5-low'},
+    'anthropic/claude-haiku-4.5': {'ddgw/claude-haiku-4-5'},
 }
+PROVIDER_MODELS = {provider:{info[1]} for provider,info in PROVIDERS.items()}
+PROVIDER_MODELS['claude'].add('anthropic/claude-haiku-4.5')
 
 def can_manage():
     from app.services.managed_connections import installation_owner
@@ -60,6 +63,9 @@ def public_connections(records):
         row = by_name.get(PREFIX + provider)
         detail = row.detail or {} if row else {}
         state = 'checking' if row and row.status in {'pending', 'running'} else detail.get('state', 'not_checked')
+        active = detail.get('active_route') or {}
+        if active.get('public_model') in PROVIDER_MODELS[provider]: public = active['public_model']
+        if public == 'anthropic/claude-haiku-4.5': account_url = 'https://duck.ai/'
         item = {'id': provider, 'name': label, 'model': public, 'state': state, 'job_status': row.status if row else None,
                 'message': detail.get('message', 'Check the saved connection to verify model access.'),
                 'account_url': account_url, 'can_add_api_key': provider in {'gemini', 'claude', 'xai'},
@@ -117,6 +123,21 @@ async def queue_check(db, provider, api_key=None):
 
 async def control_check(payload):
     from app.services import omniroute
+    from app.services.model_profiles import included_routing
+    if payload['provider'] == 'claude' and payload['action'] == 'check' and included_routing():
+        try:
+            response = await omniroute.request('/chat/completions', {
+                'model':'ddgw/claude-haiku-4-5',
+                'messages':[{'role':'user','content':'A shop has 17 red balloons and 25 blue balloons. How many balloons are there altogether? Answer briefly.'}],
+                'max_tokens':256, 'stream':False,
+            })
+            content = ((response.get('choices') or [{}])[0].get('message') or {}).get('content')
+            if response.get('model') not in {'claude-haiku-4-5','ddgw/claude-haiku-4-5'} or not isinstance(content,str) or '42' not in content:
+                raise RuntimeError('Free Claude did not pass its answer check.')
+            return {'state':'ready','message':'Free Claude Haiku 4.5 answered through Duck.ai. Sonnet 5.5 still requires separate provider access.',
+                    'public_model':'anthropic/claude-haiku-4.5','transport_model':'ddgw/claude-haiku-4-5'}
+        except Exception:
+            return {'state':'unavailable','message':'The free Claude route did not pass its live check. Your existing Codex connection remains available.'}
     url = omniroute.endpoint().removesuffix('/v1') + '/api/internal/connections/check'
     headers = omniroute.headers()
     headers['Authorization'] = 'Bearer ' + settings.OMNIROUTE_CONTROL_KEY
@@ -126,8 +147,8 @@ async def control_check(payload):
     result = response.json()
     if not isinstance(result, dict) or result.get('state') not in {'ready', 'verification_required', 'sign_in_required', 'billing_required', 'access_denied', 'rate_limited', 'unavailable'}:
         raise RuntimeError('Provider check returned no verified state.')
-    expected = PROVIDERS[payload['provider']][1]
-    if result['state'] == 'ready' and (result.get('public_model') != expected or result.get('transport_model') not in ROUTES[expected]):
+    expected = PROVIDER_MODELS[payload['provider']]
+    if result['state'] == 'ready' and (result.get('public_model') not in expected or result.get('transport_model') not in ROUTES.get(result.get('public_model'),set())):
         raise RuntimeError('Provider check did not verify the requested model.')
     return result
 
@@ -237,8 +258,10 @@ async def run_requested_check(sessions, pulse):
         updated = {key: value for key, value in detail.items() if key not in {'credentials_encrypted', 'previous_credentials_encrypted', 'previous_key_state', 'previous_key_message', 'previous_key_checked_at', 'verification_encrypted'}}
         updated.update(state=result['state'], message=str(result.get('message', 'Check finished.'))[:500], checked_at=datetime.utcnow().isoformat()+'Z')
         public = PROVIDERS[detail['provider']][1]
-        if result['state'] == 'ready' and result.get('public_model') == public and result.get('transport_model') in ROUTES.get(public, set()):
-            updated['active_route'] = {'public_model': public, 'transport_model': result['transport_model']}; updated['blocked_models'] = []
+        if result['state'] == 'ready' and result.get('public_model') in PROVIDER_MODELS[detail['provider']] and result.get('transport_model') in ROUTES.get(result['public_model'],set()):
+            active_public = result['public_model']
+            updated['active_route'] = {'public_model': active_public, 'transport_model': result['transport_model']}
+            updated['blocked_models'] = sorted(PROVIDER_MODELS[detail['provider']] - {active_public})
         if detail['provider'] in LOCAL_KEY_PROVIDERS:
             if result['state'] == 'ready':
                 updated['credentials_encrypted'] = detail.get('credentials_encrypted')

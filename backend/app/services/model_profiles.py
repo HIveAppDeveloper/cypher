@@ -23,7 +23,40 @@ PROFILES = {
 }
 LEGACY_SPECIALISTS = {('gemini','gemini-3.5-flash'), ('anthropic','claude-sonnet-4.6'), ('deepseek','deepseek-v3.2')}
 OMNIROUTE_AUTO_MODELS = {'best-coding', 'best-reasoning', 'best-vision', 'best-fast', 'best-chat'}
-ALLOWED_MODELS = {(p.provider,p.model) for p in PROFILES.values()} | {p.fallback for p in PROFILES.values()} | LEGACY_SPECIALISTS | {('auto', model) for model in OMNIROUTE_AUTO_MODELS}
+INCLUDED_PROFILES = {
+    **PROFILES,
+    'coding': Profile('openai', 'gpt-6.1-sol', ('openai', 'gpt-6-luna')),
+    'research': Profile('deepseek', 'deepseek-v4-flash', ('openai', 'gpt-6.1-sol')),
+    'writing': Profile('anthropic', 'claude-haiku-4.5', ('openai', 'gpt-6.1-sol')),
+    'analysis': Profile('openai', 'gpt-6-astra', ('openai', 'gpt-6.1-sol')),
+    'review': Profile('openai', 'gpt-6.1-sol', ('openai', 'gpt-6-luna')),
+    'vision': Profile('openai', 'gpt-6.1-sol', ('openai', 'gpt-6-luna')),
+}
+FREE_ROUTES = {
+    'anthropic/claude-haiku-4.5': 'ddgw/claude-haiku-4-5',
+    'deepseek/deepseek-v4-flash': 'ds-web/deepseek-v4-flash',
+    'auto/free-gpt-5.4-mini': 'ddgw/gpt-5.4-mini',
+    'auto/free-gpt-5.6-luna': 'ddgw/gpt-5.6-luna',
+    'auto/free-mistral-small-2603': 'ddgw/mistral-small-2603',
+    'auto/free-gpt-oss-120b': 'ddgw/tinfoil/gpt-oss-120b',
+    'auto/free-gemma4-31b': 'ddgw/tinfoil/gemma4-31b',
+}
+INCLUDED_ROUTES = {
+    **FREE_ROUTES,
+    'auto/best-coding': 'cx/gpt-6.1-sol',
+    'auto/best-reasoning': 'cx/gpt-6-astra',
+    'auto/best-vision': 'cx/gpt-6.1-sol',
+    'auto/best-fast': 'ds-web/deepseek-v4-flash',
+    'auto/best-chat': 'ds-web/deepseek-v4-flash',
+}
+ALLOWED_MODELS = {(p.provider,p.model) for p in (*PROFILES.values(),*INCLUDED_PROFILES.values())} | {p.fallback for p in PROFILES.values()} | LEGACY_SPECIALISTS | {('auto', model) for model in OMNIROUTE_AUTO_MODELS} | {tuple(public.split('/',1)) for public in FREE_ROUTES}
+
+def included_routing():
+    from app.config import settings
+    return bool(settings.OMNIROUTE_URL and settings.MODEL_ROUTING_POLICY == 'codex_and_free')
+
+def routing_profiles():
+    return INCLUDED_PROFILES if included_routing() else PROFILES
 
 
 def task_specialty(prompt, role='', modalities=None):
