@@ -3,35 +3,26 @@ import { useEffect, useRef, useState } from 'react';
 import type { Lead, SignalKind } from '../../lib/cipher/engine';
 import { SIGNAL_MAX } from '../../lib/cipher/engine';
 
-// Prospect Brain: a rotating 3D graph of every account in the territory.
-// Distance from the centre = how many buying signals are firing (hot accounts sit in the middle).
-// Each account links to the signal hubs (hiring, raising, spending, momentum) that drive it.
+// Prospect Brain: a rotating 3D scatter of every account in the territory.
+// X = hiring signal, Y = overall score, Z = capital and momentum (raising, spending, 8-K activity).
 type V3 = [number, number, number];
 type Node = { id: string; lead: Lead; pos: V3; born: number };
 type Projected = { x: number; y: number; z: number; f: number };
 
-const HUBS: { kind: SignalKind; label: string; dir: V3 }[] = [
-  { kind: 'hiring', label: 'HIRING', dir: norm([1, .62, .7]) },
-  { kind: 'raising', label: 'RAISING', dir: norm([-1, .62, -.7]) },
-  { kind: 'spending', label: 'SPENDING', dir: norm([1, -.62, -.7]) },
-  { kind: 'news', label: 'MOMENTUM', dir: norm([-1, -.62, .7]) },
-];
-
-function norm(v: V3): V3 { const l = Math.hypot(...v) || 1; return [v[0] / l, v[1] / l, v[2] / l]; }
 function hash(s: string) { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return (h >>> 0) / 4294967295; }
+// Axis placement in a [-1, 1] cube. Screen y grows downward, so a higher score is a smaller y.
 function placeLead(lead: Lead): V3 {
-  let v: V3 = [0, 0, 0];
-  for (const s of lead.signals) { const hub = HUBS.find(h => h.kind === s.kind); if (!hub) continue; const w = s.strength / SIGNAL_MAX[s.kind]; v = [v[0] + hub.dir[0] * w, v[1] + hub.dir[1] * w, v[2] + hub.dir[2] * w]; }
-  const a = hash(lead.id) * Math.PI * 2, b = hash(lead.id + 'b') * 2 - 1, c = Math.sqrt(1 - b * b);
-  const jitter: V3 = [Math.cos(a) * c, b, Math.sin(a) * c];
-  const dir = norm(Math.hypot(...v) < .25 ? [v[0] + jitter[0] * .6, v[1] + jitter[1] * .6, v[2] + jitter[2] * .6] : [v[0] + jitter[0] * .25, v[1] + jitter[1] * .25, v[2] + jitter[2] * .25]);
-  const r = .14 + (1 - lead.score / 100) * .78 + (hash(lead.id + 'r') - .5) * .08;
-  return [dir[0] * r * 1.25, dir[1] * r * .85, dir[2] * r];
+  const str = (k: SignalKind) => lead.signals.find(s => s.kind === k)?.strength ?? 0;
+  const j = (salt: string) => (hash(lead.id + salt) - .5) * .06;
+  const x = str('hiring') / SIGNAL_MAX.hiring * 2 - 1;
+  const y = -(lead.score / 100 * 2 - 1);
+  const z = (str('raising') + str('spending') + str('news')) / (SIGNAL_MAX.raising + SIGNAL_MAX.spending + SIGNAL_MAX.news) * 2 - 1;
+  return [x * .92 + j('x'), y * .92 + j('y'), z * .92 + j('z')];
 }
 
 export default function ProspectBrain({ leads, running, selected, filter, onSelect }: { leads: Lead[]; running: boolean; selected: string | null; filter: 'All' | Lead['tier']; onSelect: (id: string) => void }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const state = useRef({ yaw: .6, pitch: -.32, zoom: 1, hover: null as string | null, drag: null as null | { x: number; y: number; moved: number }, nodes: new Map<string, Node>(), running, selected, filter, onSelect });
+  const state = useRef({ yaw: -.62, pitch: -.38, zoom: 1, hover: null as string | null, drag: null as null | { x: number; y: number; moved: number }, nodes: new Map<string, Node>(), running, selected, filter, onSelect });
   const [hoverLead, setHoverLead] = useState<Lead | null>(null);
   state.current.running = running; state.current.selected = selected; state.current.filter = filter; state.current.onSelect = onSelect;
 
@@ -58,81 +49,82 @@ export default function ProspectBrain({ leads, running, selected, filter, onSele
       const cy = Math.cos(st.yaw), sy = Math.sin(st.yaw), cp = Math.cos(st.pitch), sp = Math.sin(st.pitch);
       const x1 = p[0] * cy - p[2] * sy, z1 = p[0] * sy + p[2] * cy;
       const y2 = p[1] * cp - z1 * sp, z2 = p[1] * sp + z1 * cp;
-      const f = 3.2 / (3.2 + z2); const scale = Math.min(w / 3.2, h / 2.5) * st.zoom;
-      return { x: w / 2 + x1 * f * scale, y: h / 2 + 24 + y2 * f * scale, z: z2, f };
+      const f = 6 / (6 + z2); const scale = Math.min(w / 4.2, h / 3.7) * st.zoom;
+      return { x: w / 2 + x1 * f * scale, y: h / 2 + 18 + y2 * f * scale, z: z2, f };
     };
     const matches = (l: Lead) => st.filter === 'All' || l.tier === st.filter;
 
     const FONT = "-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Inter Variable', sans-serif";
-    const hubPos = (hub: typeof HUBS[number]): V3 => [hub.dir[0] * 1.3, hub.dir[1] * .9, hub.dir[2] * 1.05];
     const tierColor = (tier: Lead['tier']) => (tier === 'Hot' ? colors.ink : tier === 'Warm' ? colors.ink2 : colors.ink3);
+    const line = (a: V3, b: V3, alpha: number, width = 1, color = colors.ink2) => { const p = project(a), q = project(b); ctx.globalAlpha = alpha; ctx.strokeStyle = color; ctx.lineWidth = width; ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(q.x, q.y); ctx.stroke(); };
+    const text = (v: V3, label: string, font: string, color: string, alpha = 1, align: CanvasTextAlign = 'center', dy = 0) => { const q = project(v); ctx.globalAlpha = alpha; ctx.fillStyle = color; ctx.font = font; ctx.textAlign = align; ctx.fillText(label, q.x, q.y + dy); };
 
     const draw = (t: number) => {
       if (!st.drag && !st.hover && !reduce.matches) st.yaw += st.running ? .004 : .0015;
       ctx.clearRect(0, 0, w, h);
       ctx.textBaseline = 'middle';
+      // floor grid (y = 1 is the floor: score 0) and back walls
+      for (let i = 0; i <= 4; i++) {
+        const v = -1 + i / 2;
+        line([v, 1, -1], [v, 1, 1], i % 2 ? .1 : .18);
+        line([-1, 1, v], [1, 1, v], i % 2 ? .1 : .18);
+        line([-1, v, -1], [1, v, -1], .07); line([-1, v, -1], [-1, v, 1], .07);
+      }
+      // axes from the origin corner (-1, 1, -1)
+      const o: V3 = [-1, 1, -1];
+      line(o, [1, 1, -1], .9, 1.5, colors.ink); line(o, [-1, -1, -1], .9, 1.5, colors.ink); line(o, [-1, 1, 1], .9, 1.5, colors.ink);
+      const axisFont = `600 11px ${FONT}`, tickFont = `400 10.5px ${FONT}`;
+      text([1.2, 1, -1], 'X · HIRING', axisFont, colors.ink);
+      text([-1, -1.16, -1], 'Y · SCORE', axisFont, colors.ink);
+      text([-1, 1, 1.24], 'Z · CAPITAL & MOMENTUM', axisFont, colors.ink);
+      for (const [v, label] of [[1, '0'], [0, '50'], [-1, '100']] as [number, string][]) text([-1.08, v, -1], label, tickFont, colors.ink2, .9, 'right');
+      for (const [v, label] of [[-1, 'Low'], [1, 'High']] as [number, string][]) { text([v, 1.12, -1], label, tickFont, colors.ink2, .8); text([-1.1, 1.08, v], label, tickFont, colors.ink2, .8, 'right'); }
+
       const zs = Math.sqrt(st.zoom);
-      const hubs = HUBS.map(hub => ({ hub, q: project(hubPos(hub)) }));
       projected = new Map();
       const nodes = Array.from(st.nodes.values());
       for (const n of nodes) {
         const q = project(n.pos); const grow = Math.min(1, Math.max(0, (t - n.born) / 600)); const e = 1 - Math.pow(1 - grow, 3);
-        projected.set(n.id, { ...q, r: (3.5 + n.lead.score / 100 * 6) * q.f * zs * e });
+        projected.set(n.id, { ...q, r: (3.5 + n.lead.score / 100 * 5.5) * q.f * zs * e });
       }
       const focus = st.hover || st.selected;
-      const focusLead = focus ? st.nodes.get(focus)?.lead : undefined;
-
-      // edges: each prospect to the signal hubs that drive it
-      ctx.lineWidth = 1;
+      // drop lines to the floor show where each prospect sits
+      ctx.setLineDash([2, 3]);
       for (const n of nodes) {
-        const p = projected.get(n.id)!; if (p.r <= .2) continue;
-        const on = matches(n.lead);
-        for (const sig of n.lead.signals) {
-          const hq = hubs.find(x => x.hub.kind === sig.kind)!.q;
-          const lit = n.id === focus;
-          ctx.globalAlpha = lit ? .9 : on ? .1 + (1 - (p.z + hq.z) / 2) * .08 : .04;
-          ctx.strokeStyle = lit ? colors.ink : colors.ink2;
-          ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(hq.x, hq.y); ctx.stroke();
-        }
+        const q = projected.get(n.id)!; if (q.r <= .2) continue;
+        const lit = n.id === focus;
+        line(n.pos, [n.pos[0], 1, n.pos[2]], lit ? .8 : matches(n.lead) ? .22 : .06, 1, lit ? colors.ink : colors.ink2);
       }
-
-      // hubs
-      for (const { hub, q } of hubs) {
-        const lit = !!focusLead?.signals.some(s => s.kind === hub.kind);
-        ctx.globalAlpha = 1; ctx.fillStyle = colors.card; ctx.strokeStyle = lit ? colors.ink : colors.ink2; ctx.lineWidth = lit ? 2 : 1.25;
-        ctx.beginPath(); ctx.arc(q.x, q.y, 9 * q.f * zs, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-        ctx.fillStyle = lit ? colors.ink : colors.ink2; ctx.textAlign = 'center';
-        ctx.font = `600 11px ${FONT}`;
-        ctx.fillText(hub.label, q.x, q.y + 9 * q.f * zs + 12);
+      ctx.setLineDash([]);
+      for (const n of nodes) {
+        const q = projected.get(n.id)!; if (q.r <= .2 || !matches(n.lead)) continue;
+        const f = project([n.pos[0], 1, n.pos[2]]); ctx.globalAlpha = n.id === focus ? .6 : .18; ctx.fillStyle = colors.ink2;
+        ctx.beginPath(); ctx.ellipse(f.x, f.y, 2.2 * f.f, 1.2 * f.f, 0, 0, Math.PI * 2); ctx.fill();
       }
-
       // prospects, back to front
       const order = nodes.slice().sort((a, b) => projected.get(b.id)!.z - projected.get(a.id)!.z);
       for (const n of order) {
         const q = projected.get(n.id)!; if (q.r <= .2) continue;
         const on = matches(n.lead), isFocus = n.id === focus;
-        ctx.globalAlpha = on ? 1 : .18;
-        ctx.fillStyle = tierColor(n.lead.tier);
+        ctx.globalAlpha = on ? 1 : .18; ctx.fillStyle = tierColor(n.lead.tier);
         ctx.beginPath(); ctx.arc(q.x, q.y, q.r, 0, Math.PI * 2); ctx.fill();
         ctx.strokeStyle = colors.card; ctx.lineWidth = 1.5; ctx.stroke();
-        if (isFocus) { ctx.strokeStyle = colors.ink; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(q.x, q.y, q.r + 4, 0, Math.PI * 2); ctx.stroke(); }
+        if (isFocus) { ctx.globalAlpha = 1; ctx.strokeStyle = colors.ink; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(q.x, q.y, q.r + 4, 0, Math.PI * 2); ctx.stroke(); }
       }
-
-      // labels, front-most and highest-scoring first, skipping collisions
+      // labels, highest score first, skipping collisions
       const placed: { x: number; y: number; w: number }[] = [];
-      const fits = (x: number, y: number, tw: number) => placed.every(r => x + tw / 2 + 4 < r.x - r.w / 2 || x - tw / 2 - 4 > r.x + r.w / 2 || Math.abs(y - r.y) > 14);
+      const fits = (x: number, y: number, tw: number) => placed.every(r => x + tw + 4 < r.x || x - 4 > r.x + r.w || Math.abs(y - r.y) > 14);
       const labelOrder = nodes.slice().sort((a, b) => (b.id === focus ? 1 : 0) - (a.id === focus ? 1 : 0) || b.lead.score - a.lead.score);
-      ctx.textAlign = 'center';
       for (const n of labelOrder) {
         const q = projected.get(n.id)!; if (q.r <= .2 || (!matches(n.lead) && n.id !== focus)) continue;
         const isFocus = n.id === focus;
-        ctx.font = `${isFocus ? 600 : n.lead.tier === 'Hot' ? 600 : 400} ${isFocus ? 13 : 11.5}px ${FONT}`;
-        const tw = ctx.measureText(n.lead.company.name).width, ly = q.y + q.r + 10;
-        if (!isFocus && !fits(q.x, ly, tw)) continue;
-        placed.push({ x: q.x, y: ly, w: tw });
-        ctx.globalAlpha = isFocus ? 1 : n.lead.tier === 'Hot' ? .95 : .7;
+        ctx.font = `${isFocus || n.lead.tier === 'Hot' ? 600 : 400} ${isFocus ? 13 : 11.5}px ${FONT}`;
+        const tw = ctx.measureText(n.lead.company.name).width, lx = q.x + q.r + 6;
+        if (!isFocus && !fits(lx, q.y, tw)) continue;
+        placed.push({ x: lx, y: q.y, w: tw });
+        ctx.globalAlpha = isFocus ? 1 : n.lead.tier === 'Hot' ? .95 : .7; ctx.textAlign = 'left';
         ctx.fillStyle = isFocus || n.lead.tier === 'Hot' ? colors.ink : colors.ink2;
-        ctx.fillText(n.lead.company.name, q.x, ly);
+        ctx.fillText(n.lead.company.name, lx, q.y);
       }
       ctx.globalAlpha = 1;
       raf = requestAnimationFrame(draw);
@@ -170,15 +162,15 @@ export default function ProspectBrain({ leads, running, selected, filter, onSele
     return () => { cancelAnimationFrame(raf); ro.disconnect(); mo.disconnect(); scheme.removeEventListener('change', recolor); canvas.removeEventListener('pointerdown', down); canvas.removeEventListener('pointermove', move); canvas.removeEventListener('pointerup', up); canvas.removeEventListener('pointerleave', leave); canvas.removeEventListener('wheel', wheel); };
   }, []);
 
-  const zoom = (k: number) => { state.current.zoom = k === 0 ? 1 : Math.max(.6, Math.min(2.4, state.current.zoom * k)); if (k === 0) { state.current.yaw = .6; state.current.pitch = -.32; } };
+  const zoom = (k: number) => { state.current.zoom = k === 0 ? 1 : Math.max(.6, Math.min(2.4, state.current.zoom * k)); if (k === 0) { state.current.yaw = -.62; state.current.pitch = -.38; } };
   const tiers = (t: Lead['tier']) => leads.filter(l => l.tier === t).length;
 
   return (
     <div className="cx-brain">
-      <canvas ref={canvasRef} role="img" aria-label={`Prospect brain with ${leads.length} accounts. ${tiers('Hot')} hot accounts sit at the centre. Use the Accounts tab for a list.`} />
+      <canvas ref={canvasRef} role="img" aria-label={`3D prospect map of ${leads.length} accounts: hiring on X, score on Y, capital and momentum on Z. ${tiers('Hot')} hot accounts. Use the Accounts tab for a list.`} />
       <div className="cx-brain-title">
         <h2>Prospect Brain</h2>
-        <p>The closer to the centre, the more buying signals are firing. Lines show which signals drive each account. Drag to rotate, click to open.</p>
+        <p>X is hiring, Y is the overall score, Z is capital and momentum. Top right and front is where to act first. Drag to rotate, click to open.</p>
       </div>
       <div className="cx-brain-zoom" role="group" aria-label="Zoom">
         <button type="button" aria-label="Zoom out" onClick={() => zoom(1 / 1.2)}>−</button>
