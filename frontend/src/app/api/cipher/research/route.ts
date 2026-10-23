@@ -1,4 +1,4 @@
-import { AiError, chat, extractJson, pickModels, resolveKey, safeUrl } from '../../../../lib/cipher/ai';
+import { AiError, chat, extractJson, pickModels, resolveProvider, safeUrl } from '../../../../lib/cipher/ai';
 import { applyResearch, type Evidence, type Lead, type Research, type SignalKind } from '../../../../lib/cipher/engine';
 
 export const dynamic = 'force-dynamic';
@@ -38,8 +38,8 @@ function toResearch(raw: unknown, citations: Evidence[]): Research {
 }
 
 export async function POST(req: Request) {
-  const key = resolveKey(req);
-  if (!key) return Response.json({ detail: 'Add an OpenRouter key in Setup, or set OPENROUTER_API_KEY on the server.' }, { status: 401 });
+  const provider = resolveProvider(req);
+  if (!provider) return Response.json({ detail: 'No model gateway is configured. Set OMNIROUTE_URL and OMNIROUTE_API_KEY (or OPENROUTER_API_KEY) on the server, or add an OpenRouter key in Setup.' }, { status: 401 });
   const body = await req.json().catch(() => null) as { lead?: Lead; offering?: string; persona?: string; senderName?: string } | null;
   const lead = body?.lead;
   if (!lead?.company || typeof lead.company.name !== 'string' || typeof lead.company.ticker !== 'string' || !Array.isArray(lead.signals)) return Response.json({ detail: 'Send a lead from a Cipher run.' }, { status: 400 });
@@ -50,7 +50,7 @@ export async function POST(req: Request) {
   const today = new Date().toISOString().slice(0, 10);
 
   const messages = [
-    { role: 'system' as const, content: 'You are Cipher, a B2B sales research analyst. Use web search results when available. Report only facts you can attribute; if you are unsure, give a lower level. Respond with a single JSON object and nothing else.' },
+    { role: 'system' as const, content: 'You are Cipher, a B2B sales research analyst. Use web search results when available, otherwise your most recent knowledge of the company. Report only facts you can attribute; if you are unsure, give a lower level. Respond with a single JSON object and nothing else.' },
     { role: 'user' as const, content: `Today is ${today}. Research ${str(lead.company.name, 80)} (ticker ${str(lead.company.ticker, 8)}${lead.company.domain ? `, ${str(lead.company.domain, 80)}` : ''}, ${str(lead.company.hq, 60)}).
 We sell: ${offering}. Our buyer is the ${persona}.
 Verified data we already have:
@@ -71,17 +71,11 @@ Level: 0 none, 1 weak, 2 clear, 3 strong.` },
   ];
 
   try {
-    const models = await pickModels(key);
-    let web = true;
-    let out;
-    try { out = await chat(key, { model: models.research, messages, web: true, maxTokens: 1400 }); }
-    catch (error) {
-      if (!(error instanceof AiError) || ![400, 404, 422].includes(error.status)) throw error;
-      web = false; out = await chat(key, { model: models.research, messages, web: false, maxTokens: 1400 });
-    }
+    const models = await pickModels(provider);
+    const out = await chat(provider, { models: models.research, messages, web: true, maxTokens: 1400, timeoutMs: 40_000 });
     const research = toResearch(extractJson(out.text), out.citations);
-    const updated = applyResearch(lead, research, { model: out.model, web });
-    return Response.json({ lead: updated, model: out.model, web });
+    const updated = applyResearch(lead, research, { model: out.model, web: out.web });
+    return Response.json({ lead: updated, model: out.model, web: out.web, provider: provider.kind });
   } catch (error) {
     const status = error instanceof AiError ? error.status : 502;
     const detail = error instanceof AiError ? error.message : error instanceof SyntaxError ? 'The model returned research Cipher could not read.' : 'Research failed. Try again.';

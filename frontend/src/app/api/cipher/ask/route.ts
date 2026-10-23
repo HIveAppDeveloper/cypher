@@ -1,4 +1,4 @@
-import { AiError, chat, pickModels, resolveKey } from '../../../../lib/cipher/ai';
+import { AiError, chat, pickModels, resolveProvider } from '../../../../lib/cipher/ai';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
@@ -8,8 +8,8 @@ const str = (v: unknown, max: number) => (typeof v === 'string' ? v.trim().slice
 
 // "Ask the brain": answers questions about the current territory using only the accounts sent.
 export async function POST(req: Request) {
-  const key = resolveKey(req);
-  if (!key) return Response.json({ detail: 'Add an OpenRouter key in Setup, or set OPENROUTER_API_KEY on the server.' }, { status: 401 });
+  const provider = resolveProvider(req);
+  if (!provider) return Response.json({ detail: 'No model gateway is configured. Set OMNIROUTE_URL and OMNIROUTE_API_KEY (or OPENROUTER_API_KEY) on the server, or add an OpenRouter key in Setup.' }, { status: 401 });
   const body = await req.json().catch(() => null) as { question?: string; offering?: string; persona?: string; leads?: Brief[] } | null;
   const question = str(body?.question, 500);
   const leads = (Array.isArray(body?.leads) ? body!.leads : []).slice(0, 40).map(l => ({
@@ -20,9 +20,9 @@ export async function POST(req: Request) {
 
   const table = leads.map(l => `${l.ticker} | ${l.name} | score ${l.score} ${l.tier} | ${l.stage} | ${l.why} | ${l.signals.join('; ')}`).join('\n');
   try {
-    const { brain } = await pickModels(key);
-    const out = await chat(key, {
-      model: brain, maxTokens: 600, timeoutMs: 45_000,
+    const { brain } = await pickModels(provider);
+    const out = await chat(provider, {
+      models: brain, maxTokens: 600, timeoutMs: 40_000,
       messages: [
         { role: 'system', content: 'You are Cipher, the sales brain for a revenue team. Answer only from the accounts provided. Be direct and specific, under 120 words, no preamble. Finish with a final line "TICKERS: X, Y" naming the accounts your answer is about (or "TICKERS: none").' },
         { role: 'user', content: `We sell: ${str(body?.offering, 200) || 'outbound for revenue teams'}. Buyer: ${str(body?.persona, 60) || 'VP of Sales'}.\nAccounts (ticker | name | score | stage | why now | signals):\n${table}\n\nQuestion: ${question}` },

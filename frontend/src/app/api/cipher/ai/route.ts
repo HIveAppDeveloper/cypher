@@ -1,6 +1,9 @@
+import { serverProvider } from '../../../../lib/cipher/ai';
+
 export const dynamic = 'force-dynamic';
 
-// Tells the page whether model features work without a key typed into Setup.
+// Tells the page whether model features work without a key typed into Setup, and through which gateway.
 export function GET() {
-  return Response.json({ serverKey: Boolean(process.env.OPENROUTER_API_KEY?.trim()) });
+  const provider = serverProvider();
+  return Response.json({ serverKey: Boolean(provider), provider });
 }
