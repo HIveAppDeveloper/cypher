@@ -57,9 +57,25 @@ body :is(.app-layout,.login-page,dialog) a {color:var(--cx-label);text-decoratio
 .connector-authorization .btn-primary {background:var(--brand-action);color:var(--brand-on-action)}
 .connector-authorization .connector-login-actions {gap:10px}
 .connector-tabs button[aria-pressed="true"] {border-color:var(--cx-label)}
+.connectors-dialog .connector-close,.connectors-dialog .connector-logo,.connectors-dialog .catalog-heading h3 span {background:var(--system-subtle);color:var(--cx-label-2)}
+.connectors-dialog :is(.connector-tabs,.connector-entry,.connector-settings section,.connector-settings>details,.website-connect) {border-color:var(--cx-sep)}
+.connectors-dialog :is(.connector-tabs button,.website-connect>p,.catalog-heading>div>p,.catalog-sync p,.connector-filters>span,.connector-categories>span,.connector-entry-title>div>span,.connector-entry>p,.catalog-note,.connector-empty,.connector-custom>p,.connector-settings p,.connector-custom label span,.connected-service summary,.connector-settings summary) {color:var(--cx-label-2)}
+.connectors-dialog .connector-tabs button[aria-pressed="true"],.connectors-dialog .connector-empty h3 {color:var(--cx-label)}
+.connectors-dialog .connector-tabs button[aria-pressed="true"]::after {background:var(--cx-label)}
+.connectors-dialog .connector-entry,.connectors-dialog .connector-filters button {background:var(--cx-card);color:var(--cx-label);border-color:var(--cx-sep)}
+.connectors-dialog .connector-entry:hover {border-color:var(--cx-label-3)}
+.connectors-dialog .connector-categories button {color:var(--cx-label-2)}
+.connectors-dialog .connector-categories button[aria-pressed="true"] {color:var(--cx-label);background:var(--system-selected)}
+.connectors-dialog .connector-filters button[aria-pressed="true"] {background:var(--brand-action);color:var(--brand-on-action)}
+.connectors-dialog .btn-primary,.connectors-dialog .btn-primary:hover {background:var(--brand-action);color:var(--brand-on-action)}
+.connectors-dialog .website-search input {background:var(--cx-card);color:var(--cx-label);border-color:var(--cx-sep)}
+.connectors-dialog .website-search input::placeholder {color:var(--cx-label-2)}
+.connectors-dialog .website-search input:focus {border-color:var(--cx-label);box-shadow:0 0 0 2px var(--cx-fill)}
+.sidebar-shell .command-launcher {background:var(--cx-card);color:var(--cx-label-2);border-color:var(--cx-sep)}
+.sidebar-shell .command-launcher:hover {background:var(--system-subtle);color:var(--cx-label)}
+.sidebar-shell :is(.roster-toolbar .section-label,.rooms-label,.rooms-label button,.sidebar-more>summary,.sidebar-more>summary::after,.sidebar-layout-tools>button,.sidebar-layout-menu>summary) {color:var(--cx-label-2)}
 
-/* The same full-resolution mark and wordmark as the reference, without an
-   ornamental orbit or a square that squeezes the wide original artwork. */
+/* The original animated binary lens and one wordmark, as in the reference. */
 .quickstart {background:var(--cx-bg)}
 .quickstart-panel {width:min(660px,100%);padding-block:24px}
 .quickstart .quickstart-mark {display:block;position:relative;width:min(460px,78vw);height:auto;aspect-ratio:560/210;margin:0 auto 24px;padding:0;background:none;border:0;border-radius:0;box-shadow:none;animation:none}

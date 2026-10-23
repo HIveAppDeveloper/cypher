@@ -83,7 +83,7 @@ test('restoring the callback conversation does not dismiss its plugin result pan
   const imports=Object.fromEntries(components.map(name=>['../components/'+name,{[name]:name}]));imports['./CommandPalette']={CommandPalette:'CommandPalette'};imports['./WorkspaceHub']={WorkspaceHub:'WorkspaceHub'};imports['./ComputerPanel']={ComputerPanel:'ComputerPanel'};
   imports['../hooks/useBots']={useBots:()=>({bots:[],selectedBot:null,setSelectedBot(){},createBot(){},refreshBots(){}})};
   imports['../components/PreferencesPanel']={PreferencesPanel:'PreferencesPanel',restoreAppearance(){}};imports['../components/RunControls']={DEFAULT_OPTIONS:{}};imports['../lib/types']={};imports['../lib/api']={request:async()=>[],api:{getConversations:async()=>[{id:'123',title:'Fixture conversation',is_group:true}]}};
-  imports['./cipher/CipherIntro']={__esModule:true,default:'CipherIntro'};
+  imports['./cipher/CypherEntrance']={__esModule:true,default:'CypherEntrance'};
   const {default:WorkspaceApp}=load('../src/components/WorkspaceApp.tsx',{react:view.react,...imports},{...env.globals,URLSearchParams,setInterval:()=>1,clearInterval(){}});
   view.mount(()=>WorkspaceApp({}));await view.flush();assert.ok(find(view.tree,n=>n.type==='PluginPanel'),'callback result remains visible after conversation restoration');view.unmount();
 });

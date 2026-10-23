@@ -1,50 +1,326 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-10-22T01:06:29.837944+00:00",
-  "title": "Design System: Open GrokBot",
+  "generatedAt": "2026-10-23T15:48:17.243583+00:00",
+  "title": "Design System: Cypher",
   "extensions": {
+    "colorMeta": {
+      "conversation": {
+        "role": "neutral",
+        "displayName": "Conversation field",
+        "tonalRamp": [
+          "oklch(15% 0 0)",
+          "oklch(26% 0 0)",
+          "oklch(38% 0 0)",
+          "oklch(49% 0 0)",
+          "oklch(61% 0 0)",
+          "oklch(72% 0 0)",
+          "oklch(84% 0 0)",
+          "oklch(95% 0 0)"
+        ]
+      },
+      "panel": {
+        "role": "neutral",
+        "displayName": "Panel white",
+        "tonalRamp": [
+          "oklch(15% 0 0)",
+          "oklch(26% 0 0)",
+          "oklch(38% 0 0)",
+          "oklch(49% 0 0)",
+          "oklch(61% 0 0)",
+          "oklch(72% 0 0)",
+          "oklch(84% 0 0)",
+          "oklch(95% 0 0)"
+        ]
+      },
+      "sidebar": {
+        "role": "neutral",
+        "displayName": "Navigation neutral",
+        "tonalRamp": [
+          "oklch(15% 0 0)",
+          "oklch(26% 0 0)",
+          "oklch(38% 0 0)",
+          "oklch(49% 0 0)",
+          "oklch(61% 0 0)",
+          "oklch(72% 0 0)",
+          "oklch(84% 0 0)",
+          "oklch(95% 0 0)"
+        ]
+      },
+      "subtle": {
+        "role": "neutral",
+        "displayName": "Subtle fill",
+        "tonalRamp": [
+          "oklch(15% 0 0)",
+          "oklch(26% 0 0)",
+          "oklch(38% 0 0)",
+          "oklch(49% 0 0)",
+          "oklch(61% 0 0)",
+          "oklch(72% 0 0)",
+          "oklch(84% 0 0)",
+          "oklch(95% 0 0)"
+        ]
+      },
+      "text": {
+        "role": "primary",
+        "displayName": "Graphite ink",
+        "tonalRamp": [
+          "oklch(15% 0 0)",
+          "oklch(26% 0 0)",
+          "oklch(38% 0 0)",
+          "oklch(49% 0 0)",
+          "oklch(61% 0 0)",
+          "oklch(72% 0 0)",
+          "oklch(84% 0 0)",
+          "oklch(95% 0 0)"
+        ]
+      },
+      "text-secondary": {
+        "role": "neutral",
+        "displayName": "Secondary ink",
+        "tonalRamp": [
+          "oklch(15% 0 0)",
+          "oklch(26% 0 0)",
+          "oklch(38% 0 0)",
+          "oklch(49% 0 0)",
+          "oklch(61% 0 0)",
+          "oklch(72% 0 0)",
+          "oklch(84% 0 0)",
+          "oklch(95% 0 0)"
+        ]
+      },
+      "text-tertiary": {
+        "role": "neutral",
+        "displayName": "Tertiary ink",
+        "tonalRamp": [
+          "oklch(15% 0 0)",
+          "oklch(26% 0 0)",
+          "oklch(38% 0 0)",
+          "oklch(49% 0 0)",
+          "oklch(61% 0 0)",
+          "oklch(72% 0 0)",
+          "oklch(84% 0 0)",
+          "oklch(95% 0 0)"
+        ]
+      },
+      "separator": {
+        "role": "neutral",
+        "displayName": "Hairline gray",
+        "tonalRamp": [
+          "oklch(15% 0 0)",
+          "oklch(26% 0 0)",
+          "oklch(38% 0 0)",
+          "oklch(49% 0 0)",
+          "oklch(61% 0 0)",
+          "oklch(72% 0 0)",
+          "oklch(84% 0 0)",
+          "oklch(95% 0 0)"
+        ]
+      },
+      "selected": {
+        "role": "neutral",
+        "displayName": "Selection fill",
+        "tonalRamp": [
+          "oklch(15% 0 0)",
+          "oklch(26% 0 0)",
+          "oklch(38% 0 0)",
+          "oklch(49% 0 0)",
+          "oklch(61% 0 0)",
+          "oklch(72% 0 0)",
+          "oklch(84% 0 0)",
+          "oklch(95% 0 0)"
+        ]
+      },
+      "dark-conversation": {
+        "role": "neutral",
+        "displayName": "Dark conversation field",
+        "tonalRamp": [
+          "oklch(15% 0 0)",
+          "oklch(26% 0 0)",
+          "oklch(38% 0 0)",
+          "oklch(49% 0 0)",
+          "oklch(61% 0 0)",
+          "oklch(72% 0 0)",
+          "oklch(84% 0 0)",
+          "oklch(95% 0 0)"
+        ]
+      },
+      "dark-panel": {
+        "role": "neutral",
+        "displayName": "Dark panel",
+        "tonalRamp": [
+          "oklch(15% 0 0)",
+          "oklch(26% 0 0)",
+          "oklch(38% 0 0)",
+          "oklch(49% 0 0)",
+          "oklch(61% 0 0)",
+          "oklch(72% 0 0)",
+          "oklch(84% 0 0)",
+          "oklch(95% 0 0)"
+        ]
+      },
+      "dark-sidebar": {
+        "role": "neutral",
+        "displayName": "Dark navigation",
+        "tonalRamp": [
+          "oklch(15% 0 0)",
+          "oklch(26% 0 0)",
+          "oklch(38% 0 0)",
+          "oklch(49% 0 0)",
+          "oklch(61% 0 0)",
+          "oklch(72% 0 0)",
+          "oklch(84% 0 0)",
+          "oklch(95% 0 0)"
+        ]
+      },
+      "dark-subtle": {
+        "role": "neutral",
+        "displayName": "Dark subtle fill",
+        "tonalRamp": [
+          "oklch(15% 0 0)",
+          "oklch(26% 0 0)",
+          "oklch(38% 0 0)",
+          "oklch(49% 0 0)",
+          "oklch(61% 0 0)",
+          "oklch(72% 0 0)",
+          "oklch(84% 0 0)",
+          "oklch(95% 0 0)"
+        ]
+      },
+      "dark-text": {
+        "role": "primary",
+        "displayName": "Light ink",
+        "tonalRamp": [
+          "oklch(15% 0 0)",
+          "oklch(26% 0 0)",
+          "oklch(38% 0 0)",
+          "oklch(49% 0 0)",
+          "oklch(61% 0 0)",
+          "oklch(72% 0 0)",
+          "oklch(84% 0 0)",
+          "oklch(95% 0 0)"
+        ]
+      },
+      "dark-text-secondary": {
+        "role": "neutral",
+        "displayName": "Dark secondary ink",
+        "tonalRamp": [
+          "oklch(15% 0 0)",
+          "oklch(26% 0 0)",
+          "oklch(38% 0 0)",
+          "oklch(49% 0 0)",
+          "oklch(61% 0 0)",
+          "oklch(72% 0 0)",
+          "oklch(84% 0 0)",
+          "oklch(95% 0 0)"
+        ]
+      },
+      "dark-text-tertiary": {
+        "role": "neutral",
+        "displayName": "Dark tertiary ink",
+        "tonalRamp": [
+          "oklch(15% 0 0)",
+          "oklch(26% 0 0)",
+          "oklch(38% 0 0)",
+          "oklch(49% 0 0)",
+          "oklch(61% 0 0)",
+          "oklch(72% 0 0)",
+          "oklch(84% 0 0)",
+          "oklch(95% 0 0)"
+        ]
+      },
+      "dark-separator": {
+        "role": "neutral",
+        "displayName": "Dark hairline",
+        "tonalRamp": [
+          "oklch(15% 0 0)",
+          "oklch(26% 0 0)",
+          "oklch(38% 0 0)",
+          "oklch(49% 0 0)",
+          "oklch(61% 0 0)",
+          "oklch(72% 0 0)",
+          "oklch(84% 0 0)",
+          "oklch(95% 0 0)"
+        ]
+      },
+      "dark-selected": {
+        "role": "neutral",
+        "displayName": "Dark selection fill",
+        "tonalRamp": [
+          "oklch(15% 0 0)",
+          "oklch(26% 0 0)",
+          "oklch(38% 0 0)",
+          "oklch(49% 0 0)",
+          "oklch(61% 0 0)",
+          "oklch(72% 0 0)",
+          "oklch(84% 0 0)",
+          "oklch(95% 0 0)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Cypher home title",
+        "purpose": "Single home title; mobile uses its explicit override."
+      },
+      "headline": {
+        "displayName": "Dialog heading",
+        "purpose": "Modal section hierarchy."
+      },
+      "title": {
+        "displayName": "Toolbar title",
+        "purpose": "Compact current-conversation title."
+      },
+      "body": {
+        "displayName": "Message body",
+        "purpose": "Default adjustable message text; existing font options remain."
+      },
+      "label": {
+        "displayName": "Compact label",
+        "purpose": "Roster and compact control text."
+      }
+    },
     "shadows": [
       {
-        "name": "glass-trigger-open",
-        "value": "0 5px 20px #30243412",
-        "purpose": "Open select trigger."
+        "name": "home-composer",
+        "value": "0 3px 12px rgba(0,0,0,.035)",
+        "purpose": "Faint home task surface depth."
       },
       {
-        "name": "glass-menu",
-        "value": "0 18px 48px #24152425,inset 0 1px 0 #fff",
-        "purpose": "Floating liquid glass menu."
+        "name": "home-composer-focus",
+        "value": "0 3px 16px rgba(0,0,0,.065)",
+        "purpose": "Home task focus alongside a darker neutral border."
       },
       {
-        "name": "glass-dialog",
-        "value": "0 24px 80px #24152426",
-        "purpose": "Native glass dialog."
+        "name": "menu",
+        "value": "0 10px 28px rgba(0,0,0,.12)",
+        "purpose": "Opaque floating controls."
       },
       {
-        "name": "command-dialog",
-        "value": "0 20px 80px #20152938",
-        "purpose": "Native workspace command palette."
-      },
-      {
-        "name": "work-drawer",
-        "value": "0 20px 80px #25152f33",
-        "purpose": "Native Work & direction drawer."
+        "name": "dialog",
+        "value": "0 18px 48px rgba(0,0,0,.18)",
+        "purpose": "Modal layer."
       }
     ],
     "motion": [
       {
+        "name": "binary-lens",
+        "value": "existing BinaryLens canvas",
+        "purpose": "Original digit flips and pulse; active only while visible with app and OS motion enabled."
+      },
+      {
+        "name": "original-intro",
+        "value": "lift 760ms; complete 1180ms; dismiss 220ms",
+        "purpose": "Unchanged CipherIntro mounted by CypherEntrance after appearance restore and visibility/motion gates; once per tab where storage is available."
+      },
+      {
         "name": "menu-settle",
         "value": "160ms cubic-bezier(.16,1,.3,1)",
-        "purpose": "TranslateY(-4px) scale(.985) to rest; disabled by OS reduced motion."
+        "purpose": "Existing menu entrance; suppressed by reduced motion or app motion-off."
       },
       {
-        "name": "trigger-state",
-        "value": "background 150ms ease,box-shadow 150ms ease",
-        "purpose": "Select state changes; disabled by in-app motion preference."
-      },
-      {
-        "name": "work-reveal",
-        "value": "220ms cubic-bezier(.16,1,.3,1)",
-        "purpose": "TranslateX(20px), opacity .65 to rest; disabled by OS reduced motion and in-app motion preference."
+        "name": "composer-state",
+        "value": "border-color .2s ease,box-shadow .2s ease",
+        "purpose": "Neutral home task hover and focus changes; motion settings take precedence."
       }
     ],
     "breakpoints": [
@@ -53,422 +329,127 @@
         "value": "1000px"
       },
       {
-        "name": "mobile-navigation",
+        "name": "mobile-navigation-and-task",
         "value": "760px"
-      }
-    ],
-    "colorMeta": {
-      "panel": {
-        "role": "neutral",
-        "displayName": "Panel",
-        "tonalRamp": [
-          "oklch(15% 0 350)",
-          "oklch(26% 0 350)",
-          "oklch(38% 0 350)",
-          "oklch(49% 0 350)",
-          "oklch(61% 0 350)",
-          "oklch(72% 0 350)",
-          "oklch(84% 0 350)",
-          "oklch(95% 0 350)"
-        ]
-      },
-      "conversation": {
-        "role": "neutral",
-        "displayName": "Warm off-white conversation",
-        "tonalRamp": [
-          "oklch(15% 0.004 80)",
-          "oklch(26% 0.004 80)",
-          "oklch(38% 0.004 80)",
-          "oklch(49% 0.004 80)",
-          "oklch(61% 0.004 80)",
-          "oklch(72% 0.004 80)",
-          "oklch(84% 0.004 80)",
-          "oklch(95% 0.004 80)"
-        ]
-      },
-      "sidebar": {
-        "role": "neutral",
-        "displayName": "Sidebar",
-        "tonalRamp": [
-          "oklch(15% 0.004 80)",
-          "oklch(26% 0.004 80)",
-          "oklch(38% 0.004 80)",
-          "oklch(49% 0.004 80)",
-          "oklch(61% 0.004 80)",
-          "oklch(72% 0.004 80)",
-          "oklch(84% 0.004 80)",
-          "oklch(95% 0.004 80)"
-        ]
-      },
-      "card": {
-        "role": "neutral",
-        "displayName": "Card",
-        "tonalRamp": [
-          "oklch(15% 0.004 80)",
-          "oklch(26% 0.004 80)",
-          "oklch(38% 0.004 80)",
-          "oklch(49% 0.004 80)",
-          "oklch(61% 0.004 80)",
-          "oklch(72% 0.004 80)",
-          "oklch(84% 0.004 80)",
-          "oklch(95% 0.004 80)"
-        ]
-      },
-      "card-hover": {
-        "role": "neutral",
-        "displayName": "Card Hover",
-        "tonalRamp": [
-          "oklch(15% 0.004 80)",
-          "oklch(26% 0.004 80)",
-          "oklch(38% 0.004 80)",
-          "oklch(49% 0.004 80)",
-          "oklch(61% 0.004 80)",
-          "oklch(72% 0.004 80)",
-          "oklch(84% 0.004 80)",
-          "oklch(95% 0.004 80)"
-        ]
-      },
-      "selected": {
-        "role": "neutral",
-        "displayName": "Selected",
-        "tonalRamp": [
-          "oklch(15% 0.004 80)",
-          "oklch(26% 0.004 80)",
-          "oklch(38% 0.004 80)",
-          "oklch(49% 0.004 80)",
-          "oklch(61% 0.004 80)",
-          "oklch(72% 0.004 80)",
-          "oklch(84% 0.004 80)",
-          "oklch(95% 0.004 80)"
-        ]
-      },
-      "border-light": {
-        "role": "neutral",
-        "displayName": "Border Light",
-        "tonalRamp": [
-          "oklch(15% 0.004 80)",
-          "oklch(26% 0.004 80)",
-          "oklch(38% 0.004 80)",
-          "oklch(49% 0.004 80)",
-          "oklch(61% 0.004 80)",
-          "oklch(72% 0.004 80)",
-          "oklch(84% 0.004 80)",
-          "oklch(95% 0.004 80)"
-        ]
-      },
-      "text": {
-        "role": "neutral",
-        "displayName": "Text",
-        "tonalRamp": [
-          "oklch(15% 0.004 80)",
-          "oklch(26% 0.004 80)",
-          "oklch(38% 0.004 80)",
-          "oklch(49% 0.004 80)",
-          "oklch(61% 0.004 80)",
-          "oklch(72% 0.004 80)",
-          "oklch(84% 0.004 80)",
-          "oklch(95% 0.004 80)"
-        ]
-      },
-      "text-muted": {
-        "role": "neutral",
-        "displayName": "Text Muted",
-        "tonalRamp": [
-          "oklch(15% 0.004 80)",
-          "oklch(26% 0.004 80)",
-          "oklch(38% 0.004 80)",
-          "oklch(49% 0.004 80)",
-          "oklch(61% 0.004 80)",
-          "oklch(72% 0.004 80)",
-          "oklch(84% 0.004 80)",
-          "oklch(95% 0.004 80)"
-        ]
-      },
-      "accent-blue": {
-        "role": "primary",
-        "displayName": "Graphite accent",
-        "tonalRamp": [
-          "oklch(15% 0.01 285)",
-          "oklch(26% 0.01 285)",
-          "oklch(38% 0.01 285)",
-          "oklch(49% 0.01 285)",
-          "oklch(61% 0.01 285)",
-          "oklch(72% 0.01 285)",
-          "oklch(84% 0.01 285)",
-          "oklch(95% 0.01 285)"
-        ]
-      },
-      "outgoing": {
-        "role": "neutral",
-        "displayName": "Neutral outgoing bubble",
-        "tonalRamp": [
-          "oklch(15% 0.004 80)",
-          "oklch(26% 0.004 80)",
-          "oklch(38% 0.004 80)",
-          "oklch(49% 0.004 80)",
-          "oklch(61% 0.004 80)",
-          "oklch(72% 0.004 80)",
-          "oklch(84% 0.004 80)",
-          "oklch(95% 0.004 80)"
-        ]
-      },
-      "send": {
-        "role": "primary",
-        "displayName": "Send Graphite",
-        "tonalRamp": [
-          "oklch(15% 0.01 285)",
-          "oklch(26% 0.01 285)",
-          "oklch(38% 0.01 285)",
-          "oklch(49% 0.01 285)",
-          "oklch(61% 0.01 285)",
-          "oklch(72% 0.01 285)",
-          "oklch(84% 0.01 285)",
-          "oklch(95% 0.01 285)"
-        ]
-      },
-      "focus": {
-        "role": "primary",
-        "displayName": "Appearance focus",
-        "tonalRamp": [
-          "oklch(15% 0.004 80)",
-          "oklch(26% 0.004 80)",
-          "oklch(38% 0.004 80)",
-          "oklch(49% 0.004 80)",
-          "oklch(61% 0.004 80)",
-          "oklch(72% 0.004 80)",
-          "oklch(84% 0.004 80)",
-          "oklch(95% 0.004 80)"
-        ]
-      },
-      "status-green": {
-        "role": "semantic",
-        "displayName": "Status Green",
-        "tonalRamp": [
-          "oklch(15% 0.1 150)",
-          "oklch(26% 0.1 150)",
-          "oklch(38% 0.1 150)",
-          "oklch(49% 0.1 150)",
-          "oklch(61% 0.1 150)",
-          "oklch(72% 0.1 150)",
-          "oklch(84% 0.1 150)",
-          "oklch(95% 0.1 150)"
-        ]
-      },
-      "status-red": {
-        "role": "semantic",
-        "displayName": "Status Red",
-        "tonalRamp": [
-          "oklch(15% 0.1 15)",
-          "oklch(26% 0.1 15)",
-          "oklch(38% 0.1 15)",
-          "oklch(49% 0.1 15)",
-          "oklch(61% 0.1 15)",
-          "oklch(72% 0.1 15)",
-          "oklch(84% 0.1 15)",
-          "oklch(95% 0.1 15)"
-        ]
-      },
-      "notice-surface": {
-        "role": "neutral",
-        "displayName": "Notice Surface",
-        "tonalRamp": [
-          "oklch(15% 0.1 350)",
-          "oklch(26% 0.1 350)",
-          "oklch(38% 0.1 350)",
-          "oklch(49% 0.1 350)",
-          "oklch(61% 0.1 350)",
-          "oklch(72% 0.1 350)",
-          "oklch(84% 0.1 350)",
-          "oklch(95% 0.1 350)"
-        ]
-      },
-      "notice-border": {
-        "role": "neutral",
-        "displayName": "Notice Border",
-        "tonalRamp": [
-          "oklch(15% 0.1 350)",
-          "oklch(26% 0.1 350)",
-          "oklch(38% 0.1 350)",
-          "oklch(49% 0.1 350)",
-          "oklch(61% 0.1 350)",
-          "oklch(72% 0.1 350)",
-          "oklch(84% 0.1 350)",
-          "oklch(95% 0.1 350)"
-        ]
-      },
-      "notice-text": {
-        "role": "neutral",
-        "displayName": "Notice Text",
-        "tonalRamp": [
-          "oklch(15% 0.1 350)",
-          "oklch(26% 0.1 350)",
-          "oklch(38% 0.1 350)",
-          "oklch(49% 0.1 350)",
-          "oklch(61% 0.1 350)",
-          "oklch(72% 0.1 350)",
-          "oklch(84% 0.1 350)",
-          "oklch(95% 0.1 350)"
-        ]
-      }
-    },
-    "focus": [
-      {
-        "name": "global",
-        "value": "2px solid var(--focus-color);outline-offset:3px",
-        "purpose": "Keyboard focus follows appearance accent."
       },
       {
-        "name": "composer",
-        "value": "border-color:#b1ada4;box-shadow:none",
-        "purpose": "The enclosing composer darkens its border without elevation."
+        "name": "mobile-connectors",
+        "value": "600px"
       }
     ],
-    "typographyMeta": {
-      "body": {
-        "displayName": "Conversation",
-        "purpose": "Inter Variable by default; main panel can switch to System or Georgia."
-      },
-      "display": {
-        "displayName": "Welcome heading",
-        "purpose": "QuickStart heading: Inter Variable, 26px desktop/24px mobile, 550, -.03em tracking, line-height 1.3."
+    "assetProvenance": {
+      "originalLogo": {
+        "path": "frontend/public/cipher-logo.png",
+        "dimensions": "2000×2000",
+        "sha256": "f85c60f5dabf119a6aa23e77cdea13310cfa71efb386634bb5e37ec7cccfa94e",
+        "viewport": "188 597 1624 806",
+        "rule": "Direct SVG image reference; no optimizer, redrawing, recompression, or lettering changes. The embedded Cipher spelling is preserved."
       }
     },
-    "glass": {
-      "blurDefault": "24px",
-      "blurRange": "0–40px",
-      "triggerSaturate": "140%",
-      "menuSaturate": "160%",
-      "dialogSaturate": "145%",
-      "backdropBlur": "5px",
-      "dialogImplementation": "Isolated noninteractive ::before backdrop filter; dialog ancestor has no filter."
-    },
-    "identity": {
-      "backgrounds": [
-        "#e9e6e0",
-        "#e1e9e5",
-        "#e3e7ee",
-        "#eae3e7"
-      ],
-      "rule": "Name-derived first two word initials and deterministic muted tone; compact roster uses circular 26px desktop/28px mobile avatars. Visible adjacent names carry identity."
-    },
-    "workspaceInteraction": {
-      "commandPalette": "Native dialog in body portal; Cmd/Ctrl+K; arrow selection, Enter, Escape; destination/action search limited to 20 matches.",
-      "conversationSearch": "Case-insensitive loaded noninternal message content only; close clears query and restores trigger focus.",
-      "workPanel": "Native drawer: active-first real jobs, latest first, up to 30; recent work and direction pages; inline cancellation errors.",
-      "composer": "White two-row 752px composer with input above attachments, response format, tools toggle and send. Appearance action accent and density remain effective; neutral bubbles do not use accent fills.",
-      "responsive": "Full-bleed workspace, 256px adjustable rail and 56px headers; <=1000px hides model metadata; <=760px modal navigation, full-width thread, and 44px composer actions.",
-      "verification": "October 22: UI owner reports production build plus 20 focused tests and actual desktop/mobile browser checks. Independent review inspected supplied screenshots and control handlers; detector findings []. Synthetic fixtures only; no production deployment, live provider execution, pixel fidelity or superiority claim."
-    },
-    "workspaceRefresh": {
-      "date": "2026-10-22",
-      "mode": "Operate",
-      "source": "frontend/src/app/grok-workspace.css",
-      "layout": "Full-bleed warm off-white thread; 256px rail; 56px headers; 752px two-row composer.",
-      "supersedes": "Earlier framed-layout, purple-gray roster, asymmetric accent-bubble and oversized heading descriptions.",
-      "evidence": "verification/ui-README.md; task-workspace verification/grokbot-ui screenshots; synthetic fixtures."
-    }
+    "recordStatus": "Source-backed local candidate after the final correction batch; final verification pending at documentation time. Synthetic captures do not prove provider grants or production activation."
   },
   "components": [
     {
       "name": "Primary action",
       "kind": "button",
       "refersTo": "button-primary",
-      "description": "Primary form action follows the saved appearance accent; Graphite by default.",
-      "html": "<button class=\"ds-primary\">Create bot</button>",
-      "css": ".ds-primary{font:16px \"Inter Variable\",-apple-system,BlinkMacSystemFont,\"Segoe UI\",sans-serif;padding:10px 18px;border:1px solid var(--accent-blue,#404047);border-radius:12px;background:var(--accent-blue,#404047);color:white;cursor:pointer}.ds-primary:focus-visible{outline:2px solid var(--focus-color,#404047);outline-offset:3px}"
+      "description": "Monochrome task and dialog action; inherits current appearance.",
+      "html": "<button class=\"ds-primary\">Done</button>",
+      "css": ".ds-primary{font-family:-apple-system,BlinkMacSystemFont,\"SF Pro Text\",system-ui,\"Segoe UI\",sans-serif;padding:10px 18px;border:0;border-radius:8px;background:var(--brand-action,#171717);color:var(--brand-on-action,#fff);cursor:pointer;transition:opacity 150ms ease}.ds-primary:hover{opacity:.84}.ds-primary:active{opacity:.75}.ds-primary:focus-visible{outline:2px solid var(--cx-label,#171717);outline-offset:3px}.ds-primary:disabled{opacity:.5;cursor:default}"
     },
     {
-      "name": "Round toolbar action",
+      "name": "Secondary action",
       "kind": "button",
-      "refersTo": "button-round",
-      "description": "Circular create control used in the roster toolbar.",
-      "html": "<button class=\"ds-round\" aria-label=\"Create bot\"><svg viewBox=\"0 0 24 24\"><path d=\"M12 4v16M4 12h16\"/></svg></button>",
-      "css": ".ds-round{width:30px;height:32px;display:grid;place-items:center;border:0;border-radius:50%;background:transparent;color:#68665f;cursor:pointer}.ds-round svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.6}.ds-round:hover{background:#e6e4df}.ds-round:focus-visible{outline:2px solid #55534e;outline-offset:3px}"
+      "refersTo": "button-secondary",
+      "description": "Quiet bordered action for optional controls.",
+      "html": "<button class=\"ds-secondary\">Reset appearance</button>",
+      "css": ".ds-secondary{font-family:-apple-system,BlinkMacSystemFont,\"SF Pro Text\",system-ui,\"Segoe UI\",sans-serif;min-height:40px;padding:10px 18px;border:1px solid var(--cx-sep,#dedede);border-radius:8px;background:var(--cx-card,#fff);color:var(--cx-label,#171717);cursor:pointer;transition:background 150ms ease}.ds-secondary:hover,.ds-secondary:active{background:var(--system-subtle,#e8e8e8)}.ds-secondary:focus-visible{outline:2px solid var(--cx-label,#171717);outline-offset:3px}"
     },
     {
-      "name": "Search field",
+      "name": "Search input",
       "kind": "input",
       "refersTo": "search-input",
-      "description": "Roster search field.",
-      "html": "<input class=\"ds-search\" placeholder=\"Search bots\" aria-label=\"Search bots\">",
-      "css": ".ds-search{font:16px \"Inter Variable\",-apple-system,BlinkMacSystemFont,\"Segoe UI\",sans-serif;padding:10px;border:1px solid #ddd;border-radius:12px;color:#202020;background:white}.ds-search:focus-visible{outline:2px solid var(--focus-color,#404047);outline-offset:3px}"
+      "description": "Neutral search or configuration field.",
+      "html": "<input class=\"ds-input\" aria-label=\"Search plugins\" placeholder=\"Search plugins\" />",
+      "css": ".ds-input{font-family:-apple-system,BlinkMacSystemFont,\"SF Pro Text\",system-ui,\"Segoe UI\",sans-serif;min-height:40px;max-width:100%;padding:10px;border:1px solid var(--cx-sep,#dedede);border-radius:8px;background:var(--cx-card,#fff);color:var(--cx-label,#171717)}.ds-input::placeholder{color:var(--cx-label-2,#626262)}.ds-input:hover{border-color:var(--cx-label-3,#737373)}.ds-input:focus-visible{outline:2px solid var(--cx-label,#171717);outline-offset:3px;border-color:var(--cx-label,#171717)}"
     },
     {
-      "name": "Outgoing message",
-      "kind": "card",
-      "refersTo": "message-outgoing",
-      "description": "Right-aligned neutral bubble; synthetic static preview.",
-      "html": "<article class=\"ds-outgoing\">A message preview</article>",
-      "css": ".ds-outgoing{font:16px/1.65 \"Inter Variable\",sans-serif;width:fit-content;max-width:88%;padding:10px 16px;border-radius:18px;background:#e8e6e1;color:#242320;white-space:pre-wrap;overflow-wrap:anywhere}"
-    },
-    {
-      "name": "Incoming message",
-      "kind": "card",
-      "refersTo": "message-incoming",
-      "description": "Neutral incoming reply bubble on the off-white thread.",
-      "html": "<article class=\"ds-incoming\">A reply preview</article>",
-      "css": ".ds-incoming{font:16px/1.65 \"Inter Variable\",sans-serif;width:fit-content;max-width:88%;padding:10px 16px;border-radius:18px;background:#eeede9;color:#242320;white-space:pre-wrap;overflow-wrap:anywhere}"
-    },
-    {
-      "name": "Roster navigation",
+      "name": "Navigation row",
       "kind": "nav",
-      "description": "Compact selected row with circular muted initials; name carries identity.",
-      "html": "<nav aria-label=\"Agents\"><button class=\"ds-row\"><span class=\"ds-avatar\" aria-hidden=\"true\">AN</span><strong>Agent name</strong></button></nav>",
-      "css": ".ds-row{font:13px \"Inter Variable\",sans-serif;display:flex;align-items:center;gap:9px;width:100%;min-height:42px;padding:7px 8px;text-align:left;border:0;border-radius:11px;background:#e6e4e0;color:#202020;cursor:pointer}.ds-avatar{display:grid;place-items:center;width:26px;height:26px;border-radius:50%;background:#e3e7ee;color:#4a4553;font-size:9px}.ds-row strong{font-size:13px;font-weight:450}.ds-row:focus-visible{outline:2px solid #55534e;outline-offset:3px}"
+      "refersTo": "nav-row",
+      "description": "Compact actual agent destination; state remains independent of simulated activity.",
+      "html": "<nav class=\"ds-nav\" aria-label=\"Agents\"><button class=\"ds-nav-row\" aria-current=\"page\"><span class=\"ds-initials\" aria-hidden=\"true\">CO</span><span>Coordinator</span></button><button class=\"ds-nav-row\"><span class=\"ds-initials\" aria-hidden=\"true\">BU</span><span>Builder</span></button></nav>",
+      "css": ".ds-nav{font-family:-apple-system,BlinkMacSystemFont,\"SF Pro Text\",system-ui,\"Segoe UI\",sans-serif;width:232px;padding:8px;background:var(--system-sidebar,#eee);color:var(--cx-label,#171717)}.ds-nav-row{display:flex;align-items:center;gap:8px;width:100%;min-height:42px;padding:6px 7px;border:0;border-radius:8px;background:transparent;color:inherit;text-align:left;font:500 12px -apple-system,BlinkMacSystemFont,\"SF Pro Text\",system-ui,sans-serif;cursor:pointer;transition:background-color .18s ease}.ds-nav-row:hover,.ds-nav-row[aria-current=\"page\"]{background:var(--system-selected,rgba(0,0,0,.075))}.ds-nav-row:focus-visible{outline:2px solid var(--cx-label,#171717);outline-offset:3px}.ds-initials{display:grid;place-items:center;width:28px;height:28px;border-radius:8px;background:var(--system-subtle,#e8e8e8);color:var(--cx-label,#171717);font-size:9px}"
     },
     {
-      "name": "Team member chip",
+      "name": "Catalog filter chip",
       "kind": "chip",
-      "description": "Compact teammate name with muted initials.",
-      "html": "<span class=\"ds-member\"><span class=\"ds-avatar\" aria-hidden=\"true\">AN</span>Agent name</span>",
-      "css": ".ds-member{display:inline-flex;align-items:center;gap:4px;font:11px \"Inter Variable\",sans-serif;padding:3px 8px;background:#f1f1f1;color:#242329;border-radius:20px}.ds-avatar{display:grid;place-items:center;width:28px;height:28px;border-radius:9px;background:#e3e7ee;color:#4a4553;font-size:10px;font-weight:650}",
-      "refersTo": "team-member-chip"
+      "refersTo": "filter-chip",
+      "description": "An explicit selected filter with neutral inverse action state.",
+      "html": "<button class=\"ds-chip\" aria-pressed=\"true\">All</button><button class=\"ds-chip\" aria-pressed=\"false\">Productivity</button>",
+      "css": ".ds-chip{font-family:-apple-system,BlinkMacSystemFont,\"SF Pro Text\",system-ui,\"Segoe UI\",sans-serif;min-height:36px;margin:3px;padding:7px 13px;border:1px solid var(--cx-sep,#dedede);border-radius:999px;background:var(--cx-card,#fff);color:var(--cx-label,#171717);font-size:12px;cursor:pointer;transition:background 150ms ease}.ds-chip[aria-pressed=\"true\"]{background:var(--brand-action,#171717);color:var(--brand-on-action,#fff)}.ds-chip:hover{opacity:.84}.ds-chip:active{opacity:.75}.ds-chip:focus-visible{outline:2px solid var(--cx-label,#171717);outline-offset:3px}"
     },
     {
-      "name": "Task-first composer",
-      "kind": "custom",
-      "description": "Two-row task input with compact selectors and a named arrow action; production uses GlassSelect.",
-      "html": "<form class=\"ds-task\" onsubmit=\"return false\"><textarea aria-label=\"Your task\" rows=\"2\" placeholder=\"Ask anything, or describe a task…\"></textarea><div><select aria-label=\"Manager model\"><option>Auto · task specialists</option></select><select aria-label=\"Task output\"><option>Ask anything</option></select><button type=\"button\" aria-label=\"Start task\"><svg aria-hidden=\"true\" viewBox=\"0 0 24 24\"><path d=\"M12 19V5m-6 6 6-6 6 6\"/></svg></button></div></form>",
-      "css": ".ds-task{box-sizing:border-box;width:min(752px,100%);border:1px solid #e1dfd9;border-radius:24px;background:#fff;padding:12px 14px 10px;font-family:\"Inter Variable\",sans-serif}.ds-task:focus-within{border-color:#b1ada4}.ds-task textarea{box-sizing:border-box;width:100%;resize:none;border:0;background:none;font:15px/24px \"Inter Variable\",sans-serif;outline:none;padding:2px 3px 10px;color:#202020;min-height:48px}.ds-task>div{display:flex;align-items:center;gap:2px}.ds-task select{max-width:45%;min-height:36px;border:0;background:transparent;padding:4px 8px;font-size:11px;color:#5e5a52}.ds-task button{margin-left:auto;width:40px;height:40px;flex-shrink:0;border:0;border-radius:50%;background:#404047;color:#fff;font-size:20px;cursor:pointer}.ds-task button:focus-visible,.ds-task select:focus-visible{outline:2px solid #55534e;outline-offset:3px}.ds-task button svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.6}"
-    },
-    {
-      "name": "Glass select states",
-      "kind": "custom",
-      "refersTo": "glass-select-trigger",
-      "description": "Visual preview of the large glass trigger and menu; production uses Radix keyboard/typeahead semantics.",
-      "html": "<button class=\"ds-glass-trigger\" aria-haspopup=\"listbox\">GPT-6.1 Sol <span aria-hidden=\"true\">⌄</span></button><div class=\"ds-glass-menu\" role=\"listbox\" aria-label=\"Model\"><div class=\"ds-glass-option\" role=\"option\" aria-selected=\"true\" tabindex=\"0\">✓ GPT-6.1 Sol</div><div class=\"ds-glass-option\" role=\"option\" aria-selected=\"false\" tabindex=\"0\">GPT-6 Luna</div></div>",
-      "css": ".ds-glass-trigger{font:15px \"Inter Variable\",sans-serif;display:inline-flex;align-items:center;justify-content:space-between;gap:16px;min-height:48px;max-width:100%;padding:12px 16px;border-radius:12px;background:rgba(255,255,255,.83);border:1px solid rgba(98,85,99,.16);box-shadow:none;backdrop-filter:blur(var(--glass-blur,24px)) saturate(140%);color:#29262c;cursor:pointer;transition:background 150ms ease,box-shadow 150ms ease}.ds-glass-trigger:hover{background:rgba(255,255,255,.95)}.ds-glass-trigger:focus-visible{outline:2px solid var(--focus-color,#404047);outline-offset:3px}.ds-glass-menu{font-family:\"Inter Variable\",sans-serif;margin-top:8px;max-width:400px;padding:7px;border-radius:16px;background:rgba(252,251,253,.91);backdrop-filter:blur(var(--glass-blur,24px)) saturate(160%);border:1px solid #ffffffd9;box-shadow:0 18px 48px #24152425,inset 0 1px 0 #fff;color:#28242a}.ds-glass-option{display:flex;align-items:center;gap:14px;min-height:50px;padding:13px 17px;border-radius:13px;font-size:15px;line-height:1.45}.ds-glass-option:hover,.ds-glass-option:focus-visible{background:color-mix(in srgb,var(--focus-color,#404047) 11%,white);outline:none}.ds-glass-option[aria-selected=true]{font-weight:550}"
-    },
-    {
-      "name": "Goal progress row",
+      "name": "Connector card",
       "kind": "card",
-      "description": "Bounded goal progress with workspace and pause actions; preview does not invoke a scheduler.",
-      "html": "<section class=\"ds-goal\"><div><strong>Goal title</strong><span>Paused</span></div><p>1 of 3 runs · every 60 minutes</p><p>Latest progress appears here.</p><button>Open workspace</button><button>Resume</button></section>",
-      "css": ".ds-goal{font-family:\"Inter Variable\",sans-serif;padding:0 0 18px;border-bottom:1px solid #e2dce5}.ds-goal>div{display:flex;justify-content:space-between;gap:12px}.ds-goal strong{font-size:15px}.ds-goal span{font-size:11px;color:#625b66}.ds-goal p{font-size:13px;line-height:1.6;color:#665e6b}.ds-goal button{font:12px \"Inter Variable\",sans-serif;padding:8px 14px;margin:8px 6px 0 0;min-height:44px;border:1px solid #ddd;border-radius:12px;background:white;color:#202020;cursor:pointer}.ds-goal button:focus-visible{outline:2px solid var(--focus-color,#404047);outline-offset:3px}"
+      "refersTo": "connector-card",
+      "description": "Source-backed discovery entry; the preview does not imply an authorized connection.",
+      "html": "<article class=\"ds-card\"><h4>Service name</h4><p>Discovery information for a hosted connector.</p><button class=\"ds-card-action\">Connect</button></article>",
+      "css": ".ds-card{font-family:-apple-system,BlinkMacSystemFont,\"SF Pro Text\",system-ui,\"Segoe UI\",sans-serif;max-width:260px;padding:16px;border:1px solid var(--cx-sep,#dedede);border-radius:10px;background:var(--cx-card,#fff);color:var(--cx-label,#171717);transition:border-color 150ms ease}.ds-card:hover{border-color:var(--cx-label-3,#737373)}.ds-card h4{margin:0;font-size:13px;font-weight:600;line-height:1.4}.ds-card p{margin:12px 0 15px;font-size:12px;line-height:1.6;color:var(--cx-label-2,#626262)}.ds-card-action{font-family:-apple-system,BlinkMacSystemFont,\"SF Pro Text\",system-ui,\"Segoe UI\",sans-serif;min-height:36px;padding:8px 12px;border:0;border-radius:7px;background:var(--brand-action,#171717);color:var(--brand-on-action,#fff);font-size:12px;cursor:pointer}.ds-card-action:hover{opacity:.84}.ds-card-action:active{opacity:.75}.ds-card-action:focus-visible{outline:2px solid var(--cx-label,#171717);outline-offset:3px}"
+    },
+    {
+      "name": "Home task composer",
+      "kind": "custom",
+      "refersTo": "task-composer",
+      "description": "Desktop shape preview. The original canvas and actual backend request remain in the app.",
+      "html": "<form class=\"ds-task\"><textarea aria-label=\"Your task\" placeholder=\"Ask anything…\"></textarea><div class=\"ds-task-controls\"><button type=\"button\" class=\"ds-task-choice\">Auto</button><button type=\"button\" class=\"ds-task-choice\">Text</button><button class=\"ds-task-send\" aria-label=\"Start task\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M5 12h14m-6-6 6 6-6 6\" /></svg></button></div></form>",
+      "css": ".ds-task{font-family:-apple-system,BlinkMacSystemFont,\"SF Pro Text\",system-ui,\"Segoe UI\",sans-serif;display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;max-width:660px;min-height:80px;padding:9px 14px;border:1px solid var(--cx-sep,#dedede);border-radius:14px;background:var(--cx-card,#fff);box-shadow:0 3px 12px rgba(0,0,0,.035);transition:border-color .2s ease,box-shadow .2s ease}.ds-task:hover{border-color:var(--cx-label-3,#737373)}.ds-task:focus-within{border-color:var(--cx-label,#171717);box-shadow:0 3px 16px rgba(0,0,0,.065)}.ds-task textarea{font-family:-apple-system,BlinkMacSystemFont,\"SF Pro Text\",system-ui,\"Segoe UI\",sans-serif;min-width:0;height:54px;padding:15px 4px 10px;resize:none;border:0;outline:none;background:transparent;color:var(--cx-label,#171717);font-size:15px}.ds-task textarea::placeholder{color:var(--cx-label-2,#626262)}.ds-task-controls{display:flex;align-items:center;gap:3px}.ds-task-choice{font-family:-apple-system,BlinkMacSystemFont,\"SF Pro Text\",system-ui,\"Segoe UI\",sans-serif;min-height:34px;padding:5px 8px;border:0;border-radius:7px;background:transparent;color:var(--cx-label-2,#626262);font-size:12px;cursor:pointer}.ds-task-choice:hover{background:var(--system-subtle,#e8e8e8)}.ds-task-send{display:grid;place-items:center;width:38px;height:38px;padding:8px;border:0;border-radius:50%;background:var(--brand-action,#171717);color:var(--brand-on-action,#fff);cursor:pointer}.ds-task-send svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.6;transform:rotate(-45deg)}.ds-task-send:hover{opacity:.84}.ds-task-send:active{opacity:.75}.ds-task-send:focus-visible,.ds-task-choice:focus-visible{outline:2px solid var(--cx-label,#171717);outline-offset:3px}@media(max-width:760px){.ds-task{grid-template-columns:minmax(0,1fr)}.ds-task textarea{height:68px;font-size:16px}.ds-task-controls{justify-content:flex-end}.ds-task-choice,.ds-task-send{min-height:44px}.ds-task-send{width:44px;height:44px}}"
     }
   ],
   "narrative": {
-    "overview": "The October 22 workspace uses a full-bleed warm off-white conversation, a quiet neutral navigation rail, subdued initials avatars, and an adjustable Graphite default action accent. A single conversation toolbar and a centered two-row composer establish hierarchy. Open GrokBot keeps its own name and mark. Glass remains available for menus and dialogs; conversation text stays the primary visual anchor.\n\nThe frontmatter and the October 22 refresh below describe the current composition. Earlier dated sections are preserved as implementation history; the October 22 values supersede conflicting frame, palette, bubble, sidebar, and composer descriptions. Existing product capability and verification limits remain separate from visual evidence.",
+    "northStar": "Cypher's original monochrome binary identity",
+    "overview": "Cypher's original monochrome binary identity gives a functional agent workspace a quiet, recognizable center. Neutral surfaces, restrained separators, system typography, and generous space around the home task composer make the work readable. The existing binary lens and brief opening signature supply the identity's motion.\n\nThe current rules are extracted from the final imported brand stylesheet and its component sources. They supersede earlier Grok, adjustable-accent, lavender, glass, and decorative-orbit directions. This document records the implemented local candidate; final correction verification was pending at documentation time. It does not declare production activation or provider readiness.",
     "keyCharacteristics": [
-      "Full-bleed off-white thread and compact neutral rail with Open GrokBot branding.",
-      "Neutral message bubbles, a two-row white composer, and a restrained heading.",
-      "Adjustable action accent, roster density, type size and motion preferences.",
-      "Keyboard-operable selects and dialogs with persistent actions and visible recovery states."
+      "Neutral light and dark surfaces with monochrome actions and visible keyboard focus.",
+      "Original PNG artwork in navigation and sign-in; unchanged BinaryLens and CipherIntro for motion.",
+      "Platform typography with existing optional conversation typefaces retained.",
+      "Compact navigation, a calm task entry, and persistent recovery and authorization states."
     ],
-    "rules": [],
+    "rules": [
+      {
+        "name": "The Original Asset Rule",
+        "body": "Use the original PNG bytes through the proportional image viewport; never redraw its lettering, distort it, recompress it, or substitute a generated logo.",
+        "section": "colors"
+      },
+      {
+        "name": "The Neutral Action Rule",
+        "body": "App-owned brand, selection, link, and action styling stays neutral in both appearances; a saved legacy accent must not restore blue or purple chrome.",
+        "section": "colors"
+      },
+      {
+        "name": "The Optional Typeface Rule",
+        "body": "System UI is the workspace default. Existing Inter and Georgia conversation choices remain preferences, not a replacement brand identity.",
+        "section": "typography"
+      },
+      {
+        "name": "The Evidence Rule",
+        "body": "Animation, a catalog listing, an open consent page, and a screenshot never establish completed work or an authorized connection.",
+        "section": "elevation"
+      }
+    ],
     "dos": [
-      "Do preserve the light Grok identity while making glass controls generous and readable.",
-      "Do keep blur and motion user-adjustable and keyboard states visible.",
-      "Do keep dialog actions reachable while fields scroll.",
-      "Do use explicit state text for goals, queued work, blocked runs, and deliveries.",
-      "Do keep private credentials masked and separate from connection-status claims."
+      "Do use the final neutral palette in both light and dark surfaces, including connector chrome and navigation.",
+      "Do preserve the original logo bytes, proportions, and embedded Cipher lettering while using Cypher for product text.",
+      "Do use the existing binary animations with visibility and motion gates.",
+      "Do keep keyboard focus, task errors, drafts, real run state, and provider authorization recovery visible.",
+      "Do keep dialog actions reachable while long content scrolls."
     ],
     "donts": [
-      "Don't claim new goals, channels, preferences, or plugin controls are live verified from source tests alone.",
-      "Don't infer private-account OAuth access from a webhook or MCP URL.",
-      "Don't replace task content with invented successful examples.",
-      "Don't force every surface into a floating glass card.",
-      "Don't claim screenshot pixel fidelity or universal provider/tool readiness."
+      "Don't restore blue, purple, lavender, or a user-selectable color accent to app-owned brand and controls.",
+      "Don't add a graph, invented orbital logo animation, or simulated task progress to the task workspace.",
+      "Don't make Inter a new default brand face or remove the existing conversation typeface options.",
+      "Don't label a service connected before the backend discovers its tools or treat Sign in as an Allow grant.",
+      "Don't claim production deployment, live provider execution, pixel fidelity, or performance superiority from local tests and synthetic captures."
     ]
   }
 }

@@ -1,6 +1,6 @@
-# Open GrokBot for Hive and Atlas
+# Cypher for Hive and Atlas
 
-An owner-operated agent workspace with persistent shared conversations, a cloud worker, configurable models, media tools, and remote MCP connections. The supplied light Grok Bot screenshot guides visual appearance; its example conversations are not real product data or authorization to send messages. No pixel-exact or xAI feature-parity claim is made.
+An owner-operated agent workspace with persistent shared conversations, a cloud worker, configurable models, media tools, and remote MCP connections. Cypher uses the original monochrome logo and binary-lens animation while retaining the Open GrokBot backend and capabilities. Earlier Grok screenshot directions are historical; example conversations and local fixtures are not real product data or authorization to send messages. No pixel-exact or xAI feature-parity claim is made.
 
 ## Current product
 
@@ -12,7 +12,7 @@ Messages accept up to four files and 3 MB combined: PNG/JPEG/WebP, PDF, UTF-8 te
 
 ## Appearance, goals, and channels
 
-The system-style workspace uses the platform font stack, opaque compact controls, and adapts to the operating system's light or dark appearance. Blue is the default action accent; browser-local preferences can change accent, message text size, desktop message width, agent-list density, and interface motion. Inter and Georgia remain optional conversation typefaces. Preferences do not imply cross-device account synchronization.
+The Cypher workspace uses the platform font stack, opaque neutral controls, and light or dark appearance. App-owned brand and action colors are monochrome: graphite on light surfaces and light ink on dark surfaces. Blue and purple are not brand options. The old accent selector is removed; loading a saved accent cannot restore colored actions. Browser-local preferences retain message text size, desktop message width, agent-list density, and interface motion. Inter and Georgia remain optional conversation typefaces; Inter is not a newly introduced brand face. Preferences do not imply cross-device account synchronization.
 
 Cloud goals persist in the database and schedule finite runs in the hosted worker. Each goal specifies an objective, evidence-based completion criteria, room, Sol/Luna manager, interval (minimum 15 minutes), and run allowance. The UI offers 1–20 runs and 15–1440 minute intervals; the API permits intervals up to seven days. Defaults are three runs, one hour apart. At most ten goals may be active. Completion requires the completion tool and a successful task. Pause cancels pending work or requests running-task cancellation; failed/interrupted work blocks further runs until explicit resume/retry. Exhausted or completed goals cannot be resumed. Agent-created follow-up goals are limited to three runs, one per task, with no nested goals.
 
@@ -51,3 +51,12 @@ Workspace setup offers an AWS CloudFormation template for a private, single-host
 ## Workspace usability update — October 21, 2026
 
 Navigation has an explicit New task action, a compact desktop layout menu, and a labeled mobile drawer. Chat text drafts survive conversation switching within the current tab. Work status and Stop remain visible beside the composer. Settings support dismissal, connection failures offer retry, and plugin browsing can remain usable when connected-service loading fails. Starting a task reuses a request ID for an unconfirmed retry and opens an accepted task without depending on an agent-list refresh. Account identity comes from the signed-in email. These UI changes do not change service permissions, model availability, or authentication requirements.
+
+
+## Cypher brand restoration — October 23, 2026
+
+The home task surface places the existing animated BinaryLens above one Cypher title and the functional task composer. It keeps model/provider and Text/Create an image selections, account-scoped tab-local drafts, error recovery, and accepted-task navigation. The layout has breathing room and no graph. Navigation and sign-in use the original uploaded 2000×2000 PNG through a proportional SVG image viewport; the source image literally contains Cipher lettering. Preserve that original artwork and spelling inside the asset without redrawing, recompression, or an image optimizer. The product name in live text remains Cypher. The asset SHA-256 is `f85c60f5dabf119a6aa23e77cdea13310cfa71efb386634bb5e37ec7cccfa94e`.
+
+CypherEntrance restores saved appearance before mounting the unchanged CipherIntro and waits until the document is visible with interface motion enabled and OS reduced motion inactive. The original intro is a brief, skippable signature, once per tab where session storage is available. The homepage BinaryLens uses its existing digit-flip and pulse animation, gated by visibility, OS reduced motion, and the interface-motion preference. Motion is identity, not evidence of task progress or provider authorization.
+
+This local brand restoration passed 114 frontend tests and the production build. The finish reviewer scored all four requested corrections resolved: neutral plugin chrome, dark-sidebar contrast, initial motion preferences, and persistent design guidance. Its ship verdict applies to those four fixes and the seven refreshed local captures. These checks do not prove production activation, valid provider grants, model execution, or universal connector readiness. Local screenshot tests use synthetic fixture data. Existing Google/email authentication and the provider Sign in → Allow/Authorize → Verify flow retain their real backend requirements. Current design guidance is in DESIGN.md; older dated descriptions there are explicitly historical.

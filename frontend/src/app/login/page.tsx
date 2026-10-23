@@ -4,7 +4,7 @@ import { AppSession, readSignedPayload } from '../../lib/auth-server';
 import { GoogleLogin } from '../../components/GoogleLogin';
 import { EmailLoginForm } from '../../components/EmailLoginForm';
 import CypherMark from '../../components/cipher/CypherMark';
-import CipherIntro from '../../components/cipher/CipherIntro';
+import CypherEntrance from '../../components/cipher/CypherEntrance';
 
 export const dynamic = 'force-dynamic';
 
@@ -24,7 +24,7 @@ export default function LoginPage({ searchParams }: { searchParams?: { error?: s
   const loginUri = (process.env.GROKBOT_PUBLIC_URL || 'http://localhost:3000') + '/api/auth/google/callback';
   return (
     <main className="login-page">
-      <CipherIntro />
+      <CypherEntrance />
       <header className="login-brandbar"><a className="login-brand" href="/" aria-label="Cypher home"><CypherMark className="brand-symbol" decorative/><span>Cypher</span></a></header>
 
       <div className="login-layout">

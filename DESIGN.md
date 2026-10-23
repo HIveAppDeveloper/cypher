@@ -1,4 +1,239 @@
 ---
+name: Cypher
+description: A quiet monochrome agent workspace with the original Cypher identity and functional connected tools.
+colors:
+  conversation: "#f4f4f4"
+  panel: "#fff"
+  sidebar: "#eee"
+  subtle: "#e8e8e8"
+  text: "#171717"
+  text-secondary: "#626262"
+  text-tertiary: "#737373"
+  separator: "#dedede"
+  selected: "rgba(0,0,0,.075)"
+  dark-conversation: "#111"
+  dark-panel: "#1c1c1c"
+  dark-sidebar: "#191919"
+  dark-subtle: "#292929"
+  dark-text: "#f5f5f5"
+  dark-text-secondary: "#b5b5b5"
+  dark-text-tertiary: "#aaa"
+  dark-separator: "#3d3d3d"
+  dark-selected: "rgba(255,255,255,.1)"
+typography:
+  display:
+    fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, "Segoe UI", sans-serif'
+    fontSize: "clamp(42px,4.5vw,58px)"
+    fontWeight: 500
+    lineHeight: 1.05
+    letterSpacing: "-.04em"
+  headline:
+    fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, "Segoe UI", sans-serif'
+    fontSize: "20px"
+    fontWeight: 650
+    letterSpacing: "-.02em"
+  title:
+    fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, "Segoe UI", sans-serif'
+    fontSize: "13px"
+    fontWeight: 600
+    letterSpacing: "-.005em"
+  body:
+    fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, "Segoe UI", sans-serif'
+    fontSize: "16px"
+    lineHeight: 1.6
+  label:
+    fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, "Segoe UI", sans-serif'
+    fontSize: "12px"
+    fontWeight: 500
+rounded:
+  sm: "6px"
+  md: "8px"
+  card: "10px"
+  composer: "14px"
+  dialog: "16px"
+  full: "999px"
+spacing:
+  xs: "4px"
+  sm: "8px"
+  md: "16px"
+  lg: "24px"
+  xl: "32px"
+components:
+  button-primary:
+    backgroundColor: "{colors.text}"
+    textColor: "{colors.panel}"
+    rounded: "{rounded.md}"
+    padding: "10px 18px"
+  button-primary-dark:
+    backgroundColor: "{colors.dark-text}"
+    textColor: "{colors.text}"
+    rounded: "{rounded.md}"
+    padding: "10px 18px"
+  button-secondary:
+    backgroundColor: "{colors.panel}"
+    textColor: "{colors.text}"
+    rounded: "{rounded.md}"
+    height: "40px"
+  search-input:
+    backgroundColor: "{colors.panel}"
+    textColor: "{colors.text}"
+    rounded: "{rounded.md}"
+    padding: "10px"
+  select-trigger:
+    backgroundColor: "{colors.panel}"
+    textColor: "{colors.text}"
+    rounded: "{rounded.md}"
+    padding: "8px 11px"
+    height: "40px"
+  nav-row:
+    textColor: "{colors.text}"
+    rounded: "{rounded.md}"
+    padding: "6px 7px"
+  filter-chip:
+    backgroundColor: "{colors.panel}"
+    textColor: "{colors.text}"
+    rounded: "{rounded.full}"
+    padding: "7px 13px"
+  connector-card:
+    backgroundColor: "{colors.panel}"
+    textColor: "{colors.text}"
+    rounded: "{rounded.card}"
+    padding: "16px"
+  task-composer:
+    backgroundColor: "{colors.panel}"
+    textColor: "{colors.text}"
+    rounded: "{rounded.composer}"
+    padding: "9px 14px"
+    height: "80px"
+  dialog:
+    backgroundColor: "{colors.panel}"
+    textColor: "{colors.text}"
+    rounded: "{rounded.dialog}"
+---
+
+# Design System: Cypher
+
+## Overview
+
+**Creative North Star: "Cypher's original monochrome binary identity"**
+
+Cypher's original monochrome binary identity gives a functional agent workspace a quiet, recognizable center. Neutral surfaces, restrained separators, system typography, and generous space around the home task composer make the work readable. The existing binary lens and brief opening signature supply the identity's motion.
+
+The current rules are extracted from the final imported brand stylesheet and its component sources. They supersede earlier Grok, adjustable-accent, lavender, glass, and decorative-orbit directions. This document records the implemented local candidate; final correction verification was pending at documentation time. It does not declare production activation or provider readiness.
+
+**Key Characteristics:**
+- Neutral light and dark surfaces with monochrome actions and visible keyboard focus.
+- Original PNG artwork in navigation and sign-in; unchanged BinaryLens and CipherIntro for motion.
+- Platform typography with existing optional conversation typefaces retained.
+- Compact navigation, a calm task entry, and persistent recovery and authorization states.
+
+## Colors
+
+The palette is achromatic: soft neutral fields support graphite actions in light appearance and light actions in dark appearance. The frontmatter is the normative token layer; the source authority is `frontend/src/app/cypher-brand.css`, imported last by the root layout.
+
+### Primary
+
+Graphite text also supplies light-mode primary actions, outgoing messages, links, focus, carets, and selection. Light ink supplies the same roles in dark mode; action text uses the corresponding inverse. The legacy variable name `--accent-blue` remains a compatibility alias for the monochrome action, not a blue color or an exposed preference.
+
+### Neutral
+
+Conversation, panel, sidebar, subtle fill, separator, and three text levels have matching light and dark roles in the frontmatter. Connector counts, tabs, search, catalog tiles, secondary notices, and sidebar controls use these same roles. Preserve explicit status text; existing green/red/amber task and error states are semantic signals rather than additional brand accents. Do not generalize their individual legacy literals into a second palette.
+
+**The Original Asset Rule.** Use the original PNG bytes through the proportional image viewport; never redraw its lettering, distort it, recompress it, or substitute a generated logo.
+
+**The Neutral Action Rule.** App-owned brand, selection, link, and action styling stays neutral in both appearances; a saved legacy accent must not restore blue or purple chrome.
+
+## Typography
+
+**Display Font:** platform UI stack, with system sans fallbacks.
+
+**Body Font:** the same platform UI stack by default.
+
+**Label/Mono Font:** platform labels; existing monospace code and tool output remain distinct.
+
+The hierarchy is restrained outside the home title. The display token applies to the single Cypher heading; mobile overrides it to (44px). Dialog headings use the headline role, toolbar titles use the title role, and roster names use (12px/500). Body message text defaults to the body role and remains adjustable from (14–22px). Composer text is (15px) on desktop and (16px) on mobile. Compact home selectors use (12px); mobile selector and send targets are at least (44px) high. The sign-in title is (27px/500) with a (1.2) line height.
+
+**The Optional Typeface Rule.** System UI is the workspace default. Existing Inter and Georgia conversation choices remain preferences, not a replacement brand identity.
+
+## Layout
+
+The shell fills (100dvh), with no outer card frame. Its desktop sidebar defaults to (256px), with a rendered CSS clamp from (220px) to the smaller of (420px) and the viewport minus (360px). The controller retains a (480px) stored-width limit; this does not override the rendered cap. Collapsed navigation is (64px). Docking, resizing, reset, collapse, filtering, and pinning preserve their existing behavior and browser-local layout storage. Current toolbar and sidebar-header height is (52px). The home task view hides the conversation toolbar rather than repeating a second title.
+
+The home panel is capped at (660px). Its binary lens uses a (560:210) aspect ratio with width capped at (460px), becoming at most (320px) on mobile. The original logo viewport has a separate (1624:806) aspect ratio; do not force either silhouette into a square. Navigation uses a (40×20px) mark and sign-in a (180px) wide hero mark. The home task form is one desktop row with textarea and control cluster; at (760px) it becomes a textarea row above its controls. Starter actions remain short text choices with ample space around the primary task.
+
+Conversation content uses the inherited (760px) thread measure. Message width defaults to (88%) and is bounded at (75ch); the desktop preference spans (60–100%). Below (760px), navigation uses a labeled modal drawer and the conversation uses the available width. At (1000px), compact composer model metadata hides. Long dialog bodies scroll independently while actions remain reachable; connector tiles move from three columns through two to one on narrow screens. The connector mobile layout changes at (600px).
+
+Appearance stores text size, width, density, and motion in this browser. Compact roster density uses (36px) minimum rows and (5px) vertical padding; spacious uses (56px) and (12px). Comfortable current sidebar rows are (42px). Cross-device synchronization is not implied.
+
+## Elevation & Depth
+
+Opaque surfaces, tonal fills, and thin separators establish depth. Menus retain a modest diffuse shadow and dialogs a broader one; the home composer has a faint shadow that strengthens on focus. Sign-in is a quiet bordered card without an enclosing shadow. The earlier user-adjustable blur and glass treatment are historical, not current guidance.
+
+### Shadow Vocabulary
+
+- **Home composer:** `0 3px 12px rgba(0,0,0,.035)` at rest; `0 3px 16px rgba(0,0,0,.065)` on focus.
+- **Menu:** `0 10px 28px rgba(0,0,0,.12)` for floating control surfaces.
+- **Dialog:** `0 18px 48px rgba(0,0,0,.18)` for the modal layer.
+
+Menu state transitions retain their short existing timing; app motion-off and OS reduced motion suppress interface animation. The unchanged BinaryLens flips digits and sweeps its pulse only when active. QuickStart gates it by intersection, document visibility, OS reduced motion, and the saved app preference. CypherEntrance restores appearance and gates the initially hidden or reduced-motion case before mounting the unchanged CipherIntro. The intro gathers, lifts at (760ms), and completes at (1180ms); Escape and Skip intro dismiss it. Session storage makes it once per tab where available. These are the existing signature animations, not a progress meter.
+
+**The Evidence Rule.** Animation, a catalog listing, an open consent page, and a screenshot never establish completed work or an authorized connection.
+
+## Shapes
+
+Controls use small, gently curved corners: select and standard input corners use the medium radius, connector tiles the card radius, and the home form the composer radius. The sign-in card uses the dialog radius. The desktop home send action remains circular at (38px), growing to (44px) on mobile. Sidebar identities are compact (28px) rounded squares. Incoming and outgoing conversation bubbles retain their directional (16px) corners with a (5px) tail corner. Keep the original wide mark free of decorative borders, orbit rings, or square clipping.
+
+## Components
+
+### Buttons and Inputs
+
+Primary actions use the monochrome action and its inverse; hover may reduce opacity to (.84). Secondary controls use opaque panel surfaces and neutral borders. The global keyboard outline retains its control-specific width with neutral ink. Preserve disabled state and text labels, including visually hidden accessible names. Text inputs inherit panel color and legible text; connector search uses a neutral border and a subtle neutral focus ring.
+
+### Selects
+
+The existing Radix-backed select retains keyboard, typeahead, selection, and native-dialog portal behavior. Standard triggers use the select token; compact composer variants are smaller on desktop and have (44px) minimum height on mobile. Menus use opaque surfaces, a (10px) radius and (5px) padding; options use a (6px) radius and retain room for the checkmark. Selected and highlighted options use neutral fill. The component name GlassSelect is legacy implementation vocabulary, not permission to reintroduce translucent lavender styling.
+
+### Navigation
+
+Navigation yields space to the task: New task is prominent, actual agents and groups occupy the central list, and secondary workspace destinations remain under More. Working filters derive from actual state. Names carry identity; initials use neutral fill. Desktop layout controls retain left/right docking, keyboard resizing, collapse, and reset. Mobile uses the existing labeled drawer and dismissal behavior.
+
+### Home Task and Brand
+
+Render the unchanged BinaryLens canvas above one Cypher title, the working task composer, and Research/Write/Build starter choices. The model/provider and output selections remain real inputs to the backend request. Preserve pending state, error detail, task text after failure, and account-scoped tab-local drafts. Use CypherMark for navigation and sign-in: its SVG viewport references the unoptimized original `/cipher-logo.png` (2000×2000), preserving the embedded Cipher lettering and all source bytes. SHA-256: `f85c60f5dabf119a6aa23e77cdea13310cfa71efb386634bb5e37ec7cccfa94e`. Dark appearance inverts display ink without changing the PNG. The sign-in card preserves Google/email authentication.
+
+### Conversation, Appearance, Goals, and Channels
+
+Incoming messages use a neutral surface; outgoing messages use the monochrome action and inverse text. Attachments retain their real staging, previews, removal, and media controls. Settings retain model/media/run controls, memory, and steering. Appearance offers density, text size, message width, and Interface animations, with persistent Reset appearance and Done actions; defaults remain comfortable density, (16px), (88%), and motion enabled. The old accent and blur controls are removed. Legacy saved accent values are ignored and inline action/focus overrides are removed when appearance is restored. Goals and channels keep explicit queued, running, paused, blocked, exhausted, and delivery states; credential masking and reveal/copy behavior do not establish an authenticated account.
+
+### Connections and Permission Handoff
+
+Connector search and catalog cards use the same neutral panel and text roles as the workspace. Actual provider images remain source-backed and are displayed in grayscale. Discovery coverage is distinct from granted access and executed tools. Provider sign-in retains the named link, Sign in → Allow/Authorize → Verify instructions, explicit check, cancellation, and recovery from blocked popups or temporary polling errors. Pending consent stays tab-local for at most ten minutes; browser-bound cookies and backend state/PKCE checks authorize completion. Returning from consent preserves the same-origin workspace and removes codes/state from the URL. A service becomes enabled only after backend tool discovery succeeds. Closing Plugins or opening a provider page does not grant access.
+
+## Do's and Don'ts
+
+### Do:
+
+- Do use the final neutral palette in both light and dark surfaces, including connector chrome and navigation.
+- Do preserve the original logo bytes, proportions, and embedded Cipher lettering while using Cypher for product text.
+- Do use the existing binary animations with visibility and motion gates.
+- Do keep keyboard focus, task errors, drafts, real run state, and provider authorization recovery visible.
+- Do keep dialog actions reachable while long content scrolls.
+
+### Don't:
+
+- Don't restore blue, purple, lavender, or a user-selectable color accent to app-owned brand and controls.
+- Don't add a graph, invented orbital logo animation, or simulated task progress to the task workspace.
+- Don't make Inter a new default brand face or remove the existing conversation typeface options.
+- Don't label a service connected before the backend discovers its tools or treat Sign in as an Allow grant.
+- Don't claim production deployment, live provider execution, pixel fidelity, or performance superiority from local tests and synthetic captures.
+
+<details>
+<summary>Historical design record through October 23, 2026 — superseded visual directions and earlier verification limits</summary>
+
+The archived text below is retained for implementation and validation history. Its brand name, color choices, typography defaults, dimensions, glass styling, and claims of current composition are not normative for this Cypher candidate. Earlier production results remain evidence only for the revisions and paths stated. Current product capability and verification limits remain in PRODUCT.md and deployment/VERIFICATION.md. No final verification or ship verdict for the latest Cypher correction batch is asserted here.
+
+~~~~markdown
+---
 name: Open GrokBot
 description: A system-style agent workspace with light and dark appearance, team conversations, multimodal input, and adjustable run controls.
 colors:
@@ -310,3 +545,5 @@ Provider rows use the same native system surfaces and compact controls as the wo
 Preserve the current Operate interface. All browser sign-ins use one permission handoff with a named provider link, clear Sign in → Allow/Authorize → Verify instructions, an explicit connection check and cancellation. A blocked or closed popup leaves the workspace available. Pending consent is retained in tab-local session storage for at most ten minutes; browser-bound HttpOnly cookies and the existing backend state/PKCE checks still authorize completion. Closing Plugins keeps provider sign-in available. Temporary polling failures retry and resume when the user returns; opening the provider page never marks a connection successful.
 
 Callbacks retain the same-origin workspace/conversation and remove provider codes and state from the return URL. Restoring a conversation does not dismiss the permission result panel. Managed and direct denials both report cancellation. The existing optional Inter conversation font is retained; its documented use has a value-specific detector exception. Sixteen controlled flow and callback regression tests and the production build pass. Browser fixture checks and live deployment evidence are recorded separately from real provider grants.
+~~~~
+</details>
