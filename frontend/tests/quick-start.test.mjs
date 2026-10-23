@@ -51,6 +51,7 @@ function quickStart(onStart, initialOptions = { routing: 'auto', provider: 'open
   let options = initialOptions;
   const { QuickStart } = load('../src/components/QuickStart.tsx', {
     react: runtime.react, './GlassSelect': { GlassSelect: 'select' }, '../lib/presets': presets,
+    './cipher/BinaryLens': { __esModule: true, default: 'binary-lens' },
   }, { React: runtime.react, localStorage: { setItem() {} } });
   return () => runtime.render(() => QuickStart({
     options, onOptions: next => { options = next; }, onStart,
