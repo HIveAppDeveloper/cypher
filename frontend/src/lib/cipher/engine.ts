@@ -138,3 +138,62 @@ export function applyResearch(lead: Lead, research: Research, meta: { model: str
   const why = research.whyNow?.trim() || (signals.length ? [...signals].sort((a, b) => b.strength - a.strength).slice(0, 2).map(s => s.headline).join(' + ') : 'No strong buying signal found');
   return { ...lead, signals, score, tier, why: why.slice(0, 240), buyer, email, ai: { ...meta, at: now.toISOString() } };
 }
+
+// Account intelligence: Cipher's estimates derived from a lead's signals (no external data).
+export interface Intel {
+  dealSize: string; seats: number; window: string; confidence: 'High' | 'Medium' | 'Low'; fit: { label: string; points: number; max: number }[];
+  committee: { role: string; title: string; why: string }[];
+  play: { name: string; angle: string; talkTrack: string[]; objections: { objection: string; answer: string }[] };
+  channel: string; timing: string;
+}
+const PLAYS: Record<SignalKind | 'none', { name: string; angle: string }> = {
+  hiring: { name: 'Ramp new reps faster', angle: 'A hiring push means new reps who need pipeline from week one.' },
+  raising: { name: 'Post-raise growth plan', angle: 'Fresh capital comes with a growth target the board will measure.' },
+  spending: { name: 'Efficiency at scale', angle: 'Rising spend puts pressure on cost per meeting and rep productivity.' },
+  news: { name: 'Change moment', angle: 'Announcements and leadership changes reopen priorities and budgets.' },
+  none: { name: 'Stay close', angle: 'No trigger yet: stay visible so you are first when one appears.' },
+};
+const TIMEZONE: Record<string, string> = { CA: 'Pacific', WA: 'Pacific', OR: 'Pacific', MT: 'Mountain', AZ: 'Mountain', TX: 'Central', IL: 'Central', MN: 'Central' };
+
+export function accountIntel(lead: Lead): Intel {
+  const hiring = lead.signals.find(s => s.kind === 'hiring');
+  const gtm = Number(hiring?.headline.match(/(\d+) in go-to-market/)?.[1] ?? 0);
+  const open = Number(hiring?.metric.match(/^\d+$/) ? hiring.metric : 0) || gtm * 4;
+  const seats = Math.max(10, Math.round((gtm || open / 4 || 12) * 1.5 / 5) * 5);
+  const acv = seats * 1200;
+  const fmt = (n: number) => (n >= 1_000_000 ? `$${(n / 1_000_000).toFixed(1)}M` : `$${Math.round(n / 1000)}K`);
+  const sources = lead.signals.map(s => s.source);
+  const confidence: Intel['confidence'] = sources.includes('live') ? 'High' : sources.includes('ai') ? 'Medium' : 'Low';
+  const top = [...lead.signals].sort((a, b) => b.strength - a.strength)[0];
+  const play = PLAYS[top?.kind ?? 'none'];
+  const state = lead.company.hq.split(',').pop()?.trim() ?? '';
+  const zone = TIMEZONE[state] ?? 'Eastern';
+  const persona = lead.buyer.persona;
+  const talkTrack = [
+    play.angle,
+    ...lead.signals.slice(0, 2).map(s => `Reference it: ${s.headline.split('.')[0].toLowerCase()}.`),
+    `Ask how the ${persona.replace(/^(VP of |VP |Head of |Chief )/, '').toLowerCase()} team plans to hit this year's number with the current process.`,
+  ].slice(0, 4);
+  return {
+    dealSize: `${fmt(acv * .8)}–${fmt(acv * 1.3)}`, seats,
+    window: lead.tier === 'Hot' ? 'Next 30 days' : lead.tier === 'Warm' ? '30–90 days' : '90+ days',
+    confidence,
+    fit: (['hiring', 'raising', 'spending', 'news'] as SignalKind[]).map(kind => ({ label: kind === 'news' ? 'Momentum' : kind[0].toUpperCase() + kind.slice(1), points: lead.signals.find(s => s.kind === kind)?.strength ?? 0, max: SIGNAL_MAX[kind] })),
+    committee: [
+      { role: 'Economic buyer', title: persona, why: 'Owns the number and the budget' },
+      { role: 'Champion', title: 'Head of Revenue Operations', why: 'Feels the pipeline pain day to day' },
+      { role: 'Evaluator', title: 'Sales Systems / Enablement lead', why: 'Checks fit with the CRM and workflow' },
+      { role: 'Approver', title: 'VP Finance', why: `Signs off on a ${fmt(acv)} line item` },
+    ],
+    play: {
+      name: play.name, angle: play.angle, talkTrack,
+      objections: [
+        { objection: 'We already have a tool for this.', answer: 'Most teams do. Cipher sits on top and decides who to work first, so the tool you have gets better leads.' },
+        { objection: lead.tier === 'Hot' ? 'Bad timing, we are mid-quarter.' : 'Not a priority this quarter.', answer: lead.tier === 'Hot' ? `That is the point: the ${top?.kind ?? 'current'} signal says the window is now.` : 'Fair. Can I send a two-line note when a trigger shows up?' },
+        { objection: 'Send me something.', answer: `Happy to. One page on how teams like ${lead.company.name} used the ${play.name.toLowerCase()} play, then 15 minutes to see if it fits.` },
+      ],
+    },
+    channel: lead.tier === 'Watch' ? 'LinkedIn first, then email' : 'Email first, LinkedIn on day 2',
+    timing: `Tue–Thu, 8–10am ${zone}`,
+  };
+}

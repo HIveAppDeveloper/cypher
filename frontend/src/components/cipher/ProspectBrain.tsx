@@ -1,7 +1,10 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
 import type { Lead, SignalKind } from '../../lib/cipher/engine';
-import { SIGNAL_MAX } from '../../lib/cipher/engine';
+import { SIGNAL_MAX, accountIntel } from '../../lib/cipher/engine';
+
+const KIND_LABEL: Record<SignalKind, string> = { hiring: 'Hiring', raising: 'Raising', spending: 'Spending', news: 'Momentum' };
+const STAGE_LABEL: Record<Lead['stage'], string> = { found: 'Found', researched: 'Researched', drafted: 'Ready to send', sent: 'In sequence', replied: 'Replied', meeting: 'Meeting booked' };
 
 // Prospect Brain: a rotating 3D scatter of every account in the territory.
 // X = hiring signal, Y = overall score, Z = capital and momentum (raising, spending, 8-K activity).
@@ -22,9 +25,14 @@ function placeLead(lead: Lead): V3 {
 
 export default function ProspectBrain({ leads, running, selected, filter, onSelect, highlight = [], busy = [] }: { leads: Lead[]; running: boolean; selected: string | null; filter: 'All' | Lead['tier']; onSelect: (id: string) => void; highlight?: string[]; busy?: string[] }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const state = useRef({ yaw: -.62, pitch: -.38, zoom: 1, hover: null as string | null, drag: null as null | { x: number; y: number; moved: number }, nodes: new Map<string, Node>(), running, selected, filter, onSelect, highlight, busy });
+  const cardRef = useRef<HTMLDivElement>(null);
+  const [pinned, setPinned] = useState<string | null>(null);
+  const state = useRef({ yaw: -.62, pitch: -.38, zoom: 1, hover: null as string | null, drag: null as null | { x: number; y: number; moved: number }, nodes: new Map<string, Node>(), running, selected, filter, onSelect, highlight, busy, pinned: null as string | null, pinnedAt: 0, setPinned: (id: string | null) => { void id; } });
   const [hoverLead, setHoverLead] = useState<Lead | null>(null);
-  state.current.running = running; state.current.selected = selected; state.current.filter = filter; state.current.onSelect = onSelect; state.current.highlight = highlight; state.current.busy = busy;
+  state.current.running = running; state.current.selected = selected; state.current.filter = filter; state.current.onSelect = onSelect; state.current.highlight = highlight; state.current.busy = busy; state.current.setPinned = setPinned;
+  if (state.current.pinned !== pinned) { state.current.pinned = pinned; state.current.pinnedAt = typeof performance !== 'undefined' ? performance.now() : 0; }
+  useEffect(() => { if (!pinned) return; const esc = (e: KeyboardEvent) => { if (e.key === 'Escape') setPinned(null); }; window.addEventListener('keydown', esc); return () => window.removeEventListener('keydown', esc); }, [pinned]);
+  useEffect(() => { if (pinned && !leads.some(l => l.id === pinned)) setPinned(null); }, [leads, pinned]);
 
   useEffect(() => {
     const st = state.current; const now = performance.now(); const ids = new Set(leads.map(l => l.id));
@@ -60,7 +68,7 @@ export default function ProspectBrain({ leads, running, selected, filter, onSele
     const text = (v: V3, label: string, font: string, color: string, alpha = 1, align: CanvasTextAlign = 'center', dy = 0) => { const q = project(v); ctx.globalAlpha = alpha; ctx.fillStyle = color; ctx.font = font; ctx.textAlign = align; ctx.fillText(label, q.x, q.y + dy); };
 
     const draw = (t: number) => {
-      if (!st.drag && !st.hover && !reduce.matches) st.yaw += st.running ? .004 : .0015;
+      if (!st.drag && !st.hover && !st.pinned && !reduce.matches) st.yaw += st.running ? .004 : .0015;
       ctx.clearRect(0, 0, w, h);
       ctx.textBaseline = 'middle';
       // floor grid (y = 1 is the floor: score 0) and back walls
@@ -88,7 +96,7 @@ export default function ProspectBrain({ leads, running, selected, filter, onSele
         const q = project(n.pos); const grow = Math.min(1, Math.max(0, (t - n.born) / 600)); const e = 1 - Math.pow(1 - grow, 3);
         projected.set(n.id, { ...q, r: (3.5 + n.lead.score / 100 * 5.5) * q.f * zs * e });
       }
-      const focus = st.hover || st.selected;
+      const focus = st.hover || st.pinned || st.selected;
       // drop lines to the floor show where each prospect sits
       ctx.setLineDash([2, 3]);
       for (const n of nodes) {
@@ -111,6 +119,7 @@ export default function ProspectBrain({ leads, running, selected, filter, onSele
         ctx.beginPath(); ctx.arc(q.x, q.y, q.r, 0, Math.PI * 2); ctx.fill();
         ctx.strokeStyle = colors.card; ctx.lineWidth = 1.5; ctx.stroke();
         if (isFocus || st.highlight.includes(n.id)) { ctx.globalAlpha = 1; ctx.strokeStyle = colors.ink; ctx.lineWidth = isFocus ? 2 : 1.5; ctx.beginPath(); ctx.arc(q.x, q.y, q.r + 4, 0, Math.PI * 2); ctx.stroke(); }
+        if (n.id === st.pinned) { const k = ((t - st.pinnedAt) / 1400) % 1; ctx.globalAlpha = .55 * (1 - k); ctx.strokeStyle = colors.ink; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(q.x, q.y, q.r + 4 + k * 22, 0, Math.PI * 2); ctx.stroke(); }
         if (st.busy.includes(n.id)) { const k = (t / 900) % 1; ctx.globalAlpha = 1 - k; ctx.strokeStyle = colors.ink; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(q.x, q.y, q.r + 4 + k * 14, 0, Math.PI * 2); ctx.stroke(); }
       }
       // labels, highest score first, skipping collisions
@@ -128,6 +137,23 @@ export default function ProspectBrain({ leads, running, selected, filter, onSele
         ctx.globalAlpha = isFocus ? 1 : n.lead.tier === 'Hot' ? .95 : .7; ctx.textAlign = 'left';
         ctx.fillStyle = isFocus || n.lead.tier === 'Hot' ? colors.ink : colors.ink2;
         ctx.fillText(n.lead.company.name, lx, q.y);
+      }
+      // pinned node: place its card beside it and draw the leader line
+      const card = cardRef.current, pq = st.pinned ? projected.get(st.pinned) : undefined;
+      if (card && pq) {
+        ctx.font = `600 13px ${FONT}`;
+        const labelW = ctx.measureText(st.nodes.get(st.pinned!)?.lead.company.name ?? '').width;
+        const cw = card.offsetWidth, chh = card.offsetHeight, gap = 22, rgap = labelW + 30;
+        const right = pq.x + pq.r + rgap + cw <= w - 12 || pq.x - pq.r - gap - cw < 12;
+        const x = right ? Math.min(pq.x + pq.r + rgap, w - cw - 12) : pq.x - pq.r - gap - cw;
+        const y = Math.max(12, Math.min(h - chh - 12, pq.y - 46));
+        card.style.transform = `translate(${Math.round(x)}px, ${Math.round(y)}px)`; card.dataset.side = right ? 'right' : 'left'; card.style.visibility = 'visible';
+        const grow = Math.min(1, (t - st.pinnedAt) / 260);
+        const ex = right ? x : x + cw, ey = Math.max(y + 18, Math.min(y + chh - 18, pq.y));
+        const sx = pq.x + (right ? pq.r + 3 : -pq.r - 3);
+        ctx.globalAlpha = .9; ctx.strokeStyle = colors.ink; ctx.lineWidth = 1.2;
+        ctx.beginPath(); ctx.moveTo(sx, pq.y); ctx.lineTo(sx + (ex - sx) * grow, pq.y + (ey - pq.y) * grow); ctx.stroke();
+        ctx.fillStyle = colors.ink; ctx.beginPath(); ctx.arc(ex, ey, grow >= 1 ? 3 : 0, 0, Math.PI * 2); ctx.fill();
       }
       ctx.globalAlpha = 1;
       raf = requestAnimationFrame(draw);
@@ -151,7 +177,7 @@ export default function ProspectBrain({ leads, running, selected, filter, onSele
     };
     const up = (e: PointerEvent) => {
       const d = st.drag; st.drag = null;
-      if (d && d.moved < 6) { const { x, y } = local(e); const id = pick(x, y); if (id) st.onSelect(id); }
+      if (d && d.moved < 6) { const { x, y } = local(e); const id = pick(x, y); st.setPinned(id); }
     };
     const leave = () => { if (!st.drag) { st.hover = null; setHoverLead(null); } };
     const wheel = (e: WheelEvent) => { if (!e.ctrlKey && !e.metaKey) return; e.preventDefault(); st.zoom = Math.max(.6, Math.min(2.4, st.zoom * Math.exp(-e.deltaY * .01))); };
@@ -173,7 +199,7 @@ export default function ProspectBrain({ leads, running, selected, filter, onSele
       <canvas ref={canvasRef} role="img" aria-label={`3D prospect map of ${leads.length} accounts: hiring on X, score on Y, capital and momentum on Z. ${tiers('Hot')} hot accounts. Use the Accounts tab for a list.`} />
       <div className="cx-brain-title">
         <h2>Prospect Brain</h2>
-        <p>X is hiring, Y is the overall score, Z is capital and momentum. Top right and front is where to act first. Drag to rotate, click to open.</p>
+        <p>X is hiring, Y is the overall score, Z is capital and momentum. Top right and front is where to act first. Drag to rotate, click any account for details.</p>
       </div>
       <div className="cx-brain-zoom" role="group" aria-label="Zoom">
         <button type="button" aria-label="Zoom out" onClick={() => zoom(1 / 1.2)}>−</button>
@@ -185,7 +211,40 @@ export default function ProspectBrain({ leads, running, selected, filter, onSele
         <li><i className="warm" />Warm <b>{tiers('Warm')}</b></li>
         <li><i className="watch" />Watch <b>{tiers('Watch')}</b></li>
       </ul>
-      {hoverLead ? (
+      {(() => {
+        const lead = pinned ? leads.find(l => l.id === pinned) : undefined;
+        if (!lead) return null;
+        const intel = accountIntel(lead);
+        const next = lead.stage === 'drafted' ? lead.sequence[0] : lead.sequence.find(t => t.day > 0);
+        return (
+          <div ref={cardRef} className="cx-node-card" style={{ visibility: 'hidden' }} role="dialog" aria-label={`${lead.company.name} details`}>
+            <div className="cx-node-inner" key={lead.id}>
+              <header>
+                <div><b>{lead.company.name}</b><span>{lead.company.ticker} · {lead.company.hq}</span></div>
+                <div className="sc"><b>{lead.score}</b><span className={`cx-tier ${lead.tier.toLowerCase()}`}>{lead.tier}</span></div>
+                <button type="button" className="x" aria-label="Close details" onClick={() => setPinned(null)}>×</button>
+              </header>
+              <p className="why">{lead.why}</p>
+              <ul className="sig">
+                {(['hiring', 'raising', 'spending', 'news'] as SignalKind[]).map((k, i) => {
+                  const s = lead.signals.find(x => x.kind === k);
+                  return <li key={k} style={{ animationDelay: `${120 + i * 50}ms` }}><span>{KIND_LABEL[k]}</span><i><em style={{ width: `${s ? Math.round(s.strength / SIGNAL_MAX[k] * 100) : 0}%`, animationDelay: `${180 + i * 50}ms` }} /></i><b>{s ? s.metric : '—'}</b></li>;
+                })}
+              </ul>
+              <dl>
+                <div><dt>Est. deal</dt><dd>{intel.dealSize}</dd></div>
+                <div><dt>Window</dt><dd>{intel.window}</dd></div>
+                <div><dt>Buyer</dt><dd>{lead.buyer.name ? `${lead.buyer.name}, ${lead.buyer.title || lead.buyer.persona}` : lead.buyer.persona}</dd></div>
+                <div><dt>Stage</dt><dd>{STAGE_LABEL[lead.stage]}</dd></div>
+                <div><dt>Next step</dt><dd>{next ? `${next.channel} · ${next.due}` : 'Follow up'}</dd></div>
+                <div><dt>Play</dt><dd>{intel.play.name}</dd></div>
+              </dl>
+              <button type="button" className="open" onClick={() => onSelect(lead.id)}>Open full profile</button>
+            </div>
+          </div>
+        );
+      })()}
+      {hoverLead && !pinned ? (
         <div className="cx-brain-tip" aria-hidden="true">
           <b>{hoverLead.company.name}</b><span>{hoverLead.company.ticker} · score {hoverLead.score} · {hoverLead.tier}</span><small>{hoverLead.why}</small>
         </div>
