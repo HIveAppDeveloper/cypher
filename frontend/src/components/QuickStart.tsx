@@ -1,5 +1,6 @@
 import { MODEL_CHOICES } from '../lib/presets';
 import { GlassSelect } from './GlassSelect';
+import Image from 'next/image';
 import { useEffect, useRef, useState } from 'react';
 import { RunOptions } from '../lib/types';
 
@@ -12,12 +13,33 @@ const STARTER_PROMPTS = [
 export function QuickStart({ onStart, options, onOptions, draftScope }: { draftScope?: string; options: RunOptions; onOptions: (options: RunOptions) => void; onStart: (prompt: string, options: Partial<RunOptions>) => Promise<void> }) {
   const manager = options.routing==='manual'?(options.model || 'gpt-6.1-sol'):'auto';
   const [prompt, setPrompt] = useState('');
+  const logoRef = useRef<HTMLDivElement>(null);
+  const [logoMotionActive, setLogoMotionActive] = useState(false);
   const draftKey='grokbot-task-draft-v1-'+(draftScope || 'local');
   const mounted=useRef(false);
   useEffect(()=>{mounted.current=true;return()=>{mounted.current=false;};},[]);
   const [restoredDraftKey, setRestoredDraftKey] = useState('');
   useEffect(() => { try { setPrompt(sessionStorage.getItem(draftKey) || ''); } catch {} setRestoredDraftKey(draftKey); }, [draftKey]);
   useEffect(() => { if(restoredDraftKey===draftKey) try { if(prompt) sessionStorage.setItem(draftKey,prompt); else sessionStorage.removeItem(draftKey); } catch {} }, [prompt,restoredDraftKey,draftKey]);
+  useEffect(() => {
+    const logo = logoRef.current;
+    if (!logo) return;
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+    let isVisible = false;
+    const syncMotion = () => setLogoMotionActive(isVisible && !document.hidden && !reducedMotion.matches && document.documentElement.dataset.motion !== 'false');
+    const visibilityObserver = new IntersectionObserver(([entry]) => { isVisible = entry.isIntersecting; syncMotion(); }, { threshold: 0.1 });
+    const settingsObserver = new MutationObserver(syncMotion);
+    visibilityObserver.observe(logo);
+    settingsObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['data-motion'] });
+    document.addEventListener('visibilitychange', syncMotion);
+    reducedMotion.addEventListener('change', syncMotion);
+    return () => {
+      visibilityObserver.disconnect();
+      settingsObserver.disconnect();
+      document.removeEventListener('visibilitychange', syncMotion);
+      reducedMotion.removeEventListener('change', syncMotion);
+    };
+  }, []);
   const [output, setOutput] = useState<'text' | 'image'>('text');
   const [busy, setBusy] = useState(false);
   const inFlight = useRef(false);
@@ -26,10 +48,14 @@ export function QuickStart({ onStart, options, onOptions, draftScope }: { draftS
   return (
     <div className="quickstart">
       <div className="quickstart-panel">
+      <div className="quickstart-mark" ref={logoRef} data-motion-active={logoMotionActive}>
+        <svg className="quickstart-mark-orbit" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="28" /></svg>
+        <Image src="/cipher-logo.png" alt="Cypher" className="quickstart-logo" width={46} height={46} priority unoptimized />
+      </div>
       <h1>What would you like to work on?</h1>
       <p className="quickstart-intro">A clear space for your next idea.</p>
 
-      <form onSubmit={start} className="task-composer" aria-busy={busy}>
+      <form onSubmit={start} className="task-composer" aria-busy={busy} data-motion-active={logoMotionActive}>
         <label className="visually-hidden" htmlFor="first-task">Your task</label>
         <textarea
           disabled={busy}
