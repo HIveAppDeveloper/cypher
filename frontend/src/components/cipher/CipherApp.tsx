@@ -216,11 +216,11 @@ export default function CipherApp() {
   return (
     <div className="cipher">
       <header className="cx-toolbar">
-        <a className="cx-word" href="/cipher"><span aria-hidden="true"><BinaryLens className="cx-mark" cols={15} rows={7} /></span>Cipher</a>
+        <a className="cx-word" href="/"><span aria-hidden="true"><BinaryLens className="cx-mark" cols={15} rows={7} /></span>Cipher</a>
         <nav className="cx-nav" aria-label="Cipher">
           <button type="button" onClick={() => setSetupOpen(v => !v)} aria-expanded={setupOpen} aria-controls="cx-setup">Setup</button>
           <button type="button" onClick={exportCsv} disabled={!leads.length}>Export CSV</button>
-          <a href="/">Workspace</a>
+          <a href="/?workspace=1">Workspace</a>
         </nav>
       </header>
 
