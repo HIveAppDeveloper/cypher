@@ -44,6 +44,7 @@ class Settings(BaseSettings):
     ATLAS_ENGINE_SIGNING_KEY: str = Field(default="", repr=False)
     GROKBOT_ATLAS_ENGINE_PROVIDER: str = ""
     GROKBOT_ATLAS_ENGINE_MODEL: str = ""
+    GROKBOT_ATLAS_ENGINE_TRANSPORT: Literal["direct", "omniroute"] = "direct"
     GROKBOT_ATLAS_ENGINE_ADMISSION: Literal["postgres", "local-memory"] = "postgres"
     GROKBOT_ATLAS_ENGINE_ALLOW_LOCAL_ADMISSION: bool = False
     GROKBOT_PUBLIC_URL: str = "http://localhost:3000"
