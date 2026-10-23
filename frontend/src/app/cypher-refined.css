@@ -205,15 +205,27 @@
   transform-origin: 32px 32px;
 }
 .quickstart-mark[data-motion-active="true"] .quickstart-mark-orbit circle { animation: cypher-mark-orbit 26s linear infinite; }
-.quickstart-logo {
+.quickstart-logo-window {
+  position: relative;
   z-index: 1;
   display: block;
-  width: 46px;
-  height: 46px;
+  width: 48px;
+  height: 48px;
+  overflow: hidden;
+}
+.quickstart-logo {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  display: block;
+  width: 220px;
+  max-width: none;
+  height: 220px;
   object-fit: contain;
   filter: drop-shadow(0 3px 6px rgba(52, 42, 99, .13));
   animation: cypher-logo-arrive .72s cubic-bezier(.16,1,.3,1) both;
   transform-origin: center;
+  transform: translate(-50%, -50%);
 }
 .quickstart h1 {
   max-width: 28ch;
@@ -372,7 +384,7 @@
 .quickstart .quickstart-status:not(.visually-hidden) { margin-top: 14px; color: var(--text-secondary); font-size: 12px; }
 @keyframes cypher-mark-signal { 0% { opacity: 0; transform: scale(.68); } 55% { opacity: .8; } 100% { opacity: .36; transform: scale(1); } }
 @keyframes cypher-mark-orbit { to { transform: rotate(360deg); } }
-@keyframes cypher-logo-arrive { 0% { opacity: 0; transform: scale(.74) rotate(-8deg); } 72% { opacity: 1; transform: scale(1.045) rotate(1deg); } 100% { opacity: 1; transform: scale(1) rotate(0); } }
+@keyframes cypher-logo-arrive { 0% { opacity: 0; transform: translate(-50%,-50%) scale(.74) rotate(-8deg); } 72% { opacity: 1; transform: translate(-50%,-50%) scale(1.045) rotate(1deg); } 100% { opacity: 1; transform: translate(-50%,-50%) scale(1) rotate(0); } }
 @keyframes cypher-title-arrive { 0% { opacity: 0; filter: blur(4px); transform: translateY(12px); } 100% { opacity: 1; filter: blur(0); transform: translateY(0); } }
 @keyframes cypher-copy-arrive { 0% { opacity: 0; transform: translateY(8px); } 100% { opacity: 1; transform: translateY(0); } }
 @keyframes cypher-composer-arrive { 0% { opacity: 0; filter: blur(3px); } 100% { opacity: 1; filter: blur(0); } }

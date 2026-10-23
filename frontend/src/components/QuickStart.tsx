@@ -50,7 +50,9 @@ export function QuickStart({ onStart, options, onOptions, draftScope }: { draftS
       <div className="quickstart-panel">
       <div className="quickstart-mark" ref={logoRef} data-motion-active={logoMotionActive}>
         <svg className="quickstart-mark-orbit" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="28" /></svg>
-        <Image src="/cipher-logo.png" alt="Cypher" className="quickstart-logo" width={46} height={46} priority unoptimized />
+        <span className="quickstart-logo-window">
+          <Image src="/cipher-logo.png" alt="Cypher" className="quickstart-logo" width={220} height={220} priority unoptimized />
+        </span>
       </div>
       <h1>What would you like to work on?</h1>
       <p className="quickstart-intro">A clear space for your next idea.</p>
