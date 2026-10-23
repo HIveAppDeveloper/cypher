@@ -42,7 +42,7 @@ export default function CipherApp() {
   const [running, setRunning] = useState(false);
   const [error, setError] = useState('');
   const [selected, setSelected] = useState<string | null>(null);
-  const [view, setView] = useState<View>('brain');
+  const [view, setView] = useState<View>('accounts');
   const [filter, setFilter] = useState<'All' | Tier>('All');
   const [toast, setToast] = useState('');
   const [orKey, setOrKey] = useState('');
@@ -166,7 +166,7 @@ export default function CipherApp() {
   async function run(event?: FormEvent) {
     event?.preventDefault();
     if (running) return;
-    setRunning(true); setError(''); setLeads([]); setSelected(null); setFinishedAt(null); setScanning([]); if (view === 'pipeline') setView('brain');
+    setRunning(true); setError(''); setLeads([]); setSelected(null); setFinishedAt(null); setScanning([]); if (view === 'pipeline') setView('accounts');
     const got: Lead[] = []; let completed = false;
     setSteps([{ type: 'step', at: new Date().toISOString(), text: `Run started for ${customTickers.length ? 'a custom list' : market.label}` }]);
     try {
@@ -287,7 +287,6 @@ export default function CipherApp() {
         <section className="cx-board" aria-label="Accounts">
           <div className="cx-board-head">
             <div className="cx-tabs" role="tablist" aria-label="View">
-              <button type="button" role="tab" aria-selected={view === 'brain'} onClick={() => setView('brain')}>Brain</button>
               <button type="button" role="tab" aria-selected={view === 'accounts'} onClick={() => setView('accounts')}>Accounts</button>
               <button type="button" role="tab" aria-selected={view === 'pipeline'} onClick={() => setView('pipeline')}>Pipeline</button>
             </div>
