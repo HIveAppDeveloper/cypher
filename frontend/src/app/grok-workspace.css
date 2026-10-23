@@ -32,6 +32,8 @@ body { color: var(--text-primary); }
 .sidebar-shell { width: clamp(220px,var(--sidebar-width,256px),min(480px,calc(100vw - 360px))); background: #f3f2ef; }
 .sidebar-layout-tools { height: 56px; min-height: 56px; padding: 8px 12px; gap: 2px; }
 .sidebar-brand { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0; font-size: 14px; font-weight: 550; letter-spacing: -.025em; white-space: nowrap; }
+.sidebar-shell a.sidebar-brand { color: inherit; text-decoration: none; }
+.mobile-nav-header strong a { display: inline-flex; align-items: center; gap: 7px; color: inherit; text-decoration: none; }
 .brand-symbol { display: grid; place-items: center; width: 26px; height: 26px; border: 1.5px solid currentColor; border-radius: 8px; font-size: 14px; font-weight: 600; }
 .sidebar-brand img.brand-symbol { padding: 2px; border: 0; object-fit: contain; }
 @media (prefers-color-scheme: dark) { :root:not([data-theme='light']) .sidebar-brand img.brand-symbol { filter: invert(1); } }
