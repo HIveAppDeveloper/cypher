@@ -33,6 +33,11 @@ body { color: var(--text-primary); }
 .sidebar-layout-tools { height: 56px; min-height: 56px; padding: 8px 12px; gap: 2px; }
 .sidebar-brand { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0; font-size: 14px; font-weight: 550; letter-spacing: -.025em; white-space: nowrap; }
 .brand-symbol { display: grid; place-items: center; width: 26px; height: 26px; border: 1.5px solid currentColor; border-radius: 8px; font-size: 14px; font-weight: 600; }
+.sidebar-brand img.brand-symbol { padding: 2px; border: 0; object-fit: contain; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme='light']) .sidebar-brand img.brand-symbol { filter: invert(1); } }
+:root[data-theme='dark'] .sidebar-brand img.brand-symbol { filter: invert(1); }
+.cipher-home-mark { width: 84px; height: 32px; margin: 0 0 18px; color: #24231f; opacity: .88; }
+.mobile-nav-header strong { display: inline-flex; align-items: center; gap: 7px; }
 .sidebar-layout-tools > button, .sidebar-layout-menu > summary { width: 30px; min-height: 36px; height: 36px; color: #62615c; }
 .sidebar-shell .sidebar { padding: 0 10px 8px; }
 .command-launcher { margin: 0 10px 8px; border: 0; background: transparent; min-height: 36px; padding: 8px 10px; font-size: 13px; color: #55534e; }
