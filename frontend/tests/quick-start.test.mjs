@@ -52,6 +52,7 @@ function quickStart(onStart, initialOptions = { routing: 'auto', provider: 'open
   const { QuickStart } = load('../src/components/QuickStart.tsx', {
     react: runtime.react, './GlassSelect': { GlassSelect: 'select' }, '../lib/presets': presets,
     './cipher/BinaryLens': { __esModule: true, default: 'binary-lens' },
+    './cipher/CypherMark': { __esModule: true, default: 'cypher-mark' },
   }, { React: runtime.react, localStorage: { setItem() {} } });
   return () => runtime.render(() => QuickStart({
     options, onOptions: next => { options = next; }, onStart,
@@ -99,7 +100,6 @@ test('the calmer home keeps the task composer and model choice together', () => 
   assert.ok(find(tree, node => node.type === 'button' && node.props['aria-label'] === 'Start task'));
   assert.equal(find(tree, node => node.type === 'button' && node.props['aria-label'] === 'Connect models'), undefined);
 });
-
 test('same-tick double submission starts once and an interruption retains the task for retry', async () => {
   const calls = [];
   let rejectFirst;
@@ -153,4 +153,14 @@ test('keyboard task submission stays blocked until the start request resolves', 
   release();
   await first;
   assert.equal(task(render()).props.disabled, false);
+});
+test('image output is included in the task sent to the backend', async () => {
+  const calls = [];
+  const render = quickStart(async (prompt, options) => { calls.push({ prompt, options }); });
+  find(render(), node => node.props?.['aria-label'] === 'Task output').props.onChange({target:{value:'image'}});
+  task(render()).props.onChange({target:{value:'A synthetic image request'}});
+  await submit(render());
+  assert.equal(calls.length, 1);
+  assert.equal(calls[0].options.output, 'image');
+  assert.equal(calls[0].options.aspect_ratio, '16:9');
 });

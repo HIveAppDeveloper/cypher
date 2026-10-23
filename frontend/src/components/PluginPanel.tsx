@@ -2,6 +2,8 @@ import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { approveConnection, enrollDevice } from '../lib/device';
 import { api } from '../lib/api';
 import { PLUGIN_SIGN_IN_KEY, PLUGIN_SIGN_IN_TTL, readPluginSignIn, type PluginSignIn } from '../lib/pluginAuthorization';
+import CypherMark from './cipher/CypherMark';
+import BinaryLens from './cipher/BinaryLens';
 export interface PluginConnection { connection_id?:string; id:string;name:string;url:string;enabled:boolean;authenticated:boolean;verification?:{status:string;checked_at?:string;detail?:{tool?:string;latency_ms?:number;message?:string}};tools:{name:string;description:string;enabled?:boolean}[]; }
 export interface CatalogEntry { id:string;name:string;url:string;description:string;category:string;domains:string[];icon?:string;source?:string;auth?:string;auth_header?:string;setup_note?:string;connection_id?:string;transport?:string; }
 export interface AvailableConnection {id:string;name:string;url:string;domains:string[];reuse_available:boolean;method:string;}
@@ -29,6 +31,11 @@ function exactCatalogMatch(value:string,items:CatalogEntry[]){
 function Logo({item}:{item:Pick<CatalogEntry,'name'|'icon'>}){
   const [failed,setFailed]=useState(false);
   return <span className="connector-logo">{item.icon && !failed?<img src={item.icon} alt="" loading="lazy" onError={()=>setFailed(true)}/>:<span>{item.name.slice(0,2).toUpperCase()}</span>}</span>;
+}
+function LovableMark({active=false}:{active?:boolean}){
+  return <span className="lovable-cypher-mark" data-active={active} aria-hidden="true">
+    {active?<BinaryLens className="lovable-binary-lens" active label="Cypher connecting"/>:<CypherMark className="lovable-real-mark" decorative/>}
+  </span>;
 }
 export function PluginPanel({onClose}:{onClose:()=>void}){
   const dialog=useRef<HTMLDialogElement>(null);
@@ -143,16 +150,35 @@ export function PluginPanel({onClose}:{onClose:()=>void}){
       try{
         if(doc.body?.style&&doc.head?.append&&doc.body.appendChild){
           const viewport=doc.createElement('meta');viewport.name='viewport';viewport.content='width=device-width, initial-scale=1';
-          const style=doc.createElement('style');style.textContent='@keyframes cypher-wait{to{transform:rotate(360deg)}}@keyframes cypher-breathe{50%{transform:scale(1.06);opacity:.72}}@media(prefers-reduced-motion:reduce){.ring,.mark{animation:none!important}}';doc.head.append(viewport,style);
+          const style=doc.createElement('style');style.textContent='@keyframes cypher-breathe{50%{opacity:.64}}@media(prefers-reduced-motion:reduce){.lens{animation:none!important}}';doc.head.append(viewport,style);
           doc.body.style.cssText='margin:0;min-height:100vh;display:grid;place-items:center;background:#f8f8fa;color:#24242b;font:14px system-ui,-apple-system,sans-serif';
           const stage=doc.createElement('main');stage.style.cssText='display:grid;justify-items:center;gap:18px;padding:32px;text-align:center';
-          const emblem=doc.createElement('div');emblem.style.cssText='width:84px;height:84px;position:relative;display:grid;place-items:center';
-          const ring=doc.createElement('span');ring.className='ring';ring.style.cssText='position:absolute;inset:0;border:1px solid #d4d2dc;border-top-color:#575161;border-radius:50%;animation:cypher-wait 1.5s linear infinite';
-          const logoWindow=doc.createElement('span');logoWindow.style.cssText='position:absolute;inset:14px;border-radius:50%;overflow:hidden';
-          const logo=doc.createElement('img');logo.className='mark';logo.alt='Cypher';logo.src=new URL('/cipher-logo.png',window.location.origin).href;logo.style.cssText='position:absolute;top:50%;left:50%;width:220px;height:220px;max-width:none;object-fit:contain;transform:translate(-50%,-50%);animation:cypher-breathe 1.8s ease-in-out infinite';
+          const emblem=doc.createElement('div');emblem.style.cssText='width:184px;height:78px;position:relative';
+          const lens=doc.createElement('canvas');lens.className='lens';lens.width=368;lens.height=156;lens.style.cssText='display:block;width:184px;height:78px;color:#24242b;animation:cypher-breathe 1.8s ease-in-out infinite';
+          const ctx=lens.getContext?.('2d');
+          if(ctx){
+            const cols=41,rows=17,w=184,h=78,dpr=2;ctx.setTransform(dpr,0,0,dpr,0,0);
+            const digits=Array.from({length:cols*rows},()=>Math.random()<.5?'0':'1');
+            const draw=(time:number)=>{
+              try{if(opened.closed||opened.location.href!=='about:blank')return;}catch{return;}
+              ctx.clearRect(0,0,w,h);ctx.fillStyle='#24242b';ctx.textAlign='center';ctx.textBaseline='middle';
+              const cw=w/cols,rh=h/rows,max=Math.min(cw*1.05,rh*1.25),sweep=((time/1400)%1.6)-.3;
+              for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){
+                const dx=(c+.5)/cols*2-1,dy=(r+.5)/rows*2-1,d=.55*Math.hypot(dx,dy*1.05)+.45*(Math.abs(dx)*.92+Math.abs(dy));
+                const shape=Math.max(0,1-d*1.08);if(shape<=.02)continue;
+                const pulse=Math.exp(-((((c+.5)/cols)-sweep)**2)/.012),size=Math.max(1.2,max*Math.pow(shape,.75)*(1+pulse*.55));
+                ctx.globalAlpha=Math.min(1,.25+shape*1.1);ctx.font=`${size.toFixed(1)}px system-ui,sans-serif`;
+                if(Math.random()<.004){const index=r*cols+c;digits[index]=digits[index]==='0'?'1':'0';}
+                ctx.fillText(digits[r*cols+c],(c+.5)*cw,(r+.5)*rh);
+              }
+              ctx.globalAlpha=1;
+              if(!window.matchMedia('(prefers-reduced-motion: reduce)').matches)requestAnimationFrame(draw);
+            };
+            requestAnimationFrame(draw);
+          }
           const title=doc.createElement('strong');title.textContent=`Opening ${provider}`;title.style.cssText='font-size:16px;font-weight:600';
           const detail=doc.createElement('p');detail.textContent='Finding the secure sign-in page…';detail.style.cssText='margin:-12px 0 0;color:#686572;line-height:1.5';
-          if([stage,emblem,logoWindow].every(element=>typeof element.appendChild==='function')){logoWindow.appendChild(logo);emblem.appendChild(ring);emblem.appendChild(logoWindow);stage.appendChild(emblem);stage.appendChild(title);stage.appendChild(detail);doc.body.appendChild(stage);brandedSplash=true;}
+          if([stage,emblem,lens].every(element=>typeof element.appendChild==='function')){emblem.appendChild(lens);stage.appendChild(emblem);stage.appendChild(title);stage.appendChild(detail);doc.body.appendChild(stage);brandedSplash=true;}
         }
       }catch{/* Keep provider consent available if the browser isolates the splash document. */}
       if(!brandedSplash){const message=doc.createElement('p');message.textContent='Finding the secure sign-in page…';if(message.style)message.style.cssText='font:16px system-ui;padding:32px;color:#45434c';doc.body?.appendChild?.(message);}
@@ -248,13 +274,13 @@ export function PluginPanel({onClose}:{onClose:()=>void}){
     <header className="connectors-header"><div><h2 id="plugins-title">Plugins</h2><p>Connect services, then let Cypher use their tools.</p></div><button className="connector-close" aria-label="Close plugins" onClick={onClose}><svg viewBox="0 0 24 24"><path d="m6 6 12 12M6 18 18 6"/></svg></button></header>
     <nav className="connector-tabs" aria-label="Plugin pages">{([['browse','Browse'],['connected',`Connected${plugins.length?' · '+plugins.length:''}`],['custom','Advanced'],['settings','Settings']] as const).map(([id,label])=><button key={id} aria-pressed={view===id} onClick={()=>chooseView(id)}>{label}</button>)}</nav>
     <div ref={body} className="connectors-body" aria-busy={loading}>
-      {connectingName.toLocaleLowerCase()==='lovable'&&!flow?<div className="lovable-connect-progress" role="status"><div className="lovable-cypher-mark" data-active="true"><span className="lovable-cypher-logo-window"><img src="/cipher-logo.png" alt=""/></span><span/></div><div><strong>Opening Lovable</strong><p>Cypher is preparing Lovable’s secure sign-in. You’ll review access on Lovable before anything connects.</p></div></div>:null}
-      {flow?<section className={`connector-authorization${lovableActive?' lovable-authorization':''}`} aria-labelledby="plugin-sign-in-title">{lovableActive?<div className="lovable-auth-heading"><div className="lovable-cypher-mark" data-active="true"><span className="lovable-cypher-logo-window"><img src="/cipher-logo.png" alt=""/></span><span/></div><div><h3 id="plugin-sign-in-title">Connect Lovable</h3><p>Sign in, review access, then press Allow.</p></div></div>:<h3 id="plugin-sign-in-title">Allow access to {flow.name}</h3>}<ol>{lovableActive?<><li>Sign in to Lovable in the secure window.</li><li>Review the permissions Lovable lists and press <strong>Allow</strong>.</li><li>Return here while Cypher verifies the available tools.</li></>:<><li>Sign in on {flow.name}’s page.</li><li>Review the permissions and choose Allow or Authorize.</li><li>Return here. We’ll verify the connection and load its tools.</li></>}</ol><div className="connector-login-actions"><a className="btn-primary" href={flow.url} target="_blank" rel="noopener noreferrer" onClick={event=>{try{if(popup.current&&!popup.current.closed){event.preventDefault();popup.current.focus();}}catch{}}}>Continue to {flow.name}</a><button className="btn-secondary" type="button" disabled={checkingSignIn} onClick={()=>void checkSignIn.current()}>{checkingSignIn?'Checking…':'Check connection'}</button><button type="button" disabled={cancellingSignIn} onClick={()=>void cancelSignIn()}>{cancellingSignIn?'Cancelling…':'Cancel sign-in'}</button></div><p role="status">{flowError||'Waiting for provider approval. You can close this panel and continue later in this tab.'}{lovableActive?' Cypher can use only the tools Lovable authorizes; some Lovable actions may consume plan credits.':''}</p></section>:null}
+      {connectingName.toLocaleLowerCase()==='lovable'&&!flow?<div className="lovable-connect-progress" role="status"><LovableMark active/><div><strong>Opening Lovable</strong><p>Cypher is preparing Lovable’s secure sign-in. You’ll review access on Lovable before anything connects.</p></div></div>:null}
+      {flow?<section className={`connector-authorization${lovableActive?' lovable-authorization':''}`} aria-labelledby="plugin-sign-in-title">{lovableActive?<div className="lovable-auth-heading"><LovableMark active/><div><h3 id="plugin-sign-in-title">Connect Lovable</h3><p>Sign in, review access, then press Allow.</p></div></div>:<h3 id="plugin-sign-in-title">Allow access to {flow.name}</h3>}<ol>{lovableActive?<><li>Sign in to Lovable in the secure window.</li><li>Review the permissions Lovable lists and press <strong>Allow</strong>.</li><li>Return here while Cypher verifies the available tools.</li></>:<><li>Sign in on {flow.name}’s page.</li><li>Review the permissions and choose Allow or Authorize.</li><li>Return here. We’ll verify the connection and load its tools.</li></>}</ol><div className="connector-login-actions"><a className="btn-primary" href={flow.url} target="_blank" rel="noopener noreferrer" onClick={event=>{try{if(popup.current&&!popup.current.closed){event.preventDefault();popup.current.focus();}}catch{}}}>Continue to {flow.name}</a><button className="btn-secondary" type="button" disabled={checkingSignIn} onClick={()=>void checkSignIn.current()}>{checkingSignIn?'Checking…':'Check connection'}</button><button type="button" disabled={cancellingSignIn} onClick={()=>void cancelSignIn()}>{cancellingSignIn?'Cancelling…':'Cancel sign-in'}</button></div><p role="status">{flowError||'Waiting for provider approval. You can close this panel and continue later in this tab.'}{lovableActive?' Cypher can use only the tools Lovable authorizes; some Lovable actions may consume plan credits.':''}</p></section>:null}
       {notice?<div className="connector-notice" role="status">{notice}</div>:null}
       {error?<div className="connector-error" role="alert">{error}{refreshableError?<button type="button" className="connector-retry" disabled={loading||busy} onClick={()=>void retryLoad()}>Refresh connections</button>:null}</div>:null}
       {view==='browse'?<>
         <section className="lovable-connect" data-active={lovableActive} aria-label="Connect Lovable">
-          <div className="lovable-cypher-mark" data-active={lovableActive} aria-hidden="true"><span className="lovable-cypher-logo-window"><img src="/cipher-logo.png" alt=""/></span><span/></div>
+          <LovableMark active={lovableActive}/>
           <div className="lovable-connect-copy"><div className="lovable-title-row"><h3>Lovable</h3><span>Development</span></div><p>Use the official Lovable MCP connection in Cypher.</p><small>Sign in with Lovable and approve the access shown on its consent screen. Cypher checks the tools before marking it connected.</small></div>
           <div className="lovable-connect-actions"><button type="button" className="connector-connect" disabled={busy||Boolean(flow)} onClick={()=>{if(lovableConnection){setSearch('lovable');setView('connected');setNotice('Lovable is connected. Review its enabled tools below.');}else void connectItem(lovableItem);}}>{lovableConnection?'Manage connection':busy&&lovableActive?'Opening…':'Connect Lovable'}<svg viewBox="0 0 24 24"><path d="M5 12h14m-5-5 5 5-5 5"/></svg></button><a href={LOVABLE_SOURCE} target="_blank" rel="noreferrer">Provider details</a></div>
         </section>

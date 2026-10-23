@@ -38,7 +38,7 @@ function environment(session = storage()) {
   const nodes = new Map();
   const document = Object.assign(new EventTarget(), { hidden: false, body: {},
     documentElement: { dataset: {} }, getElementById: id => nodes.get(id) ?? null });
-  const window = Object.assign(new EventTarget(), { matchMedia: () => ({ matches: false }) });
+  const window = Object.assign(new EventTarget(), { matchMedia: () => Object.assign(new EventTarget(), { matches: false }) });
   class FixtureDate extends Date { constructor(...args) { super(...(args.length ? args : [time.now])); } static now() { return time.now; } }
   function element(props = {}) {
     return { open: false, style: {}, scrollHeight: 1000, scrollTop: 1000, clientHeight: 500,
@@ -48,6 +48,8 @@ function environment(session = storage()) {
   }
   return { time, nodes, document, window, element, globals: { document, window, Event, AbortController,
     sessionStorage: session, localStorage: storage(), Date: FixtureDate,
+    IntersectionObserver: class { observe() {} disconnect() {} },
+    MutationObserver: class { observe() {} disconnect() {} },
     setTimeout: time.setTimeout, clearTimeout: time.clearTimeout,
     HTMLElement: class {}, process: { env: {} } } };
 }
@@ -135,6 +137,7 @@ function quickStart(env, onStart, initialScope = 'local') {
   const { QuickStart } = load('../src/components/QuickStart.tsx', {
     react: view.react, '../lib/presets': presets, './GlassSelect': { GlassSelect: 'select' },
     './cipher/BinaryLens': { __esModule: true, default: 'binary-lens' },
+    './cipher/CypherMark': { __esModule: true, default: 'cypher-mark' },
   }, { ...env.globals, React: view.react.default });
   view.mount(() => QuickStart({ draftScope, options: { routing: 'auto', provider: 'openai', model: 'gpt-6.1-sol' },
     onStart, onOptions() {}, onCreateBot() {}, onCreateRoom() {}, onOpenLounge: async () => {} }));
