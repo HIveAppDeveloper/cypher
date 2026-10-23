@@ -280,7 +280,14 @@ button:focus-visible,input:focus-visible,textarea:focus-visible{outline-color:va
 .runtime-notice{left:24px;right:24px;max-width:720px;margin:0 auto}
 @media(max-width:760px){.workspace-toolbar{padding:0 12px}.chat-header{padding:14px 12px}.message-stream{padding:16px 12px}.composer{margin:8px 12px;border-radius:20px}.message-content{font-size:15px;padding:10px 13px}.thread-members{padding:0 12px 8px}}
 @media(max-width:760px){.sidebar-layout-tools button[aria-expanded]{display:none}}
-.connector-login-actions{display:flex;gap:20px;flex-wrap:wrap}
+.connector-login-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.connector-authorization{padding:16px;margin-bottom:20px;border-radius:12px;background:var(--bg-card);color:inherit;border:1px solid var(--border-light)}
+.connector-authorization h3{margin:0 0 10px;font-size:16px;font-weight:600;overflow-wrap:anywhere}
+.connector-authorization ol{margin:0 0 16px;padding-left:22px;font-size:13px;line-height:1.65}
+.connector-authorization p{margin:12px 0 0;font-size:12px;line-height:1.5;overflow-wrap:anywhere}
+.connector-authorization .connector-login-actions>a,.connector-authorization .connector-login-actions>button{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:8px 12px;border-radius:8px;font-size:13px;text-decoration:none;white-space:normal;overflow-wrap:anywhere}
+.connector-authorization .connector-login-actions>a{max-width:100%}
+.connector-authorization :is(a,button):focus-visible{outline:2px solid var(--accent-blue);outline-offset:3px}
 
 .message-markdown{white-space:normal;min-width:0}
 .message-markdown>:first-child{margin-top:0}.message-markdown>:last-child{margin-bottom:0}

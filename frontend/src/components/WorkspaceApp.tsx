@@ -31,7 +31,7 @@ export default function WorkspaceApp({ accountEmail, accountId }: { accountEmail
   useEffect(()=>{let active=true;const load=()=>{if(document.hidden)return;void request('/computer/approvals/pending').then(data=>{if(active)setPendingApprovals(data.length);}).catch(()=>{});};load();const timer=setInterval(load,30000);return()=>{active=false;clearInterval(timer);};},[]);
   useEffect(() => { let active = true; api.getConversations().then(data => { if (active) { setRooms(data.filter(c => c.is_group)); const lounge=data.find(c=>c.is_group && c.title==='Agent lounge'); if(lounge && !new URLSearchParams(window.location.search).has('conversation'))setSelectedRoom(lounge); setRoomError(''); } }).catch(() => { if (active) setRoomError('Team rooms could not load.'); }); return () => { active = false; }; }, []);
   async function openLounge() { const room = await api.defaultTeam(); await refreshBots(); setRooms(list => list.some(item => item.id === room.id) ? list : [...list, room]); setSelectedBot(null); setSelectedRoom(room); return room; }
-  async function openGoalWorkspace(id:string){ const room=(await api.getConversations()).find(item=>item.id===id); if(!room){setRoomError('This saved conversation could not be found.');return;} const agent=room.is_group?null:(await api.getBots()).find(item=>item.id===room.bot_ids[0])||null;setSelectedRoom(room);setSelectedBot(agent);setCreator(null); }
+  async function openGoalWorkspace(id:string,closePanel=true){ const room=(await api.getConversations()).find(item=>item.id===id); if(!room){setRoomError('This saved conversation could not be found.');return;} const agent=room.is_group?null:(await api.getBots()).find(item=>item.id===room.bot_ids[0])||null;setSelectedRoom(room);setSelectedBot(agent);if(closePanel)setCreator(null); }
   const pendingQuickTask = useRef<{ signature: string; id: string } | null>(null);
   async function quickStart(prompt: string, options: Partial<RunOptions>) {
     const signature=JSON.stringify({prompt,options});
@@ -42,7 +42,7 @@ export default function WorkspaceApp({ accountEmail, accountId }: { accountEmail
     setRooms(list=>list.some(item=>item.id===room.id)?list:[...list,room]);setSelectedBot(null);setSelectedRoom(room);
     void refreshBots().catch(()=>{});
   }
-  useEffect(()=>{const id=new URLSearchParams(window.location.search).get('conversation');if(id)void openGoalWorkspace(id).catch(()=>setRoomError('Could not open the saved conversation.'));},[]);
+  useEffect(()=>{const id=new URLSearchParams(window.location.search).get('conversation');if(id)void openGoalWorkspace(id,false).catch(()=>setRoomError('Could not open the saved conversation.'));},[]);
   const commands: WorkspaceCommand[] = [
     {id:'new',label:'New task',group:'Action',run:()=>{setSelectedRoom(null);setSelectedBot(null);}},
     {id:'plugins',label:'Connect tools',group:'Action',detail:'Browse and manage plugins',run:()=>setCreator('plugins')},

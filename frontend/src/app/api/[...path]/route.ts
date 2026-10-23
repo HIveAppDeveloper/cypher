@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSessionFromCookieHeader } from '../../../lib/auth-server';
+import { pluginReturnPath } from '../../../lib/pluginAuthorization';
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
 async function proxy(request: NextRequest, { params }: { params: { path: string[] } }) {
@@ -33,7 +34,11 @@ async function proxy(request: NextRequest, { params }: { params: { path: string[
     const data=await response.json();
     const binding=data.binding; delete data.binding;
     const result=NextResponse.json(data,{status:response.status,headers:{'Cache-Control':'private, no-store'}});
-    if(binding && data.flow_id)result.cookies.set('grokbot-oauth-'+data.flow_id,binding,{httpOnly:true,secure:true,sameSite:'lax',maxAge:600,path:'/api/plugin-oauth/callback'});
+    if(binding && /^[0-9a-f-]{36}$/.test(data.flow_id||'')){
+      const options={httpOnly:true,secure:true,sameSite:'lax' as const,maxAge:600,path:'/api/plugin-oauth/callback'};
+      result.cookies.set('grokbot-oauth-'+data.flow_id,binding,options);
+      result.cookies.set('grokbot-oauth-return-'+data.flow_id,pluginReturnPath(request.headers.get('referer'),request.nextUrl.origin),options);
+    }
     return result;
   }
   const responseHeaders: Record<string, string> = { 'Content-Type': response.headers.get('content-type') || 'application/json', 'Cache-Control': 'private, no-store', 'X-Content-Type-Options': 'nosniff' };
