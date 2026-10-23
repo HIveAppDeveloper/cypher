@@ -156,19 +156,19 @@
   min-height: 0;
   flex: 1 1 auto;
   justify-content: center;
-  padding: 28px 28px 80px;
+  padding: 28px 28px 45px;
   overflow-y: auto;
 }
 .quickstart-panel {
   display: flex;
-  width: min(100%, 720px);
+  width: min(100%, 960px);
   flex-direction: column;
   align-items: center;
   animation: cypher-home-arrive .48s cubic-bezier(.2, .8, .2, 1) both;
 }
 .quickstart h1 {
   max-width: 28ch;
-  margin: 0 0 8px;
+  margin: 0 0 24px;
   color: #282631;
   font-size: clamp(30px, 2.65vw, 40px);
   font-weight: 550;
@@ -180,7 +180,7 @@
 .quickstart-intro {
   width: auto;
   max-width: 42ch;
-  margin: 0 0 32px;
+  margin: 0 0 40px;
   color: #747180;
   font-size: 14px;
   line-height: 1.55;
@@ -188,9 +188,15 @@
   text-wrap: balance;
 }
 .quickstart .task-composer {
+  display: grid;
+  box-sizing: border-box;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-rows: 1fr;
+  align-items: center;
   width: 100%;
+  height: 76px;
   margin: 0;
-  padding: 13px 14px 10px;
+  padding: 9px 14px;
   border: 1px solid #e4e2eb;
   border-radius: 16px;
   background: rgba(255, 255, 255, .95);
@@ -202,14 +208,23 @@
   box-shadow: 0 0 0 3px rgba(112, 84, 220, .09), 0 3px 10px rgba(38, 33, 61, .045);
 }
 .quickstart .task-composer textarea {
-  min-height: 57px;
-  padding: 5px 4px 11px;
+  grid-column: 1;
+  grid-row: 1;
+  height: 54px;
+  min-height: 54px;
+  padding: 15px 4px 10px;
   color: var(--text-primary);
   font-size: 15px;
   line-height: 1.5;
 }
 .quickstart .task-composer textarea::placeholder { color: #898695; opacity: 1; }
-.quickstart .task-composer-footer { min-height: 38px; align-items: center; gap: 3px; }
+.quickstart .task-composer-footer {
+  grid-column: 2;
+  grid-row: 1;
+  min-height: 38px;
+  align-items: center;
+  gap: 3px;
+}
 .quickstart .task-composer-footer .glass-select-trigger {
   min-width: auto;
   min-height: 34px;
@@ -246,7 +261,7 @@
   justify-content: center;
   gap: 17px;
   width: 100%;
-  margin: 20px 0 0;
+  margin: 38px 0 0;
 }
 .quickstart .starter-prompts button {
   display: inline-flex;
@@ -329,12 +344,18 @@
   .quickstart { padding: 24px 18px max(44px, env(safe-area-inset-bottom)); }
   .quickstart h1 { max-width: 16ch; font-size: clamp(28px, 8vw, 34px); }
   .quickstart-intro { margin-bottom: 25px; font-size: 13px; }
-  .quickstart .task-composer { padding: 12px 12px 9px; border-radius: 15px; }
-  .quickstart .task-composer textarea { min-height: 68px; font-size: 16px; }
-  .quickstart .task-composer-footer { display: flex; gap: 2px; }
+  .quickstart .task-composer {
+    height: auto;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: 68px auto;
+    padding: 10px 12px 9px;
+    border-radius: 15px;
+  }
+  .quickstart .task-composer textarea { grid-column: 1; grid-row: 1; height: 68px; min-height: 68px; padding: 18px 4px 8px; font-size: 16px; }
+  .quickstart .task-composer-footer { grid-column: 1; grid-row: 2; display: flex; gap: 2px; }
   .quickstart .task-composer-footer .glass-select-trigger { max-width: min(42vw, 170px); padding-inline: 6px; font-size: 11px; }
   .quickstart .task-composer-footer .btn-primary { width: 40px; height: 40px; min-height: 40px; }
-  .quickstart .starter-prompts { gap: 12px; margin-top: 16px; }
+  .quickstart .starter-prompts { gap: 12px; margin-top: 22px; }
   .quickstart .starter-prompts button { font-size: 12px; }
   .quickstart .starter-prompts button:not(:first-child)::before { margin-right: 12px; }
 }
