@@ -13,7 +13,7 @@ import { modelPolicy } from '../lib/modelPolicy';
 import { readAttachment } from '../lib/attachments';
 const POLL_MS = 1500;
 const MAX_BYTES = 3 * 1024 * 1024;
-export function ChatPanel({ bot, room, bots, onCreateBot, onCreateRoom, onQuickStart, onOpenLounge, onOpenSetup, draftScope }: { draftScope?: string; bot: Bot | null; room: Conversation | null; bots: Bot[]; onCreateBot: () => void; onCreateRoom: () => void; onQuickStart: (prompt: string, options: Partial<import('../lib/types').RunOptions>) => Promise<void>; onOpenLounge: () => Promise<Conversation>; onOpenSetup?: () => void }) {
+export function ChatPanel({ bot, room, bots, onCreateBot, onCreateRoom, onQuickStart, onOpenLounge, onOpenSetup, onOpenRecent, draftScope }: { draftScope?: string; bot: Bot | null; room: Conversation | null; bots: Bot[]; onCreateBot: () => void; onCreateRoom: () => void; onQuickStart: (prompt: string, options: Partial<import('../lib/types').RunOptions>) => Promise<void>; onOpenLounge: () => Promise<Conversation>; onOpenSetup?: () => void; onOpenRecent: (conversationId: string) => void }) {
   const [conversationId, setConversationId] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
   const [jobs, setJobs] = useState<Job[]>([]);
@@ -178,7 +178,7 @@ export function ChatPanel({ bot, room, bots, onCreateBot, onCreateRoom, onQuickS
 </div></details></div></header>
     {searchOpen?<div className="conversation-search"><input autoFocus type="search" aria-label="Search loaded messages" placeholder="Search loaded messages…" value={messageQuery} onChange={event=>setMessageQuery(event.target.value)} onKeyDown={event=>{if(event.key==='Escape')closeSearch();}}/><span role="status">{visibleMessages.length} results</span><button onClick={closeSearch}>Close</button></div>:null}
     {conversationId?<WorkPanel open={workOpen} onClose={()=>setWorkOpen(false)} conversationId={conversationId} jobs={jobs} options={options} onChange={setOptions} onRefresh={async()=>setJobs(await api.getJobs(conversationId))}/>:null}
-    {!bot && !room ? <QuickStart key={draftScope || 'local'} draftScope={draftScope} options={options} onOptions={setOptions} onStart={onQuickStart}/> : <>
+    {!bot && !room ? <QuickStart key={draftScope || 'local'} draftScope={draftScope} options={options} onOptions={setOptions} onStart={onQuickStart} onOpenRecent={onOpenRecent}/> : <>
     {bot ? <div className="conversation-computer"><span>{computerBotId === bot.id ? 'Computer connected' : 'Computer tools'}</span><button disabled={computerBusy} onClick={() => void toggleComputer()}>{computerBusy ? 'Connecting…' : computerBotId === bot.id ? 'Stop computer' : 'Start computer'}</button></div> : null}
     {room?.is_group ? <details className="thread-members"><summary>{room.bot_ids.length} teammates</summary><div className="team-members">{bots.filter(b => room.bot_ids.includes(b.id)).map(b => <span key={b.id} title={`${b.llmProvider} · ${b.llmModel}`}><BotAvatar name={b.name} small/>{b.name}</span>)}</div></details> : null}
     {computerError ? <p role="alert">{computerError}</p> : null}

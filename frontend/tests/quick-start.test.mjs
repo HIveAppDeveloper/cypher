@@ -53,6 +53,7 @@ function quickStart(onStart, initialOptions = { routing: 'auto', provider: 'open
     react: runtime.react, './GlassSelect': { GlassSelect: 'select' }, '../lib/presets': presets,
     './cipher/BinaryLens': { __esModule: true, default: 'binary-lens' },
     './cipher/CypherMark': { __esModule: true, default: 'cypher-mark' },
+    './cipher/RecentWork': { RecentWork: 'recent-work' },
   }, { React: runtime.react, localStorage: { setItem() {} } });
   return () => runtime.render(() => QuickStart({
     options, onOptions: next => { options = next; }, onStart,

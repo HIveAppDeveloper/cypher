@@ -1,6 +1,7 @@
 import { MODEL_CHOICES } from '../lib/presets';
 import { GlassSelect } from './GlassSelect';
 import BinaryLens from './cipher/BinaryLens';
+import { RecentWork } from './cipher/RecentWork';
 import { useEffect, useRef, useState } from 'react';
 import { RunOptions } from '../lib/types';
 
@@ -10,7 +11,7 @@ const STARTER_PROMPTS = [
   { text: 'Build', prompt: 'Help me plan and build ' },
 ];
 
-export function QuickStart({ onStart, options, onOptions, draftScope }: { draftScope?: string; options: RunOptions; onOptions: (options: RunOptions) => void; onStart: (prompt: string, options: Partial<RunOptions>) => Promise<void> }) {
+export function QuickStart({ onStart, onOpenRecent, options, onOptions, draftScope }: { draftScope?: string; options: RunOptions; onOptions: (options: RunOptions) => void; onStart: (prompt: string, options: Partial<RunOptions>) => Promise<void>; onOpenRecent: (conversationId: string) => void }) {
   const manager = options.routing==='manual'?(options.model || 'gpt-6.1-sol'):'auto';
   const [prompt, setPrompt] = useState('');
   const logoRef = useRef<HTMLDivElement>(null);
@@ -117,6 +118,8 @@ export function QuickStart({ onStart, options, onOptions, draftScope }: { draftS
             >{item.text}</button>
           ))}
       </nav>
+
+      <RecentWork onOpen={onOpenRecent} />
 
       <span className={busy ? 'quickstart-status' : 'visually-hidden'} role="status">{busy ? <><BinaryLens className="quickstart-busy-lens" active={logoMotionActive} label="Cypher working" />Opening your conversation…</> : ''}</span>
       </div>
