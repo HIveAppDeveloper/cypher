@@ -6,6 +6,13 @@ import pytest
 from app.services.model_profiles import PROFILES, task_specialty, model_route_id
 from app.schemas.input import RunOptions
 
+@pytest.fixture(autouse=True)
+def isolated_model_connections(monkeypatch):
+    from app.services import omniroute
+    async def refresh(): pass
+    monkeypatch.setattr(omniroute,'refresh_model_routes',refresh)
+    monkeypatch.setattr(omniroute,'_managed_records',[])
+
 
 def test_routes_current_task_and_trusted_role():
     for prompt, expected in [('Fix this Python bug','coding'),('Research current sources','research'),('Draft a short story','writing'),('Calculate this equation','analysis'),('Plan the architecture','planning'),('Review this answer','review'),('Hello','general')]:
@@ -110,3 +117,40 @@ async def test_wait_for_work_is_interruptible_and_does_not_leak_tasks():
     assert not wake.is_set()
     waiter=asyncio.create_task(wait_for_work(wake,stop,30));stop.set()
     assert await asyncio.wait_for(waiter,1) is False
+
+@pytest.mark.asyncio
+async def test_free_claude_tool_task_uses_codex_and_never_adds_paid_backups(monkeypatch):
+    from app.services import llm_gateway, model_routing, omniroute
+    from app.config import settings
+    from litellm import ModelResponse
+    monkeypatch.setattr(settings,'OMNIROUTE_URL','https://router.example')
+    monkeypatch.setattr(settings,'OMNIROUTE_API_KEY','test-route-key')
+    monkeypatch.setattr(settings,'MODEL_ROUTING_POLICY','codex_and_free')
+    monkeypatch.setattr(settings,'OMNIROUTE_CONTROL_KEY','')
+    monkeypatch.setattr(settings,'OMNIROUTE_MODEL_MAP',{'openai/gpt-6.1-sol':'cx/gpt-6.1-sol'})
+    monkeypatch.setattr(settings,'LLM_FALLBACK_MODEL',None)
+    catalog={
+        'anthropic/claude-haiku-4.5':{'type':'language','modalities':{'input':['text']},'supported_parameters':[]},
+        'openai/gpt-6.1-sol':{'type':'language','modalities':{'input':['text','image']},'supported_parameters':['tools']},
+    }
+    async def live_catalog():return catalog
+    monkeypatch.setattr(model_routing,'route_catalog',live_catalog)
+    calls=[]
+    async def complete(messages, tools, provider, model, generation):
+        calls.append((messages,tools,provider,model))
+        return ModelResponse(choices=[{'message':{'role':'assistant','content':'42'}}])
+    monkeypatch.setattr(omniroute,'complete',complete)
+    messages=[{'role':'user','content':'Read the connected account and tell me the total.'}]
+    tools=[{'type':'function','function':{'name':'get_connectors','parameters':{'type':'object'}}}]
+    result=await llm_gateway.LLMGateway.complete(messages,tools,provider='anthropic',model='claude-haiku-4.5',fallback=('openai','gpt-6.1-sol'))
+    assert calls==[(messages,tools,'openai','gpt-6.1-sol')]
+    assert result._hidden_params['grokbot_route']['fallback'] is True
+    calls.clear()
+    monkeypatch.setattr(settings,'LLM_FALLBACK_MODEL','grok-4.7')
+    monkeypatch.setattr(settings,'LLM_FALLBACK_PROVIDER','xai')
+    async def unavailable(messages,tools,provider,model,generation):
+        calls.append((provider,model));raise omniroute.OmniRouteError(503)
+    monkeypatch.setattr(omniroute,'complete',unavailable)
+    with pytest.raises(omniroute.OmniRouteError):
+        await llm_gateway.LLMGateway.complete(messages,provider='anthropic',model='claude-haiku-4.5',fallback=('openai','gpt-6.1-sol'))
+    assert calls==[('anthropic','claude-haiku-4.5'),('openai','gpt-6.1-sol')]

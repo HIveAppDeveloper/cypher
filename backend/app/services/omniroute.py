@@ -14,9 +14,6 @@ _managed_records = []
 
 async def refresh_model_routes():
     global _managed_records
-    if not settings.OMNIROUTE_CONTROL_KEY:
-        _managed_records = []
-        return
     from app.db.session import AsyncSessionLocal
     from app.models.runtime import RuntimeCheck
     from sqlalchemy import select
@@ -24,9 +21,27 @@ async def refresh_model_routes():
     async with AsyncSessionLocal() as db:
         _managed_records = list((await db.execute(select(RuntimeCheck).where(RuntimeCheck.name.startswith(PREFIX)))).scalars())
 
+
+def managed_api_key(provider):
+    """Return a decrypted owner-saved API key only for a verified connection."""
+    from app.services.plugins import reveal
+    from app.services.model_connections import PREFIX
+    row = next((item for item in _managed_records if item.name == PREFIX + provider), None)
+    detail = row.detail or {} if row else {}
+    if detail.get('state') != 'ready' or not detail.get('credentials_encrypted'):
+        return None
+    try:
+        return reveal(detail['credentials_encrypted'])
+    except Exception:
+        return None
+
 def configured_model_map():
     from app.services.model_connections import model_map
-    return model_map(_managed_records) if settings.OMNIROUTE_CONTROL_KEY else settings.OMNIROUTE_MODEL_MAP
+    from app.services.model_profiles import included_routing, INCLUDED_ROUTES, FREE_ROUTES
+    result = dict(model_map(_managed_records) if settings.OMNIROUTE_CONTROL_KEY else settings.OMNIROUTE_MODEL_MAP)
+    result.update(FREE_ROUTES)
+    if included_routing(): result.update(INCLUDED_ROUTES)
+    return result
 
 
 def enabled():

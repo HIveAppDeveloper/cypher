@@ -27,6 +27,10 @@ def catalog():
 
 @pytest_asyncio.fixture
 async def provider(monkeypatch):
+    from app.services import omniroute
+    async def refresh(): pass
+    monkeypatch.setattr(omniroute, 'refresh_model_routes', refresh)
+    monkeypatch.setattr(omniroute, '_managed_records', [])
     from litellm.llms.custom_httpx.http_handler import AsyncHTTPHandler
     from litellm.llms.custom_httpx import llm_http_handler
     state = SimpleNamespace(requests=[], statuses=[], outputs=[], models=catalog())
@@ -119,9 +123,17 @@ async def test_transient_failover_uses_compatible_backup(provider, monkeypatch):
     assert all(PNG in json.dumps(r['input']) for r in provider.requests)
     assert response._hidden_params['grokbot_route']['fallback']
 
+@pytest.mark.asyncio
+async def test_exhausted_primary_uses_declared_codex_backup(provider, monkeypatch):
+    provider.statuses = [402, 200]
+    monkeypatch.setattr(settings, 'LLM_FALLBACK_MODEL', 'gpt-6-luna')
+    response = await LLMGateway.complete(messages=[{'role':'user','content':'Test'}],model='gpt-6.1-sol',provider='openai')
+    assert [r['model'] for r in provider.requests] == ['gpt-6.1-sol','gpt-6-luna']
+    assert response._hidden_params['grokbot_route']['fallback']
+
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize('status', [401, 402, 403, 400])
+@pytest.mark.parametrize('status', [401, 403, 400])
 async def test_configuration_and_auth_errors_do_not_fan_out(provider, monkeypatch, status):
     provider.statuses = [status]
     monkeypatch.setattr(settings, 'LLM_FALLBACK_MODEL', 'gpt-6-luna')

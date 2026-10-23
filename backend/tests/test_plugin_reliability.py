@@ -213,3 +213,26 @@ async def test_browser_cookies_are_not_accepted_as_plugin_api_keys(workspace):
     })
     assert result.status_code==422
     assert 'Browser session cookies cannot be used as API keys' in result.json()['detail']
+
+@pytest.mark.asyncio
+async def test_windsor_smoke_test_reads_existing_accounts_without_write_actions(workspace,monkeypatch):
+    client,sessions=workspace
+    calls=[]
+    async def invoke(plugin_id,name,arguments):
+        calls.append((name,arguments))
+        return {'success':True,'content':'Existing connected accounts returned.'}
+    monkeypatch.setattr(plugins,'invoke',invoke)
+    tenant=current_tenant_id.set('windsor-owner')
+    try:
+        async with sessions() as db:
+            plugin=Plugin(name='Windsor',url='https://mcp.windsor.ai/',enabled=True,credential=plugins.seal('existing-saved-grant'),tools=[
+                {'name':'get_connectors','description':'Read connected accounts'},
+                {'name':'execute_action','description':'Write action','enabled':False},
+            ])
+            db.add(plugin);await db.commit();pid=plugin.id
+    finally:current_tenant_id.reset(tenant)
+    result=await client.post(f'/api/plugins/{pid}/test',headers={'x-grokbot-user-id':'windsor-owner'})
+    assert result.status_code==200 and result.json()['status']=='passed'
+    assert calls==[('get_connectors',{'include_actions':False,'include_options':False})]
+    saved=(await client.get('/api/plugins',headers={'x-grokbot-user-id':'windsor-owner'})).json()[0]
+    assert saved['authenticated'] and saved['tools'][1]['enabled'] is False

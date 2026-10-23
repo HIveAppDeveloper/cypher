@@ -15,6 +15,9 @@ from app.services.model_routing import ModelConfigurationError, ModelCapabilityE
 
 @pytest.fixture
 def router(monkeypatch):
+    async def refresh(): pass
+    monkeypatch.setattr(omniroute, 'refresh_model_routes', refresh)
+    monkeypatch.setattr(omniroute, '_managed_records', [])
     monkeypatch.setattr(settings, 'OMNIROUTE_URL', 'https://router.example')
     monkeypatch.setattr(settings, 'OMNIROUTE_API_KEY', 'private-inference-key')
     monkeypatch.setattr(settings, 'OMNIROUTE_PROTECTION_BYPASS', 'private-access-key')

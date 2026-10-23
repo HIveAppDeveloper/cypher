@@ -49,6 +49,21 @@
     "verification": "not_tested"
   },
   {
+    "id": "f85324490fd53a16",
+    "name": "Windsor.ai",
+    "url": "https://mcp.windsor.ai/",
+    "description": "Use your existing Windsor.ai accounts for Instagram, YouTube, LinkedIn, TikTok and other connected business sources. Sign in to Windsor once; existing source grants are reused.",
+    "category": "Business",
+    "domains": [
+      "windsor.ai",
+      "onboard.windsor.ai",
+      "mcp.windsor.ai"
+    ],
+    "source": "https://github.com/windsor-ai/windsor_mcp",
+    "auth": "auto",
+    "verification": "not_tested"
+  },
+  {
     "id": "5b64146edc1804e6",
     "name": "Figma",
     "url": "https://mcp.figma.com/mcp",

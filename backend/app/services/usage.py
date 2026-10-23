@@ -38,7 +38,7 @@ async def check_allowance():
         if usage['weekly_token_limit'] is not None and usage['tokens']>=usage['weekly_token_limit']:
             raise UsageLimitError('The workspace weekly model-token allowance has been reached. Adjust it in Usage or wait for its reset. No new model request was sent.')
 
-async def record(provider,model,usage):
+async def record(provider,model,usage,*,direct=False):
     current=active.get()
     if not current or not current[0] or not usage:return
     data=usage.model_dump() if hasattr(usage,'model_dump') else usage if isinstance(usage,dict) else {'input_tokens':getattr(usage,'input_tokens',0),'output_tokens':getattr(usage,'output_tokens',0)}
@@ -48,7 +48,7 @@ async def record(provider,model,usage):
         from app.services import omniroute
         if data.get('cost') is not None:
             cost=float(data['cost'])
-        elif omniroute.enabled():
+        elif omniroute.enabled() and not direct:
             from app.services.model_routing import route_catalog
             from app.services.model_profiles import model_route_id
             pricing=(await route_catalog()).get(model_route_id(provider,model),{}).get('pricing',{})
