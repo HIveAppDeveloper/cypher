@@ -1,0 +1,24 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "services": {
+    "frontend": {
+      "root": "frontend",
+      "framework": "nextjs",
+      "installCommand": "env -u npm_config_cache_dir -u NPM_CONFIG_CACHE_DIR npm ci",
+      "buildCommand": "env -u npm_config_cache_dir -u NPM_CONFIG_CACHE_DIR npm run build",
+      "bindings": [{"type": "service", "service": "backend", "format": "url", "env": "BACKEND_INTERNAL_URL"}]
+    },
+    "backend": {"root": "backend", "runtime": "container", "entrypoint": "Dockerfile"}
+  },
+  "daemons": {
+    "agent-worker": {
+      "root": "backend",
+      "entrypoint": "Dockerfile",
+      "command": ["python", "-m", "app.worker_main"],
+      "instances": {"iad1": 2},
+      "resources": {"requests": {"memory": "2Gi"}},
+      "terminationGracePeriodSeconds": 60
+    }
+  },
+  "rewrites": [{"source": "/(.*)", "destination": {"service": "frontend"}}]
+}

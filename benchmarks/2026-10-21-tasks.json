@@ -1,0 +1,76 @@
+{
+  "created_at": "2026-10-21T23:20:55.393563+00:00",
+  "setup": "Complete these controlled benchmark tasks using real tools. Do not send messages to other people or change external accounts. You may create files under /workspace/benchmark-20261021. Be precise about evidence and limits. Do not ask for clarification unless essential.",
+  "tasks": [
+    {
+      "id": "data",
+      "prompt": "Analyze this order export. Keep only the latest updated_at row for each order_id, regardless of input row order. Revenue is the sum of paid and refunded amounts; exclude pending and cancelled. Use exact decimal arithmetic. Create /workspace/benchmark-20261021/revenue_analysis.py (stdlib only, runnable as python revenue_analysis.py INPUT.csv), orders.csv and revenue_summary.json. JSON must contain unique_orders, status_counts, paid_usd, refunded_usd, net_usd (money as two-decimal strings). Run it and test shuffled input, an empty input with headers, and a later cancellation replacing a paid row. Return the totals, test evidence, and links to the actual files.\n\nCSV:\norder_id,updated_at,status,amount_usd\nA100,2026-10-01T09:00:00Z,paid,120.00\nA101,2026-10-01T10:00:00Z,paid,80.00\nA100,2026-10-02T09:00:00Z,paid,150.00\nA102,2026-10-01T11:00:00Z,paid,0.00\nA103,2026-10-01T12:00:00Z,cancelled,90.00\nA104,2026-10-01T13:00:00Z,refunded,-30.00\nA105,2026-10-01T14:00:00Z,paid,19.99\nA106,2026-10-01T15:00:00Z,pending,44.00\nA107,2026-10-01T16:00:00Z,paid,10.01\nA108,2026-10-01T17:00:00Z,paid,200.00\nA108,2026-10-02T17:00:00Z,cancelled,200.00\nA109,2026-10-01T18:00:00Z,refunded,-5.50\n",
+      "criteria": [
+        "Latest row deduplication, independent of row order",
+        "Correct money 260.00,-35.50,224.50 and counts",
+        "Real runnable script and all requested edge tests",
+        "Actual accessible files and source input"
+      ]
+    },
+    {
+      "id": "web",
+      "prompt": "Use current official Python sources to verify Python 3.14.0. Give its release date, explain the change to annotations and the status of free-threaded Python, and identify the relevant PEP numbers. Cite direct official source links next to the claims. Keep it under 180 words. Fetch sources; do not answer from memory.",
+      "criteria": [
+        "Fetched official sources",
+        "Correct release date",
+        "Correct lazy annotation behavior and PEPs",
+        "Correct supported free-threading status and source links"
+      ]
+    },
+    {
+      "id": "browser",
+      "prompt": "Use your real browser to open https://books.toscrape.com/ and navigate to the Travel category. Return the first three books in displayed order, their prices in GBP, and availability. Include the category URL and an actual screenshot of the Travel page as evidence. Do not buy anything.",
+      "criteria": [
+        "Actual browser navigation to Travel",
+        "First 3 titles correct and in order",
+        "All prices and stock status correct",
+        "Actual screenshot accessible in answer"
+      ]
+    },
+    {
+      "id": "plugin",
+      "prompt": "Use my existing Vercel connection to inspect the open-grokbot project in the hiveapp team. Report its project name and ID, the current production deployment URL, state, Git commit SHA, and creation time. Use read-only plugin calls; do not deploy, change settings, or reconnect an account that already works. State any missing access honestly.",
+      "criteria": [
+        "Existing Vercel plugin actually called",
+        "Correct project/team scope",
+        "Production deployment distinguished from previews",
+        "Real SHA, URL, state, creation timestamp"
+      ]
+    },
+    {
+      "id": "memory_save",
+      "prompt": "Remember this preference for this benchmark bot: my synthetic release codename is Cobalt Finch and status updates should be exactly three bullets: Outcome, Evidence, Next. Save it as private memory for this bot, not a workspace-wide preference. Confirm when saved.",
+      "criteria": [
+        "Preference really persisted",
+        "Bot-private scope"
+      ]
+    },
+    {
+      "id": "memory_recall",
+      "prompt": "What is my synthetic release codename, and what format did I ask you to use for status updates? Answer using that format.",
+      "criteria": [
+        "Cobalt Finch recalled",
+        "Three bullets Outcome Evidence Next",
+        "New conversation or app restart verified"
+      ]
+    }
+  ],
+  "method": "Prompts and rubric locked before output. Equal user permissions; Open GrokBot automatic model routing and production defaults, Grok Bot default product model. Up to 8 minutes per task, score each criterion 0/1, first attempt separately from repairs. No conclusion beyond this small sample.",
+  "data_expected": {
+    "unique_orders": 10,
+    "status_counts": {
+      "paid": 5,
+      "refunded": 2,
+      "cancelled": 2,
+      "pending": 1
+    },
+    "paid_usd": "260.00",
+    "refunded_usd": "-35.50",
+    "net_usd": "224.50"
+  }
+}

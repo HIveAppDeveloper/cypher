@@ -1,0 +1,5 @@
+<ns0:svg xmlns:ns0="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <ns0:rect width="64" height="64" rx="12" fill="#0a0c10" />
+  <ns0:text x="32" y="29" text-anchor="middle" font-family="'Arial Black', 'Helvetica Neue', Helvetica, Arial, sans-serif" font-weight="900" font-size="20" letter-spacing="-0.5" fill="#1AB6E0">BYTE</ns0:text>
+  <ns0:text x="32" y="51" text-anchor="middle" font-family="'Arial Black', 'Helvetica Neue', Helvetica, Arial, sans-serif" font-weight="900" font-size="20" letter-spacing="-0.5" fill="#e6e9ef">Ray</ns0:text>
+</ns0:svg>

@@ -1,0 +1,164 @@
+/* Cypher's original monochrome identity. Imported last so older workspace
+   palettes cannot recolor the brand or its controls. Status colors retain meaning. */
+:root {
+  --cx-bg:#f2f2f7; --cx-card:#fff; --cx-label:#000; --cx-label-2:#626267;
+  --cx-label-3:#737373; --cx-fill:rgba(0,0,0,.07); --cx-fill-2:rgba(0,0,0,.04);
+  --cx-sep:#dedee4; --cx-inverse:#fff; --cx-material:rgba(242,242,247,.94);
+  --bg-main:var(--cx-bg); --bg-panel:var(--cx-card); --bg-surface:var(--cx-card);
+  --bg-card:#ebebeb; --bg-card-hover:#e5e5e5; --system-sidebar:#eee;
+  --system-subtle:#e8e8e8; --system-hover:rgba(0,0,0,.045); --system-selected:rgba(0,0,0,.075);
+  --system-separator:var(--cx-sep); --border-light:var(--cx-sep);
+  --text-primary:var(--cx-label); --text-secondary:var(--cx-label-2); --text-muted:var(--cx-label-2);
+  --brand-action:var(--cx-label); --brand-on-action:var(--cx-inverse);
+  --accent-blue:var(--brand-action); --focus-color:var(--cx-label);
+  --outgoing-background:var(--brand-action); --outgoing-color:var(--brand-on-action);
+}
+@media(prefers-color-scheme:dark) {
+  :root:not([data-theme="light"]) {
+    --cx-bg:#111; --cx-card:#1c1c1c; --cx-label:#f5f5f5; --cx-label-2:#b5b5b5;
+    --cx-label-3:#aaa; --cx-fill:rgba(255,255,255,.1); --cx-fill-2:rgba(255,255,255,.06);
+    --cx-sep:#3d3d3d; --cx-inverse:#171717; --cx-material:rgba(17,17,17,.94);
+    --bg-card:#282828; --bg-card-hover:#333; --system-sidebar:#191919;
+    --system-subtle:#292929; --system-hover:rgba(255,255,255,.055); --system-selected:rgba(255,255,255,.1);
+  }
+}
+:root[data-theme="dark"] {
+  --cx-bg:#111; --cx-card:#1c1c1c; --cx-label:#f5f5f5; --cx-label-2:#b5b5b5;
+  --cx-label-3:#aaa; --cx-fill:rgba(255,255,255,.1); --cx-fill-2:rgba(255,255,255,.06);
+  --cx-sep:#3d3d3d; --cx-inverse:#171717; --cx-material:rgba(17,17,17,.94);
+  --bg-card:#282828; --bg-card-hover:#333; --system-sidebar:#191919;
+  --system-subtle:#292929; --system-hover:rgba(255,255,255,.055); --system-selected:rgba(255,255,255,.1);
+}
+html,body {color:var(--cx-label);background:var(--cx-bg)}
+::selection {background:var(--cx-label);color:var(--cx-inverse)}
+input,textarea,select,button,progress {accent-color:var(--brand-action);caret-color:var(--cx-label)}
+:is(button,a,input,textarea,select,summary,[tabindex]):focus-visible {outline-color:var(--cx-label)}
+::-webkit-scrollbar-thumb {background:var(--cx-sep)}
+body :is(.app-layout,.login-page,dialog) a {color:var(--cx-label);text-decoration-color:currentColor}
+.cypher-mark {display:block;width:100%;height:auto;aspect-ratio:1624/806;overflow:visible;flex-shrink:0}
+@media(prefers-color-scheme:dark) {:root:not([data-theme="light"]) .cypher-mark {filter:invert(1)}}
+:root[data-theme="dark"] .cypher-mark {filter:invert(1)}
+.sidebar-brand .brand-symbol,.mobile-nav-header .brand-symbol,.login-brand .brand-symbol {width:40px;height:20px;border:0;border-radius:0;background:none;filter:none;transform:none;transition:opacity .2s ease}
+.sidebar-brand:hover .brand-symbol {filter:none;transform:none;opacity:.65}
+@media(prefers-color-scheme:dark) {:root:not([data-theme="light"]) :is(.sidebar-brand,.mobile-nav-header,.login-brand) .brand-symbol {filter:invert(1)}}
+:root[data-theme="dark"] :is(.sidebar-brand,.mobile-nav-header,.login-brand) .brand-symbol {filter:invert(1)}
+.sidebar-shell .new-task-button,.btn-primary,.login-email-button,.connector-connect,.composer .send-button,.quickstart .task-composer-footer .btn-primary {background:var(--brand-action);color:var(--brand-on-action);box-shadow:none}
+.sidebar-shell .new-task-button:hover,.btn-primary:hover:not(:disabled),.connector-connect:hover {background:var(--brand-action);opacity:.84}
+.sidebar-shell .bot-row.selected,.sidebar-shell .roster-filters button[aria-pressed="true"],.glass-select-option[data-highlighted],.connector-tabs button[aria-pressed="true"] {background:var(--system-selected);color:var(--cx-label)}
+.connector-state,.connector-notice,.sidebar-dock-preview,.workspace-shortcuts button {background:var(--system-subtle);color:var(--cx-label);border-color:var(--cx-sep)}
+.message.outgoing .message-content {background:var(--brand-action);color:var(--brand-on-action)}
+.message.outgoing .message-content a {color:inherit}
+.message-markdown a,.model-connection-link,.sidebar-shell .roster-filters button[aria-pressed="true"] {color:var(--cx-label)}
+.bot-avatar.agent-initials {background:var(--system-subtle)!important;color:var(--cx-label)!important}
+.connector-logo img,.google-login {filter:grayscale(1)}
+.glass-select-content,.bot-dialog,.connectors-dialog,.work-panel,.command-dialog {background:var(--cx-card);color:var(--cx-label);border-color:var(--cx-sep)}
+.connector-authorization {background:var(--cx-bg);border-color:var(--cx-sep)}
+.connector-authorization h3 {font-weight:500}
+.connector-authorization .btn-primary {background:var(--brand-action);color:var(--brand-on-action)}
+.connector-authorization .connector-login-actions {gap:10px}
+.connector-tabs button[aria-pressed="true"] {border-color:var(--cx-label)}
+.connectors-dialog .connector-close,.connectors-dialog .connector-logo,.connectors-dialog .catalog-heading h3 span {background:var(--system-subtle);color:var(--cx-label-2)}
+.connectors-dialog :is(.connector-tabs,.connector-entry,.connector-settings section,.connector-settings>details,.website-connect) {border-color:var(--cx-sep)}
+.connectors-dialog :is(.connector-tabs button,.website-connect>p,.catalog-heading>div>p,.catalog-sync p,.connector-filters>span,.connector-categories>span,.connector-entry-title>div>span,.connector-entry>p,.catalog-note,.connector-empty,.connector-custom>p,.connector-settings p,.connector-custom label span,.connected-service summary,.connector-settings summary) {color:var(--cx-label-2)}
+.connectors-dialog .connector-tabs button[aria-pressed="true"],.connectors-dialog .connector-empty h3 {color:var(--cx-label)}
+.connectors-dialog .connector-tabs button[aria-pressed="true"]::after {background:var(--cx-label)}
+.connectors-dialog .connector-entry,.connectors-dialog .connector-filters button {background:var(--cx-card);color:var(--cx-label);border-color:var(--cx-sep)}
+.connectors-dialog .connector-entry:hover {border-color:var(--cx-label-3)}
+.connectors-dialog .mcp-directory-panel {margin:28px 0;padding:24px 0 4px;border-top:1px solid var(--cx-sep)}
+.connectors-dialog .mcp-directory-search {display:block;margin:14px 0 6px;color:var(--cx-label-2);font-size:12px;font-weight:600}
+.connectors-dialog .mcp-directory-panel>input {width:100%;min-height:44px;padding:10px 12px;border:1px solid var(--cx-sep);border-radius:10px;background:var(--cx-card);color:var(--cx-label);font:inherit}
+.connectors-dialog .mcp-directory-panel>input:focus-visible {outline:2px solid var(--cx-label);outline-offset:2px}
+.connectors-dialog .mcp-directory-toolbar {display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin:14px 0}
+.connectors-dialog .mcp-directory-toolbar label {color:var(--cx-label-2);font-size:12px;font-weight:600}
+.connectors-dialog .mcp-directory-toolbar select {min-height:36px;max-width:220px;padding:0 30px 0 11px;border:1px solid var(--cx-sep);border-radius:9px;background:var(--cx-card);color:var(--cx-label);font:inherit}
+.connectors-dialog .mcp-directory-toolbar select:focus-visible {outline:2px solid var(--cx-label);outline-offset:2px}
+.connectors-dialog .mcp-directory-permissions {margin:14px 0;padding:12px 14px;border:1px solid var(--cx-sep);border-radius:10px;background:var(--cx-fill-2);color:var(--cx-label-2);font-size:12px;line-height:1.55}
+.connectors-dialog .mcp-directory-status {display:inline-flex;align-items:center;min-height:22px;padding:2px 8px;border:1px solid var(--cx-sep);border-radius:999px;color:var(--cx-label-2);font-size:10px;font-weight:650;letter-spacing:.015em}
+.connectors-dialog .mcp-directory-status[data-status="protocol_verified"] {color:var(--cx-label);border-color:var(--cx-label-3)}
+.connectors-dialog .connector-entry-description {display:-webkit-box;overflow:hidden;-webkit-box-orient:vertical;-webkit-line-clamp:3;line-height:1.5}
+.connectors-dialog .connector-tool-preview {margin-top:10px}
+.connectors-dialog .connector-preview-toggle {padding:4px 0;border:0;background:transparent;color:var(--cx-label);font:inherit;font-size:12px;font-weight:600;text-align:left;text-underline-offset:3px;cursor:pointer}
+.connectors-dialog .connector-preview-toggle:hover {text-decoration:underline}
+.connectors-dialog .connector-preview-toggle:focus-visible {outline:2px solid var(--cx-label);outline-offset:3px;border-radius:3px}
+.connectors-dialog .connector-tool-preview-content {margin-top:8px;padding:10px 12px;border:1px solid var(--cx-sep);border-radius:10px;background:var(--cx-fill-2);color:var(--cx-label-2);font-size:12px;line-height:1.45}
+.connectors-dialog .connector-tool-preview-heading {display:flex;justify-content:space-between;gap:12px;color:var(--cx-label)}
+.connectors-dialog .connector-tool-preview-content ul {display:grid;gap:8px;margin:8px 0 0;padding:0;list-style:none}
+.connectors-dialog .connector-tool-preview-content li {display:grid;gap:2px;padding-top:8px;border-top:1px solid var(--cx-sep)}
+.connectors-dialog .connector-tool-preview-content li strong {overflow-wrap:anywhere;color:var(--cx-label);font-size:11px}
+.connectors-dialog .connector-tool-preview-content li span {display:-webkit-box;overflow:hidden;-webkit-box-orient:vertical;-webkit-line-clamp:2}
+.connectors-dialog .connector-tool-preview-content p {margin:0}
+.connectors-dialog .connector-tool-preview-content small {display:block;margin-top:8px}
+@media(max-width:600px){.connectors-dialog .mcp-directory-toolbar {display:grid;grid-template-columns:auto 1fr}.connectors-dialog .mcp-directory-toolbar select {width:100%;max-width:none}}
+.connectors-dialog .connector-categories button {color:var(--cx-label-2)}
+.connectors-dialog .connector-categories button[aria-pressed="true"] {color:var(--cx-label);background:var(--system-selected)}
+.connectors-dialog .connector-filters button[aria-pressed="true"] {background:var(--brand-action);color:var(--brand-on-action)}
+.connectors-dialog .btn-primary,.connectors-dialog .btn-primary:hover {background:var(--brand-action);color:var(--brand-on-action)}
+.connectors-dialog .website-search input {background:var(--cx-card);color:var(--cx-label);border-color:var(--cx-sep)}
+.connectors-dialog .website-search input::placeholder {color:var(--cx-label-2)}
+.connectors-dialog .website-search input:focus {border-color:var(--cx-label);box-shadow:0 0 0 2px var(--cx-fill)}
+.sidebar-shell .command-launcher {background:var(--cx-card);color:var(--cx-label-2);border-color:var(--cx-sep)}
+.sidebar-shell .command-launcher:hover {background:var(--system-subtle);color:var(--cx-label)}
+.sidebar-shell :is(.roster-toolbar .section-label,.rooms-label,.rooms-label button,.sidebar-more>summary,.sidebar-more>summary::after,.sidebar-layout-tools>button,.sidebar-layout-menu>summary) {color:var(--cx-label-2)}
+
+/* The original animated binary lens and one wordmark, as in the reference. */
+.quickstart {background:var(--cx-bg);justify-content:flex-start;padding-block:clamp(32px,7vh,72px) 40px}
+.quickstart-panel {width:min(620px,100%);padding-block:0}
+.quickstart .quickstart-mark {display:block;position:relative;width:min(560px,100%);height:auto;aspect-ratio:560/210;margin:0 auto 20px;padding:0;background:none;border:0;border-radius:0;box-shadow:none;animation:none}
+.quickstart-mark::before,.quickstart-mark::after {display:none}
+.quickstart .quickstart-real-lens {display:block;width:100%;height:100%;color:var(--cx-label)}
+.quickstart h1 {margin:0 0 12px;font-size:clamp(48px,6vw,72px);line-height:1.05;font-weight:500;letter-spacing:-.04em;color:var(--cx-label);animation:none}
+.quickstart-intro {margin:0 0 28px;max-width:46ch;font-size:14px;color:var(--cx-label-2);animation:none}
+.quickstart .task-composer {display:flex;flex-direction:column;gap:14px;height:auto;padding:0;border:0;border-radius:0;background:transparent;box-shadow:none;animation:none;transform:none}
+.quickstart .task-composer:hover,.quickstart .task-composer:focus-within {border:0;box-shadow:none;transform:none}
+.task-composer-fields {width:100%;border:1px solid var(--cx-sep);border-radius:14px;background:var(--cx-card);overflow:hidden;transition:border-color .2s ease}
+.task-composer-fields:focus-within {border-color:var(--cx-label)}
+.quickstart .task-composer textarea {display:block;width:100%;height:76px;min-height:76px;max-height:240px;padding:18px 18px 12px;color:var(--cx-label);resize:vertical;border:0;border-radius:0;background:transparent;line-height:1.5}
+.quickstart .task-composer textarea::placeholder {color:var(--cx-label-2)}
+.quickstart .task-composer-footer {display:flex;flex-wrap:wrap;min-height:52px;margin-inline:16px;padding:4px 0;border-top:1px solid var(--cx-sep);gap:10px}
+.quickstart .task-composer-footer .glass-select-trigger {min-height:44px;height:44px;color:var(--cx-label);font-size:13px}
+.quickstart .task-composer-footer .glass-select-trigger:hover {background:var(--cx-fill-2)}
+.quickstart .quickstart-submit {display:flex;align-items:center;justify-content:center;gap:12px;width:100%;height:50px;min-height:50px;margin:0;padding:12px 20px;border:0;border-radius:999px;background:var(--cx-label);color:var(--cx-inverse);font-size:15px;font-weight:550}
+.quickstart-submit svg {width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.6}
+.quickstart .quickstart-submit:disabled {background:var(--cx-label);color:var(--cx-inverse);opacity:.45;cursor:default}
+.quickstart .starter-prompts button {color:var(--cx-label-2);animation:none}
+.quickstart .starter-prompts button:hover:not(:disabled) {color:var(--cx-label);transform:none}
+.quickstart .quickstart-status:not(.visually-hidden) {display:flex;align-items:center;justify-content:center;gap:10px;color:var(--cx-label-2)}
+.quickstart-busy-lens {width:70px;height:28px;color:var(--cx-label)}
+
+/* Existing Cypher intro; it is a brief signature, never a simulated progress bar. */
+.cx-intro {color:var(--cx-label)}
+.cx-intro canvas {opacity:.24}
+.cx-intro-skip {background:var(--cx-card);color:var(--cx-label);border-color:var(--cx-sep);backdrop-filter:none}
+
+/* Sign-in belongs to the same quiet monochrome workspace. */
+.login-page {display:flex;flex-direction:column;min-height:100dvh;padding:24px 32px;background:var(--cx-bg);color:var(--cx-label)}
+.login-page::before,.login-page::after,.login-orb {display:none}
+.login-brandbar {position:relative;inset:auto;width:100%;max-width:1320px;margin:0 auto;padding:0}
+.login-brand {display:inline-flex;align-items:center;gap:10px;color:var(--cx-label);font-size:17px;font-weight:600;letter-spacing:-.02em}
+.login-layout {display:flex;flex:1;align-items:center;justify-content:center;width:100%;max-width:none;margin:0;padding:48px 0 72px;gap:0}
+.login-card {display:block;position:relative;width:min(420px,100%);max-width:420px;margin:0;padding:32px;background:var(--cx-card);color:var(--cx-label);border:1px solid var(--cx-sep);border-radius:16px;box-shadow:none}
+.login-card::before,.login-card::after {display:none}
+.login-hero-mark {width:180px;max-width:80%;margin:0 auto 24px}
+.login-card h1 {margin:0 0 10px;text-align:center;font-size:27px;font-weight:500;letter-spacing:-.03em;color:var(--cx-label);line-height:1.2}
+.login-copy {margin:0 0 24px;text-align:center;color:var(--cx-label-2)}
+.login-divider,.login-card .login-privacy,.email-login-form label {color:var(--cx-label-2)}
+.login-card .email-login-form input {border-color:var(--cx-sep);background:var(--cx-card);color:var(--cx-label);box-shadow:none}
+.login-card .email-login-form input:focus {border-color:var(--cx-label);box-shadow:none}
+.login-card .email-login-form .login-email-button {background:var(--brand-action);color:var(--brand-on-action);box-shadow:none}
+.login-card .email-login-form .login-email-button:hover:not(:disabled) {box-shadow:none;filter:none;opacity:.84}
+.login-card .email-login-form :focus-visible {outline-color:var(--cx-label)}
+.sidebar-shell .roster-empty button {color:var(--cx-label);text-decoration:underline;text-underline-offset:3px}
+.login-skip,.login-page .login-card a {color:var(--cx-label)}
+.login-email-sent {background:var(--cx-bg);border-color:var(--cx-sep)}
+@media(max-width:760px) {
+  .quickstart .quickstart-mark {width:100%;margin-bottom:20px}
+  .quickstart h1 {font-size:52px}
+  .quickstart-intro {margin-bottom:24px;font-size:14px}
+  .quickstart .task-composer {height:auto}
+  .quickstart .task-composer-footer .btn-primary {width:44px;height:44px;min-height:44px}
+  .quickstart .task-composer-footer .glass-select-trigger {min-height:44px;font-size:12px}
+  .login-page {padding:20px 18px}
+  .login-layout {padding:32px 0}
+  .login-card {padding:28px 22px}
+}
+@media(prefers-reduced-motion:reduce) {*,*::before,*::after {scroll-behavior:auto!important}}

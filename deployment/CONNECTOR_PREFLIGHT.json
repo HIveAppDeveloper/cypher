@@ -1,0 +1,256 @@
+{
+  "checked_at": "2026-10-21T15:00:00Z",
+  "method": "Unauthenticated MCP initialize POST, protocol 2025-03-26, 10-second timeout. Preflight only: not proof of execution or account authorization. HTTP 400/405 results can be protocol incompatibility.",
+  "total": 500,
+  "summary": {
+    "authentication_required": 282,
+    "unavailable": 21,
+    "protocol_responded": 186,
+    "redirect": 2,
+    "unreachable": 9
+  },
+  "read_only_tool_tests": [
+    {
+      "service": "DeepWiki",
+      "tool": "read_wiki_structure",
+      "passed": true
+    },
+    {
+      "service": "Microsoft Learn",
+      "tool": "microsoft_docs_search",
+      "passed": true
+    },
+    {
+      "service": "Cloudflare Docs",
+      "tool": "search_cloudflare_documentation",
+      "passed": true
+    }
+  ],
+  "test_environment_note": "Live tool tests used the production MCP session implementation. Local DNS validation used an exact allowlist of these three official HTTPS endpoints because this environment resolves external hosts through a proxy. Production DNS validation remains enabled.",
+  "inconclusive_results": [
+    {
+      "id": "5b64146edc1804e6",
+      "name": "Figma",
+      "url": "https://mcp.figma.com/mcp",
+      "http_status": 405,
+      "status": "unavailable"
+    },
+    {
+      "id": "db8420f56e46da8d",
+      "name": "citepath",
+      "url": "https://citepath.ai/api/mcp",
+      "http_status": 308,
+      "status": "redirect"
+    },
+    {
+      "id": "831818adae936bd8",
+      "name": "Clevera",
+      "url": "https://app.clevera.ai/mcp",
+      "http_status": 400,
+      "status": "unavailable"
+    },
+    {
+      "id": "2c9879f97fd4b854",
+      "name": "ContentMaschine",
+      "url": "https://contentmaschine.ai/api/mcp",
+      "http_status": 503,
+      "status": "unavailable"
+    },
+    {
+      "id": "8003d8a39c5b8ca4",
+      "name": "CooperBuild",
+      "url": "https://api.cooperbuild.ai/mcp",
+      "status": "unreachable",
+      "error": "ReadTimeout"
+    },
+    {
+      "id": "6da4efa8c66e24fa",
+      "name": "fAlpha",
+      "url": "https://agent.falpha.ai/mcp",
+      "http_status": 405,
+      "status": "unavailable"
+    },
+    {
+      "id": "4940fa51f193252d",
+      "name": "Instapath",
+      "url": "https://instapath.ai/mcp",
+      "http_status": 503,
+      "status": "unavailable"
+    },
+    {
+      "id": "293834f349667b52",
+      "name": "Kolonie AI",
+      "url": "https://mcp.kolonie.ai/mcp",
+      "http_status": 404,
+      "status": "unavailable"
+    },
+    {
+      "id": "7b27a512de19a6bc",
+      "name": "Lightdrift Images MCP",
+      "url": "https://lightdrift.ai/mcp",
+      "http_status": 503,
+      "status": "unavailable"
+    },
+    {
+      "id": "8649be1decb6b8f4",
+      "name": "Mappu",
+      "url": "https://api.mappu.ai/mcp",
+      "status": "unreachable",
+      "error": "ReadTimeout"
+    },
+    {
+      "id": "39b3b3c7a4034025",
+      "name": "Agent Skills Search Server",
+      "url": "https://skills-sh.run.mcp.com.ai/mcp",
+      "http_status": 503,
+      "status": "unavailable"
+    },
+    {
+      "id": "510a6f772fe67627",
+      "name": "Jobero job search",
+      "url": "https://jobero.ai/mcp",
+      "http_status": 301,
+      "status": "redirect"
+    },
+    {
+      "id": "7b0eef93a01237f9",
+      "name": "OpenArx",
+      "url": "https://mcp.openarx.ai/researcher/mcp",
+      "http_status": 526,
+      "status": "unavailable"
+    },
+    {
+      "id": "aa28801ff7b71746",
+      "name": "69.ai",
+      "url": "https://69ai.ai/mcp",
+      "http_status": 503,
+      "status": "unavailable"
+    },
+    {
+      "id": "397983e69ed229cf",
+      "name": "aTars MCP",
+      "url": "https://mcp.aarna.ai/mcp",
+      "http_status": 502,
+      "status": "unavailable"
+    },
+    {
+      "id": "1d92d2001f9c8f6f",
+      "name": "Contractor Licence Changes",
+      "url": "https://license-changes-mcp.ottobot2025.workers.dev/mcp",
+      "status": "unreachable",
+      "error": "ReadTimeout"
+    },
+    {
+      "id": "d92826927015a546",
+      "name": "Graffeo Coffee Roasting",
+      "url": "https://api.agenticshelf.ai/m/graffeo/mcp",
+      "http_status": 503,
+      "status": "unavailable"
+    },
+    {
+      "id": "683c31aa01867dd5",
+      "name": "Agothe Agent Contract Preflight",
+      "url": "https://mcp-chatgpt.agothe.ai/mcp",
+      "http_status": 530,
+      "status": "unavailable"
+    },
+    {
+      "id": "0b01ebd7cd8a49a8",
+      "name": "Arclan MCP Registry",
+      "url": "https://arclan.ai/mcp",
+      "http_status": 500,
+      "status": "unavailable"
+    },
+    {
+      "id": "ae3d086a4d8a8fca",
+      "name": "Ambix",
+      "url": "https://mcp.ambix.ai",
+      "status": "unreachable",
+      "error": "ReadTimeout"
+    },
+    {
+      "id": "8bd9e1107e360522",
+      "name": "Atmark",
+      "url": "https://api.atmark.ai/mcp",
+      "http_status": 503,
+      "status": "unavailable"
+    },
+    {
+      "id": "3a5e34ddd5da4d98",
+      "name": "ARPI MCP",
+      "url": "https://mcp.arpi.ai/mcp",
+      "status": "unreachable",
+      "error": "ReadTimeout"
+    },
+    {
+      "id": "ae5c02b56ed557b8",
+      "name": "Autoblogging.ai",
+      "url": "https://autoblogging.ai/mcp",
+      "status": "unreachable",
+      "error": "ReadTimeout"
+    },
+    {
+      "id": "112d819522742188",
+      "name": "Aviado AI",
+      "url": "https://aviado.ai/api/mcp",
+      "status": "unreachable",
+      "error": "ReadTimeout"
+    },
+    {
+      "id": "63d80188ed547045",
+      "name": "BittleBits GEO Assistant",
+      "url": "https://bittlebits.ai/mcp",
+      "http_status": 503,
+      "status": "unavailable"
+    },
+    {
+      "id": "d4797a61e0d00ddc",
+      "name": "Boolsai Grep",
+      "url": "https://grep.boolsai.ai/mcp",
+      "http_status": 503,
+      "status": "unavailable"
+    },
+    {
+      "id": "de30941bb61d4d08",
+      "name": "Boolsai Signals",
+      "url": "https://signals.boolsai.ai/mcp",
+      "http_status": 503,
+      "status": "unavailable"
+    },
+    {
+      "id": "37c4a5eda60f0a6a",
+      "name": "Boolsai Directory",
+      "url": "https://directory.boolsai.ai/mcp",
+      "http_status": 503,
+      "status": "unavailable"
+    },
+    {
+      "id": "de7288882ccd07d5",
+      "name": "Cabrini Market Data",
+      "url": "https://cabrini.ai/mcp",
+      "http_status": 503,
+      "status": "unavailable"
+    },
+    {
+      "id": "fd8d7c90ef68b665",
+      "name": "Clarid Compliance",
+      "url": "https://mcp.clarid.ai/mcp",
+      "http_status": 503,
+      "status": "unavailable"
+    },
+    {
+      "id": "dcdb19c37f645630",
+      "name": "Chat Thing",
+      "url": "https://app.chatthing.ai/mcp",
+      "status": "unreachable",
+      "error": "ReadTimeout"
+    },
+    {
+      "id": "9a855117034b3031",
+      "name": "Circleback",
+      "url": "https://circleback.ai/api/mcp",
+      "status": "unreachable",
+      "error": "ReadTimeout"
+    }
+  ]
+}
