@@ -556,3 +556,7 @@ The plugin surface stays Operate and monochrome. Prefer compact list rows to ele
 ## Reference composition — October 24, 2026
 
 The supplied Claude Cipher artifact is the visual authority for this refinement. Preserve its pale gray canvas, original animated BinaryLens, large single wordmark, restrained controls and generous space. QuickStart uses a 620px task form with a white, lightly divided input area and a separate full-width black pill action. Keep the working model/output choices, recent work and accessible collapsible navigation. The Google service chooser belongs to the same visual world: simple permission rows, original CypherMark, and one clear continuation to Google. Preserve the original PNG bytes and visibility/reduced-motion gates.
+
+## Group-text conversation surface
+
+The conversation is an Operate surface with a group-text composition: quiet title and agent count, a narrow centered message stream, compact gray incoming and black outgoing bubbles, and one white composer. Names and small neutral avatars identify incoming senders; consecutive messages stay close and timestamps separate clusters. The info button holds secondary controls. A subtle message menu preserves actions and technical evidence without repeating text under every bubble. Keep dark appearance, keyboard access, 44px mobile controls and reduced-motion behavior.
