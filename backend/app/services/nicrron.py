@@ -1,4 +1,4 @@
-"""Server-only Nicrron catalog and OpenAI-compatible chat transport."""
+"""Server-only Nicrron catalog and OmniRoute connection contract."""
 import asyncio
 import math
 import re
@@ -11,11 +11,18 @@ from app.config import settings
 
 BASE_URL = "https://api.nicrron.ai/v1"
 CATALOG_TTL = 300
+OMNIROUTE_ROUTE_TTL = 15
+ENROLLMENT_RETRY_SECONDS = 30
 _MODEL_ID = re.compile(r"^[a-z0-9][a-z0-9._-]{0,100}/[a-z0-9][a-z0-9._-]{0,140}$", re.I)
 _catalog: dict[str, dict] = {}
 _catalog_at = 0.0
 _catalog_checked_at: str | None = None
+_route_model_ids: set[str] = set()
+_route_checked_at = 0.0
+_enrollment_attempted_at = 0.0
+_route_lock = asyncio.Lock()
 _catalog_lock = asyncio.Lock()
+_CONNECTION_TEST_MODEL = "nicrron/anthropic/claude-opus-5-5"
 
 
 class NicrronError(RuntimeError):
@@ -25,16 +32,6 @@ class NicrronError(RuntimeError):
         self.status_code = status_code
         status = status_code if isinstance(status_code, int) else 502
         super().__init__(f"Nicrron request failed (HTTP {status}).")
-
-
-def _catalog_response() -> dict:
-    return {
-        "provider": "nicrron",
-        "configured": True,
-        "status": "ready",
-        "models": sorted(_catalog.values(), key=lambda item: (item["name"].casefold(), item["id"])),
-        "checked_at": _catalog_checked_at,
-    }
 
 
 def configured() -> bool:
@@ -75,16 +72,115 @@ def _safe_model(row: object) -> dict | None:
     }
 
 
+def _route_ids(payload: object) -> set[str]:
+    rows = payload.get("data") if isinstance(payload, dict) else None
+    if not isinstance(rows, list):
+        return set()
+    result = set()
+    for row in rows:
+        public_id = row.get("id") if isinstance(row, dict) else None
+        if isinstance(public_id, str) and public_id.startswith("nicrron/"):
+            model_id = public_id.removeprefix("nicrron/")
+            if valid_model_id(model_id):
+                result.add(model_id)
+    return result
+
+
+def _catalog_response(model_ids: set[str]) -> dict:
+    return {
+        "provider": "nicrron",
+        "configured": True,
+        "status": "ready" if model_ids else "unavailable",
+        "models": sorted(
+            (_catalog[model_id] for model_id in model_ids if model_id in _catalog),
+            key=lambda item: (item["name"].casefold(), item["id"]),
+        ),
+        "checked_at": _catalog_checked_at,
+    }
+
+
+async def _live_omniroute_model_ids(*, refresh: bool = False, force_enrollment: bool = False) -> tuple[set[str], bool]:
+    """Return only Nicrron IDs listed by OmniRoute, enrolling the owner key once if needed."""
+    global _route_model_ids, _route_checked_at, _enrollment_attempted_at
+    if not settings.OMNIROUTE_URL or not settings.OMNIROUTE_API_KEY:
+        return set(), False
+    from app.services import omniroute
+
+    async with _route_lock:
+        if not refresh and monotonic() - _route_checked_at < OMNIROUTE_ROUTE_TTL:
+            return set(_route_model_ids), False
+        try:
+            ids = _route_ids(await omniroute.request("/models"))
+        except Exception:
+            ids = set()
+        if ids:
+            _route_model_ids = ids
+            _route_checked_at = monotonic()
+            return set(ids), False
+
+        _route_model_ids = set()
+        _route_checked_at = monotonic()
+        if not configured() or not settings.OMNIROUTE_CONTROL_KEY:
+            return set(), False
+        if not force_enrollment and monotonic() - _enrollment_attempted_at < ENROLLMENT_RETRY_SECONDS:
+            return set(), False
+
+        _enrollment_attempted_at = monotonic()
+        endpoint = omniroute.endpoint().removesuffix("/v1") + "/api/internal/connections/check"
+        headers = omniroute.headers()
+        headers["Authorization"] = "Bearer " + settings.OMNIROUTE_CONTROL_KEY
+        try:
+            async with httpx.AsyncClient(timeout=110, follow_redirects=False) as client:
+                response = await client.post(
+                    endpoint,
+                    headers=headers,
+                    json={
+                        "provider": "nicrron",
+                        "action": "connect_api_key",
+                        "api_key": settings.NICRRON_API_KEY,
+                    },
+                )
+            if not 200 <= response.status_code < 300:
+                return set(), False
+            result = response.json()
+            if not isinstance(result, dict) or result.get("state") != "ready":
+                return set(), False
+            if result.get("public_model") != _CONNECTION_TEST_MODEL or result.get("transport_model") != _CONNECTION_TEST_MODEL:
+                return set(), False
+        except Exception:
+            return set(), False
+
+        # The OmniRoute control action checks a real completion. Wait briefly for its
+        # model cache to publish the new route before exposing any picker choices.
+        for attempt in range(8):
+            try:
+                ids = _route_ids(await omniroute.request("/models"))
+            except Exception:
+                ids = set()
+            if ids:
+                _route_model_ids = ids
+                _route_checked_at = monotonic()
+                return set(ids), True
+            if attempt < 7:
+                await asyncio.sleep(0.75)
+        return set(), False
+
+
 async def model_catalog(*, refresh: bool = False) -> dict:
-    """Return the live chat catalog, using a short cache on API and worker processes."""
+    """Return only live Nicrron chat models that OmniRoute currently serves."""
     global _catalog, _catalog_at, _catalog_checked_at
     if not configured():
         return {"provider": "nicrron", "configured": False, "status": "not_configured", "models": [], "checked_at": None}
+
+    model_ids, _ = await _live_omniroute_model_ids(refresh=refresh)
+    if not model_ids:
+        return _catalog_response(set())
     if not refresh and _catalog and monotonic() - _catalog_at < CATALOG_TTL:
-        return _catalog_response()
+        return _catalog_response(model_ids)
+
     async with _catalog_lock:
         if not refresh and _catalog and monotonic() - _catalog_at < CATALOG_TTL:
-            return _catalog_response()
+            return _catalog_response(model_ids)
         try:
             # Nicrron's catalog is public; do not attach the user's secret to this request.
             async with httpx.AsyncClient(timeout=12, follow_redirects=False) as client:
@@ -109,7 +205,7 @@ async def model_catalog(*, refresh: bool = False) -> dict:
         _catalog = parsed
         _catalog_at = monotonic()
         _catalog_checked_at = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
-        return _catalog_response()
+        return _catalog_response(model_ids)
 
 
 async def require_chat_model(model: str) -> dict:
@@ -129,37 +225,32 @@ async def require_chat_model(model: str) -> dict:
 
 
 async def test_connection() -> dict:
-    """Verify the configured key with one small chat completion; return no raw body."""
+    """Enroll or probe through OmniRoute; return no raw response or credentials."""
     if not configured():
         return {"state": "unavailable", "message": "NICRRON_API_KEY is not configured on the backend and worker."}
+    if not settings.OMNIROUTE_URL or not settings.OMNIROUTE_API_KEY:
+        return {"state": "unavailable", "message": "OmniRoute is not configured on this runtime."}
+    ids, connected_now = await _live_omniroute_model_ids(refresh=True, force_enrollment=True)
+    if not ids:
+        return {"state": "unavailable", "message": "Nicrron is not available through OmniRoute. Check its connection and retry."}
+    if connected_now:
+        return {"state": "ready", "message": "Nicrron was connected and verified through OmniRoute."}
+    from app.services import omniroute
     try:
-        async with httpx.AsyncClient(timeout=35, follow_redirects=False) as client:
-            response = await client.post(
-                f"{BASE_URL}/chat/completions",
-                headers={"Authorization": f"Bearer {settings.NICRRON_API_KEY}", "Content-Type": "application/json"},
-                json={
-                    "model": "nicrron/fastest",
-                    "messages": [{"role": "user", "content": "Reply with exactly: Connection verified."}],
-                    "max_tokens": 16,
-                    "stream": False,
-                },
-            )
-        if response.status_code in {401, 403}:
-            return {"state": "access_denied", "message": "Nicrron rejected the configured API key or model access."}
-        if response.status_code == 402:
-            return {"state": "billing_required", "message": "Nicrron credits or account billing need attention."}
-        if response.status_code == 429:
-            return {"state": "rate_limited", "message": "Nicrron is rate limited. Wait briefly, then check again."}
-        if response.status_code >= 500:
-            return {"state": "unavailable", "message": "Nicrron is temporarily unavailable. Check again shortly."}
-        if not 200 <= response.status_code < 300:
-            return {"state": "unavailable", "message": "Nicrron could not verify a chat model response."}
-        body = response.json()
-        choices = body.get("choices") if isinstance(body, dict) else None
+        response = await omniroute.request(
+            "/chat/completions",
+            {
+                "model": f"nicrron/{sorted(ids)[0]}",
+                "messages": [{"role": "user", "content": "Reply with exactly: Connection verified."}],
+                "max_tokens": 16,
+                "stream": False,
+            },
+        )
+        choices = response.get("choices") if isinstance(response, dict) else None
         message = choices[0].get("message") if isinstance(choices, list) and choices and isinstance(choices[0], dict) else None
         content = message.get("content") if isinstance(message, dict) else None
         if not isinstance(content, str) or not content.strip():
-            return {"state": "unavailable", "message": "Nicrron returned no chat text. Check the provider route and retry."}
-        return {"state": "ready", "message": "Nicrron returned a live model response."}
-    except (httpx.HTTPError, ValueError, TypeError):
-        return {"state": "unavailable", "message": "Nicrron could not be reached. Check again shortly."}
+            return {"state": "unavailable", "message": "OmniRoute could not verify a Nicrron model response. Check the connection and retry."}
+        return {"state": "ready", "message": "Nicrron returned a live model response through OmniRoute."}
+    except Exception:
+        return {"state": "unavailable", "message": "OmniRoute could not verify a Nicrron model response. Check the connection and retry."}
