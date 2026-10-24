@@ -1,0 +1,55 @@
+# Fund thesis (a VC looking for founders). EXAMPLE: replace with your fund's own thesis.
+# Founder sourcing runs on files like this one: `run.py rank --thesis theses/fund/example_fund.toml`.
+
+fund_name = "Example Seed Fund"
+one_liner = "Pre-seed and seed AI-native software for regulated industries"
+
+thesis = """
+Healthcare, insurance and financial services spend more on compliance and paperwork than on almost
+anything else, and general-purpose AI tools can't be used there without audit trails, data controls and
+domain workflows. We back technical founders who come from inside these industries and build AI-native
+software that a regulator, an auditor and an operator would all sign off on.
+"""
+
+# What the fund believes that most investors don't. Claude looks for founders whose work supports these.
+beliefs = [
+  "Compliance and auditability are the moat in regulated AI, not the model",
+  "Founders from inside the industry beat generalists who discover it later",
+  "Open-source or public traction is the best early signal for technical founders",
+  "Small teams shipping weekly beat large early rounds",
+]
+
+# Matched as whole words in filings, repos, launches, papers and websites
+keywords = ["compliance", "regulated", "regulatory", "healthcare", "clinical", "hipaa", "fhir", "insurance", "claims",
+            "underwriting", "banking", "fintech", "kyc", "aml", "audit", "risk", "llm", "ai agent", "automation"]
+
+# Used as search queries for GitHub, Show HN and arXiv (keep to about six)
+search_terms = ["compliance automation", "healthcare ai", "insurance claims", "fintech compliance", "clinical llm", "kyc"]
+
+# Form D industry groups that count as on-thesis
+industries = ["Other Technology", "Other Health Care", "Other Banking and Financial Services", "Insurance", "Computers", "Business Services"]
+
+# Companies already in the portfolio, and competitors to them; overlap is flagged for review
+portfolio = []
+competitors = []
+
+# Leads whose language is dominated by these are off-thesis
+exclusions = ["real estate", "oil", "crypto", "web3", "restaurant", "cannabis", "film", "apparel"]
+
+round_size_usd = [500_000, 5_000_000]   # rounds this fund leads or joins
+geo_preferred = ["NY", "CA", "MA"]      # soft preference (US state codes)
+geo_required = []                       # hard filter; leave empty for anywhere
+founded_after = 2022                    # Form D startups incorporated before this are dropped
+max_months_since_filing = 12            # Form D startups whose latest filing is older are dropped
+
+# akta.pro List Generation (only with --akta-list N): natural-language query, or set akta_filters instead
+akta_query = "Early-stage US startups building AI-native software for healthcare, insurance or banking compliance, founded 2022 or later"
+
+[run]
+sourced = 1000
+screen = 200
+deep = 50
+shortlist = 15
+judge_effort = "high"
+pre_round_share = 0.33   # share of each stage kept for builders who have not raised yet
+min_builder_fit = 3      # on the final shortlist, kept places go only to builders Claude rates this fit or better

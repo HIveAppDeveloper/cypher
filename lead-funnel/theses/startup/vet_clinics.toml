@@ -1,5 +1,5 @@
 # RANDOM EXAMPLE THESIS: AI back office for independent veterinary clinics.
-# The previous example (tools for VCs and LPs) is saved as thesis_example_vc_tools.toml.
+# Startup thesis: used by investor matching (`run.py investors`). See also vc_tools.toml.
 
 one_liner = "An AI back office for independent veterinary clinics"
 

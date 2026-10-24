@@ -1,0 +1,189 @@
+{
+  "lead_id": "co:0002152940",
+  "rank": 10,
+  "screening_score": 0.6043,
+  "generated": "2026-10-24",
+  "summary": "Dr. Peymon Ghazi is co-founder and CEO of Malcova, Inc (Newark, CA), an imaging physicist with 10+ years in diagnostic radiology. Malcova builds a patented low-dose Narrow-Beam CT system for early detection of breast cancer in dense tissue and of stroke, with digital and physical twins and an AI diagnostic agent for radiologists. It is currently raising a $2.0M round ($1.214M sold to 12 investors per Form D). The founders are credible healthcare insiders, but this is a hardware-first medical device company rather than AI-native compliance or paperwork software, so it sits outside the fund's core thesis and is only worth a meeting if the fund wants to stretch into med-device.",
+  "person": {
+    "name": "Dr. Peymon Ghazi",
+    "role": "Co-Founder & CEO (leads strategy)",
+    "location": "Newark, CA",
+    "links": [
+      "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0002152940",
+      "https://malcova.com/",
+      "https://malcova.com/about"
+    ]
+  },
+  "co_founders": [
+    "Dr. Tara Ghazi: Co-Founder & CBO, cognitive neuroscientist (S5, S6)",
+    "Michael Kim: Head of Hardware (S5, S6)",
+    "Dr. Jason Lomnitz: Head of Software (S5, S6)"
+  ],
+  "company": {
+    "name": "Malcova, Inc",
+    "what_they_build": "A patented Narrow-Beam CT imaging system that claims contamination-free, detailed images at significantly lower radiation doses, aimed at early detection of breast cancer in dense breast tissue and of acute stroke. It is supported by digital twins (anatomy/physiology simulation), physical twins (real-world models) and an AI-based Diagnostic Agent that assists radiologists (S4, S5).",
+    "customers": "Not stated. The site targets radiologists and healthcare providers as users, with women with dense breast tissue as patients (S4, S5). No named customers, sites or revenue.",
+    "stage": "seed",
+    "raised": "Form D filed 2026-09-08: $2,000,000 offered, $1,214,000 sold, 12 investors, first sale 2026-08-24 (S1, S3). A data-provider profile says the company moved from SBIR-funded research to a first equity investment from RPV Fund in 2024 (S6). Amounts are unknown, and none of this appears on the company site or the Form D backer list.",
+    "website": "https://malcova.com/"
+  },
+  "background": [
+    {
+      "fact": "Imaging physicist and entrepreneur with 10+ years in diagnostic radiology, specializing in the physics of turning signals into images.",
+      "source": "S5",
+      "url": "https://malcova.com/about",
+      "source_label": "Company web page (from akta.pro company search)"
+    },
+    {
+      "fact": "Co-founded Malcova with Dr. Tara Ghazi, a cognitive neuroscientist with more than a decade in visual cognition who serves as CBO.",
+      "source": "S5",
+      "url": "https://malcova.com/about",
+      "source_label": "Company web page (from akta.pro company search)"
+    },
+    {
+      "fact": "Data-provider profile says he co-founded the company in 2021 and led its transition from SBIR-funded research to a first equity investment from RPV Fund in 2024.",
+      "source": "S6",
+      "url": "akta.pro (https://www.malcova.com)",
+      "source_label": "akta.pro management profile"
+    },
+    {
+      "fact": "Form D lists the year of incorporation as 2022, entity type Corporation.",
+      "source": "S1",
+      "url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0002152940",
+      "source_label": "Shortlist record"
+    }
+  ],
+  "founder_signals": [
+    {
+      "fact": "Malcova has sold $1,214,000 of a $2,000,000 round to 12 investors, with the first sale on 2026-08-24.",
+      "source": "S3",
+      "url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0002152940",
+      "source_label": "Form D filings for Malcova, Inc"
+    },
+    {
+      "fact": "The company describes its Narrow-Beam CT, digital twins and physical twins technologies as patented.",
+      "source": "S5",
+      "url": "https://malcova.com/about",
+      "source_label": "Company web page (from akta.pro company search)"
+    },
+    {
+      "fact": "Has assembled a team with dedicated heads of hardware (Michael Kim, aerospace and medical-device background) and software (Dr. Jason Lomnitz, a decade building commercial-grade platforms).",
+      "source": "S5",
+      "url": "https://malcova.com/about",
+      "source_label": "Company web page (from akta.pro company search)"
+    },
+    {
+      "fact": "Site claims the company is 'Validated. Funded. Future-Ready.' and 'backed by... substantial funding', with no specifics.",
+      "source": "S4",
+      "url": "https://malcova.com/",
+      "source_label": "Company web page (from akta.pro company search)"
+    }
+  ],
+  "thesis_fit": [
+    {
+      "belief": "Compliance and auditability are the moat in regulated AI, not the model",
+      "verdict": "neutral",
+      "evidence": "The claimed moat is patented CT hardware and imaging physics. The AI Diagnostic Agent is a one-line add-on, with no mention of audit trails, data controls or compliance tooling.",
+      "source": "S4",
+      "url": "https://malcova.com/"
+    },
+    {
+      "belief": "Founders from inside the industry beat generalists who discover it later",
+      "verdict": "supports",
+      "evidence": "The CEO has 10+ years in diagnostic radiology physics, and the co-founder has a decade in visual cognition. Both are domain insiders in medical imaging.",
+      "source": "S5",
+      "url": "https://malcova.com/about"
+    },
+    {
+      "belief": "Open-source or public traction is the best early signal for technical founders",
+      "verdict": "unknown",
+      "evidence": "No GitHub, papers, Hacker News or other public traction appears in the evidence. The only external signals are the Form D and an unquantified SBIR mention.",
+      "source": ""
+    },
+    {
+      "belief": "Small teams shipping weekly beat large early rounds",
+      "verdict": "neutral",
+      "evidence": "The named team is small (four leaders) and the round is modest at $2.0M. However, the product is CT scanner hardware, and nothing shows a weekly software shipping cadence.",
+      "source": "S5",
+      "url": "https://malcova.com/about"
+    }
+  ],
+  "fit_score": 2,
+  "strengths": [
+    "Deep domain expertise: the CEO is an imaging physicist with 10+ years in diagnostic radiology (S5).",
+    "Patented core technology across Narrow-Beam CT, digital twins and physical twins (S5).",
+    "Live round with demand: $1.214M of $2.0M sold to 12 investors (S3).",
+    "Balanced leadership with dedicated heads of hardware and software (S5).",
+    "Reported non-dilutive SBIR history and a prior equity investor, RPV Fund (S6)."
+  ],
+  "risks": [
+    "Off-thesis: the core product is medical imaging hardware, not AI-native compliance or paperwork software. AI is a minor component (S4).",
+    "Hardware medical devices typically mean long development cycles and a clinical/regulatory pathway. None of this is described in the evidence, so timeline and capital needs are unknown.",
+    "Founding date conflict: the data provider says co-founded in 2021 (S6), while the Form D says incorporated in 2022 (S1). This may simply be founding versus incorporation, but it should be confirmed.",
+    "Funding claims are not corroborated by primary sources. The NSF and NIH funding mentioned in the earlier screening (S2) does not appear in any primary source here. The SBIR and RPV Fund 2024 claims come only from the data-provider commentary (S6), and the Form D shows no backers listed (S1).",
+    "The S6 profile describes a 'gantry-free system design' that does not appear on the cited about page (S5). This may be data-provider embellishment.",
+    "No clinical validation data, customers, pilots or regulatory status are disclosed, despite the 'Validated' claim on the site (S4).",
+    "Website identity looks consistent with the Form D: same founders and the same breast cancer imaging focus (S1, S5)."
+  ],
+  "open_questions": [
+    "Where is the Narrow-Beam CT today: benchtop prototype, phantom studies on your physical twins, or human imaging? What clinical data exists on dose and detection in dense breast tissue?",
+    "What regulatory pathway do you expect for the scanner and, separately, for the AI Diagnostic Agent? What is the timeline and cost to clearance?",
+    "What does the $2.0M round fund specifically, and how much more capital do you expect to need before first commercial units?",
+    "How large are the SBIR awards and the 2024 RPV Fund investment, and are there NSF or NIH grants beyond SBIR?",
+    "Is the AI Diagnostic Agent a separable software product that could be sold independently? How does it log and explain its findings to radiologists?",
+    "Which indication goes first, dense-breast cancer screening or acute stroke, and who is the first paying buyer (imaging centers, hospital systems)?",
+    "How big is the team under Michael Kim and Jason Lomnitz, and how often do you ship software or hardware iterations?",
+    "Was the company founded in 2021 or 2022, and what happened in the gap before incorporation?"
+  ],
+  "conversation_openers": [
+    "Your about page frames Malcova around women with dense breast tissue whose cancers standard scans miss. I'd love to hear how the Narrow-Beam CT gets better contrast at lower dose than conventional CT.",
+    "Using digital and physical twins to validate a scanner before patient exposure is an unusual approach. Are the twins also something you could use for regulatory evidence or for training the AI Diagnostic Agent?",
+    "Congrats on getting past $1.2M of the $2.0M round. I'm curious how the AI assistant for radiologists fits into the roadmap alongside the hardware."
+  ],
+  "unknowns": [
+    "Clinical validation results and the current prototype stage",
+    "Regulatory strategy and status for the device and the AI agent",
+    "Customers, pilots, LOIs or revenue",
+    "Total headcount and team size beyond the four named leaders",
+    "Amounts and sources of non-dilutive funding (SBIR, NSF, NIH) and the RPV Fund investment terms",
+    "Patent numbers and scope",
+    "Peymon Ghazi's education and prior employers",
+    "Any public code, publications or open-source work",
+    "Who the 12 investors in the current round are"
+  ],
+  "confidence": "medium",
+  "sources": [
+    {
+      "id": "S1",
+      "label": "Shortlist record",
+      "url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0002152940"
+    },
+    {
+      "id": "S2",
+      "label": "Earlier screening judgment (Claude)",
+      "url": ""
+    },
+    {
+      "id": "S3",
+      "label": "Form D filings for Malcova, Inc",
+      "url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0002152940"
+    },
+    {
+      "id": "S4",
+      "label": "Company web page (from akta.pro company search)",
+      "url": "https://malcova.com/"
+    },
+    {
+      "id": "S5",
+      "label": "Company web page (from akta.pro company search)",
+      "url": "https://malcova.com/about"
+    },
+    {
+      "id": "S6",
+      "label": "akta.pro management profile",
+      "url": "akta.pro (https://www.malcova.com)"
+    }
+  ],
+  "dropped_unsourced_facts": 0,
+  "provider": "nicrron:anthropic/claude-opus-5-5"
+}

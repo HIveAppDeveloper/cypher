@@ -1,0 +1,212 @@
+{
+  "lead_id": "co:0002133227",
+  "rank": 12,
+  "screening_score": 0.5761,
+  "generated": "2026-10-24",
+  "summary": "Karim Pourak is Co-Founder & CEO of ProcessMiner, Inc., an Atlanta company founded in 2015 that sells a 'physical AI' platform to continuous-manufacturing plants (pulp & paper, nonwovens, water, plastics), with 50+ plant deployments and a Form D showing $2.65M sold of a $3.4M round. It is a mature, revenue-stage industrial AI business, not a regulated-industry company: it does not serve healthcare, insurance or financial services, and its value proposition is process optimization, not compliance or auditability. Example Seed Fund should treat this as off-thesis, at most a referral, despite a strong technical co-founder and long customer track record.",
+  "person": {
+    "name": "Karim Pourak",
+    "role": "Co-Founder & CEO, ProcessMiner, Inc.",
+    "location": "Atlanta, GA (HQ in Atlanta's Tech Square per company site; Form D reads 'Atlanta, CA')",
+    "links": [
+      "https://processminer.com",
+      "https://processminer.com/about/",
+      "https://www.linkedin.com/in/karim-pourak-0b2250/",
+      "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0002133227"
+    ]
+  },
+  "co_founders": [
+    "Kamran Paynabar, Ph.D. - Co-Founder & Chief Science Officer, Georgia Tech ISyE professor and Fouts Family Chair holder, board member (S6, S7)",
+    "Tom Morris - Global Chief Financial Officer, an officer and not a founder despite the 'repeat founder' flag (S1, S6)",
+    "Markku Mustonen - listed as Co-Founder, Business Advisor on the Board of Advisors (S6)"
+  ],
+  "company": {
+    "name": "ProcessMiner, Inc.",
+    "what_they_build": "A physical AI platform for continuous manufacturing. It predicts product quality every 30 seconds from existing plant data, ranks the top 10 likely root causes of drift, and recommends or automatically applies setpoint corrections within operator-set limits. Products include PM AI Agent, PM Studio, TrialMiner, Real-Time Prediction, Root Cause Analysis, PM Vector and Autonomous Optimization (S5).",
+    "customers": "Continuous-manufacturing plants in pulp & paper, nonwovens, water & wastewater and plastics. The site claims 20+ major paper manufacturers and 50+ plant deployments; no customer names are given (S5, S6).",
+    "stage": "seed",
+    "raised": "Form D filed 2026-05-19: $3,400,000 offered, $2,649,999 sold, 1 investor, first sale 2026-03-02 (S4). The site says the seed round was led by Titanium Innovation Investments in April 2026 (S6).",
+    "website": "https://processminer.com"
+  },
+  "background": [
+    {
+      "fact": "Pourak co-founded ProcessMiner in 2015 with Georgia Tech professor Kamran Paynabar.",
+      "source": "S6",
+      "url": "https://processminer.com/about/",
+      "source_label": "Company web page (guessed from the company name; check it is the same company)"
+    },
+    {
+      "fact": "Pourak has spent 3 decades building and commercializing software, including 2 earlier AI health analytics ventures (unnamed).",
+      "source": "S6",
+      "url": "https://processminer.com/about/",
+      "source_label": "Company web page (guessed from the company name; check it is the same company)"
+    },
+    {
+      "fact": "A data-provider profile lists Pourak as co-founder of Litmus, an IIoT platform that is a Platinum Channel Partner of ProcessMiner.",
+      "source": "S7",
+      "url": "akta.pro (https://processminer.com)",
+      "source_label": "akta.pro management profile"
+    },
+    {
+      "fact": "Co-founder Kamran Paynabar is a professor in Georgia Tech's School of Industrial and Systems Engineering and Fouts Family Chair holder, published in Technometrics and IIE Transactions. His statistical modeling research is described as the platform's foundation.",
+      "source": "S6",
+      "url": "https://processminer.com/about/",
+      "source_label": "Company web page (guessed from the company name; check it is the same company)"
+    },
+    {
+      "fact": "CFO Tom Morris has more than a decade in audit, financial advisory and controllership, including roles at Urjanet and The North Highland Company.",
+      "source": "S6",
+      "url": "https://processminer.com/about/",
+      "source_label": "Company web page (guessed from the company name; check it is the same company)"
+    }
+  ],
+  "founder_signals": [
+    {
+      "fact": "The platform has run in production plants since 2015, with 50+ plant deployments and 20+ major paper manufacturers as customers.",
+      "source": "S5",
+      "url": "https://processminer.com",
+      "source_label": "Company web page (guessed from the company name; check it is the same company)"
+    },
+    {
+      "fact": "In a single-deployment paper-line case study, the company reports 25% less wet-strength chemistry, 23% reduced quality variation and about $1M in cumulative savings over 12 months.",
+      "source": "S5",
+      "url": "https://processminer.com",
+      "source_label": "Company web page (guessed from the company name; check it is the same company)"
+    },
+    {
+      "fact": "The company claims customers from its first years still run the platform today.",
+      "source": "S6",
+      "url": "https://processminer.com/about/",
+      "source_label": "Company web page (guessed from the company name; check it is the same company)"
+    },
+    {
+      "fact": "ProcessMiner raised its first external round: $2.65M sold of $3.4M offered, with 1 investor, per the Form D.",
+      "source": "S4",
+      "url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0002133227",
+      "source_label": "Form D filings for ProcessMiner, Inc."
+    },
+    {
+      "fact": "ProcessMiner has an office in Espoo, Finland, in addition to its Atlanta HQ.",
+      "source": "S6",
+      "url": "https://processminer.com/about/",
+      "source_label": "Company web page (guessed from the company name; check it is the same company)"
+    },
+    {
+      "fact": "Pourak leads go-to-market, enterprise sales and a 'First Application' pilot model meant to de-risk customer adoption.",
+      "source": "S7",
+      "url": "akta.pro (https://processminer.com)",
+      "source_label": "akta.pro management profile"
+    }
+  ],
+  "thesis_fit": [
+    {
+      "belief": "Compliance and auditability are the moat in regulated AI, not the model",
+      "verdict": "contradicts",
+      "evidence": "ProcessMiner's pitch is prediction accuracy, root-cause ranking and autonomous setpoint control in manufacturing. Its moat appears to be models and plant track record, not compliance or audit trails in a regulated industry.",
+      "source": "S5",
+      "url": "https://processminer.com"
+    },
+    {
+      "belief": "Founders from inside the industry beat generalists who discover it later",
+      "verdict": "neutral",
+      "evidence": "The team are insiders in industrial process manufacturing ('built by people who worked on plant floors', a Georgia Tech industrial-statistics professor). That is not one of the fund's industries, and the CEO's healthcare analytics ventures are mentioned without detail.",
+      "source": "S6",
+      "url": "https://processminer.com/about/"
+    },
+    {
+      "belief": "Open-source or public traction is the best early signal for technical founders",
+      "verdict": "neutral",
+      "evidence": "The traction is commercial (50+ deployments, a published case study) plus academic publications. The evidence contains no GitHub, open-source or Hacker News presence.",
+      "source": "S5",
+      "url": "https://processminer.com"
+    },
+    {
+      "belief": "Small teams shipping weekly beat large early rounds",
+      "verdict": "unknown",
+      "evidence": "Team size and shipping cadence are not in the evidence. The round is modest at $3.4M, but the company has operated for 10+ years.",
+      "source": ""
+    }
+  ],
+  "fit_score": 1,
+  "strengths": [
+    "A long production track record: running in plants since 2015, 50+ deployments, 20+ major paper manufacturers (S5, S6).",
+    "Deep technical co-founder: a chaired Georgia Tech ISyE professor whose research underpins the models (S6).",
+    "Quantified customer ROI in a case study: 25% less chemistry, 23% less variation, about $1M saved in 12 months (S5).",
+    "Experienced CEO with 3 decades in software, prior ventures, and a reported Litmus IIoT channel partnership for distribution (S6, S7).",
+    "Institutional seed lead, Titanium Innovation Investments, and an international footprint with an office in Espoo, Finland (S6)."
+  ],
+  "risks": [
+    "Off-thesis: the company serves pulp & paper, nonwovens, water and plastics, not healthcare, insurance or financial services (S5).",
+    "Not early-stage in practice: the company is a 10+ year-old operating business, though its first external round is labeled seed (S4, S6).",
+    "Founding date conflict: the Form D says incorporated in 2025 (S1), while the site says founded in 2015 (S6). This may indicate a re-incorporation or new entity, which affects cap table and diligence.",
+    "Location data error: the Form D reads 'Atlanta, CA' (S1), while the site says Atlanta's Tech Square (S6).",
+    "The website at processminer.com was guessed from the company name. It appears to be the same company because Pourak, Paynabar and Morris appear on both the Form D and the site (S1, S6).",
+    "Tom Morris is flagged as a repeat founder (S1) but is the CFO, not a founder (S6). The S3 match to a Tom Morris at a Children's Healthcare of Atlanta surgery center LLC is a name-only match and may be a different person; his ProcessMiner bio cites Urjanet and North Highland, not Children's Healthcare (S3, S6).",
+    "Prior-venture information is inconsistent and thin: the site cites 2 unnamed AI health analytics ventures (S6), while a data provider cites Litmus co-founder (S7). Neither source corroborates the other.",
+    "Customer results come from a single deployment and are self-reported against each plant's own baseline (S5)."
+  ],
+  "open_questions": [
+    "Why does the Form D show 2025 incorporation when ProcessMiner was founded in 2015? Was there a re-incorporation, asset transfer or new holding entity?",
+    "What were the 2 earlier AI health analytics ventures, what did they build, and how did they end? Is there any intent to apply ProcessMiner's methods in regulated healthcare settings?",
+    "What is your role at Litmus today, and how much of ProcessMiner's pipeline comes through the Litmus Platinum Channel Partner relationship?",
+    "How many of the 50+ plant deployments are currently paying, and what is the revenue under per-production-line licensing?",
+    "Who besides Titanium Innovation Investments is in the $3.4M round, and how will the remaining roughly $750K be allocated?",
+    "For autonomous setpoint changes 'within limits you set', what logging and audit trail do plants get? Has any customer, for example in water & wastewater, needed it for regulatory reporting?"
+  ],
+  "conversation_openers": [
+    "Your paper-line case study, with 25% less wet-strength chemistry and about $1M saved in 12 months, is a rare quantified result in industrial AI. I'd like to hear how you measured it against the plant's own baseline.",
+    "I noticed your background includes two earlier AI health analytics ventures before ProcessMiner. As we focus on regulated industries like healthcare, I'd value hearing what you learned there versus selling into paper mills.",
+    "Congrats on the Titanium-led seed after a decade of running in plants since 2015. I'm curious how Kamran Paynabar's statistical process-monitoring research translated into the 30-second quality predictions."
+  ],
+  "unknowns": [
+    "Revenue, ARR and pricing.",
+    "Team size and shipping cadence.",
+    "Names and outcomes of Pourak's two earlier AI health analytics ventures.",
+    "Whether Pourak's Litmus co-founder role is accurate and current (data provider only).",
+    "Reason for the 2025 incorporation date versus the 2015 founding.",
+    "Identities of investors beyond the round lead and the terms of the round.",
+    "Named customers beyond the generic '20+ major paper manufacturers'.",
+    "Any compliance, regulatory or audit features of the platform.",
+    "Pourak's education and earlier career detail."
+  ],
+  "confidence": "medium",
+  "sources": [
+    {
+      "id": "S1",
+      "label": "Shortlist record",
+      "url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0002133227"
+    },
+    {
+      "id": "S2",
+      "label": "Earlier screening judgment (Claude)",
+      "url": ""
+    },
+    {
+      "id": "S3",
+      "label": "Form D name match (same name and state, may still be a different person): Tom Morris is an officer of CHILDRENS HEALTHCARE OF ATLANTA SURGERY CENTER AT MERIDIAN MARK PLAZA, LLC",
+      "url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0001200058"
+    },
+    {
+      "id": "S4",
+      "label": "Form D filings for ProcessMiner, Inc.",
+      "url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0002133227"
+    },
+    {
+      "id": "S5",
+      "label": "Company web page (guessed from the company name; check it is the same company)",
+      "url": "https://processminer.com"
+    },
+    {
+      "id": "S6",
+      "label": "Company web page (guessed from the company name; check it is the same company)",
+      "url": "https://processminer.com/about/"
+    },
+    {
+      "id": "S7",
+      "label": "akta.pro management profile",
+      "url": "akta.pro (https://processminer.com)"
+    }
+  ],
+  "dropped_unsourced_facts": 0,
+  "provider": "nicrron:anthropic/claude-opus-5-5"
+}

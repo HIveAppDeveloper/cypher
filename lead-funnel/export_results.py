@@ -33,7 +33,7 @@ from funnel import judge  # noqa: E402
 
 misses = []
 judge._Nicrron.ask = lambda self, user: (misses.append(1), (None, "not judged (cache miss, export makes no paid calls)"))[1]
-judge._ask_anthropic = lambda client, effort, user: (misses.append(1), (None, "not judged (cache miss, export makes no paid calls)"))[1]
+judge._ask_anthropic = lambda client, effort, user, *a: (misses.append(1), (None, "not judged (cache miss, export makes no paid calls)"))[1]
 
 # Session history: runs made before this file existed (their outputs were overwritten by later runs).
 HISTORY = """
@@ -86,11 +86,13 @@ Nicrron 67 judgments (estimated $3-4).
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--thesis", default="thesis.toml", metavar="PATH")
+    ap.add_argument("--thesis", default=run.DEFAULT_FUND, metavar="PATH")
     thesis_arg = ap.parse_args().thesis
     run.load_env()
     th = run.Thesis(thesis_arg)
-    OUT = HERE / ("run_results.txt" if th.name == "thesis" else f"run_results_{th.name}.txt")
+    OUT = HERE / f"run_results_{th.mode}_{th.name}.txt"
+    if th.mode == "founders":
+        return export_founders(th, OUT)
     sys.argv = ["run.py", "rank", "--thesis", str(th.path)]
     captured = {}
     real_report = run.write_report
@@ -109,7 +111,7 @@ def main():
     run.main()
 
     L = [f"LEAD FUNNEL · ALL RESULTS SO FAR", f"Exported {datetime.now():%Y-%m-%d %H:%M}. Thesis: {th.path}", ""]
-    if th.name == "thesis_example_vc_tools":
+    if th.name == "vc_tools":
         L += [HISTORY.strip(), ""]  # session history belongs to this thesis
     L += ["", "LATEST RUN · FUNNEL", "=" * 60]
     L += [f"  {n:>7,}  {label}" for label, n in captured["counts"]]
@@ -159,6 +161,36 @@ def main():
         L.insert(2, f"NOTE: {len(misses)} finalists had no cached judgment, so they show 'not judged'. No paid calls were made.")
     OUT.write_text("\n".join(L) + "\n")
     print(f"\nWrote {OUT} ({OUT.stat().st_size // 1024} KB). Paid calls made: 0. Judgment cache misses: {len(misses)}.")
+
+
+def export_founders(th, OUT):
+    """Founder runs save every finalist with its judgment, so the export reads files and calls nothing."""
+    if not (th.out / "leads.json").exists():
+        raise SystemExit(f"No results yet for {th.name}. Run: python run.py rank --thesis {th.path}")
+    leads = json.loads((th.out / "leads.json").read_text())
+    L = ["LEAD FUNNEL · FOUNDER SOURCING RESULTS", f"Exported {datetime.now():%Y-%m-%d %H:%M}. Fund thesis: {th.path}", "",
+         f"ALL {len(leads)} FINALISTS (best first)", "=" * 60]
+    for i, l in enumerate(leads, 1):
+        j = l.get("judgment") or {}
+        L.append(f"\n{i:>2}. {l.get('person') or j.get('contact') or '?'} · {l.get('company') or ''}  [{l['source']}, {l['stage']}]  score {l['score']:.3f}"
+                 + (f"  fit {j['fit']}/5 founder {j['founder_quality']}/5" if "fit" in j else "") + ("  [overlap: " + "; ".join(l["conflicts"]) + "]" if l.get("conflicts") else ""))
+        L.append(f"    {l['headline']}")
+        for k in ("what_they_build", "why"):
+            if j.get(k):
+                L.append(f"    {k.replace('_', ' ')}: {j[k]}")
+        if j.get("quote"):
+            L.append(f"    quote (verified): \"{j['quote']}\"  <- {j.get('quote_url')}")
+        if j.get("concerns"):
+            L.append("    concerns: " + "; ".join(j["concerns"]))
+        L.append(f"    website: {l.get('website') or '-'}   source: {l.get('url') or '-'}   contact: {l.get('contact') or '-'}")
+        L.append("    features: " + ", ".join(f"{k} {v:.2f}" for k, v in l["features"].items()))
+    from funnel import akta
+    led = akta.Ledger(HERE / "data/akta")
+    L += ["", "", "AKTA.PRO CREDITS THIS MONTH", "=" * 60, f"{led.used():g} used of {akta.MONTHLY_CREDITS:g}; {led.left():g} usable left"]
+    L += ["", "", f"LATEST SHORTLIST ({th.out / 'shortlist.csv'})", "=" * 60] + [",".join(r) for r in csv.reader(open(th.out / "shortlist.csv"))]
+    L += ["", "", f"LATEST REPORT ({th.out / 'report.md'})", "=" * 60, (th.out / "report.md").read_text()]
+    OUT.write_text("\n".join(L) + "\n")
+    print(f"Wrote {OUT} ({OUT.stat().st_size // 1024} KB). No API calls made.")
 
 
 if __name__ == "__main__":

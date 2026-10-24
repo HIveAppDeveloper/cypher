@@ -1,0 +1,238 @@
+{
+  "lead_id": "co:0001962104",
+  "rank": 3,
+  "screening_score": 0.6632,
+  "generated": "2026-10-24",
+  "summary": "Andrew Howard is CEO and co-founder of Lockchain Corp. (lockchain.ai). Lockchain is an AI-native risk, compliance and monitoring platform for institutions in digital assets, with an exportable audit trail, sourced outputs and a claimed SOC 2 Type II; Howard was previously CEO/CTO of Kudelski Security and led a Georgia Tech UARC. The product matches the fund's auditability thesis, but the company is outside the fund's window and core: it announced a $5M Series A in Feb 2025, filed a further $3M offering in Sept 2026, sells into crypto/digital assets rather than healthcare, insurance or banking, and has a large executive team.",
+  "person": {
+    "name": "Andrew Howard",
+    "role": "CEO, Co-Founder of Lockchain Corp. / Lockchain.ai",
+    "location": "Athens, GA (per SEC Form D record, S1)",
+    "links": [
+      "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0001962104",
+      "https://lockchain.ai",
+      "https://lockchain.ai/about",
+      "https://www.linkedin.com/in/ahow"
+    ]
+  },
+  "co_founders": [
+    "Aidan Kehoe \u2013 Chairman of the Board, Co-Founder (S5, S7)",
+    "Matt Higgins \u2013 Co-Founder; co-founder and CEO of RSE Ventures (S5, S7)",
+    "Ryan Spanier \u2013 Chief Product Officer (S5)",
+    "Brian Keogh \u2013 President and Chief Revenue Officer (S5)",
+    "Bo Lane \u2013 Chief Technology Officer (S5)",
+    "Kevin Costello \u2013 Chief Services Officer and Chief Security Officer (S5)",
+    "Josh Berry \u2013 Lead Developer (S5)"
+  ],
+  "company": {
+    "name": "Lockchain Corp. (Lockchain.ai)",
+    "what_they_build": "AI-native digital-asset intelligence and risk management platform that automates risk, compliance and monitoring workflows for institutions. Features include real-time monitoring across assets, networks, protocols and counterparties, watchlists, custom risk-scoring frameworks, and an exportable institutional audit trail with sourced outputs (S4). A newer tool targets prediction-market contract settlement (S6).",
+    "customers": "Institutions and financial institutions participating in digital assets (S4). Blog content also targets crypto issuers and prediction-market platforms (S6). No named customers; 'Trusted by the biggest names in finance' is unsubstantiated (S4).",
+    "stage": "series A",
+    "raised": "$5M Series A announced Feb 25, 2025 (S6). Form D filed 2024-12-11: $5,000,000 offered, $4,419,177 sold, 6 investors, first sale 2024-12-02 (S3). Form D filed 2026-09-22: $3,000,000 offered, $1,999,993 sold, 1 investor, first sale 2026-09-08 (S3). An earlier seed round with RSE Ventures participation is mentioned (S7), amount unknown. Backed by Nadia Partners (AI Fund I) LLC (S1).",
+    "website": "https://lockchain.ai"
+  },
+  "background": [
+    {
+      "fact": "Former CEO and CTO of global cybersecurity firm Kudelski Security before founding Lockchain.ai",
+      "source": "S5",
+      "url": "https://lockchain.ai/about",
+      "source_label": "Company web page (guessed from the company name; check it is the same company)"
+    },
+    {
+      "fact": "Before Kudelski, led a University Affiliated Research Center (UARC) at Georgia Tech focused on cybersecurity, described as one of only 16 U.S. Defense Department applied R&D facilities",
+      "source": "S5",
+      "url": "https://lockchain.ai/about",
+      "source_label": "Company web page (guessed from the company name; check it is the same company)"
+    },
+    {
+      "fact": "Served twice on the World Economic Forum's Global Futures Council on cybersecurity",
+      "source": "S5",
+      "url": "https://lockchain.ai/about",
+      "source_label": "Company web page (guessed from the company name; check it is the same company)"
+    },
+    {
+      "fact": "Named to the Georgia Tech 40 Under 40 Alumni List in 2022",
+      "source": "S5",
+      "url": "https://lockchain.ai/about",
+      "source_label": "Company web page (guessed from the company name; check it is the same company)"
+    },
+    {
+      "fact": "Co-founded Lockchain.ai in 2023 per data-provider profile",
+      "source": "S7",
+      "url": "akta.pro (https://lockchain.ai)",
+      "source_label": "akta.pro management profile"
+    },
+    {
+      "fact": "Lockchain Corp. year of incorporation listed as 2022 in the Form D record",
+      "source": "S1",
+      "url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0001962104",
+      "source_label": "Shortlist record"
+    }
+  ],
+  "founder_signals": [
+    {
+      "fact": "Publicly launched Lockchain.ai on Apr 1, 2024 'after a year in stealth' as an AI-powered blockchain risk management platform (launch post authored by Andrew Howard)",
+      "source": "S6",
+      "url": "https://lockchain.ai/blog",
+      "source_label": "Company web page (guessed from the company name; check it is the same company)"
+    },
+    {
+      "fact": "Announced a $5 Million Series A on Feb 25, 2025 to scale on-chain compliance",
+      "source": "S6",
+      "url": "https://lockchain.ai/blog",
+      "source_label": "Company web page (guessed from the company name; check it is the same company)"
+    },
+    {
+      "fact": "Form D filed 2024-12-11 shows $4,419,177 sold of a $5,000,000 offering to 6 investors",
+      "source": "S3",
+      "url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0001962104",
+      "source_label": "Form D filings for Lockchain Corp."
+    },
+    {
+      "fact": "Form D filed 2026-09-22 shows $1,999,993 sold of a $3,000,000 offering to 1 investor, first sale 2026-09-08",
+      "source": "S3",
+      "url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0001962104",
+      "source_label": "Form D filings for Lockchain Corp."
+    },
+    {
+      "fact": "Website claims SOC 2 Type II, tenant isolation, end-to-end encryption, SSO, an exportable audit trail of every assessment and action, and that customer data is never used to train models",
+      "source": "S4",
+      "url": "https://lockchain.ai",
+      "source_label": "Company web page (guessed from the company name; check it is the same company)"
+    },
+    {
+      "fact": "Aug 18, 2026 blog post describes a new Lockchain automation tool for prediction-market contract settlement",
+      "source": "S6",
+      "url": "https://lockchain.ai/blog",
+      "source_label": "Company web page (guessed from the company name; check it is the same company)"
+    },
+    {
+      "fact": "Published MiCAR and DORA compliance content (Sep 26, 2024) and SEC crypto-issuer filing analysis (Aug 28, 2026)",
+      "source": "S6",
+      "url": "https://lockchain.ai/blog",
+      "source_label": "Company web page (guessed from the company name; check it is the same company)"
+    },
+    {
+      "fact": "Co-founder and chairman Aidan Kehoe previously founded SKOUT Cybersecurity (acquired by Barracuda Networks, 2021) and Oxford Global (acquired by Willis Towers Watson, 2013)",
+      "source": "S5",
+      "url": "https://lockchain.ai/about",
+      "source_label": "Company web page (guessed from the company name; check it is the same company)"
+    }
+  ],
+  "thesis_fit": [
+    {
+      "belief": "Compliance and auditability are the moat in regulated AI, not the model",
+      "verdict": "supports",
+      "evidence": "The product is positioned on an exportable institutional audit trail, outputs traceable to their sources ('no black-box conclusions'), SOC 2 Type II, and never training on customer data.",
+      "source": "S4",
+      "url": "https://lockchain.ai"
+    },
+    {
+      "belief": "Founders from inside the industry beat generalists who discover it later",
+      "verdict": "neutral",
+      "evidence": "Howard comes from cybersecurity and defense R&D (Kudelski Security, Georgia Tech UARC), not from inside financial-institution compliance or digital-asset operations. Co-founder Kehoe has prior risk-management exits.",
+      "source": "S5",
+      "url": "https://lockchain.ai/about"
+    },
+    {
+      "belief": "Open-source or public traction is the best early signal for technical founders",
+      "verdict": "unknown",
+      "evidence": "The evidence contains no GitHub, Hacker News, usage metrics or named customers. Public output is limited to blog posts.",
+      "source": ""
+    },
+    {
+      "belief": "Small teams shipping weekly beat large early rounds",
+      "verdict": "contradicts",
+      "evidence": "The company lists a full C-suite (CEO, CPO, President/CRO, CTO, CSO), a six-person board and six advisors, and has raised roughly $6.4M across two Form D filings. There is no evidence of a weekly shipping cadence.",
+      "source": "S5",
+      "url": "https://lockchain.ai/about"
+    }
+  ],
+  "fit_score": 2,
+  "strengths": [
+    "Product directly embodies the fund's auditability thesis: logged and exportable assessments, sourced outputs, SOC 2 Type II, no training on customer data (S4).",
+    "Experienced security operator as CEO: former CEO/CTO of Kudelski Security and former lead of a Georgia Tech DoD UARC (S5).",
+    "Chairman/co-founder Aidan Kehoe has two prior exits in security and risk, to Barracuda and Willis Towers Watson (S5).",
+    "Regulation-aware product focus, with content on MiCAR, DORA, SEC issuer filings and ADGM (S6).",
+    "Institutional investors and board: White Star Capital and Lerer Hippeau partners on the board; Nadia Partners AI Fund I is a backer (S1, S5)."
+  ],
+  "risks": [
+    "Stage mismatch: a $5M Series A was announced Feb 2025 (S6) and a further $3M offering was filed in Sept 2026 (S3). Both are beyond the fund's pre-seed/seed focus.",
+    "Source conflict on the 2026 round: S1 headlines a '$5.0M round, 6 investors, filed 2026-09-22', but S3 shows that filing is a $3M offering with $1,999,993 sold to 1 investor. The $5M / $4,419,177 / 6-investor figures belong to the 2024-12-11 filing. S2 repeats the same error. Verify directly.",
+    "Founding date inconsistency: S1 lists incorporation in 2022, while S7 says co-founded in 2023. S6 ('a year in stealth' before the Apr 2024 launch) fits either.",
+    "Website lockchain.ai was guessed from the company name (S4\u2013S6). It appears to be the same company because the footer reads '\u00a9 2026 Lockchain Corporation' and Andrew Howard is listed as CEO, but this is not confirmed against the filings.",
+    "Sector is crypto/digital-asset compliance, adjacent to rather than within the fund's core of healthcare, insurance and traditional financial services.",
+    "Large leadership team, celebrity-heavy board and advisor list (e.g., Anthony Scaramucci), and a co-founder who also runs an investing firm (Matt Higgins / RSE Ventures, S7) suggest a capital-heavy rather than lean team.",
+    "Traction is unproven: no named customers, revenue or usage figures, and the 'Trusted by the biggest names in finance' claim is unsupported (S4).",
+    "The 2026 offering had $1M of its $3M unsold at filing, with only one investor (S3). This may signal fundraising difficulty or an insider bridge.",
+    "S2 is a prior AI-generated screening note, not primary evidence. Its claims were rechecked against S3\u2013S6.",
+    "S7 profile data is truncated."
+  ],
+  "open_questions": [
+    "Is the Sept 2026 $3M Form D (1 investor, ~$2M sold) a Series A extension, a bridge, or the start of a new priced round, and who is the single investor?",
+    "What was the size of the pre-Series A seed round that RSE Ventures joined, and was it raised under a separate filing?",
+    "Which institutions currently pay for Lockchain? Can you name any behind 'Trusted by the biggest names in finance', and what is current ARR?",
+    "How many people are on the team today, and how often does the product ship? For example, how long did the prediction-market settlement tool take from idea to release?",
+    "Who audits the 'every output, sourced' claim? Have any customers' auditors or regulators (e.g., under MiCAR/DORA) reviewed the audit-trail exports?",
+    "Do you plan to extend the risk-scoring and audit-trail engine beyond digital assets into traditional banking, insurance or asset-management compliance?",
+    "Was Lockchain incorporated in 2022 or founded in 2023, and what happened during the year in stealth before the Apr 2024 launch?",
+    "Who on the team brings direct experience from inside a financial institution's risk or compliance function?"
+  ],
+  "conversation_openers": [
+    "Your Aug 2026 post on prediction-market contract settlement caught my eye. I'd like to hear how the resolution tool uses the same sourced-output and audit-trail approach as the core risk platform.",
+    "Your line that '80% of digital asset risk work is data collection, not judgment' matches how we think about compliance software in regulated finance. How do institutions' auditors actually use the exportable assessment logs?",
+    "Going from leading a Georgia Tech DoD research center and running Kudelski Security to building custom risk-scoring frameworks for digital-asset institutions is an unusual path. I'd value your view on how the SEC's new crypto issuer filing requirements change what your customers need."
+  ],
+  "unknowns": [
+    "Named customers, revenue, ARR or usage metrics",
+    "Current team size and shipping cadence",
+    "Size, date and investors of the seed round referenced in S7",
+    "Identity of the single investor in the 2026 offering and the round's terms or valuation",
+    "Whether lockchain.ai is formally confirmed as the website of the Form D entity Lockchain Corp.",
+    "Howard's education (not specified in S7)",
+    "Any open-source code, GitHub activity or technical publications",
+    "Whether the SOC 2 Type II report is current and independently verifiable",
+    "Whether the Athens, GA filing address reflects where the team operates"
+  ],
+  "confidence": "medium",
+  "sources": [
+    {
+      "id": "S1",
+      "label": "Shortlist record",
+      "url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0001962104"
+    },
+    {
+      "id": "S2",
+      "label": "Earlier screening judgment (Claude)",
+      "url": ""
+    },
+    {
+      "id": "S3",
+      "label": "Form D filings for Lockchain Corp.",
+      "url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0001962104"
+    },
+    {
+      "id": "S4",
+      "label": "Company web page (guessed from the company name; check it is the same company)",
+      "url": "https://lockchain.ai"
+    },
+    {
+      "id": "S5",
+      "label": "Company web page (guessed from the company name; check it is the same company)",
+      "url": "https://lockchain.ai/about"
+    },
+    {
+      "id": "S6",
+      "label": "Company web page (guessed from the company name; check it is the same company)",
+      "url": "https://lockchain.ai/blog"
+    },
+    {
+      "id": "S7",
+      "label": "akta.pro management profile",
+      "url": "akta.pro (https://lockchain.ai)"
+    }
+  ],
+  "dropped_unsourced_facts": 0,
+  "provider": "nicrron:anthropic/claude-opus-5-5"
+}

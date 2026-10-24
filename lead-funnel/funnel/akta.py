@@ -11,6 +11,7 @@ Docs: https://docs.akta.pro (Company Search is free; Company Data is priced per 
 import hashlib
 import json
 import os
+import threading
 import time
 from datetime import datetime
 import urllib.error
@@ -21,7 +22,7 @@ from pathlib import Path
 BASE = "https://api.akta.pro/api/v1"
 TEXT_SECTIONS = ["firmographic"]          # 2 credits: description, focus, location
 PORTFOLIO_SECTION = "mna_and_investment"  # 5 credits: the firm's investments (the most useful part)
-SECTION_CREDITS = {"firmographic": 2, "business_model": 2, "strategic_signal": 1.5, "mna_and_investment": 5}
+SECTION_CREDITS = {"firmographic": 2, "business_model": 2, "strategic_signal": 1.5, "mna_and_investment": 5, "management_profile": 1}
 MONTHLY_CREDITS = float(os.environ.get("AKTA_MONTHLY_CREDITS", "1250"))  # plan allowance; past it the card is charged
 RESERVE_CREDITS = float(os.environ.get("AKTA_RESERVE_CREDITS", "100"))    # never spend the last 100
 # Credits used in October 2026 before this ledger existed. The tool's own calls were 405 credits;
@@ -69,6 +70,9 @@ class BudgetStop(Exception):
     pass
 
 
+_LOCK = threading.Lock()  # one akta.pro call at a time: keeps the ledger consistent and stays under the rate limit
+
+
 class Akta:
     def __init__(self, key: str, cache_dir: Path, allow_paid: bool):
         self.key, self.cache, self.allow_paid = key, cache_dir, allow_paid
@@ -79,7 +83,11 @@ class Akta:
         self.credits = 0.0
         self._last = 0.0
 
-    def _get(self, path, params, max_credits=0.0):
+    def _get(self, path, params, max_credits=0.0, body=None):
+        with _LOCK:
+            return self._request(path, params, max_credits, body)
+
+    def _request(self, path, params, max_credits=0.0, body=None):
         if max_credits:  # paid endpoint: enforce the rules before sending anything
             if not self.allow_paid:
                 raise BudgetStop("paid akta.pro calls are off for this run (pass --akta-new N to allow)")
@@ -90,21 +98,31 @@ class Akta:
         if wait > 0:
             time.sleep(wait)
         self._last = time.time()
-        url = f"{BASE}{path}?{urllib.parse.urlencode(params)}"
-        req = urllib.request.Request(url, headers={"x-api-key": self.key, "Accept": "application/json", "User-Agent": "lead-funnel/0.1"})
+        url = f"{BASE}{path}" + (f"?{urllib.parse.urlencode(params)}" if params else "")
+        headers = {"x-api-key": self.key, "Accept": "application/json", "User-Agent": "lead-funnel/0.1"}
+        if body is not None:
+            headers["Content-Type"] = "application/json"
+        req = urllib.request.Request(url, headers=headers, data=json.dumps(body).encode() if body is not None else None,
+                                     method="POST" if body is not None else "GET")
         try:
-            with urllib.request.urlopen(req, timeout=60) as r:
-                body = r.read()
+            # List Generation's p99 is about 32 s and grows with query size; give paid calls room to finish.
+            with urllib.request.urlopen(req, timeout=180 if max_credits else 60) as r:
+                raw = r.read()  # not `body`: that name is the request payload, used below for the ledger note
                 self.calls += 1
-                data = json.loads(body) if body else {"data": []}
+                data = json.loads(raw) if raw else {"data": []}
                 used = float(data.get("credits_consumed") or 0)
                 self.credits += used
                 if used:
-                    self.ledger.add(used, f"{path} {params.get('company') or params.get('query')}")
+                    what = (params or {}).get("company") or (params or {}).get("query") or (body or {}).get("query") or "filters"
+                    self.ledger.add(used, f"{path} {str(what)[:80]}")
                 return data
         except urllib.error.HTTPError as e:
             detail = e.read()[:300].decode("utf-8", "replace")
             raise AktaError(f"HTTP {e.code} on {path}: {detail}") from None
+        except (TimeoutError, urllib.error.URLError, ConnectionError) as e:
+            if max_credits:  # the server may have done (and billed) the work; never assume it was free
+                self.ledger.add(max_credits, f"UNCONFIRMED: {path} got no reply ({type(e).__name__}); worst case recorded, check your akta.pro dashboard")
+            raise AktaError(f"no reply from {path} ({type(e).__name__})") from None
 
     def _path(self, kind, key):
         return self.cache / f"{kind}-{hashlib.sha1(key.encode()).hexdigest()[:16]}.json"
@@ -123,15 +141,33 @@ class Akta:
         path = self._path(kind, key)
         if path.exists():
             return json.loads(path.read_text())
-        value = fn()
+        value = fn()  # fn calls _get, which holds the lock for the request and ledger write
         path.write_text(json.dumps(value))
         return value
+
+    def search(self, name):
+        """Free Company Search: name -> [{uuid, name, website, product_category}]. Cached forever."""
+        return self._cached("search", name, lambda: self._get("/company/search", {"query": name}).get("data", []))
+
+    def company_sections(self, company, sections):
+        """Paid Company Data for chosen sections (e.g. management_profile, 1 credit). Cached forever."""
+        worst = sum(SECTION_CREDITS[s] for s in sections)
+        key = company + "|" + ",".join(sorted(sections))
+        return self._cached("sections", key, lambda: self._get("/company/enrichment", {"company": company, "sections": ",".join(sections)}, max_credits=worst))
+
+    def list_companies(self, query=None, filters=None, limit=100):
+        """Paid List Generation: companies matching a natural-language query or structured filters.
+        Costs 1.5 + 2.5 (if query) + 0.2 per company returned, with no enrichment sections."""
+        worst = 1.5 + (0 if filters else 2.5) + 0.2 * limit
+        key = json.dumps({"q": query, "f": filters, "n": limit}, sort_keys=True)
+        body = {"limit": limit, **({"filters": filters} if filters else {"query": query})}
+        return self._cached("list", key, lambda: self._get("/list/generate/companies/", None, max_credits=worst, body=body))
 
     def enrich_firm(self, firm):
         """Returns {'text': ..., 'investments': [...], 'uuid': ...} or raises AktaError."""
         ident = firm.get("website") or ""
         if not ident:
-            hits = self._cached("search", firm["name"], lambda: self._get("/company/search", {"query": firm["name"]}).get("data", []))
+            hits = self.search(firm["name"])
             if not hits:
                 return {"text": "", "investments": [], "uuid": None}
             ident = hits[0]["uuid"]

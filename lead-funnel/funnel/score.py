@@ -139,11 +139,11 @@ def penalty(f, t):
     return excluded, hard, soft
 
 
-def text_similarity(firms, t, labels):
+def text_similarity(firms, t, labels, doc_fn=None, query_text=None):
     """TF-IDF cosine between each firm's text and the thesis, after moving the thesis toward liked firms."""
-    docs = [text_of(f) for f in firms]
+    docs = [(doc_fn or text_of)(f) for f in firms]
     vec = TfidfVectorizer(stop_words="english", ngram_range=(1, 2), min_df=1, max_df=0.6, sublinear_tf=True, max_features=60000)
-    X = vec.fit_transform(docs + [thesis_text(t)])
+    X = vec.fit_transform(docs + [query_text or thesis_text(t)])
     profile = X[-1].toarray()
     idx = {f["id"]: i for i, f in enumerate(firms)}
     liked = [idx[i] for i, (l, _) in labels.items() if l > 0 and i in idx]
@@ -156,7 +156,8 @@ def text_similarity(firms, t, labels):
     sims = cosine_similarity(X[:-1], profile).ravel()
     ranks = sims.argsort().argsort() / max(1, len(sims) - 1)  # percentile within the cohort
     for f, s, r in zip(firms, sims, ranks):
-        f["features"]["text_sim"] = round(float(r) if f.get("pages") or f["board_seats"] else float(r) * 0.5, 3)
+        has_text = f.get("pages") or f.get("board_seats") or f.get("kind") == "builder"  # builders carry repo/paper text
+        f["features"]["text_sim"] = round(float(r) if has_text else float(r) * 0.5, 3)
         f["raw_sim"] = float(s)
     return vec, profile
 
@@ -184,7 +185,8 @@ def best_passages(f, vec, profile, n=2):
 
 
 # ---------- weights learned from your labels ----------
-def learned_weights(firms_by_id, labels):
+def learned_weights(firms_by_id, labels, features=None, defaults=None):
+    FEATURES, DEFAULT_WEIGHTS = features or globals()["FEATURES"], defaults or globals()["DEFAULT_WEIGHTS"]
     w = dict(DEFAULT_WEIGHTS)
     rows = [(firms_by_id[i]["features"], l) for i, (l, _) in labels.items() if i in firms_by_id and "features" in firms_by_id[i]]
     pos, neg = sum(1 for _, l in rows if l > 0), sum(1 for _, l in rows if l < 0)

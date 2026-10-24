@@ -1,0 +1,224 @@
+{
+  "lead_id": "co:0002152778",
+  "rank": 9,
+  "screening_score": 0.608,
+  "generated": "2026-10-24",
+  "summary": "Anton Shumskikh is named on the Form D for Neo Agent Inc., a London-located corporation incorporated in 2025 that has sold a $2.74M round to 13 investors, including Lookout Ventures I (S1, S3). The website likely belonging to the company (neoagent.io, guessed from the name and not confirmed) describes an AI agent that works IT service desk tickets end to end for managed service providers (MSPs). It shows approval gates, per-tool permissions, action logging, SOC 2 Type 2, a claim of 250+ MSP customers, a Pax8 Marketplace listing and weekly releases (S4, S5, S7). The auditability design and shipping pace echo the fund's beliefs, but the customer base is IT MSPs, not healthcare, insurance or financial services, and there is no evidence of the founders' backgrounds, so this looks off-thesis unless the founders show a regulated-industry angle.",
+  "person": {
+    "name": "Anton Shumskikh",
+    "role": "Named person on the Neo Agent Inc. Form D filing; exact title not stated in the evidence",
+    "location": "London (Form D location 'London, X0')",
+    "links": [
+      "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0002152778",
+      "https://www.neoagent.io/ (unconfirmed link to the company)"
+    ]
+  },
+  "co_founders": [
+    "Nikhil Sehgal (named on the Neo Agent Inc. Form D record; role not stated) (S1)",
+    "Dana Liedholm (appointed Chief Marketing Officer, per the unconfirmed neoagent.io blog, September 2026) (S5)"
+  ],
+  "company": {
+    "name": "Neo Agent Inc.",
+    "what_they_build": "An AI agent that works IT service desk tickets for MSPs, such as onboarding, password resets, triage, dispatch, RMM scripts and after-hours phone calls. It runs across the PSA, RMM, documentation and Microsoft stack, with technician approval rules, None/Read/Write permissions per tool and every action logged. Technicians can also use it as a teammate inside Microsoft Teams. This description comes from the unconfirmed neoagent.io site (S4, S5, S6, S7).",
+    "customers": "IT managed service providers (MSPs). The site claims 'TRUSTED BY 250+ MSPs' and names Digacore and Plus 1 Technology (S4, S5). The link between the site and the filer is unconfirmed.",
+    "stage": "seed",
+    "raised": "Form D filed 2026-09-01: $2,744,996 offered and $2,744,996 sold, 13 investors, first sale 2026-02-26 (S1, S3). Backed by Lookout Ventures I (S1).",
+    "website": "https://www.neoagent.io/ (guessed from the company name; not confirmed as the same company)"
+  },
+  "background": [
+    {
+      "fact": "Anton Shumskikh is the named person on the Form D record for Neo Agent Inc., alongside Nikhil Sehgal.",
+      "source": "S1",
+      "url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0002152778",
+      "source_label": "Shortlist record"
+    },
+    {
+      "fact": "Neo Agent Inc. is a corporation incorporated in 2025, with location listed as London and industry as 'Other Technology'.",
+      "source": "S1",
+      "url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0002152778",
+      "source_label": "Shortlist record"
+    },
+    {
+      "fact": "The Form D record flags no repeat founders.",
+      "source": "S1",
+      "url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0002152778",
+      "source_label": "Shortlist record"
+    },
+    {
+      "fact": "The akta.pro management profile returned no data.",
+      "source": "S8",
+      "url": "akta.pro (https://www.neoagent.io/)",
+      "source_label": "akta.pro management profile"
+    },
+    {
+      "fact": "The neoagent.io footer says the product is 'Built by MSP people', which suggests IT services domain experience. It does not name individuals.",
+      "source": "S7",
+      "url": "https://www.neoagent.io/integrations/microsoft-teams",
+      "source_label": "Company web page (guessed from the company name; check it is the same company)"
+    }
+  ],
+  "founder_signals": [
+    {
+      "fact": "Sold the full $2,744,996 round to 13 investors, with first sale on 2026-02-26 and Lookout Ventures I as a backer.",
+      "source": "S3",
+      "url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0002152778",
+      "source_label": "Form D filings for Neo Agent Inc."
+    },
+    {
+      "fact": "The site claims 'TRUSTED BY 250+ MSPs' and quotes Rob Wenger (Ops, Digacore): the product is 'saving us tens of hours per week'.",
+      "source": "S4",
+      "url": "https://www.neoagent.io/",
+      "source_label": "Company web page (guessed from the company name; check it is the same company)"
+    },
+    {
+      "fact": "In a customer story, Plus 1 Technology says it saves roughly two full technicians' worth of time daily, and ticket triage dropped from about 15 minutes to 2.",
+      "source": "S5",
+      "url": "https://www.neoagent.io/blogs",
+      "source_label": "Company web page (guessed from the company name; check it is the same company)"
+    },
+    {
+      "fact": "Neo Agent became purchasable through the Pax8 Marketplace (blog post dated October 15, 2026).",
+      "source": "S5",
+      "url": "https://www.neoagent.io/blogs",
+      "source_label": "Company web page (guessed from the company name; check it is the same company)"
+    },
+    {
+      "fact": "The company announced SOC 2 Type 2 compliance in July 2026, audited under the AICPA framework and monitored continuously by Oneleet.",
+      "source": "S5",
+      "url": "https://www.neoagent.io/blogs",
+      "source_label": "Company web page (guessed from the company name; check it is the same company)"
+    },
+    {
+      "fact": "The blog shows near-weekly product updates. On October 12, 2026 it added savings reporting, after-hours call handling and 17 integrations. On October 23, 2026 it added dashboards, Slack, help desk notes and 30 integrations. The June 2026 release added a white-label end-user Teams bot, Long-Term Memory and Kaseya VSA X.",
+      "source": "S5",
+      "url": "https://www.neoagent.io/blogs",
+      "source_label": "Company web page (guessed from the company name; check it is the same company)"
+    },
+    {
+      "fact": "Integrations include ConnectWise, IT Glue, Active Directory, Exchange, Microsoft 365 and Pax8/Intune, with None, Read or Write permission set per tool and every action logged.",
+      "source": "S4",
+      "url": "https://www.neoagent.io/",
+      "source_label": "Company web page (guessed from the company name; check it is the same company)"
+    },
+    {
+      "fact": "The site publishes comparison pages against Rewst, Pia, Thread, MSPBots and Zofiq, and offers a 14-day free trial with no credit card.",
+      "source": "S4",
+      "url": "https://www.neoagent.io/",
+      "source_label": "Company web page (guessed from the company name; check it is the same company)"
+    }
+  ],
+  "thesis_fit": [
+    {
+      "belief": "Compliance and auditability are the moat in regulated AI, not the model",
+      "verdict": "supports",
+      "evidence": "The product centres on approval gating, per-tool permissions, tenant isolation, action logging and SOC 2 Type 2. However, its customers are IT MSPs, not a regulated vertical, and the site link is unconfirmed.",
+      "source": "S5",
+      "url": "https://www.neoagent.io/blogs"
+    },
+    {
+      "belief": "Founders from inside the industry beat generalists who discover it later",
+      "verdict": "unknown",
+      "evidence": "Nothing describes Shumskikh's or Sehgal's backgrounds. The site's 'Built by MSP people' claim would mean insiders to IT services, not to healthcare, insurance or financial services.",
+      "source": ""
+    },
+    {
+      "belief": "Open-source or public traction is the best early signal for technical founders",
+      "verdict": "neutral",
+      "evidence": "There is no open-source or GitHub evidence. Public commercial traction is claimed (250+ MSPs, named case studies, Pax8 listing), but it sits on an unconfirmed website.",
+      "source": "S4",
+      "url": "https://www.neoagent.io/"
+    },
+    {
+      "belief": "Small teams shipping weekly beat large early rounds",
+      "verdict": "supports",
+      "evidence": "The blog shows near-weekly releases with dozens of new integrations each, and the round is a modest $2.74M. Team size is unknown.",
+      "source": "S5",
+      "url": "https://www.neoagent.io/blogs"
+    }
+  ],
+  "fit_score": 2,
+  "strengths": [
+    "The auditability-first product design (approval rules, per-tool None/Read/Write permissions, logged actions, SOC 2 Type 2) matches the fund's view of what makes enterprise AI deployable (S4, S5).",
+    "Visible commercial traction: a claimed 250+ MSP customers, quantified case studies (Plus 1 Technology, Digacore) and Pax8 Marketplace distribution (S4, S5).",
+    "High shipping velocity, with weekly product updates and a rebuilt integration layer adding several integrations a week (S5).",
+    "Capital-efficient seed of $2.74M fully sold, with an institutional backer (Lookout Ventures I) (S1, S3)."
+  ],
+  "risks": [
+    "Off-thesis vertical: customers are IT MSPs, not healthcare, insurance or financial services (S4, S2).",
+    "The website was guessed from the company name. No page names Shumskikh or Sehgal, so the product, traction and SOC 2 claims are not confirmed to belong to the Form D filer (S4\u2013S7).",
+    "There is no evidence about the founders' backgrounds, prior companies or technical depth, and the akta.pro profile is empty (S8).",
+    "The round looks largely closed: fully sold with 13 investors. The earlier screening also says Lookout Ventures holds a director seat, but only S2 makes that claim and the Form D record shows only 'backed_by'. Entry may be late or crowded for a pre-seed/seed fund (S1, S3, S2).",
+    "Crowded competitive set with named rivals Rewst, Pia, Thread, MSPBots and Zofiq (S4).",
+    "Hiring a Chief Marketing Officer focused on the MSP channel suggests the company is committing to the MSP market rather than moving toward regulated verticals (S5)."
+  ],
+  "open_questions": [
+    "What are your and Nikhil Sehgal's roles and backgrounds, and is neoagent.io your company?",
+    "The footer says 'Built by MSP people'. Who on the founding team ran or worked at an MSP, and which one?",
+    "How many of the 250+ MSPs pay, versus being on trial, and what does revenue look like after the Pax8 Marketplace launch?",
+    "Do any of your MSP customers serve healthcare, insurance or financial-services clients? Have HIPAA, FINRA or similar requirements come up in their deployments?",
+    "How do approval rules and action logs hold up in a customer's own audit? Has an MSP used Neo's logs as audit evidence?",
+    "When customers raise autonomy after test mode, what share of tickets does Neo close without a technician approval?",
+    "Is the $2.74M round closed, who leads it, and is there room for a new seed investor?",
+    "How large is the team shipping the weekly releases and the rebuilt integration layer?"
+  ],
+  "conversation_openers": [
+    "Congrats on the Pax8 Marketplace launch. Letting MSPs buy Neo through their existing Pax8 billing is a smart distribution move, and I'd love to hear how it has changed your trial-to-paid conversion.",
+    "Your per-tool None/Read/Write permissions and approval-gated actions are the kind of audit trail we look for in AI for regulated industries. I'm curious whether MSPs serving healthcare or finance clients are pulling you in that direction.",
+    "The Plus 1 Technology story, with triage dropping from 15 minutes to 2 and roughly two technicians' time saved daily, is a striking result. I'd love to understand what made that rollout work and how repeatable it is."
+  ],
+  "unknowns": [
+    "Whether neoagent.io belongs to Neo Agent Inc., the Form D filer",
+    "Anton Shumskikh's title, education, career history and prior companies",
+    "Nikhil Sehgal's role and background",
+    "Team size and headcount",
+    "Revenue, pricing and the number of paying customers versus the 250+ claim",
+    "Round lead, valuation, and whether the round is still open",
+    "Any regulated-industry (healthcare, insurance, finance) customers or plans",
+    "Any open-source, GitHub or technical publications by the founders"
+  ],
+  "confidence": "low",
+  "sources": [
+    {
+      "id": "S1",
+      "label": "Shortlist record",
+      "url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0002152778"
+    },
+    {
+      "id": "S2",
+      "label": "Earlier screening judgment (Claude)",
+      "url": ""
+    },
+    {
+      "id": "S3",
+      "label": "Form D filings for Neo Agent Inc.",
+      "url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0002152778"
+    },
+    {
+      "id": "S4",
+      "label": "Company web page (guessed from the company name; check it is the same company)",
+      "url": "https://www.neoagent.io/"
+    },
+    {
+      "id": "S5",
+      "label": "Company web page (guessed from the company name; check it is the same company)",
+      "url": "https://www.neoagent.io/blogs"
+    },
+    {
+      "id": "S6",
+      "label": "Company web page (guessed from the company name; check it is the same company)",
+      "url": "https://www.neoagent.io/features/technician-teams-agent"
+    },
+    {
+      "id": "S7",
+      "label": "Company web page (guessed from the company name; check it is the same company)",
+      "url": "https://www.neoagent.io/integrations/microsoft-teams"
+    },
+    {
+      "id": "S8",
+      "label": "akta.pro management profile",
+      "url": "akta.pro (https://www.neoagent.io/)"
+    }
+  ],
+  "dropped_unsourced_facts": 0,
+  "provider": "nicrron:anthropic/claude-opus-5-5"
+}

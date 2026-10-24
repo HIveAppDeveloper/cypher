@@ -1,0 +1,197 @@
+{
+  "lead_id": "co:0002130106",
+  "rank": 1,
+  "screening_score": 0.714,
+  "generated": "2026-10-24",
+  "summary": "Jason Griffith is the founder of Undeniable Health AI Inc. (White Plains, NY), which builds AI 'digital employee' billing agents that work healthcare claims end to end, from charge entry through denials, appeals and AR follow-up, for providers and billing companies. The company has filed two Form Ds totaling $1.1M ($500K from 1 investor, then $600K from 13 investors). The founders are self-described repeat founders with exits, and there is one named customer testimonial (JAG Billing). It fits the fund's regulated-AI thesis on market and compliance positioning, but the founders' RCM depth is adjacent rather than from inside billing operations, there is no public or open-source traction, and nearly all claims are self-reported.",
+  "person": {
+    "name": "Jason Griffith",
+    "role": "Founder",
+    "location": "White Plains, NY",
+    "links": [
+      "https://www.undeniablehealth.ai/",
+      "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0002130106"
+    ]
+  },
+  "co_founders": [
+    "Alex Poon (Co-founder)"
+  ],
+  "company": {
+    "name": "Undeniable Health AI Inc.",
+    "what_they_build": "AI agents marketed as 'digital employees' for revenue cycle teams, in-house and outsourced. They run a claim end to end across charge entry, claim submission, payment posting, denials and appeals, and AR follow-up. The pitch is lowering the cost to work a claim from $60 to $10 so that previously written-off claims become worth recovering.",
+    "customers": "Healthcare providers and billing organizations (in-house and outsourced RCM teams). The one named customer is JAG Billing (testimonial from CEO Gina Mattes).",
+    "stage": "pre-seed",
+    "raised": "Form D 2026-04-17: $500K offered and sold, 1 investor, first sale 2025-03-25. Form D 2026-06-22: $600K offered and sold, 13 investors, first sale 2026-05-20. About $1.1M total across 2 filings.",
+    "website": "https://www.undeniablehealth.ai/"
+  },
+  "background": [
+    {
+      "fact": "Described as a four-time founder with three prior exits: SiteCompli, Synco and Tripology (self-reported via company site).",
+      "source": "S5",
+      "url": "akta.pro (https://www.undeniablehealth.ai/)",
+      "source_label": "akta.pro management profile"
+    },
+    {
+      "fact": "Has management consulting experience, including quality-improvement work for a large health insurance plan (payer side).",
+      "source": "S5",
+      "url": "akta.pro (https://www.undeniablehealth.ai/)",
+      "source_label": "akta.pro management profile"
+    },
+    {
+      "fact": "Co-founder Alex Poon is described as a three-time VC-backed founder with exits from x.ai and Visual Revenue. He has built AI agents and human-in-the-loop systems since 2012 and previously led engineering and data science at a healthtech company.",
+      "source": "S5",
+      "url": "akta.pro (https://www.undeniablehealth.ai/)",
+      "source_label": "akta.pro management profile"
+    },
+    {
+      "fact": "Undeniable Health AI Inc. is a corporation with year of incorporation listed as 2026, based in White Plains, NY.",
+      "source": "S1",
+      "url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0002130106",
+      "source_label": "Shortlist record"
+    }
+  ],
+  "founder_signals": [
+    {
+      "fact": "Raised $600K from 13 investors in a round with first sale on 2026-05-20, filed 2026-06-22.",
+      "source": "S3",
+      "url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0002130106",
+      "source_label": "Form D filings for Undeniable Health AI Inc."
+    },
+    {
+      "fact": "Earlier $500K raise from a single investor, first sale 2025-03-25, filed 2026-04-17.",
+      "source": "S3",
+      "url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0002130106",
+      "source_label": "Form D filings for Undeniable Health AI Inc."
+    },
+    {
+      "fact": "JAG Billing CEO Gina Mattes is quoted on the site: 'Within a month, the digital biller was outperforming people I spent years training.'",
+      "source": "S4",
+      "url": "https://www.undeniablehealth.ai/",
+      "source_label": "Company web page (from akta.pro company search)"
+    },
+    {
+      "fact": "Product covers the whole revenue cycle rather than a single step: 'Most tools pick one step. We work all of them, end to end.'",
+      "source": "S4",
+      "url": "https://www.undeniablehealth.ai/",
+      "source_label": "Company web page (from akta.pro company search)"
+    },
+    {
+      "fact": "Repeat founding: Griffith claims three prior exits and Poon claims two.",
+      "source": "S5",
+      "url": "akta.pro (https://www.undeniablehealth.ai/)",
+      "source_label": "akta.pro management profile"
+    },
+    {
+      "fact": "An earlier screen reports the company is in a 90-day pilot phase with a small number of partners and has not published outcome metrics.",
+      "source": "S2",
+      "url": "",
+      "source_label": "Earlier screening judgment (Claude)",
+      "unverified": true,
+      "note": "from the earlier AI screening, not from primary evidence"
+    }
+  ],
+  "thesis_fit": [
+    {
+      "belief": "Compliance and auditability are the moat in regulated AI, not the model",
+      "verdict": "supports",
+      "evidence": "The earlier screen reports the company leads with HIPAA-by-design, an immutable six-year audit trail and human-in-the-loop autonomy. These claims do not appear in the truncated website excerpt (S4) and need verification.",
+      "source": "S2",
+      "url": "",
+      "unverified": true,
+      "note": "rests on the earlier AI screening, not on primary evidence"
+    },
+    {
+      "belief": "Founders from inside the industry beat generalists who discover it later",
+      "verdict": "neutral",
+      "evidence": "Griffith did payer-side quality-improvement consulting and Poon led engineering at a healthtech company. Neither is shown to have run billing or RCM operations, so the domain experience is adjacent rather than insider.",
+      "source": "S5",
+      "url": "akta.pro (https://www.undeniablehealth.ai/)"
+    },
+    {
+      "belief": "Open-source or public traction is the best early signal for technical founders",
+      "verdict": "unknown",
+      "evidence": "No GitHub, open-source, Hacker News or other public traction appears in the evidence. The only traction is one testimonial on the company's own site.",
+      "source": ""
+    },
+    {
+      "belief": "Small teams shipping weekly beat large early rounds",
+      "verdict": "supports",
+      "evidence": "The company has raised modestly ($500K then $600K) with two named founders, consistent with capital efficiency. Shipping cadence is not evidenced.",
+      "source": "S3",
+      "url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0002130106"
+    }
+  ],
+  "fit_score": 3,
+  "strengths": [
+    "Squarely in a regulated vertical (healthcare RCM) with a clear economic wedge: cutting the cost to work a claim from $60 to $10 makes written-off small claims recoverable (S4).",
+    "Positioned around compliance controls (HIPAA-by-design, audit trail, human-in-the-loop) that match the fund's moat thesis (S2, to be verified).",
+    "Experienced pair: Griffith is a claimed four-time founder with three exits, and Poon a claimed agent/human-in-the-loop builder since 2012 (S5).",
+    "Named early customer, JAG Billing, with a strong qualitative testimonial (S4).",
+    "Capital-efficient so far: about $1.1M raised, with investor count growing from 1 to 13 (S3)."
+  ],
+  "risks": [
+    "Exits, prior companies and domain experience come only from the company site via akta.pro (S5) and are unverified. The healthtech company and health plan are unnamed.",
+    "Date inconsistency: S1 lists year of incorporation as 2026, but the first Form D reports a first sale on 2025-03-25 (S3). This could be a pre-incorporation instrument, a prior entity or a filing error.",
+    "Form D industry is 'Other Technology' rather than healthcare (S1, S3), a minor mismatch with the company's positioning.",
+    "The website was found through an akta.pro company search (S4). The name matches, but it has not been independently confirmed as the same entity as the SEC filer.",
+    "Compliance claims (HIPAA, six-year immutable audit trail) and the 90-day pilot status come from the prior screen (S2) and are not visible in the provided website text.",
+    "Traction rests on a single testimonial. No outcome metrics, revenue or customer count are disclosed.",
+    "The founders are not RCM operators. Payer consulting and healthtech engineering are adjacent experience (S5).",
+    "Per S2, the market is crowded with well-funded AI RCM and denials-management competitors, and an agent-as-employee model may carry services-like margins."
+  ],
+  "open_questions": [
+    "What does the agent actually execute autonomously at JAG Billing versus with human review, and what are the measured denial-overturn rate, cost per claim and days in AR versus their human billers?",
+    "Can you walk us through the audit trail: what is logged per claim action, how is it made immutable, and has a customer's compliance officer or auditor reviewed it?",
+    "Is the $60-to-$10 cost-per-claim figure measured on live pilot data or modeled?",
+    "Which PM/billing systems and clearinghouses do you integrate with, and how does the agent handle payer-portal work that has no API?",
+    "Jason, how does your quality-improvement consulting for a health plan shape how the agent builds appeals? Which plan, and what did you see about adjudication?",
+    "How many pilot partners are in the 90-day program, what are the conversion criteria, and how will pricing work (per claim, per seat-equivalent, or percent of collections)?",
+    "The first Form D shows a first sale in March 2025 but incorporation is listed as 2026. What was that $500K instrument, and who was the single investor?",
+    "What were SiteCompli, Synco and Tripology, and what were the exit outcomes?"
+  ],
+  "conversation_openers": [
+    "Gina Mattes at JAG Billing saying your digital biller outperformed staff she spent years training within a month is a striking line. We'd love to hear what that looked like on the denials and appeals side.",
+    "Your point that a $50 claim costs more to recover with a human in the loop than it's worth is exactly the regulated-industry economics we invest behind. We're curious how you keep that math while still giving auditors a full trail.",
+    "Pairing payer-side quality-improvement experience with Alex's human-in-the-loop agent work since 2012 is an unusual combination for denials. We'd like to hear how it shows up in how your agent writes appeals."
+  ],
+  "unknowns": [
+    "Revenue, number of paying customers and pilot partners, and pilot outcome metrics.",
+    "Identity of the healthtech company (Poon) and health insurance plan (Griffith) in the founders' backgrounds.",
+    "Independent verification of the claimed prior exits and their sizes.",
+    "Team size beyond the two founders, and shipping cadence.",
+    "Identity of investors in either round; S1 lists no notable backers.",
+    "Whether HIPAA compliance, BAAs, SOC 2 or other certifications are in place.",
+    "Pricing model and gross margins of the digital-employee offering.",
+    "Why incorporation year (2026) and first sale date (2025-03-25) conflict."
+  ],
+  "confidence": "low",
+  "sources": [
+    {
+      "id": "S1",
+      "label": "Shortlist record",
+      "url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0002130106"
+    },
+    {
+      "id": "S2",
+      "label": "Earlier screening judgment (Claude)",
+      "url": ""
+    },
+    {
+      "id": "S3",
+      "label": "Form D filings for Undeniable Health AI Inc.",
+      "url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0002130106"
+    },
+    {
+      "id": "S4",
+      "label": "Company web page (from akta.pro company search)",
+      "url": "https://www.undeniablehealth.ai/"
+    },
+    {
+      "id": "S5",
+      "label": "akta.pro management profile",
+      "url": "akta.pro (https://www.undeniablehealth.ai/)"
+    }
+  ],
+  "dropped_unsourced_facts": 0,
+  "provider": "nicrron:anthropic/claude-opus-5-5"
+}
