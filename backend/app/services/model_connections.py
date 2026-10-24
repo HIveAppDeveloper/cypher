@@ -23,11 +23,18 @@ PREFIX = 'model_connection:'
 ROUTES = {
     'openai/gpt-6.1-sol': {'cx/gpt-6.1-sol'},
     'google/gemini-3.8-flash': {'gemini/gemini-3.8-flash', 'agy/gemini-3.8-flash-low'},
-    'anthropic/claude-sonnet-5.5': {'anthropic/claude-sonnet-5-5', 'agy/claude-sonnet-5-5-low'},
+    'anthropic/claude-sonnet-5.5': {
+        'anthropic/claude-sonnet-5-5', 'agy/claude-sonnet-5-5-low',
+        'cc/claude-sonnet-4-6',
+    },
     'anthropic/claude-haiku-4.5': {'ddgw/claude-haiku-4-5'},
+    'xai/grok-4.7': {'xai/grok-4.7', 'xao/grok-4.7'},
 }
 PROVIDER_MODELS = {provider:{info[1]} for provider,info in PROVIDERS.items()}
 PROVIDER_MODELS['claude'].add('anthropic/claude-haiku-4.5')
+
+def remote_control_available():
+    return bool(settings.OMNIROUTE_URL and settings.OMNIROUTE_CONTROL_KEY)
 
 def can_manage():
     from app.services.managed_connections import installation_owner
@@ -68,8 +75,9 @@ def public_connections(records):
         if public == 'anthropic/claude-haiku-4.5': account_url = 'https://duck.ai/'
         item = {'id': provider, 'name': label, 'model': public, 'state': state, 'job_status': row.status if row else None,
                 'message': detail.get('message', 'Check the saved connection to verify model access.'),
-                'account_url': account_url, 'can_add_api_key': provider in {'gemini', 'claude', 'xai'},
-                'requires_api_key': provider in LOCAL_KEY_PROVIDERS,
+                'account_url': account_url,
+                'can_add_api_key': provider in {'gemini', 'claude', 'xai'} and (not settings.OMNIROUTE_URL or remote_control_available()),
+                'requires_api_key': provider in LOCAL_KEY_PROVIDERS and not settings.OMNIROUTE_URL,
                 'key_configured': bool(detail.get('credentials_encrypted')),
                 'checked_at': detail.get('checked_at'), 'verification_url': None}
         expires = detail.get('verification_expires_at')
@@ -78,8 +86,10 @@ def public_connections(records):
                 from app.services.plugins import reveal
                 item['verification_url'] = safe_verification_url(reveal(detail.get('verification_encrypted')))
         except (ValueError, TypeError): pass
-        if provider == 'gemini' and state == 'verification_required':
-            item['message'] = 'Connect Gemini with an AI Studio API key. Consumer subscription sign-in cannot be used by this app.'
+        if provider == 'gemini' and state == 'verification_required' and remote_control_available():
+            item['message'] = 'Google requires an account check before this OmniRoute connection can respond. Complete the check, then choose Check again.'
+        elif provider == 'gemini' and state == 'verification_required':
+            item['message'] = 'Connect Gemini with an AI Studio API key. Google account subscriptions are available through OmniRoute when configured there.'
         elif state == 'verification_required' and not item['verification_url']:
             item['message'] = 'The verification link expired. Choose Check again to get a fresh Google account check.'
         result.append(item)
@@ -89,7 +99,9 @@ async def queue_check(db, provider, api_key=None):
     require_owner()
     if provider not in PROVIDERS or (api_key is not None and provider not in {'gemini', 'claude', 'xai'}):
         raise HTTPException(422, 'Choose a supported model connection.')
-    if provider not in LOCAL_KEY_PROVIDERS and (not settings.OMNIROUTE_CONTROL_KEY or not settings.OMNIROUTE_URL):
+    if settings.OMNIROUTE_URL and not remote_control_available():
+        raise HTTPException(503, 'OmniRoute account management is not configured on this runtime.')
+    if provider not in LOCAL_KEY_PROVIDERS and not remote_control_available():
         raise HTTPException(503, 'Model connection management is not configured on this runtime.')
     if api_key is not None and (not 20 <= len(api_key) <= 1000 or any(c.isspace() or ord(c) < 32 for c in api_key)):
         raise HTTPException(422, 'Enter a valid provider API key without spaces or line breaks.')
@@ -114,7 +126,7 @@ async def queue_check(db, provider, api_key=None):
             detail['previous_key_message'] = previous.get('message')
             detail['previous_key_checked_at'] = previous.get('checked_at')
         detail['credentials_encrypted'] = seal(api_key)
-    elif provider in LOCAL_KEY_PROVIDERS and not detail.get('credentials_encrypted'):
+    elif provider in LOCAL_KEY_PROVIDERS and not remote_control_available() and not detail.get('credentials_encrypted'):
         raise HTTPException(422, 'Add a provider API key before checking this connection.')
     if row: row.status = 'pending'; row.detail = detail; row.updated_at = datetime.utcnow()
     else: db.add(RuntimeCheck(name=PREFIX + provider, status='pending', detail=detail, updated_at=datetime.utcnow()))
@@ -235,7 +247,12 @@ async def run_requested_check(sessions, pulse):
         if detail.get('credentials_encrypted'):
             from app.services.plugins import reveal
             payload['api_key'] = reveal(detail['credentials_encrypted'])
-        check = provider_key_check(payload['provider'], payload['api_key']) if payload['provider'] in LOCAL_KEY_PROVIDERS else control_check(payload)
+        if remote_control_available():
+            check = control_check(payload)
+        elif payload['provider'] in LOCAL_KEY_PROVIDERS:
+            check = provider_key_check(payload['provider'], payload['api_key'])
+        else:
+            check = control_check(payload)
         task = asyncio.create_task(check)
         try:
             while not task.done():
