@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
-import { request } from '../lib/api';
+import { ApiError, request } from '../lib/api';
 import WorkflowShell from './WorkflowShell';
 import './vc-prospecting.css';
 
@@ -31,7 +31,15 @@ type Outreach = {
 
 const terminal = (status: string) => ['completed', 'partial', 'failed', 'cancelled'].includes(status);
 const ACTIVE = new Set(['pending', 'running', 'cancel_requested']);
-const errorMessage = (error: unknown) => error instanceof Error ? error.message : 'The request failed. Try again.';
+const errorMessage = (error: unknown) => {
+  if (error instanceof ApiError) {
+    if (error.status === 401) return 'Your sign-in expired. Sign in again to continue.';
+    if (error.status === 403) return 'This workspace can’t access that research yet.';
+    if (error.status === 429) return 'Cypher is handling several research requests. Try again in a moment.';
+    if (error.status >= 500) return 'Cypher couldn’t reach the research service. Try again shortly.';
+  }
+  return 'That step didn’t finish. Please try again.';
+};
 const dateLabel = (value: string | null | undefined) => value ? new Date(value).toLocaleDateString() : 'Not refreshed yet';
 
 export default function VcProspectingWorkspace() {
@@ -44,7 +52,7 @@ export default function VcProspectingWorkspace() {
   const [founderOnly, setFounderOnly] = useState(false);
   const [offset, setOffset] = useState(0);
   const [direction, setDirection] = useState<MatchRun['direction']>('companies_for_thesis');
-  const [oneLiner, setOneLiner] = useState('Recent SEC Form D startup leads');
+  const [oneLiner, setOneLiner] = useState('Find founders for our climate fund');
   const [thesis, setThesis] = useState('Source recent SEC Form D issuer filings across industries for venture investor research. Treat filing-named people as related persons; label someone as a founder only when a filing explicitly says founder or co-founder. Do not contact anyone or add personal contact details.');
   const [industries, setIndustries] = useState('');
   const [loading, setLoading] = useState(true);
@@ -55,6 +63,30 @@ export default function VcProspectingWorkspace() {
   const [outreach, setOutreach] = useState<{ resultId: string; value: Outreach } | null>(null);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
+  const [workspaceStep, setWorkspaceStep] = useState<'thesis' | 'research' | 'shortlist' | 'outreach' | 'meetings'>('research');
+  const [selectedFounderId, setSelectedFounderId] = useState<string | null>(null);
+  const [detailTab, setDetailTab] = useState<'overview' | 'evidence' | 'outreach' | 'notes'>('overview');
+  const [shortlistItems, setShortlistItems] = useState<Founder[]>([]);
+  const [shortlistLoaded, setShortlistLoaded] = useState(false);
+
+  useEffect(() => {
+    try {
+      const stored: unknown = JSON.parse(window.localStorage.getItem('cypher-vc-shortlist') || '[]');
+      if (Array.isArray(stored)) setShortlistItems(stored.filter((value): value is Founder => value && typeof value === 'object' && typeof value.id === 'string' && typeof value.person_name === 'string' && typeof value.company_name === 'string'));
+    } catch { /* Keep the shortlist empty if this browser has no saved list. */ }
+    setShortlistLoaded(true);
+  }, []);
+
+  useEffect(() => {
+    if (shortlistLoaded) window.localStorage.setItem('cypher-vc-shortlist', JSON.stringify(shortlistItems));
+  }, [shortlistItems, shortlistLoaded]);
+
+  useEffect(() => {
+    const available = [...(data?.items || []), ...shortlistItems];
+    if (available.length && !available.some(item => item.id === selectedFounderId)) {
+      setSelectedFounderId(available[0].id);
+    }
+  }, [data, shortlistItems, selectedFounderId]);
 
   const loadFounders = useCallback(async (nextOffset: number, signal?: AbortSignal) => {
     const params = new URLSearchParams();
@@ -197,108 +229,169 @@ export default function VcProspectingWorkspace() {
   }
 
   const activeRun = !!run && ACTIVE.has(run.status);
+  const steps = [
+    { id: 'thesis', label: 'Thesis' },
+    { id: 'research', label: 'Research' },
+    { id: 'shortlist', label: 'Shortlist' },
+    { id: 'outreach', label: 'Outreach' },
+    { id: 'meetings', label: 'Meetings' },
+  ] as const;
+  const savedListView = workspaceStep === 'shortlist';
+  const visibleFounders = workspaceStep === 'shortlist' ? shortlistItems : (data?.items || []);
+  const selectedFounder = [...(data?.items || []), ...shortlistItems].find(item => item.id === selectedFounderId) || visibleFounders[0] || null;
+  const isShortlisted = (id: string) => shortlistItems.some(item => item.id === id);
+  const toggleShortlist = (item: Founder) => setShortlistItems(rows => rows.some(row => row.id === item.id) ? rows.filter(row => row.id !== item.id) : [item, ...rows]);
+  const currentDraftReady = !!outreach;
+  const runStatus = !run ? 'No match yet' : activeRun ? 'Researching' : run.status === 'completed' ? 'Ready to review' : run.status === 'partial' ? 'Some results ready' : run.status === 'failed' ? 'Needs another try' : 'Stopped';
+
   return <WorkflowShell section="investors"><main className="vc-page">
-    <section className="vc-hero">
-      <h1>VC intelligence</h1>
-      <p>Find investors for a company, source issuers for a fund thesis, and search people named in SEC Form D filings.</p>
+    <header className="vc-titlebar">
+      <a className="vc-back" href="/prospecting" aria-label="Back to company research">‹</a>
+      <div><h1>{oneLiner || 'Find founders for your climate fund'}</h1><p>Research founders and companies with public SEC evidence.</p></div>
+      <span className="vc-title-status"><i aria-hidden="true" />{data?.database.snapshot_ready ? 'Public data connected' : 'Ready to find public data'}</span>
+    </header>
+
+    <nav className="vc-steps" aria-label="Founder research steps">
+      {steps.map((step, index) => <button type="button" key={step.id} className={workspaceStep === step.id ? 'is-current' : ''} aria-current={workspaceStep === step.id ? 'step' : undefined} onClick={() => setWorkspaceStep(step.id)}>
+        <span className="vc-step-number">{index + 1}</span><span>{step.label}</span>
+      </button>)}
+    </nav>
+
+    {error ? <div className="vc-alert" role="alert"><span aria-hidden="true">!</span><div><strong>We couldn’t finish that step.</strong><p>{error}</p><button type="button" onClick={() => setError('')}>Dismiss</button></div></div> : null}
+    {notice ? <div className="vc-notice" role="status"><span aria-hidden="true">✓</span>{notice}</div> : null}
+
+    <section className="vc-data-settings">
+      <details>
+        <summary><span className="vc-source-dot" />SEC public data and coverage <small>{loading ? 'Checking data…' : (data?.database.records ?? 0).toLocaleString() + ' people and company records'}</small><span className="vc-summary-chevron" aria-hidden="true">⌄</span></summary>
+        <div className="vc-data-settings-body">
+          <p>Cypher uses public SEC Form D filings. A person is labeled a founder only when the filing explicitly says founder or co-founder.</p>
+          <div className="vc-data-facts"><span><b>{(data?.database.explicit_founder_signals ?? 0).toLocaleString()}</b> filed founder signals</span><span><b>{data?.database.quarter_count ?? 0}</b> SEC quarters indexed</span><span>Last updated <b>{dateLabel(data?.database.snapshot_built_at)}</b></span></div>
+          {data?.database.historical.status === 'running' || data?.database.historical.status === 'pending' ? <p className="vc-history-progress">{data.database.historical.processed_quarters.toLocaleString()} of {data.database.historical.total_quarters.toLocaleString()} historical quarters indexed{data.database.historical.current_quarter ? ' · working on ' + data.database.historical.current_quarter.toUpperCase() : ''}</p> : null}
+          {data?.database.historical.status === 'failed' ? <p className="vc-inline-error">The archive import paused. You can safely resume it.</p> : null}
+          <div className="vc-data-actions">
+            <button type="button" onClick={() => void startSecRefresh()} disabled={starting || activeRun}>{starting ? 'Starting…' : data?.database.snapshot_ready ? 'Refresh recent SEC data' : 'Get recent SEC data'}</button>
+            <button type="button" onClick={() => void startHistoricalImport()} disabled={startingHistory || ['pending', 'running'].includes(data?.database.historical.status || 'idle')}>{startingHistory ? 'Starting…' : data?.database.historical.status === 'completed' ? 'Check SEC archive' : data?.database.historical.status === 'failed' ? 'Resume archive import' : 'Add SEC history from 2008'}</button>
+          </div>
+        </div>
+      </details>
     </section>
 
-    <section className="vc-source-summary" aria-label="SEC database status">
-      <strong>SEC Form D index</strong>
-      <span>{loading ? 'Loading counts' : `${(data?.database.records ?? 0).toLocaleString()} named person–company records`}</span>
-      <span>{loading ? 'Loading founder signals' : `${(data?.database.explicit_founder_signals ?? 0).toLocaleString()} explicit founder signals`}</span>
-      <span>{loading ? 'Checking snapshot' : `Last refreshed ${dateLabel(data?.database.snapshot_built_at)}`}</span>
-      <span>{loading ? 'Loading quarters' : `${data?.database.quarter_count ?? 0} of the SEC’s published quarters indexed`}</span>
-    </section>
-
-    {error ? <div className="vc-alert" role="alert">{error}</div> : null}
-    {notice ? <div className="vc-notice" role="status">{notice}</div> : null}
-
-    <section className="vc-refresh-card">
-      <div>
-        <h2>{data?.database.snapshot_ready ? 'Refresh the public SEC snapshot' : 'Build the founder and issuer index'}</h2>
-        <p>Cypher reads the SEC’s latest eight Form D quarters and current Form ADV files, then indexes the named issuer-related people for search.</p>
-      </div>
-      <button type="button" onClick={() => void startSecRefresh()} disabled={starting || activeRun}>
-        {starting ? 'Queueing…' : activeRun ? 'SEC run in progress' : data?.database.snapshot_ready ? 'Refresh SEC data' : 'Pull SEC data'}
-      </button>
-    </section>
-
-    <section className="vc-refresh-card vc-history-card" aria-live="polite">
-      <div>
-        <h2>{data?.database.historical.status === 'completed' ? 'Historical founder and issuer index' : 'Expand the index to SEC history'}</h2>
-        <p>Import SEC Form D quarterly archives from January 2008 onward. Cypher saves each quarter as it finishes, resumes safely after interruptions, and keeps founder labels tied to explicit filing evidence.</p>
-        {data?.database.historical.status === 'running' || data?.database.historical.status === 'pending' ? <p className="vc-history-progress">{data.database.historical.processed_quarters.toLocaleString()} / {data.database.historical.total_quarters.toLocaleString()} historical quarters indexed{data.database.historical.current_quarter ? ` · working on ${data.database.historical.current_quarter.toUpperCase()}` : ''}</p> : null}
-        {data?.database.historical.status === 'failed' && data.database.historical.error ? <p className="vc-inline-error">{data.database.historical.error}</p> : null}
-        {data?.database.historical.status === 'completed' ? <p className="vc-history-progress">Complete · {data.database.quarter_count.toLocaleString()} SEC quarters indexed</p> : null}
-      </div>
-      <button type="button" onClick={() => void startHistoricalImport()} disabled={startingHistory || ['pending', 'running'].includes(data?.database.historical.status || 'idle')}>
-        {startingHistory ? 'Queueing…' : data?.database.historical.status === 'running' || data?.database.historical.status === 'pending' ? 'Historical import in progress' : data?.database.historical.status === 'completed' ? 'Check SEC archive coverage' : data?.database.historical.status === 'failed' ? 'Resume historical import' : 'Import SEC history'}
-      </button>
-    </section>
-
-    {run ? <section className="vc-run-card" aria-live="polite">
-      <div className="vc-run-heading">
-        <div><h2>{run.thesis?.one_liner || 'VC research run'}</h2></div>
-        <span className={`vc-status ${terminal(run.status) ? 'is-done' : 'is-live'}`}>{run.status.replaceAll('_', ' ')}</span>
-      </div>
-      <p className="vc-run-phase">{run.phase.replaceAll('_', ' ')}{activeRun ? ' · Working in the background' : ''}</p>
-      {run.error?.detail ? <p className="vc-inline-error">{run.error.detail}</p> : null}
-      {run.events?.length ? <details className="vc-events"><summary>Source activity ({run.events.length})</summary><ul>{run.events.slice(-8).reverse().map((event, index) => <li key={`${event.at}-${event.type}-${index}`}><span>{event.type.replaceAll('_', ' ')}</span>{typeof event.count === 'number' ? <small>{event.count.toLocaleString()}</small> : null}{event.source_url ? <a href={event.source_url} target="_blank" rel="noreferrer">source</a> : null}</li>)}</ul></details> : null}
-      {run.results?.length ? <div className="vc-match-results"><h3>{run.direction === 'companies_for_thesis' ? 'Company matches' : 'Investor matches'}</h3>{run.results.map(result => <article className="vc-match-row" key={result.id}>
-        <div><strong>{result.name}</strong><p>{String(result.reason || (Array.isArray(result.reasons) ? result.reasons.join(' · ') : '') || result.industry || 'Public filing match')}</p></div>
-        {typeof result.score === 'number' ? <span>{Math.round(result.score)}% fit</span> : null}
-        {result.source_url || result.sources?.[0]?.url || result.website ? <a href={String(result.source_url || result.sources?.[0]?.url || result.website)} target="_blank" rel="noreferrer">Source</a> : null}
-        <button type="button" onClick={() => void prepareOutreach(result)} disabled={!!drafting || !terminal(run.status)}>{drafting === result.id ? 'Preparing…' : 'Prepare outreach'}</button>
-        {outreach?.resultId === result.id ? <div className="vc-outreach">
-          <strong>Draft for review · not sent</strong>
-          <p><b>{outreach.value.subject}</b></p><pre>{outreach.value.body}</pre>
-          <h4>Meeting preparation</h4><p>{outreach.value.meeting_brief.goal}</p>
-          {outreach.value.meeting_brief.public_signals.length ? <><b>Public signals</b><ul>{outreach.value.meeting_brief.public_signals.map((signal, index) => <li key={`${index}-${signal}`}>{signal}</li>)}</ul></> : null}
-          <b>Questions to cover</b><ul>{outreach.value.meeting_brief.questions.map((question, index) => <li key={`${index}-${question}`}>{question}</li>)}</ul>
-          <b>Before sending</b><ul>{outreach.value.meeting_brief.before_sending.map((item, index) => <li key={`${index}-${item}`}>{item}</li>)}</ul>
-          <p>{outreach.value.meeting_brief.sources.map(source => <a key={source.url} href={source.url} target="_blank" rel="noreferrer">{source.label}</a>)}</p>
-          <small>{outreach.value.sending}</small>
-        </div> : null}
-      </article>)}</div> : null}
-      {run.limitations?.length ? <p className="vc-limitations">{run.limitations[0]}</p> : null}
+    {workspaceStep === 'thesis' ? <section className="vc-thesis-card">
+      <div className="vc-section-intro"><span className="vc-eyebrow">STEP 1 · YOUR INVESTMENT FOCUS</span><h2>What are you looking to invest in?</h2><p>Describe it the way you’d explain it to a colleague. Cypher will use this to find relevant public company and fund information.</p></div>
+      <form className="vc-thesis-form" onSubmit={startMatch}>
+        <label>Give this search a name<input value={oneLiner} onChange={event => setOneLiner(event.target.value)} minLength={4} maxLength={300} required placeholder="e.g. Climate founders at seed stage" /></label>
+        <label>Describe what makes a good fit<textarea value={thesis} onChange={event => setThesis(event.target.value)} minLength={20} maxLength={4000} rows={5} required placeholder="Include the stage, location, and themes you care about." /></label>
+        <label>Industries to focus on <span>Optional</span><input value={industries} onChange={event => setIndustries(event.target.value)} placeholder="Climate, energy, agriculture" /></label>
+        <label>What should Cypher find?<select value={direction} onChange={event => setDirection(event.target.value as MatchRun['direction'])}><option value="companies_for_thesis">Companies that fit my fund</option><option value="investors_for_thesis">Investors for a company</option></select></label>
+        <button className="vc-primary" type="submit" disabled={starting || activeRun || oneLiner.trim().length < 4 || thesis.trim().length < 20}>{starting ? 'Starting research…' : activeRun ? 'Research is already running' : 'Find matching companies'}</button>
+      </form>
+      <p className="vc-footnote">Cypher reviews public sources. You can check every source before taking action.</p>
     </section> : null}
 
-    <section className="vc-layout">
-      <section className="vc-panel vc-match-panel">
-        <div className="vc-panel-heading"><div><h2>Start a VC search</h2></div></div>
-        <form className="vc-form" onSubmit={startMatch}>
-          <label>Search direction<select value={direction} onChange={event => setDirection(event.target.value as MatchRun['direction'])}><option value="companies_for_thesis">Find companies for a VC thesis</option><option value="investors_for_thesis">Find investors for a company</option></select></label>
-          <label>One-line brief<input value={oneLiner} onChange={event => setOneLiner(event.target.value)} minLength={4} maxLength={300} required /></label>
-          <label>Investment thesis<textarea value={thesis} onChange={event => setThesis(event.target.value)} minLength={20} maxLength={4000} rows={5} required /></label>
-          <label>Industries <span>(optional, comma-separated)</span><input value={industries} onChange={event => setIndustries(event.target.value)} placeholder="AI, healthcare, climate" /></label>
-          <button className="vc-primary" type="submit" disabled={starting || activeRun || oneLiner.trim().length < 4 || thesis.trim().length < 20}>{starting ? 'Queueing…' : 'Start match'}</button>
-        </form>
-        <p className="vc-footnote">Uses public SEC filings and public fund information. Match scores are a first-pass screen; review sources before acting.</p>
+    {workspaceStep === 'research' || workspaceStep === 'shortlist' ? <div className="vc-dashboard-grid">
+      <section className="vc-candidates-panel" aria-labelledby="vc-candidates-title">
+        <header className="vc-candidates-heading">
+          <div><span className="vc-eyebrow">{workspaceStep === 'shortlist' ? 'YOUR SAVED PEOPLE' : 'PUBLIC SEC FILINGS'}</span><h2 id="vc-candidates-title">{workspaceStep === 'shortlist' ? 'Your shortlist' : 'Founder and company research'}</h2><p>{workspaceStep === 'shortlist' ? 'Saved on this device so you can return to them during this session.' : 'Search people named in company filings. Every result links to its public source.'}</p></div>
+          <button className="vc-reload" type="button" onClick={() => void loadFounders(0).catch(failure => setError(errorMessage(failure)))} disabled={loading || searching}>Refresh</button>
+        </header>
+
+        {workspaceStep === 'research' ? <>
+          <div className="vc-stats" aria-label="Research totals">
+            <div><strong>{loading ? '—' : (data?.database.records ?? 0).toLocaleString()}</strong><span>People in SEC index</span></div>
+            <div><strong>{loading ? '—' : (data?.database.explicit_founder_signals ?? 0).toLocaleString()}</strong><span>Filed founder signals</span></div>
+            <div><strong>{run?.results?.length ?? 0}</strong><span>Company matches</span></div>
+            <div><strong>{shortlistItems.length}</strong><span>Shortlisted</span></div>
+          </div>
+          <form className="vc-search" onSubmit={search}>
+            <label className="vc-search-query"><span className="vc-sr-only">Search founders</span><span aria-hidden="true">⌕</span><input value={query} onChange={event => setQuery(event.target.value)} placeholder="Search people, companies, or roles…" /></label>
+            <details className="vc-more-filters"><summary>Filters</summary><div>
+              <label>Industry<input value={industry} onChange={event => setIndustry(event.target.value)} placeholder="Any industry" /></label>
+              <label>State<input value={state} onChange={event => setState(event.target.value)} placeholder="Any state" maxLength={80} /></label>
+              <label className="vc-checkbox"><input type="checkbox" checked={founderOnly} onChange={event => setFounderOnly(event.target.checked)} /> Founder titles only</label>
+            </div></details>
+            <button className="vc-search-button" type="submit" disabled={searching}>{searching ? 'Searching…' : 'Search'}</button>
+          </form>
+        </> : null}
+
+        <div className="vc-table-head"><h3>{savedListView ? 'Saved candidates' : 'Candidates (' + (data?.database.matched_records ?? 0).toLocaleString() + ')'}</h3><span>Source-backed records</span></div>
+        <div className="vc-table-wrap">
+          <table className="vc-candidate-table">
+            <thead><tr><th scope="col">Company</th><th scope="col">Founder or related person</th><th scope="col">Filed role</th><th scope="col">Evidence</th></tr></thead>
+            <tbody>
+              {loading && workspaceStep === 'research' ? <tr><td colSpan={4} className="vc-table-message">Loading public filing records…</td></tr> : visibleFounders.length ? visibleFounders.map(item => {
+                const founderSignal = item.founder_status === 'founder_named_in_filing';
+                return <tr key={item.id} className={selectedFounder?.id === item.id ? 'is-selected' : ''} aria-selected={selectedFounder?.id === item.id}>
+                  <td><button className="vc-row-select" type="button" onClick={() => { setSelectedFounderId(item.id); setDetailTab('overview'); }}><strong>{item.company_name}</strong><small>{item.industry || 'Industry not listed'}</small></button></td>
+                  <td><button className="vc-row-select" type="button" onClick={() => { setSelectedFounderId(item.id); setDetailTab('overview'); }}><strong>{item.person_name}</strong><small>{[item.location?.city, item.location?.state].filter(Boolean).join(', ') || 'Location not listed'}</small></button></td>
+                  <td>{item.title || item.roles.join(', ') || 'Not listed'}</td>
+                  <td><span className={founderSignal ? 'vc-evidence-badge is-founder' : 'vc-evidence-badge'}>{founderSignal ? 'Founder named' : 'Related person'}</span></td>
+                </tr>;
+              }) : <tr><td colSpan={4} className="vc-table-message"><strong>{workspaceStep === 'shortlist' ? 'Your shortlist is empty' : data?.database.snapshot_ready ? 'No matching people found' : 'The SEC index is ready to build'}</strong><span>{workspaceStep === 'shortlist' ? 'Save a person from research and they’ll show up here.' : data?.database.snapshot_ready ? 'Try another name or remove a filter.' : 'Open “SEC public data and coverage” above to load the latest filings.'}</span></td></tr>}
+            </tbody>
+          </table>
+        </div>
+        {workspaceStep === 'research' ? <footer className="vc-pagination"><span>{(data?.database.matched_records ?? 0).toLocaleString()} people found · showing {data?.page.returned ?? 0}</span><div><button type="button" onClick={() => void loadFounders(Math.max(0, offset - 25)).catch(failure => setError(errorMessage(failure)))} disabled={offset === 0 || searching}>Previous</button><button type="button" onClick={() => void loadFounders(offset + 25).catch(failure => setError(errorMessage(failure)))} disabled={!data || offset + data.page.returned >= data.database.matched_records || searching}>Next</button></div></footer> : null}
+        <p className="vc-disclosure">A filing may name executives or other related people. Cypher only uses the founder label when the SEC filing explicitly says founder or co-founder.</p>
       </section>
 
-      <section className="vc-panel vc-founders-panel">
-        <div className="vc-panel-heading"><div><h2>Founder and issuer leads</h2></div><button className="vc-text-button" type="button" onClick={() => void loadFounders(0).catch(failure => setError(errorMessage(failure)))} disabled={loading || searching}>Reload</button></div>
-        <form className="vc-search" onSubmit={search}>
-          <label className="vc-search-query">Search name, company or title<input value={query} onChange={event => setQuery(event.target.value)} placeholder="e.g. robotics, Jane Smith" /></label>
-          <label>Industry<input value={industry} onChange={event => setIndustry(event.target.value)} placeholder="Any" /></label>
-          <label>State<input value={state} onChange={event => setState(event.target.value)} placeholder="Any" maxLength={80} /></label>
-          <label className="vc-checkbox"><input type="checkbox" checked={founderOnly} onChange={event => setFounderOnly(event.target.checked)} /> Explicit founder titles only</label>
-          <button className="vc-secondary" type="submit" disabled={searching}>{searching ? 'Searching…' : 'Search'}</button>
-        </form>
-        <div className="vc-data-source"><span className="vc-source-dot" />SEC Form D public data{data?.database.quarters.length ? <span>· latest indexed: {data.database.quarters.join(', ').toUpperCase()}</span> : null}</div>
-        <div className="vc-founder-list" aria-live="polite">
-          {loading ? <p className="vc-empty">Loading founder index…</p> : data?.items.length ? data.items.map(item => {
-            const founderSignal = item.founder_status === 'founder_named_in_filing';
-            const filingCount = item.filing_count_in_snapshot || 1;
-            return <article className="vc-founder-row" key={item.id}>
-            <div className="vc-founder-copy"><div className="vc-founder-title"><strong>{item.person_name}</strong><span className={founderSignal ? 'vc-founder-badge' : 'vc-related-badge'}>{founderSignal ? 'Founder signal' : 'Related person'}</span></div><p>{item.title || item.roles.join(' · ') || 'Role not specified'} · {item.company_name}</p><small>{[item.industry, [item.location?.city, item.location?.state].filter(Boolean).join(', '), item.filing_date, `${filingCount} SEC filing${filingCount === 1 ? '' : 's'} indexed`].filter(Boolean).join(' · ')}</small>{founderSignal && item.founder_evidence ? <small>Filed evidence: {item.founder_evidence}</small> : null}</div>
-            {item.source_url ? <a href={item.source_url} target="_blank" rel="noreferrer">SEC filing</a> : null}
-          </article>}) : <div className="vc-empty"><h3>{data?.database.snapshot_ready ? 'No matching people' : 'No SEC snapshot yet'}</h3><p>{data?.database.snapshot_ready ? 'Try a broader search or clear the filters.' : 'Pull the public SEC dataset above to create the first searchable records.'}</p></div>}
+      <aside className="vc-detail-panel" aria-label="Selected person details">
+        {selectedFounder ? <>
+          <div className="vc-detail-top"><span className="vc-detail-symbol" aria-hidden="true">{selectedFounder.company_name.slice(0, 1).toUpperCase()}</span><button type="button" className="vc-detail-menu" aria-label="More options">···</button></div>
+          <h2>{selectedFounder.company_name}</h2><p className="vc-detail-subtitle">{selectedFounder.industry || 'Company named in an SEC filing'}</p>
+          <nav className="vc-detail-tabs" aria-label="Candidate details">{(['overview', 'evidence', 'outreach', 'notes'] as const).map(tab => <button type="button" key={tab} aria-current={detailTab === tab ? 'page' : undefined} onClick={() => setDetailTab(tab)}>{tab[0].toUpperCase() + tab.slice(1)}</button>)}</nav>
+          {detailTab === 'overview' ? <div className="vc-detail-content">
+            <dl className="vc-facts"><div><dt>Person named</dt><dd>{selectedFounder.person_name}</dd></div><div><dt>Role in filing</dt><dd>{selectedFounder.title || selectedFounder.roles.join(', ') || 'Not specified'}</dd></div><div><dt>Location</dt><dd>{[selectedFounder.location?.city, selectedFounder.location?.state].filter(Boolean).join(', ') || 'Not listed'}</dd></div><div><dt>Filing date</dt><dd>{selectedFounder.filing_date ? dateLabel(selectedFounder.filing_date) : 'Not listed'}</dd></div></dl>
+            <h3>Why this person appears</h3><p>{selectedFounder.founder_status === 'founder_named_in_filing' ? (selectedFounder.founder_evidence || 'The filing explicitly identifies a founder role.') : 'This person is named in a company filing. The filing does not explicitly identify them as a founder.'}</p>
+            {selectedFounder.source_url ? <a className="vc-source-link" href={selectedFounder.source_url} target="_blank" rel="noreferrer">Open SEC filing <span aria-hidden="true">↗</span></a> : null}
+          </div> : null}
+          {detailTab === 'evidence' ? <div className="vc-detail-content">
+            <h3>Filing evidence</h3><p>{selectedFounder.founder_evidence || 'This filing lists the person as related to the issuer, without a founder title.'}</p>
+            <dl className="vc-facts"><div><dt>Record type</dt><dd>{selectedFounder.founder_status === 'founder_named_in_filing' ? 'Founder named in filing' : 'Related person named in filing'}</dd></div><div><dt>Filings indexed</dt><dd>{selectedFounder.filing_count_in_snapshot.toLocaleString()}</dd></div><div><dt>SEC quarters</dt><dd>{selectedFounder.source_quarters.map(value => value.toUpperCase()).join(', ') || 'Latest indexed snapshot'}</dd></div></dl>
+            {selectedFounder.source_url ? <a className="vc-source-link" href={selectedFounder.source_url} target="_blank" rel="noreferrer">Review original source <span aria-hidden="true">↗</span></a> : null}
+          </div> : null}
+          {detailTab === 'outreach' ? <div className="vc-detail-content">
+            <h3>Prepare a first conversation</h3><p>Cypher can prepare an editable email and meeting brief after it finds a company match. Nothing is sent automatically.</p>
+            <button className="vc-outline-action" type="button" onClick={() => setWorkspaceStep('outreach')}>Review company matches</button>
+          </div> : null}
+          {detailTab === 'notes' ? <div className="vc-detail-content"><h3>Research notes</h3><p>Use the filing and its linked source to verify the person’s current role before reaching out.</p><p className="vc-muted">This record comes from public SEC data and does not include a verified email address.</p></div> : null}
+          <footer className="vc-detail-actions">
+            <button className="vc-primary" type="button" onClick={() => toggleShortlist(selectedFounder)}>{isShortlisted(selectedFounder.id) ? 'Remove from shortlist' : 'Add to shortlist'}</button>
+            <span>{isShortlisted(selectedFounder.id) ? 'Saved on this device' : 'Your shortlist stays on this device'}</span>
+          </footer>
+        </> : <div className="vc-empty-detail"><h2>Choose a person to review</h2><p>Select a row to see the company and SEC evidence.</p></div>}
+      </aside>
+    </div> : null}
+
+    {workspaceStep === 'outreach' ? <section className="vc-outreach-workspace">
+      <header className="vc-candidates-heading"><div><span className="vc-eyebrow">STEP 4 · PREPARE A CONVERSATION</span><h2>Company matches and outreach</h2><p>Review a match, then prepare an editable email and meeting brief. Cypher never sends it for you.</p></div><span className="vc-run-badge">{runStatus}</span></header>
+      {!run?.results?.length ? <div className="vc-workflow-empty"><h3>{activeRun ? 'Cypher is researching your thesis' : 'Start with your investment focus'}</h3><p>{activeRun ? 'This page will update when the public-source research is ready.' : 'Add your thesis and run a search. Cypher will use that research to prepare a source-backed first conversation.'}</p>{!activeRun ? <button className="vc-primary" type="button" onClick={() => setWorkspaceStep('thesis')}>Set up a search</button> : <span className="vc-live-indicator"><i /> Working in the background</span>}</div> : <>
+        <div className="vc-outreach-grid"><div className="vc-match-list"><div className="vc-table-head"><h3>{run.direction === 'companies_for_thesis' ? 'Companies to review' : 'Investors to review'}</h3><span>{run.results.length} results</span></div>
+          {run.results.map(result => <article className="vc-match-card" key={result.id}>
+            <div><strong>{result.name}</strong><p>{String(result.reason || (Array.isArray(result.reasons) ? result.reasons.join(' · ') : '') || result.industry || 'Public-source match')}</p></div>
+            {typeof result.score === 'number' ? <span className="vc-fit-score">{Math.round(result.score)}% fit</span> : null}
+            {result.source_url || result.sources?.[0]?.url || result.website ? <a href={String(result.source_url || result.sources?.[0]?.url || result.website)} target="_blank" rel="noreferrer">View source ↗</a> : null}
+            <button className="vc-outline-action" type="button" onClick={() => void prepareOutreach(result)} disabled={!!drafting || !terminal(run.status)}>{drafting === result.id ? 'Preparing…' : outreach?.resultId === result.id ? 'Refresh draft' : 'Prepare outreach'}</button>
+          </article>)}
+          {run.limitations?.length ? <p className="vc-muted">{run.limitations[0]}</p> : null}
         </div>
-        <footer className="vc-pagination"><span>{data?.database.matched_records.toLocaleString() || 0} matching · showing {data?.page.returned || 0}</span><div><button type="button" onClick={() => void loadFounders(Math.max(0, offset - 25)).catch(failure => setError(errorMessage(failure)))} disabled={offset === 0 || searching}>Previous</button><button type="button" onClick={() => void loadFounders(offset + 25).catch(failure => setError(errorMessage(failure)))} disabled={!data || offset + data.page.returned >= data.database.matched_records || searching}>Next</button></div></footer>
-        <p className="vc-disclosure">{data?.limitations?.[0] || 'SEC related-person filings are public leads; only a filed title or role that says founder/co-founder is labeled as a founder. No personal contact details are included.'}</p>
-      </section>
-    </section>
+        <div className="vc-draft-card">
+          {outreach ? <><span className="vc-eyebrow">DRAFT FOR REVIEW · NOT SENT</span><h3>{outreach.value.subject}</h3><p className="vc-recipient">{outreach.value.recipient || 'Recipient not provided'}</p><pre>{outreach.value.body}</pre><button className="vc-outline-action" type="button" onClick={() => setWorkspaceStep('meetings')}>Open meeting brief</button></> : <div className="vc-workflow-empty"><h3>Outreach stays in your hands</h3><p>Choose a company and prepare a draft to see a researched message here. It will not be sent.</p></div>}
+        </div></div>
+      </>}
+      {run?.events?.length ? <details className="vc-source-activity"><summary>See public source activity</summary><ul>{run.events.slice(-8).reverse().map((event, index) => <li key={event.at + event.type + index}><span>{event.type.replaceAll('_', ' ')}</span>{typeof event.count === 'number' ? <small>{event.count.toLocaleString()}</small> : null}{event.source_url ? <a href={event.source_url} target="_blank" rel="noreferrer">Source</a> : null}</li>)}</ul></details> : null}
+    </section> : null}
+
+    {workspaceStep === 'meetings' ? <section className="vc-meeting-workspace">
+      <header className="vc-candidates-heading"><div><span className="vc-eyebrow">STEP 5 · MEETING PREPARATION</span><h2>Walk into the conversation prepared</h2><p>Build from public evidence and keep the draft under your review.</p></div>{outreach ? <span className="vc-run-badge">Brief ready</span> : null}</header>
+      {outreach ? <div className="vc-meeting-card"><div className="vc-meeting-main"><span className="vc-eyebrow">MEETING GOAL</span><h3>{outreach.value.meeting_brief.goal}</h3>
+        {outreach.value.meeting_brief.public_signals.length ? <><h4>Public signals</h4><ul>{outreach.value.meeting_brief.public_signals.map((signal, index) => <li key={index + signal}>{signal}</li>)}</ul></> : null}
+        <h4>Questions to cover</h4><ul>{outreach.value.meeting_brief.questions.map((question, index) => <li key={index + question}>{question}</li>)}</ul>
+        <h4>Before you send</h4><ul>{outreach.value.meeting_brief.before_sending.map((item, index) => <li key={index + item}>{item}</li>)}</ul>
+        <h4>Sources</h4><ul>{outreach.value.meeting_brief.sources.map(source => <li key={source.url}><a href={source.url} target="_blank" rel="noreferrer">{source.label}</a></li>)}</ul>
+        <button className="vc-outline-action" type="button" onClick={() => setWorkspaceStep('outreach')}>Back to outreach draft</button>
+      </div><aside className="vc-meeting-draft"><span className="vc-eyebrow">EMAIL DRAFT</span><h3>{outreach.value.subject}</h3><p>{outreach.value.body}</p><small>{outreach.value.sending}</small></aside></div> : <div className="vc-workflow-empty"><h3>Your meeting brief will appear here</h3><p>Run a company search, then choose “Prepare outreach” on a match. Cypher will create a draft and a source-backed briefing.</p><button className="vc-primary" type="button" onClick={() => setWorkspaceStep(run?.results?.length ? 'outreach' : 'thesis')}>{run?.results?.length ? 'Review company matches' : 'Set up a search'}</button></div>}
+    </section> : null}
+
+    {run ? <p className="vc-run-footnote" aria-live="polite"><span className={activeRun ? 'vc-live-indicator' : ''}>{activeRun ? <><i /> Research in progress</> : runStatus}</span><span>{run.thesis?.one_liner || oneLiner}</span></p> : null}
   </main></WorkflowShell>;
 }
