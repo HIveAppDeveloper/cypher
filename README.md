@@ -82,6 +82,10 @@ graph TD
 
 Configuration is managed via the `.env` file. See `.env.example` for all available options, including database credentials, LLM provider settings (OpenAI, Anthropic, Ollama, etc.), and application secrets.
 
+## VC founder and investor research
+
+Cypher's authenticated `/prospecting/investors` workspace searches public SEC Form D people and issuers, matches investor theses against public fund data, and prepares outreach and meeting briefs for review. The latest eight Form D quarters power the fast refresh. A resumable background import can extend the shared founder/issuer index through the SEC's quarterly archive back to January 2008; check `GET /api/prospecting/investors/founders/backfill` for progress and start or resume with `POST` on that path. The signed-in user's verified email identifies Cypher in SEC requests. SEC related-person entries are not automatically founders, and this source does not verify current employment, active fundraising, or personal contact details. Outreach remains a draft and is not sent by this workflow.
+
 ## 📚 API Documentation
 
 Once the backend is running, you can view the interactive API documentation at `http://localhost:8000/docs` (Swagger UI) or `http://localhost:8000/redoc`.

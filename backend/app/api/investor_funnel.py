@@ -8,9 +8,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.session import get_db
 from app.db.tenancy import current_tenant_id
-from app.models.investor_funnel import InvestorMatchLabel, InvestorMatchRun, InvestorUniverseSnapshot, utcnow
+from app.models.investor_funnel import FounderArchiveBackfill, InvestorMatchLabel, InvestorMatchRun, InvestorUniverseSnapshot, utcnow
 from app.models.user import User
-from app.services.investor_funnel import prepare_outreach, record_event, search_founder_leads, sec_user_agent, snapshot
+from app.services.investor_funnel import enqueue_founder_archive, founder_archive_state, get_founder_archive_state, prepare_outreach, record_event, search_founder_leads, sec_user_agent, snapshot
 
 router = APIRouter()
 
@@ -103,6 +103,24 @@ async def search_founders(
     if len(query) == 1:
         raise HTTPException(422, "Search query must contain at least two characters.")
     return await search_founder_leads(db, query, industry, state, founder_only, limit, offset)
+
+
+@router.get("/founders/backfill")
+async def founder_backfill_status(tenant=Depends(authenticated), db: AsyncSession = Depends(get_db)):
+    return await get_founder_archive_state(db)
+
+
+@router.post("/founders/backfill", status_code=202)
+async def start_founder_backfill(tenant=Depends(authenticated), db: AsyncSession = Depends(get_db)):
+    user = await db.get(User, tenant)
+    if user is None or not sec_user_agent(user.email):
+        raise HTTPException(401, "Sign in with a verified email address before importing SEC public data.")
+    current = await db.get(FounderArchiveBackfill, "historical")
+    if current and current.status == "completed":
+        return founder_archive_state(current)
+    if current and current.status in {"pending", "running"}:
+        return founder_archive_state(current)
+    return await enqueue_founder_archive(db, tenant)
 
 
 @router.post("/runs", status_code=202)
