@@ -81,3 +81,18 @@ test('hiding the tab stops the canvas and cleanup removes all scheduled work', a
   assert.equal(i.env.time.pending, 0);
   assert.equal(getEventListeners(i.env.document, 'visibilitychange').length, 0);
 });
+
+test('finished intro cannot reappear when the mounted workspace receives keyboard or visibility events', async () => {
+  const i = intro();
+  i.env.time.advance(3000); await i.view.flush();
+  assert.equal(i.view.tree, null);
+  i.env.window.dispatchEvent(new Event('keydown')); await i.view.flush();
+  assert.equal(i.view.tree, null, 'typing after natural completion must not recreate the overlay');
+  i.env.document.hidden = true;
+  i.env.document.dispatchEvent(new Event('visibilitychange')); await i.view.flush();
+  assert.equal(i.view.tree, null);
+  assert.equal(getEventListeners(i.env.window, 'keydown').length, 0);
+  assert.equal(getEventListeners(i.env.document, 'visibilitychange').length, 0);
+  assert.equal(i.env.time.pending, 0);
+  i.view.unmount();
+});

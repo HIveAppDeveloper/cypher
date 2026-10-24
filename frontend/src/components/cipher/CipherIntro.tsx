@@ -26,7 +26,7 @@ export default function CipherIntro() {
 
     const wordTimer = window.setTimeout(() => setPhase('word'), WORD_AT);
     const liftTimer = window.setTimeout(() => setPhase('lift'), LIFT_AT);
-    const doneTimer = window.setTimeout(() => setPhase('gone'), DONE_AT);
+    const doneTimer = window.setTimeout(finish, DONE_AT);
     let done = false;
     let skipTimer = 0;
     let raf = 0;
@@ -38,13 +38,21 @@ export default function CipherIntro() {
       window.clearTimeout(liftTimer);
       window.clearTimeout(doneTimer);
       setPhase('lift');
-      skipTimer = window.setTimeout(() => setPhase('gone'), 320);
+      skipTimer = window.setTimeout(finish, 320);
     };
     dismissRef.current = dismiss;
     const onKeyDown = () => dismiss();
     window.addEventListener('keydown', onKeyDown);
     const onVisibility = () => { if (document.hidden) dismiss(); };
     document.addEventListener('visibilitychange', onVisibility);
+    function finish() {
+      done = true;
+      cancelAnimationFrame(raf);
+      window.clearTimeout(wordTimer); window.clearTimeout(liftTimer); window.clearTimeout(doneTimer); window.clearTimeout(skipTimer);
+      window.removeEventListener('keydown', onKeyDown);
+      document.removeEventListener('visibilitychange', onVisibility);
+      setPhase('gone');
+    }
 
     const canvas = canvasRef.current, ctx = canvas?.getContext('2d');
     if (canvas && ctx) {
