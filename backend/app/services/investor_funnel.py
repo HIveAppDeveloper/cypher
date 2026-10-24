@@ -22,13 +22,14 @@ from pathlib import Path
 from urllib.parse import urljoin, urlsplit
 
 import httpx
-from sqlalchemy import delete, func, insert, or_, select, text
+from sqlalchemy import func, or_, select, text
 
 from app.db.tenancy import current_tenant_id
 from app.models.investor_funnel import (
     InvestorMatchLabel,
     InvestorMatchRun,
     InvestorUniverseSnapshot,
+    FounderArchiveBackfill,
     FounderLead,
     utcnow,
 )
@@ -150,6 +151,20 @@ def _file_date(digits: str):
     return year, int(digits[:2]), int(digits[2:4])
 
 
+def _formd_archives(page: bytes):
+    archives = {}
+    for link in _links(page):
+        if not re.search(r"_d\.zip(?:$|\?)", link, re.I):
+            continue
+        url = urljoin(FORMD_PAGE, link)
+        _validate_sec_url(url)
+        name = Path(urlsplit(url).path).name
+        match = re.search(r"(\d{4})q([1-4])_d\.zip$", name, re.I)
+        if match:
+            archives[name] = {"name": name, "url": url, "year": int(match.group(1)), "quarter": int(match.group(2))}
+    return sorted(archives.values(), key=lambda item: (item["year"], item["quarter"]), reverse=True)
+
+
 async def _download_sec_files(contact_email: str):
     user_agent = sec_user_agent(contact_email)
     if not user_agent:
@@ -161,18 +176,8 @@ async def _download_sec_files(contact_email: str):
             _read_sec(client, FORMD_PAGE, user_agent, SEC_PAGE_LIMIT),
             _read_sec(client, ADV_PAGE, user_agent, SEC_PAGE_LIMIT),
         )
-        formd_links = []
-        for link in _links(formd_page):
-            if re.search(r"_d\.zip(?:$|\?)", link, re.I):
-                url = urljoin(FORMD_PAGE, link)
-                _validate_sec_url(url)
-                formd_links.append(url)
-        def quarter_key(url):
-            match = re.search(r"(\d{4})q(\d)", url, re.I)
-            return tuple(map(int, match.groups())) if match else (0, 0)
-
-        formd_links = sorted(set(formd_links), key=quarter_key, reverse=True)
-        if len(formd_links) < 4:
+        formd_archives = _formd_archives(formd_page)
+        if len(formd_archives) < 4:
             raise FunnelError("sec_formd_files_missing", "The SEC page did not list enough recent Form D data files.")
         adv = []
         for link in _links(adv_page):
@@ -185,7 +190,8 @@ async def _download_sec_files(contact_email: str):
         registered_files = [item for item in adv if not item[2]]
         if not exempt_files or not registered_files:
             raise FunnelError("sec_adv_files_missing", "The SEC page did not list the registered and exempt Form ADV data files.")
-        selected = formd_links[:8] + [max(exempt_files, key=lambda item: _file_date(item[1]))[0], max(registered_files, key=lambda item: _file_date(item[1]))[0]]
+        recent_archives = formd_archives[:8]
+        selected = [item["url"] for item in recent_archives] + [max(exempt_files, key=lambda item: _file_date(item[1]))[0], max(registered_files, key=lambda item: _file_date(item[1]))[0]]
         blobs = {}
         sem = asyncio.Semaphore(3)
 
@@ -194,7 +200,30 @@ async def _download_sec_files(contact_email: str):
                 blobs[url] = await _read_sec(client, url, user_agent, SEC_FILE_LIMIT)
 
         await asyncio.gather(*(download(url) for url in selected))
-        return blobs, [Path(urlsplit(url).path).name for url in selected[:8]]
+        return blobs, [item["name"] for item in recent_archives]
+
+
+async def _list_formd_archives(contact_email: str):
+    user_agent = sec_user_agent(contact_email)
+    if not user_agent:
+        raise FunnelError("sec_user_agent_required", "Sign in with a verified email address before refreshing the public SEC dataset.")
+    timeout = httpx.Timeout(connect=15, read=45, write=30, pool=30)
+    async with httpx.AsyncClient(timeout=timeout, follow_redirects=False) as client:
+        page = await _read_sec(client, FORMD_PAGE, user_agent, SEC_PAGE_LIMIT)
+    archives = _formd_archives(page)
+    if len(archives) < 4:
+        raise FunnelError("sec_formd_files_missing", "The SEC page did not list enough quarterly Form D data files.")
+    return archives
+
+
+async def _download_formd_archive(contact_email: str, url: str):
+    user_agent = sec_user_agent(contact_email)
+    if not user_agent:
+        raise FunnelError("sec_user_agent_required", "Sign in with a verified email address before refreshing the public SEC dataset.")
+    _validate_sec_url(url)
+    timeout = httpx.Timeout(connect=15, read=45, write=30, pool=30)
+    async with httpx.AsyncClient(timeout=timeout, follow_redirects=False) as client:
+        return await _read_sec(client, url, user_agent, SEC_FILE_LIMIT)
 
 
 def _tsv(zf, suffix):
@@ -436,6 +465,62 @@ def _founder_lead_rows(companies):
                 for key in ("person_name", "company_name", "cik", "accession", "filing_date", "industry", "city", "state", "title", "offering_amount_usd", "amount_sold_usd", "source_url"):
                     existing[key] = row[key]
     return list(rows.values())
+
+
+def _founder_rows_for_archive(blob: bytes, quarter_name: str):
+    """Parse one Form D quarter into deduplicated person–issuer evidence rows."""
+    companies = []
+    with zipfile.ZipFile(io.BytesIO(blob)) as zf:
+        dates = {row["ACCESSIONNUMBER"]: _filing_date(row["FILING_DATE"]) for row in _tsv(zf, "FORMDSUBMISSION.TSV")}
+        issuers = {row["ACCESSIONNUMBER"]: row for row in _tsv(zf, "ISSUERS.TSV") if row.get("IS_PRIMARYISSUER_FLAG", "").upper() == "YES"}
+        people = defaultdict(list)
+        for row in _tsv(zf, "RELATEDPERSONS.TSV"):
+            first, last = row.get("FIRSTNAME", "").strip(), row.get("LASTNAME", "").strip()
+            if first.upper() in ("", "N/A", "NA", "NONE"):
+                continue
+            people[row["ACCESSIONNUMBER"]].append({
+                "first": first.title(), "last": last.title(),
+                "roles": [value for value in (row.get("RELATIONSHIP_1"), row.get("RELATIONSHIP_2"), row.get("RELATIONSHIP_3")) if value],
+                "title": row.get("RELATIONSHIPCLARIFICATION", "").strip()[:120],
+                "state": row.get("STATEORCOUNTRY", "").strip(),
+            })
+        for row in _tsv(zf, "OFFERING.TSV"):
+            accession = row.get("ACCESSIONNUMBER", "")
+            issuer = issuers.get(accession)
+            if not issuer:
+                continue
+            industry = row.get("INDUSTRYGROUPTYPE", "")
+            if (row.get("INVESTMENTFUNDTYPE")
+                    or row.get("ISPOOLEDINVESTMENTFUNDTYPE", "").lower() == "true"
+                    or SKIP_INDUSTRY.search(industry)):
+                continue
+            companies.append({
+                "acc": accession, "name": issuer.get("ENTITYNAME", "").strip(),
+                "cik": issuer.get("CIK", "").strip(), "date": dates.get(accession, ""),
+                "state": issuer.get("STATEORCOUNTRY", "").strip().upper(),
+                "city": issuer.get("CITY", "").strip().title(),
+                "amount": _money(row.get("TOTALOFFERINGAMOUNT")),
+                "sold": _money(row.get("TOTALAMOUNTSOLD")), "industry": industry,
+                "people": people.get(accession, []), "quarter": quarter_name,
+            })
+    return _founder_lead_rows(companies)
+
+
+def founder_archive_state(job):
+    if job is None:
+        return {"status": "idle", "total_quarters": 0, "processed_quarters": 0, "current_quarter": None, "error": None}
+    quarter_files = job.quarter_files or []
+    cursor = min(job.cursor or 0, len(quarter_files))
+    current = quarter_files[cursor]["name"] if cursor < len(quarter_files) and job.status in {"pending", "running", "failed"} else None
+    return {
+        "status": job.status,
+        "total_quarters": len(quarter_files),
+        "processed_quarters": cursor,
+        "current_quarter": current,
+        "error": job.error,
+        "started_at": job.started_at.isoformat() + "Z" if job.started_at else None,
+        "completed_at": job.completed_at.isoformat() + "Z" if job.completed_at else None,
+    }
 
 
 async def build_universe(contact_email: str):
@@ -823,9 +908,37 @@ def prepare_outreach(run, result):
 
 
 async def _insert_founder_rows(db, rows):
-    await db.execute(delete(FounderLead))
-    for start in range(0, len(rows), 1000):
-        await db.execute(insert(FounderLead), rows[start:start + 1000])
+    # SEC refreshes replace the compressed recent snapshot, but the searchable
+    # people table can also contain historical quarters. Keep those rows and
+    # upsert the latest evidence instead of truncating the full archive.
+    for start in range(0, len(rows), 500):
+        batch = rows[start:start + 500]
+        existing_rows = (await db.execute(
+            select(FounderLead).where(FounderLead.id.in_([row["id"] for row in batch]))
+        )).scalars().all()
+        existing_by_id = {row.id: row for row in existing_rows}
+        for values in batch:
+            current = existing_by_id.get(values["id"])
+            if current is None:
+                db.add(FounderLead(**values))
+                continue
+            current.roles = list(dict.fromkeys([*(current.roles or []), *(values.get("roles") or [])]))
+            current.source_quarters = sorted(set([*(current.source_quarters or []), *(values.get("source_quarters") or [])]), reverse=True)
+            current.filing_count = max(current.filing_count or 0, values.get("filing_count") or 1)
+            if values.get("founder_signal"):
+                current.founder_signal = True
+                evidence_date = values.get("founder_evidence_date")
+                if (not current.founder_evidence
+                        or (evidence_date and (current.founder_evidence_date is None or evidence_date > current.founder_evidence_date))):
+                    current.founder_evidence = values.get("founder_evidence") or ""
+                    current.founder_evidence_date = evidence_date
+                    current.founder_evidence_url = values.get("founder_evidence_url")
+            filing_date = values.get("filing_date")
+            if filing_date and (current.filing_date is None or filing_date > current.filing_date):
+                for key in ("person_name", "company_name", "cik", "accession", "filing_date", "industry", "city", "state", "title", "offering_amount_usd", "amount_sold_usd", "source_url"):
+                    setattr(current, key, values[key])
+            current.refreshed_at = utcnow()
+        await db.flush()
 
 
 async def _save_universe(sessions, packed, firm_count, quarters, founder_leads):
@@ -863,6 +976,147 @@ async def ensure_founder_leads(db):
     return len(rows)
 
 
+async def enqueue_founder_archive(db, requested_by):
+    job = await db.get(FounderArchiveBackfill, "historical")
+    if job is None:
+        job = FounderArchiveBackfill(id="historical", requested_by=requested_by, status="pending")
+        db.add(job)
+    elif job.status == "failed":
+        job.requested_by = requested_by
+        job.status = "pending"
+        job.error = None
+        job.completed_at = None
+    await db.commit()
+    await db.refresh(job)
+    return founder_archive_state(job)
+
+
+async def get_founder_archive_state(db):
+    return founder_archive_state(await db.get(FounderArchiveBackfill, "historical"))
+
+
+async def _merge_archive_rows(db, rows, quarter_name):
+    for start in range(0, len(rows), 500):
+        batch = rows[start:start + 500]
+        existing_rows = (await db.execute(
+            select(FounderLead).where(FounderLead.id.in_([row["id"] for row in batch]))
+        )).scalars().all()
+        existing_by_id = {row.id: row for row in existing_rows}
+        for values in batch:
+            current = existing_by_id.get(values["id"])
+            if current is None:
+                db.add(FounderLead(**values))
+                continue
+            source_quarters = list(current.source_quarters or [])
+            if quarter_name in source_quarters:
+                continue
+            current.source_quarters = sorted(set([*source_quarters, quarter_name]), reverse=True)
+            current.filing_count = (current.filing_count or 0) + (values.get("filing_count") or 1)
+            current.roles = list(dict.fromkeys([*(current.roles or []), *(values.get("roles") or [])]))
+            if values.get("founder_signal"):
+                current.founder_signal = True
+                new_evidence_date = values.get("founder_evidence_date")
+                if (not current.founder_evidence
+                        or (new_evidence_date and (current.founder_evidence_date is None or new_evidence_date > current.founder_evidence_date))):
+                    current.founder_evidence = values.get("founder_evidence") or ""
+                    current.founder_evidence_date = new_evidence_date
+                    current.founder_evidence_url = values.get("founder_evidence_url")
+            filing_date = values.get("filing_date")
+            if filing_date and (current.filing_date is None or filing_date > current.filing_date):
+                for key in ("person_name", "company_name", "cik", "accession", "filing_date", "industry", "city", "state", "title", "offering_amount_usd", "amount_sold_usd", "source_url"):
+                    setattr(current, key, values[key])
+            current.refreshed_at = utcnow()
+        await db.flush()
+
+
+async def tick_founder_archive(sessions, pulse=None):
+    """Import at most one quarterly Form D archive and persist its checkpoint."""
+    async with sessions() as db:
+        job = (await db.execute(
+            select(FounderArchiveBackfill).where(
+                FounderArchiveBackfill.id == "historical",
+                FounderArchiveBackfill.status.in_(["pending", "running"]),
+            ).with_for_update(skip_locked=True)
+        )).scalar_one_or_none()
+        if job is None:
+            return False
+        if job.status == "pending":
+            job.status = "running"
+            job.started_at = job.started_at or utcnow()
+            job.error = None
+        requested_by = job.requested_by
+        cursor = job.cursor or 0
+        quarter_files = list(job.quarter_files or [])
+        needs_listing = not quarter_files
+        await db.commit()
+
+    try:
+        from app.models.user import User
+        async with sessions() as db:
+            user = await db.get(User, requested_by)
+            contact_email = user.email if user else None
+            cache = await db.get(InvestorUniverseSnapshot, SNAPSHOT_ID)
+            current_quarters = set(cache.quarters or []) if cache else set()
+        if not sec_user_agent(contact_email):
+            raise FunnelError("sec_contact_email_missing", "A verified sign-in email is required to access the SEC public archive.")
+
+        if needs_listing:
+            archives = await _await_with_pulse(_list_formd_archives(contact_email), pulse)
+            older_archives = [item for item in archives if item["name"] not in current_quarters]
+            async with sessions() as db:
+                job = (await db.execute(select(FounderArchiveBackfill).where(
+                    FounderArchiveBackfill.id == "historical",
+                ).with_for_update())).scalar_one_or_none()
+                if job is None:
+                    return True
+                job.quarter_files = older_archives
+                if not older_archives:
+                    job.status = "completed"
+                    job.completed_at = utcnow()
+                await db.commit()
+            return True
+
+        if cursor >= len(quarter_files):
+            async with sessions() as db:
+                job = await db.get(FounderArchiveBackfill, "historical")
+                if job and job.status == "running":
+                    job.status = "completed"
+                    job.completed_at = utcnow()
+                    await db.commit()
+            return True
+
+        archive = quarter_files[cursor]
+        blob = await _await_with_pulse(_download_formd_archive(contact_email, archive["url"]), pulse)
+        rows = await _await_with_pulse(asyncio.to_thread(_founder_rows_for_archive, blob, archive["name"]), pulse)
+        async with sessions() as db:
+            job = (await db.execute(select(FounderArchiveBackfill).where(
+                FounderArchiveBackfill.id == "historical",
+            ).with_for_update())).scalar_one_or_none()
+            if job is None or job.status != "running":
+                return True
+            await _merge_archive_rows(db, rows, archive["name"])
+            job.cursor = cursor + 1
+            if job.cursor >= len(job.quarter_files or []):
+                job.status = "completed"
+                job.completed_at = utcnow()
+            await db.commit()
+        return True
+    except asyncio.CancelledError:
+        raise
+    except Exception as error:
+        detail = error.detail if isinstance(error, FunnelError) else f"Could not import {quarter_files[cursor].get('name', 'the SEC archive') if cursor < len(quarter_files) else 'the SEC archive'}. Resume the historical import to retry."
+        async with sessions() as db:
+            job = (await db.execute(select(FounderArchiveBackfill).where(
+                FounderArchiveBackfill.id == "historical",
+            ).with_for_update())).scalar_one_or_none()
+            if job and job.status == "running":
+                job.status = "failed"
+                job.error = detail[:1000]
+                job.completed_at = utcnow()
+                await db.commit()
+        return True
+
+
 async def search_founder_leads(db, q=None, industry=None, state=None, founder_only=False, limit=25, offset=0):
     await ensure_founder_leads(db)
     filters = []
@@ -889,6 +1143,15 @@ async def search_founder_leads(db, q=None, industry=None, state=None, founder_on
         .offset(offset).limit(limit)
     )).scalars().all()
     cache = await db.get(InvestorUniverseSnapshot, SNAPSHOT_ID)
+    archive_job = await db.get(FounderArchiveBackfill, "historical")
+    history = founder_archive_state(archive_job)
+    loaded_quarters = set(cache.quarters or []) if cache else set()
+    if archive_job:
+        loaded_quarters.update(item["name"] for item in (archive_job.quarter_files or [])[:history["processed_quarters"]])
+    def quarter_sort(name):
+        match = re.fullmatch(r"(\d{4})q([1-4])_d\.zip", name, re.I)
+        return (int(match.group(1)), int(match.group(2))) if match else (0, 0)
+    all_quarters = sorted(loaded_quarters, key=quarter_sort, reverse=True)
     return {
         "database": {
             "records": database_count,
@@ -896,7 +1159,9 @@ async def search_founder_leads(db, q=None, industry=None, state=None, founder_on
             "matched_records": matched_count,
             "snapshot_ready": cache is not None,
             "snapshot_built_at": cache.built_at.isoformat() + "Z" if cache and cache.built_at else None,
-            "quarters": cache.quarters if cache else [],
+            "quarters": all_quarters[:8],
+            "quarter_count": len(all_quarters),
+            "historical": history,
             "source": "SEC Form D public data",
         },
         "items": [{
@@ -924,7 +1189,7 @@ async def search_founder_leads(db, q=None, industry=None, state=None, founder_on
         "limitations": [
             "A filing names related persons; only rows whose filed title or role explicitly says founder are labeled as founders.",
             "SEC Form D does not verify current employment, current fundraising status, or personal contact details.",
-            "This dataset covers the recent SEC Form D quarters shown above and is refreshed with Cypher's SEC snapshot.",
+            "The recent SEC snapshot covers eight quarters. Historical SEC Form D archives can be indexed back to January 2008.",
         ],
     }
 

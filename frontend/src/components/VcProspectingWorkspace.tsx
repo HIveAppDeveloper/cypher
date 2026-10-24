@@ -12,8 +12,9 @@ type Founder = {
   filing_date: string | null; filing_count_in_snapshot: number; source_quarters: string[];
   source_url: string;
 };
+type FounderHistory = { status: 'idle' | 'pending' | 'running' | 'completed' | 'failed'; total_quarters: number; processed_quarters: number; current_quarter: string | null; error: string | null; started_at?: string | null; completed_at?: string | null };
 type FounderPage = {
-  database: { records: number; explicit_founder_signals: number; matched_records: number; snapshot_ready: boolean; snapshot_built_at: string | null; quarters: string[]; source: string };
+  database: { records: number; explicit_founder_signals: number; matched_records: number; snapshot_ready: boolean; snapshot_built_at: string | null; quarters: string[]; quarter_count: number; historical: FounderHistory; source: string };
   items: Founder[]; page: { limit: number; offset: number; returned: number }; next_step?: string; limitations: string[];
 };
 type MatchResult = { id: string; name: string; score?: number; reasons?: string[]; reason?: string; source_url?: string; website?: string; sources?: { label: string; url: string }[]; city?: string; state?: string; industry?: string; [key: string]: unknown };
@@ -49,6 +50,7 @@ export default function VcProspectingWorkspace() {
   const [loading, setLoading] = useState(true);
   const [searching, setSearching] = useState(false);
   const [starting, setStarting] = useState(false);
+  const [startingHistory, setStartingHistory] = useState(false);
   const [drafting, setDrafting] = useState('');
   const [outreach, setOutreach] = useState<{ resultId: string; value: Outreach } | null>(null);
   const [error, setError] = useState('');
@@ -111,6 +113,29 @@ export default function VcProspectingWorkspace() {
     return () => { controller.abort(); clearTimeout(timer); };
   }, [loadFounders, run?.id, run?.status]);
 
+  useEffect(() => {
+    const status = data?.database.historical.status;
+    if (!status || !['pending', 'running'].includes(status)) return;
+    const controller = new AbortController();
+    let timer: ReturnType<typeof setTimeout>;
+    const poll = async () => {
+      try {
+        const next: FounderHistory = await request('/prospecting/investors/founders/backfill', { signal: controller.signal });
+        if (controller.signal.aborted) return;
+        setData(current => current ? { ...current, database: { ...current.database, historical: next } } : current);
+        if (['pending', 'running'].includes(next.status)) timer = setTimeout(poll, 5000);
+        else if (next.status === 'completed') {
+          await loadFounders(0);
+          setNotice('Historical SEC Form D archive is indexed and searchable.');
+        } else if (next.error) setError(next.error);
+      } catch (failure) {
+        if (!controller.signal.aborted) setError(errorMessage(failure));
+      }
+    };
+    void poll();
+    return () => { controller.abort(); clearTimeout(timer); };
+  }, [data?.database.historical.status, loadFounders]);
+
   async function search(event: FormEvent) {
     event.preventDefault();
     if (query.trim().length === 1) { setError('Search with at least two characters.'); return; }
@@ -146,6 +171,18 @@ export default function VcProspectingWorkspace() {
     });
   }
 
+  async function startHistoricalImport() {
+    if (startingHistory) return;
+    setStartingHistory(true); setError(''); setNotice('');
+    try {
+      const history: FounderHistory = await request('/prospecting/investors/founders/backfill', { method: 'POST' }, 45000);
+      setData(current => current ? { ...current, database: { ...current.database, historical: history } } : current);
+      if (history.status === 'completed') setNotice('The historical SEC Form D archive is already indexed.');
+      else if (history.status === 'running' || history.status === 'pending') setNotice('Historical SEC archives are being indexed in resumable quarterly batches.');
+    } catch (failure) { setError(errorMessage(failure)); }
+    finally { setStartingHistory(false); }
+  }
+
   async function prepareOutreach(result: MatchResult) {
     if (!run || drafting) return;
     setDrafting(result.id); setError(''); setOutreach(null);
@@ -165,7 +202,7 @@ export default function VcProspectingWorkspace() {
 
     <section className="vc-hero">
       <h1>VC intelligence</h1>
-      <p>Find investors for a company, source issuers for a fund thesis, and search people named in recent SEC Form D filings.</p>
+      <p>Find investors for a company, source issuers for a fund thesis, and search people named in SEC Form D filings.</p>
     </section>
 
     <section className="vc-source-summary" aria-label="SEC database status">
@@ -173,7 +210,7 @@ export default function VcProspectingWorkspace() {
       <span>{loading ? 'Loading counts' : `${(data?.database.records ?? 0).toLocaleString()} named person–company records`}</span>
       <span>{loading ? 'Loading founder signals' : `${(data?.database.explicit_founder_signals ?? 0).toLocaleString()} explicit founder signals`}</span>
       <span>{loading ? 'Checking snapshot' : `Last refreshed ${dateLabel(data?.database.snapshot_built_at)}`}</span>
-      <span>{loading ? 'Loading quarters' : `${data?.database.quarters.length ?? 0} quarters indexed`}</span>
+      <span>{loading ? 'Loading quarters' : `${data?.database.quarter_count ?? 0} of the SEC’s published quarters indexed`}</span>
     </section>
 
     {error ? <div className="vc-alert" role="alert">{error}</div> : null}
@@ -186,6 +223,19 @@ export default function VcProspectingWorkspace() {
       </div>
       <button type="button" onClick={() => void startSecRefresh()} disabled={starting || activeRun}>
         {starting ? 'Queueing…' : activeRun ? 'SEC run in progress' : data?.database.snapshot_ready ? 'Refresh SEC data' : 'Pull SEC data'}
+      </button>
+    </section>
+
+    <section className="vc-refresh-card vc-history-card" aria-live="polite">
+      <div>
+        <h2>{data?.database.historical.status === 'completed' ? 'Historical founder and issuer index' : 'Expand the index to SEC history'}</h2>
+        <p>Import SEC Form D quarterly archives from January 2008 onward. Cypher saves each quarter as it finishes, resumes safely after interruptions, and keeps founder labels tied to explicit filing evidence.</p>
+        {data?.database.historical.status === 'running' || data?.database.historical.status === 'pending' ? <p className="vc-history-progress">{data.database.historical.processed_quarters.toLocaleString()} / {data.database.historical.total_quarters.toLocaleString()} historical quarters indexed{data.database.historical.current_quarter ? ` · working on ${data.database.historical.current_quarter.toUpperCase()}` : ''}</p> : null}
+        {data?.database.historical.status === 'failed' && data.database.historical.error ? <p className="vc-inline-error">{data.database.historical.error}</p> : null}
+        {data?.database.historical.status === 'completed' ? <p className="vc-history-progress">Complete · {data.database.quarter_count.toLocaleString()} SEC quarters indexed</p> : null}
+      </div>
+      <button type="button" onClick={() => void startHistoricalImport()} disabled={startingHistory || ['pending', 'running', 'completed'].includes(data?.database.historical.status || 'idle')}>
+        {startingHistory ? 'Queueing…' : data?.database.historical.status === 'running' || data?.database.historical.status === 'pending' ? 'Historical import in progress' : data?.database.historical.status === 'completed' ? 'Historical index complete' : data?.database.historical.status === 'failed' ? 'Resume historical import' : 'Import SEC history'}
       </button>
     </section>
 
@@ -238,13 +288,13 @@ export default function VcProspectingWorkspace() {
           <label className="vc-checkbox"><input type="checkbox" checked={founderOnly} onChange={event => setFounderOnly(event.target.checked)} /> Explicit founder titles only</label>
           <button className="vc-secondary" type="submit" disabled={searching}>{searching ? 'Searching…' : 'Search'}</button>
         </form>
-        <div className="vc-data-source"><span className="vc-source-dot" />SEC Form D public data{data?.database.quarters.length ? <span>· {data.database.quarters.join(', ').toUpperCase()}</span> : null}</div>
+        <div className="vc-data-source"><span className="vc-source-dot" />SEC Form D public data{data?.database.quarters.length ? <span>· latest indexed: {data.database.quarters.join(', ').toUpperCase()}</span> : null}</div>
         <div className="vc-founder-list" aria-live="polite">
           {loading ? <p className="vc-empty">Loading founder index…</p> : data?.items.length ? data.items.map(item => {
             const founderSignal = item.founder_status === 'founder_named_in_filing';
             const filingCount = item.filing_count_in_snapshot || 1;
             return <article className="vc-founder-row" key={item.id}>
-            <div className="vc-founder-copy"><div className="vc-founder-title"><strong>{item.person_name}</strong><span className={founderSignal ? 'vc-founder-badge' : 'vc-related-badge'}>{founderSignal ? 'Founder signal' : 'Related person'}</span></div><p>{item.title || item.roles.join(' · ') || 'Role not specified'} · {item.company_name}</p><small>{[item.industry, [item.location?.city, item.location?.state].filter(Boolean).join(', '), item.filing_date, `${filingCount} filing${filingCount === 1 ? '' : 's'}`].filter(Boolean).join(' · ')}</small>{founderSignal && item.founder_evidence ? <small>Filed evidence: {item.founder_evidence}</small> : null}</div>
+            <div className="vc-founder-copy"><div className="vc-founder-title"><strong>{item.person_name}</strong><span className={founderSignal ? 'vc-founder-badge' : 'vc-related-badge'}>{founderSignal ? 'Founder signal' : 'Related person'}</span></div><p>{item.title || item.roles.join(' · ') || 'Role not specified'} · {item.company_name}</p><small>{[item.industry, [item.location?.city, item.location?.state].filter(Boolean).join(', '), item.filing_date, `${filingCount} SEC filing${filingCount === 1 ? '' : 's'} indexed`].filter(Boolean).join(' · ')}</small>{founderSignal && item.founder_evidence ? <small>Filed evidence: {item.founder_evidence}</small> : null}</div>
             {item.source_url ? <a href={item.source_url} target="_blank" rel="noreferrer">SEC filing</a> : null}
           </article>}) : <div className="vc-empty"><h3>{data?.database.snapshot_ready ? 'No matching people' : 'No SEC snapshot yet'}</h3><p>{data?.database.snapshot_ready ? 'Try a broader search or clear the filters.' : 'Pull the public SEC dataset above to create the first searchable records.'}</p></div>}
         </div>
