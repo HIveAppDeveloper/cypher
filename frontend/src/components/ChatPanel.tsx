@@ -208,7 +208,7 @@ export function ChatPanel({ bot, room, bots, onCreateBot, onCreateRoom, onQuickS
     const userTurnAt = new Date().toISOString();
     setMessages(previous => mergeMessages(previous, [{id:messageId,conversationId,senderType:'user',content:text,messageType:MessageType.TEXT,createdAt:userTurnAt,attachments:files,threadRootId:replyTo?.threadRootId||replyTo?.id,replyToId:replyTo?.id,delivery:'sending'}]));
     try {
-      const accepted = await api.sendMessage(conversationId, text, files, isVoiceTurn ? { ...options, output: 'text' } : options, messageId,replyTo?.id);
+      const accepted = await api.sendMessage(conversationId, text, files, isVoiceTurn ? { ...options, output: 'text', voice_mode: true } : options, messageId,replyTo?.id);
       setReplyTo(null);
       unconfirmedDraft.current=null;
       if (isVoiceTurn && voiceModeRef.current && session === voiceSession.current) { voicePending.current={messageId,taskId:accepted.task_id}; setVoiceError(''); }

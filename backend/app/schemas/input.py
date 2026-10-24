@@ -19,6 +19,7 @@ class Attachment(BaseModel):
         return value
 
 class RunOptions(BaseModel):
+    voice_mode: bool = False
     routing: Literal['auto', 'manual'] = 'auto'
     allow_tools: bool = True
     steering: str = Field(default='', max_length=6000)

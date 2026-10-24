@@ -29,6 +29,8 @@ from app.services.memory import MemoryManager
 from app.services.sandbox import SandboxManager
 from app.services.tools.registry import ToolRegistry
 from app.services.execution import ExecutionJournal, RecoveryReviewRequired, RetryTask, ExecutionSuperseded
+from app.services.voice_metrics import audio_task, note, timed, stage
+from app.services.voice_policy import voice_options, speech_request, requests_teammates, VOICE_INSTRUCTIONS
 
 logger = logging.getLogger(__name__)
 
@@ -55,6 +57,7 @@ class AgentOrchestrator:
         self.fleet.register(self.registry)
 
     @track_task
+    @audio_task
     async def process_message(
         self,
         conversation_id: str,
@@ -86,14 +89,17 @@ class AgentOrchestrator:
         self.incoming_message_id = str(incoming_message_id) if incoming_message_id else None
         self.journal = ExecutionJournal(task_id, AsyncSessionLocal, execution_attempt)
         self.scope_counter = 0
-        self.options = RunOptions(**(options or {}))
+        self.options = voice_options(RunOptions(**(options or {})))
+        self.voice_request = ''
         async with AsyncSessionLocal() as db:
             if incoming_message_id:
                 existing = await db.get(Message, incoming_message_id)
                 if existing is None or existing.conversation_id != conversation_id:
                     raise ValueError("Queued message is missing from its conversation")
                 self.history_cutoff = existing.created_at
+                note('queue_to_context_ms', max(0, (datetime.now(timezone.utc).replace(tzinfo=None) - existing.created_at.replace(tzinfo=None)).total_seconds() * 1000))
                 self.thread_root_id=(existing.metadata_json or {}).get('thread_root_id')
+                current_message = existing
             else:
                 # Non-HTTP jobs still persist their incoming message here.
                 incoming_id = str(uuid.uuid5(uuid.NAMESPACE_URL, 'grokbot:incoming:'+task_id)) if task_id else str(uuid.uuid4())
@@ -114,6 +120,7 @@ class AgentOrchestrator:
                     await db.commit()
                 self.history_cutoff = (prior or incoming_msg).created_at
                 self.thread_root_id=None
+                current_message = prior or incoming_msg
 
             await register_context_tools(self.registry, conversation_id, AsyncSessionLocal, history_cutoff=self.history_cutoff,thread_root_id=self.thread_root_id)
 
@@ -128,6 +135,17 @@ class AgentOrchestrator:
             if not conversation:
                 logger.error(f"Conversation {conversation_id} not found")
                 return []
+
+            if self.options.voice_mode:
+                from app.services.attachments import prepare_audio
+                files = (current_message.metadata_json or {}).get('attachments', [])
+                with stage('voice_prepare'):
+                    prepared = await prepare_audio(db, current_message, files)
+                self.voice_request = speech_request(prepared)
+                if self.voice_request:
+                    # Routing and explicit teammate requests use what was spoken,
+                    # while the immutable original recording stays in its message.
+                    user_message_content = self.voice_request
 
             if self.options.output != "text":
                 from app.services.media import generate_media
@@ -155,6 +173,16 @@ class AgentOrchestrator:
                     db, conversation_id, bot_id, user_message_content
                 )
 
+    async def _persist_voice_metrics(self, metrics):
+        message_id = getattr(self, 'incoming_message_id', None)
+        if not message_id:
+            return
+        async with AsyncSessionLocal() as db:
+            message = await db.get(Message, message_id, with_for_update=True)
+            if message:
+                message.metadata_json = {**(message.metadata_json or {}), 'voice_timings': dict(metrics)}
+                await db.commit()
+
     async def _handle_group_chat(
         self, db, conversation, bot_ids, message, sender_type, sender_bot_id
     ) -> list[dict]:
@@ -175,6 +203,9 @@ class AgentOrchestrator:
                 responses.extend(await self._run_agent_loop(db,str(conversation.id),bot.id,message))
             return responses
         coordinator = next((b for b in bots if b.role.casefold() == "coordinator"), None)
+        lead = coordinator or (bots[0] if bots else None)
+        if self.options.voice_mode and lead and not requests_teammates(message, bots, lead):
+            return await self._run_agent_loop(db, str(conversation.id), lead.id, message)
         if coordinator:
             return await self._coordinate_team(db, conversation, bots, coordinator, message)
         all_responses = []
@@ -258,6 +289,7 @@ class AgentOrchestrator:
             self.internal_activity = False
             self.phase_instructions = ""
 
+    @timed('agent_loop')
     async def _run_agent_loop(
         self, db, conversation_id: str, bot_id: str, trigger_message: str
     ) -> list[dict]:
@@ -291,7 +323,8 @@ class AgentOrchestrator:
             # Build system prompt
             from app.services.context import context_prompt
             from app.services.workspace import knowledge_prompt
-            system_prompt = self._build_system_prompt(bot) + (await context_prompt(db,conversation_id) if not self.thread_root_id else '') + await knowledge_prompt(db,bot_id)
+            with stage('context_load'):
+                system_prompt = self._build_system_prompt(bot) + (await context_prompt(db,conversation_id) if not self.thread_root_id else '') + await knowledge_prompt(db,bot_id)
             system_prompt += "\nUse the available tools to complete the task. You are running on a model selected for this task. Consult another specialist only for a useful independent check. Tool-free consultations only advise; they cannot perform actions. You own execution, verification and the final response. Do not ask the user to manage model handoffs. Never share credentials with specialists. Use media generation only when requested. If a specialist fails, continue with the evidence and report only blockers affecting the result."
             if getattr(self, "phase_instructions", ""):
                 system_prompt += "\nCurrent team phase: " + self.phase_instructions
@@ -322,6 +355,8 @@ class AgentOrchestrator:
             names = dict((await db.execute(select(Bot.id, Bot.name))).all())
             if self.options.steering:
                 system_prompt += "\nUser working brief (within this task): " + self.options.steering
+            if self.options.voice_mode:
+                system_prompt += VOICE_INSTRUCTIONS
             messages = [{"role": "system", "content": system_prompt}]
             seen_directions = {item.id for item in history}
             # Re-send the three newest attachment sets, keeping older references readable.
@@ -335,7 +370,7 @@ class AgentOrchestrator:
                     content = content_parts(item.content, prepared)
                     if files and item.id not in attachment_ids:
                         content += "\nEarlier attachment reference (not resent): " + ", ".join(a["name"] for a in files)
-                    if item.id == getattr(self, 'incoming_message_id', None) and item.content == trigger_message:
+                    if item.id == getattr(self, 'incoming_message_id', None) and (item.content == trigger_message or (self.options.voice_mode and trigger_message == self.voice_request)):
                         # Keep this queued turn last without dropping its prepared
                         # transcript/files or sending its attachment bytes twice.
                         trigger_content = content
@@ -351,7 +386,8 @@ class AgentOrchestrator:
             messages.append({"role": "user", "content": trigger_content})
 
             # Get available tools for this bot
-            await self.registry.load_plugins(db, bot)
+            with stage('plugin_load'):
+                await self.registry.load_plugins(db, bot)
             tools = [] if getattr(self, "planning", False) or not self.options.allow_tools else self.registry.get_tools_for_bot(bot)
             available = self.registry.get_tools_for_bot(bot) if self.options.allow_tools else []
             messages[0]["content"] += "\nExecution tools enabled for this agent: " + ", ".join(t["function"]["name"] for t in available)

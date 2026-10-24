@@ -79,12 +79,13 @@ export async function POST(request: Request) {
   const url = new URL(`https://api.elevenlabs.io/v1/text-to-speech/${encodeURIComponent(voiceId)}/stream`);
   url.searchParams.set('output_format', 'mp3_44100_128');
   try {
+    const generationStarted = performance.now();
     const response = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Accept': 'audio/mpeg', 'xi-api-key': apiKey },
-      body: JSON.stringify({ text, model_id: 'eleven_flash_v2_5', voice_settings: { stability: 0.38, similarity_boost: 0.82, style: 0.55, use_speaker_boost: true, speed: 1.03 } }),
+      body: JSON.stringify({ text, model_id: 'eleven_flash_v2_5', voice_settings: { stability: 0.38, similarity_boost: 0.82, style: 0, use_speaker_boost: true, speed: 1.03 } }),
       cache: 'no-store',
-      signal: AbortSignal.timeout(20_000),
+      signal: AbortSignal.any([request.signal, AbortSignal.timeout(20_000)]),
     });
     if (!response.ok || !response.body) {
       if (response.status === 429) return NextResponse.json({ detail: 'ElevenLabs usage limit reached. Check your account quota and try again.' }, { status: 429, headers: { 'Cache-Control': 'no-store' } });
@@ -95,7 +96,7 @@ export async function POST(request: Request) {
     }
     return new Response(response.body, {
       status: 200,
-      headers: { 'Content-Type': response.headers.get('content-type') || 'audio/mpeg', 'Cache-Control': 'private, no-store', 'X-Content-Type-Options': 'nosniff' },
+      headers: { 'Content-Type': response.headers.get('content-type') || 'audio/mpeg', 'Cache-Control': 'private, no-store', 'X-Content-Type-Options': 'nosniff', 'Server-Timing': `voice_provider_headers;dur=${(performance.now() - generationStarted).toFixed(1)}` },
     });
   } catch {
     return NextResponse.json({ detail: 'ElevenLabs did not respond in time. Try again.' }, { status: 504, headers: { 'Cache-Control': 'no-store' } });
