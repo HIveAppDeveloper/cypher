@@ -2,14 +2,14 @@
 name: Cypher
 description: A quiet monochrome agent workspace with the original Cypher identity and functional connected tools.
 colors:
-  conversation: "#f2f2f7"
+  conversation: "#f6f5ef"
   panel: "#fff"
-  sidebar: "#eee"
-  subtle: "#e8e8e8"
+  sidebar: "#f0efe9"
+  subtle: "#e9e8e1"
   text: "#000000"
   text-secondary: "#626262"
   text-tertiary: "#737373"
-  separator: "#dedee4"
+  separator: "#e2e0d8"
   selected: "rgba(0,0,0,.075)"
   dark-conversation: "#111"
   dark-panel: "#1c1c1c"
@@ -129,7 +129,7 @@ The current rules are extracted from the final imported brand stylesheet and its
 
 ## Colors
 
-The palette is achromatic: soft neutral fields support graphite actions in light appearance and light actions in dark appearance. The frontmatter is the normative token layer; the source authority is `frontend/src/app/cypher-brand.css`, imported last by the root layout.
+The palette uses very light ivory and white surfaces with black actions in light appearance, then charcoal surfaces and light actions in dark appearance. The frontmatter is the normative token layer; the source authority is `frontend/src/app/cypher-brand.css`, imported last by the root layout.
 
 ### Primary
 
@@ -555,4 +555,4 @@ The plugin surface stays Operate and monochrome. Prefer compact list rows to ele
 
 ## Reference composition — October 24, 2026
 
-The supplied Claude Cipher artifact is the visual authority for this refinement. Preserve its pale gray canvas, original animated BinaryLens, large single wordmark, restrained controls and generous space. QuickStart uses a 620px task form with a white, lightly divided input area and a separate full-width black pill action. Keep the working model/output choices, recent work and accessible collapsible navigation. The Google service chooser belongs to the same visual world: simple permission rows, original CypherMark, and one clear continuation to Google. Preserve the original PNG bytes and visibility/reduced-motion gates.
+The supplied Claude Cipher artifact is the visual authority for this refinement. Preserve its pale ivory canvas, original animated BinaryLens, large single wordmark, restrained controls and generous space. QuickStart uses a 620px task form with a white, lightly divided input area and a separate full-width black pill action. Keep the working model/output choices, recent work and accessible collapsible navigation. The Google service chooser belongs to the same visual world: simple permission rows, original CypherMark, and one clear continuation to Google. Preserve the original PNG bytes and visibility/reduced-motion gates.
