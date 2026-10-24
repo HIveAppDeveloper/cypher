@@ -1,12 +1,12 @@
 /* Cypher's original monochrome identity. Imported last so older workspace
    palettes cannot recolor the brand or its controls. Status colors retain meaning. */
 :root {
-  --cx-bg:#f2f2f7; --cx-card:#fff; --cx-label:#000; --cx-label-2:#626267;
-  --cx-label-3:#737373; --cx-fill:rgba(0,0,0,.07); --cx-fill-2:rgba(0,0,0,.04);
-  --cx-sep:#dedee4; --cx-inverse:#fff; --cx-material:rgba(242,242,247,.94);
+  --cx-bg:#f6f5ef; --cx-card:#fff; --cx-label:#000; --cx-label-2:#62625d;
+  --cx-label-3:#74746e; --cx-fill:rgba(0,0,0,.07); --cx-fill-2:rgba(0,0,0,.04);
+  --cx-sep:#e2e0d8; --cx-inverse:#fff; --cx-material:rgba(246,245,239,.94);
   --bg-main:var(--cx-bg); --bg-panel:var(--cx-card); --bg-surface:var(--cx-card);
-  --bg-card:#ebebeb; --bg-card-hover:#e5e5e5; --system-sidebar:#eee;
-  --system-subtle:#e8e8e8; --system-hover:rgba(0,0,0,.045); --system-selected:rgba(0,0,0,.075);
+  --bg-card:#eeede7; --bg-card-hover:#e8e7df; --system-sidebar:#f0efe9;
+  --system-subtle:#e9e8e1; --system-hover:rgba(0,0,0,.045); --system-selected:rgba(0,0,0,.075);
   --system-separator:var(--cx-sep); --border-light:var(--cx-sep);
   --text-primary:var(--cx-label); --text-secondary:var(--cx-label-2); --text-muted:var(--cx-label-2);
   --brand-action:var(--cx-label); --brand-on-action:var(--cx-inverse);
