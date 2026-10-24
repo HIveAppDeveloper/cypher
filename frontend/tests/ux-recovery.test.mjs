@@ -154,6 +154,7 @@ function chat(env, api) {
     './WorkPanel': { WorkPanel: 'work-panel' }, './GlassSelect': { GlassSelect: 'select' },
     '../lib/types': { MessageType: { TEXT: 'text' } }, '../lib/api': { api, ApiError },
     './BotAvatar': { BotAvatar: 'bot-avatar' }, './MessageBubble': { MessageBubble: 'message-bubble' },
+    '../lib/voice-playback': {},
     './cipher/CypherMark': { __esModule: true, default: 'cypher-mark' },
     './QuickStart': { QuickStart: 'quick-start' }, './RunControls': { RunControls: 'run-controls', DEFAULT_OPTIONS: {} },
     '../lib/modelPolicy': { modelPolicy: value => value }, '../lib/attachments': { readAttachment: async () => ({ name: 'fixture.txt', mime: 'text/plain', data: 'eA==' }) } };
@@ -358,5 +359,34 @@ test('Jump to latest honors disabled app motion when OS motion is enabled', asyn
   button(view.tree, 'Jump to latest').props.onClick(); await view.flush();
   assert.equal(scrolls.length, 1); assert.equal(scrolls[0].top, 1200); assert.equal(scrolls[0].behavior, 'instant');
   assert.equal(button(view.tree, 'Jump to latest'), undefined);
+  view.unmount();
+});
+
+
+test('a refresh during an idle sync schedules one immediate follow-up instead of waiting ten seconds', async () => {
+  const env = environment(), pending = deferred(); let syncs = 0;
+  const view = chat(env, { conversationForBot: async () => 'synthetic-conversation', syncConversation: () => {
+    syncs++; return syncs === 1 ? pending.promise : Promise.resolve({ messages: [], tasks: [] });
+  } });
+  await view.flush();
+  env.window.dispatchEvent(new Event('grokbot:refresh'));
+  env.window.dispatchEvent(new Event('grokbot:refresh'));
+  assert.equal(syncs, 1, 'never overlap requests');
+  pending.resolve({ messages: [], tasks: [] }); await view.flush();
+  env.time.advance(0); await view.flush();
+  assert.equal(syncs, 2, 'coalesce refreshes into a zero-delay follow-up');
+  assert.equal(env.time.now, 0);
+  view.unmount();
+});
+
+test('a queued refresh preserves Retry-After when the in-flight sync fails', async () => {
+  const env = environment(), pending = deferred(); let syncs = 0;
+  const view = chat(env, { conversationForBot: async () => 'synthetic-conversation', syncConversation: () => {
+    syncs++; return syncs === 1 ? pending.promise : Promise.resolve({ messages: [], tasks: [] });
+  } });
+  await view.flush(); env.window.dispatchEvent(new Event('grokbot:refresh'));
+  pending.reject(new ApiError('Synthetic limit', 429, undefined, 5)); await view.flush();
+  env.time.advance(4999); await view.flush(); assert.equal(syncs, 1);
+  env.time.advance(1); await view.flush(); assert.equal(syncs, 2);
   view.unmount();
 });

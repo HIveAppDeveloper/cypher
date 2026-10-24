@@ -13,6 +13,7 @@ import { modelPolicy } from '../lib/modelPolicy';
 import { readAttachment } from '../lib/attachments';
 import BinaryLens from './cipher/BinaryLens';
 import CypherMark from './cipher/CypherMark';
+import { playVoiceResponse, speakWithBrowser } from '../lib/voice-playback';
 const POLL_MS = 1500;
 const MAX_BYTES = 3 * 1024 * 1024;
 export function messageTime(value: string) {
@@ -96,10 +97,10 @@ export function ChatPanel({ bot, room, bots, onCreateBot, onCreateRoom, onQuickS
   const voicePanel = useRef<HTMLDivElement>(null);
   const voiceButton = useRef<HTMLButtonElement>(null);
   const voiceAudio = useRef<HTMLAudioElement>(null);
-  const voiceObjectUrl = useRef('');
+  const voiceSession = useRef(0);
+  const voiceStarting = useRef(false);
   const voiceLevel = useRef(0);
   const voiceRequest = useRef<AbortController | null>(null);
-  const voicePlaybackEnd = useRef<(() => void) | null>(null);
   const voiceContext = useRef<AudioContext | null>(null);
   const voiceOutputAnalyser = useRef<AnalyserNode | null>(null);
   const voiceOutputSource = useRef<MediaElementAudioSourceNode | null>(null);
@@ -126,7 +127,7 @@ export function ChatPanel({ bot, room, bots, onCreateBot, onCreateRoom, onQuickS
   useEffect(() => { const el = stream.current; if (!el) return; if (prependOffset.current !== null) { el.scrollTop = el.scrollHeight - prependOffset.current; prependOffset.current = null; } else if (followLatest.current) el.scrollTop = el.scrollHeight; }, [messages.length, messages[messages.length - 1]?.id, voiceMode]);
   useEffect(()=>{followLatest.current=true;setConversationId('');setMessages([]);setJobs([]);setAttachments([]);setError('');setLoading(!!bot || !!room);setSyncError('');setSessionExpired(false);retryNotBefore.current=0;setRetryAt(0);firstPage.current=true;},[bot?.id,room?.id]);
   useEffect(() => {
-    let active = true; let timer: ReturnType<typeof setTimeout>; let failures=0; let pending=false;
+    let active = true; let timer: ReturnType<typeof setTimeout>; let failures=0; let pending=false; let refreshRequested=false;
     const controller=new AbortController();
     if (!bot && !room) return;
     retryOpening.current=true;setRefreshing(true);
@@ -136,9 +137,9 @@ export function ChatPanel({ bot, room, bots, onCreateBot, onCreateRoom, onQuickS
       pending=true; clearTimeout(timer); let delay=10000;
       try { const {messages:data,tasks}=await api.syncConversation(currentId,latestMessageId,controller.signal); if(active){failures=0;if(data.length)latestMessageId=data[data.length-1].id;if(firstPage.current){setHasEarlier(data.length===50);firstPage.current=false;}setMessages(previous=>mergeMessages(previous,data));setJobs(tasks);setLoading(false);setSyncError('');setSessionExpired(false);delay=tasks.some(t=>['pending','running','cancel_requested'].includes(t.status))?POLL_MS:10000;} }
       catch(e){if(active){failures++;setLoading(false);setSessionExpired(e instanceof ApiError && e.status===401);const wait=e instanceof ApiError?Math.max(0,e.retryAfter*1000):0;retryNotBefore.current=wait?Date.now()+wait:0;setRetryAt(retryNotBefore.current);setSyncError(e instanceof ApiError && e.code==='database_quota'?e.message:e instanceof ApiError && e.status===401?'Your session expired. Sign in again to reconnect.':'Couldn’t refresh this conversation. Your messages are saved; reconnecting automatically…');delay=Math.max(e instanceof ApiError?e.retryAfter*1000:0,Math.min(60000,2000*2**Math.min(failures,5)));}}
-      finally{pending=false;if(active){retryOpening.current=false;setRefreshing(false);}if(active)timer=setTimeout(poll,document.hidden?Math.max(delay,60000):delay);}
+      finally{pending=false;if(active){retryOpening.current=false;setRefreshing(false);}if(active){const next=refreshRequested && !failures?0:document.hidden?Math.max(delay,60000):delay;refreshRequested=false;timer=setTimeout(poll,next);}}
     };
-    const refresh=()=>{if(document.hidden || pending || retryOpening.current || Date.now()<retryNotBefore.current)return;if(currentId){setRefreshing(true);void poll();}else{retryOpening.current=true;setSyncAttempt(value=>value+1);}};
+    const refresh=()=>{if(document.hidden || Date.now()<retryNotBefore.current)return;if(pending){refreshRequested=true;return;}if(retryOpening.current)return;if(currentId){setRefreshing(true);void poll();}else{retryOpening.current=true;setSyncAttempt(value=>value+1);}};
     document.addEventListener('visibilitychange',refresh);window.addEventListener('grokbot:refresh',refresh);window.addEventListener('online',refresh);
     const load = room ? Promise.resolve(room.id) : api.conversationForBot(bot!);
     load.then(id=>{if(active){currentId=id;setConversationId(id);void poll();}}).catch(e=>{if(active){retryOpening.current=false;setRefreshing(false);setLoading(false);setSessionExpired(e instanceof ApiError && e.status===401);const wait=e instanceof ApiError?Math.max(0,e.retryAfter*1000):0;retryNotBefore.current=wait?Date.now()+wait:0;setRetryAt(retryNotBefore.current);setSyncError(e instanceof ApiError && e.status===401?'Your session expired. Sign in again to reconnect.':(e instanceof ApiError?e.message:'Couldn’t open this conversation.')+' Your draft is kept here. Reconnect to try again.');}});
@@ -192,6 +193,7 @@ export function ChatPanel({ bot, room, bots, onCreateBot, onCreateRoom, onQuickS
     const text = override?.text ?? input;
     const files = override?.files ?? attachments;
     const isVoiceTurn = override?.voiceTurn === true;
+    const session = voiceSession.current;
     if ((!text.trim() && !files.length) || !conversationId || readingFiles || sendingRef.current) {
       if (isVoiceTurn) { setVoiceError('Cypher is still sending another request. Try speaking again.'); updateVoiceStatus('listening'); }
       return;
@@ -208,15 +210,15 @@ export function ChatPanel({ bot, room, bots, onCreateBot, onCreateRoom, onQuickS
       const accepted = await api.sendMessage(conversationId, text, files, isVoiceTurn ? { ...options, output: 'text' } : options, messageId,replyTo?.id);
       setReplyTo(null);
       unconfirmedDraft.current=null;
-      if (isVoiceTurn) { voicePending.current={messageId,taskId:accepted.task_id}; setVoiceError(''); }
+      if (isVoiceTurn && voiceModeRef.current && session === voiceSession.current) { voicePending.current={messageId,taskId:accepted.task_id}; setVoiceError(''); }
       window.dispatchEvent(new Event('grokbot:refresh'));
       setMessages(previous=>previous.map(message=>message.id===messageId?{...message,delivery:'sent'}:message));
       setJobs(previous=>previous.some(job=>job.id===accepted.task_id)?previous:[{id:accepted.task_id,title:text.slice(0,100),status:'pending',created_at:new Date().toISOString()},...previous]);
     } catch (e) {
       if (!isVoiceTurn) unconfirmedDraft.current={id:messageId,text,files,reply:replyTo?.id};
       setMessages(previous=>previous.map(message=>message.id===messageId?{...message,delivery:'failed'}:message));
-      if (isVoiceTurn) { setVoiceError(`I couldn’t send that. ${String(e).replace(/^Error: /,'')}`); updateVoiceStatus('listening'); }
-      else { setInput(current=>current || text);setAttachments(current=>current.length?current:files); setError(`Message was not confirmed. ${String(e).replace(/^Error: /,'')} Your message is kept in this thread; resend from the composer to retry.`); }
+      if (isVoiceTurn && voiceModeRef.current && session === voiceSession.current) { setVoiceError(`I couldn’t send that. ${String(e).replace(/^Error: /,'')}`); updateVoiceStatus('listening'); }
+      else if (!isVoiceTurn) { setInput(current=>current || text);setAttachments(current=>current.length?current:files); setError(`Message was not confirmed. ${String(e).replace(/^Error: /,'')} Your message is kept in this thread; resend from the composer to retry.`); }
     } finally { sendingRef.current=false;setSending(false); }
   }
   voiceModeRef.current = voiceMode;
@@ -227,11 +229,16 @@ export function ChatPanel({ bot, room, bots, onCreateBot, onCreateRoom, onQuickS
   async function toggleVoice() {
     if (voiceMode) { onVoiceStop(); return; }
     if (!navigator.mediaDevices?.getUserMedia || !window.MediaRecorder) { setVoiceError('Voice chat needs a browser that supports microphone recording.'); return; }
+    if (voiceStarting.current) return;
+    voiceStarting.current = true;
+    const session = voiceSession.current;
     setVoiceError('');
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } });
+      if (session !== voiceSession.current) { stream.getTracks().forEach(track => track.stop()); return; }
       onVoiceStream(stream);
-    } catch (failure) { setVoiceError(failure instanceof Error ? failure.message : 'Microphone access was not available.'); }
+    } catch (failure) { if (session === voiceSession.current) setVoiceError(failure instanceof Error ? failure.message : 'Microphone access was not available.'); }
+    finally { voiceStarting.current = false; }
   }
   async function speakReply(content: string) {
     const text = speechText(content);
@@ -248,38 +255,32 @@ export function ChatPanel({ bot, room, bots, onCreateBot, onCreateRoom, onQuickS
       if (controller.signal.aborted || !voiceModeRef.current) return;
       const audio = voiceAudio.current;
       if (!audio) throw new Error('Audio playback is unavailable.');
-      if (voiceObjectUrl.current) URL.revokeObjectURL(voiceObjectUrl.current);
-      const url = URL.createObjectURL(await response.blob());
-      voiceObjectUrl.current = url;
-      audio.src = url;
-      updateVoiceStatus('speaking');
-      await new Promise<void>((resolve, reject) => {
-        voicePlaybackEnd.current = resolve;
-        audio.onended = () => resolve();
-        audio.onerror = () => reject(new Error('Cypher’s reply could not be played.'));
-        void audio.play().catch(reject);
+      await playVoiceResponse(response, audio, controller.signal, () => {
+        if (!controller.signal.aborted) updateVoiceStatus('speaking');
       });
-      voicePlaybackEnd.current = null;
-      audio.onended = null; audio.onerror = null; audio.removeAttribute('src'); audio.load();
-      URL.revokeObjectURL(url); voiceObjectUrl.current = '';
-      if (voiceModeRef.current) updateVoiceStatus('listening');
+      if (!controller.signal.aborted && voiceModeRef.current) updateVoiceStatus('listening');
     } catch (failure) {
       if (controller.signal.aborted || !voiceModeRef.current) return;
-      const fallback = typeof window !== 'undefined' && 'speechSynthesis' in window;
-      if (fallback) {
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.rate = 1.06; utterance.pitch = .78;
-        const maleVoice = window.speechSynthesis.getVoices().find(voice => voice.lang.toLowerCase().startsWith('en') && /male|david|daniel|alex|mark|guy|james|thomas/i.test(voice.name));
-        if (maleVoice) utterance.voice = maleVoice;
-        updateVoiceStatus('speaking');
-        await new Promise<void>(resolve => { utterance.onend = () => resolve(); utterance.onerror = () => resolve(); window.speechSynthesis.cancel(); window.speechSynthesis.speak(utterance); });
-        if (voiceModeRef.current) updateVoiceStatus('listening');
+      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+        try {
+          updateVoiceStatus('speaking');
+          await speakWithBrowser(text, controller.signal);
+          if (!controller.signal.aborted && voiceModeRef.current) updateVoiceStatus('listening');
+        } catch (fallbackFailure) {
+          if (!controller.signal.aborted && voiceModeRef.current) {
+            setVoiceError(fallbackFailure instanceof Error ? fallbackFailure.message : 'Cypher’s voice could not be played.');
+            updateVoiceStatus('listening');
+          }
+        }
       } else {
         setVoiceError(failure instanceof Error ? failure.message : 'Cypher’s voice could not be played.');
-        if (voiceModeRef.current) updateVoiceStatus('listening');
+        updateVoiceStatus('listening');
       }
+    } finally {
+      if (voiceRequest.current === controller) voiceRequest.current = null;
     }
   }
+
   useEffect(() => {
     const pending = voicePending.current;
     if (!voiceMode || !pending?.taskId) return;
@@ -296,6 +297,7 @@ export function ChatPanel({ bot, room, bots, onCreateBot, onCreateRoom, onQuickS
       if (!voiceMode) updateVoiceStatus('off');
       return;
     }
+    voiceSession.current++;
     const activeStream = voiceStream;
     let stopped = false;
     let frame = 0;
@@ -341,7 +343,7 @@ export function ChatPanel({ bot, room, bots, onCreateBot, onCreateRoom, onQuickS
           if (blob.size > MAX_BYTES) { setVoiceError('That recording was too long. Please keep each request under 45 seconds.'); updateVoiceStatus('listening'); return; }
           const extension = mime === 'audio/mp4' ? 'm4a' : mime === 'audio/ogg' ? 'ogg' : 'webm';
           const file = new File([blob], `cypher-voice-${Date.now()}.${extension}`, { type: mime });
-          void readAttachment(file, mime).then(attachment => voiceTurnHandler.current(attachment)).catch(failure => { if (!stopped) { setVoiceError(failure instanceof Error ? failure.message : 'The recording could not be sent.'); updateVoiceStatus('listening'); } });
+          void readAttachment(file, mime).then(attachment => { if (!stopped) return voiceTurnHandler.current(attachment); }).catch(failure => { if (!stopped) { setVoiceError(failure instanceof Error ? failure.message : 'The recording could not be sent.'); updateVoiceStatus('listening'); } });
         };
         recorder.start(250); updateVoiceStatus('recording');
       } catch (failure) { setVoiceError(failure instanceof Error ? failure.message : 'The microphone recorder could not start.'); updateVoiceStatus('error'); }
@@ -378,18 +380,16 @@ export function ChatPanel({ bot, room, bots, onCreateBot, onCreateRoom, onQuickS
     activeStream.getAudioTracks().forEach(track => track.addEventListener('ended', ended));
     setVoiceError(''); updateVoiceStatus('listening'); frame = requestAnimationFrame(measure);
     return () => {
-      stopped = true; cancelAnimationFrame(frame); activeStream.getAudioTracks().forEach(track => track.removeEventListener('ended', ended));
+      stopped = true; voiceSession.current++; cancelAnimationFrame(frame); activeStream.getAudioTracks().forEach(track => track.removeEventListener('ended', ended));
       if (recorder && recorder.state !== 'inactive') { recorder.onstop = null; recorder.stop(); }
       micSource?.disconnect(); micAnalyser?.disconnect();
       voiceLevel.current = 0; voiceRequest.current?.abort();
-      voicePlaybackEnd.current?.(); voicePlaybackEnd.current = null;
       const audio = voiceAudio.current; if (audio) { audio.pause(); audio.onended = null; audio.onerror = null; audio.removeAttribute('src'); audio.load(); }
-      if (voiceObjectUrl.current) URL.revokeObjectURL(voiceObjectUrl.current); voiceObjectUrl.current = '';
       window.speechSynthesis?.cancel(); voicePending.current = null;
       if (!voiceModeRef.current) updateVoiceStatus('off');
     };
   }, [voiceMode, voiceStream, conversationId]);
-  useEffect(() => () => { voiceContext.current?.close().catch(() => {}); }, []);
+  useEffect(() => () => { voiceSession.current++; voiceRequest.current?.abort(); voiceContext.current?.close().catch(() => {}); }, []);
   const visibleMessages = messages.filter(m => !m.internal && (!messageQuery.trim() || m.content.toLowerCase().includes(messageQuery.trim().toLowerCase())));
   const activeJobs = jobs.filter(j => j.status === 'pending' || j.status === 'running' || j.status === 'cancel_requested');
   const fontFamily = font === 'serif' ? 'Georgia, serif' : font === 'system' ? '-apple-system, BlinkMacSystemFont, system-ui, sans-serif' : '"Inter Variable", sans-serif';
