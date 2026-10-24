@@ -3,7 +3,8 @@ import { useEffect, useRef, useState, type CSSProperties, type PointerEvent, typ
 import CypherMark from './cipher/CypherMark';
 
 const STORAGE_KEY = 'grokbot-sidebar-layout-v1';
-const DEFAULT_WIDTH = 256;
+const DEFAULT_WIDTH = 240;
+const PREVIOUS_DEFAULT_WIDTH = 256;
 const MIN_WIDTH = 220;
 const MAX_WIDTH = 480;
 const CHAT_MIN_WIDTH = 360;
@@ -29,7 +30,11 @@ export function SidebarShell({ children }: { children: ReactNode }) {
   useEffect(() => {
     try {
       const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
-      if (saved) setLayout({ side: saved.side === 'right' ? 'right' : 'left', width: Number.isFinite(saved.width) ? Math.max(MIN_WIDTH, Math.min(MAX_WIDTH, saved.width)) : DEFAULT_WIDTH, collapsed: saved.collapsed === true });
+      if (saved) {
+        const storedWidth = Number.isFinite(saved.width) ? saved.width : DEFAULT_WIDTH;
+        const width = storedWidth === PREVIOUS_DEFAULT_WIDTH ? DEFAULT_WIDTH : Math.max(MIN_WIDTH, Math.min(MAX_WIDTH, storedWidth));
+        setLayout({ side: saved.side === 'right' ? 'right' : 'left', width, collapsed: saved.collapsed === true });
+      }
     } catch {}
     setLoaded(true);
     const media = window.matchMedia('(max-width: 760px)');

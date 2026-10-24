@@ -67,21 +67,22 @@ export function BotRoster({ bots, selectedBot, onSelectBot, onCreateNew, rooms, 
 
     <header className="roster-toolbar">
       <span className="section-label">Agents</span>
-      <button className="round-button" aria-label="Search agents and rooms" aria-expanded={searching} onClick={() => { setSearching(value => !value); setQuery(''); }}>
-        <svg viewBox="0 0 24 24"><circle cx="10" cy="10" r="6.5"/><path d="m15 15 5 5"/></svg>
-      </button>
-      <button className="round-button" aria-label="Create agent" onClick={onCreateNew}>
-        <svg viewBox="0 0 24 24"><path d="M12 4v16M4 12h16"/></svg>
-      </button>
-    </header>
-
-    <details className="roster-filter-details">
-      <summary aria-label="Filter agents" title="Filter agents"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16l-6.5 7.2v5.5l-3 1.6v-7.1L4 5Z"/></svg></summary>
-      <div className="roster-filters" aria-label="Filter agents">
-        <button aria-pressed={!onlyWorking} onClick={() => setOnlyWorking(false)}>All</button>
-        <button aria-pressed={onlyWorking} onClick={() => setOnlyWorking(value => !value)}>Working <span>{bots.filter(bot => bot.status === 'working').length}</span></button>
+      <div className="roster-actions">
+        <button className="round-button" aria-label="Search agents and rooms" aria-expanded={searching} onClick={() => { setSearching(value => !value); setQuery(''); }}>
+          <svg viewBox="0 0 24 24"><circle cx="10" cy="10" r="6.5"/><path d="m15 15 5 5"/></svg>
+        </button>
+        <details className="roster-filter-details">
+          <summary aria-label="Filter agents" title={onlyWorking ? 'Showing working agents' : 'Filter agents'}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16l-6.5 7.2v5.5l-3 1.6v-7.1L4 5Z"/></svg>{onlyWorking ? <i aria-hidden="true"/> : null}</summary>
+          <div className="roster-filters" aria-label="Filter agents">
+            <button aria-pressed={!onlyWorking} onClick={() => setOnlyWorking(false)}>All agents</button>
+            <button aria-pressed={onlyWorking} onClick={() => setOnlyWorking(value => !value)}>Working <span>{bots.filter(bot => bot.status === 'working').length}</span></button>
+          </div>
+        </details>
+        <button className="round-button create-agent-button" aria-label="Create agent" onClick={onCreateNew}>
+          <svg viewBox="0 0 24 24"><path d="M12 4v16M4 12h16"/></svg>
+        </button>
       </div>
-    </details>
+    </header>
 
     <nav className="roster-list" aria-label="Agents and team rooms">
       {renderedBots.map((bot, index) => <div className="agent-roster-item" key={bot.id}>
@@ -111,16 +112,19 @@ export function BotRoster({ bots, selectedBot, onSelectBot, onCreateNew, rooms, 
       {!rooms.length ? <p className="roster-no-results">No team rooms yet.</p> : null}
     </nav>
 
+    <nav className="sidebar-shortcuts" aria-label="Workspace tools">
+      <button className="plugins-nav" onClick={onPlugins} aria-label="Plugins" title="Connect services"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3v5m8-5v5M6 8h12v4a6 6 0 0 1-12 0V8Zm6 10v3"/></svg><span>Plugins</span></button>
+      <button className="preferences-nav" onClick={onComputer} aria-label="Computer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h18v13H3zM8 21h8m-4-4v4"/></svg><span>Computer</span></button>
+    </nav>
+
     <details className="sidebar-more">
-      <summary>More</summary>
+      <summary>More tools</summary>
       <div className="sidebar-more-content">
         <nav className="workspace-destinations" aria-label="Workspace tools">
-          <button className="preferences-nav" onClick={onComputer} aria-label="Computer"><svg viewBox="0 0 24 24"><path d="M3 4h18v13H3zM8 21h8m-4-4v4"/></svg><span>Computer</span></button>
           <button className="preferences-nav" onClick={onWorkspace} aria-label="Workspace library"><svg viewBox="0 0 24 24"><path d="M4 4h6v16H4zM14 4h6v16h-6z"/></svg><span>Memory, skills &amp; routines</span></button>
           <button className="preferences-nav" onClick={onGoals} aria-label="Goals"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><path d="m12 12 8-8"/></svg><span>Goals</span></button>
         </nav>
         <nav className="workspace-tools" aria-label="Tools and settings">
-          <button className="plugins-nav" onClick={onPlugins} aria-label="Plugins" title="Plugins"><svg viewBox="0 0 24 24"><path d="M8 3v5m8-5v5M6 8h12v4a6 6 0 0 1-12 0V8Zm6 10v3"/></svg><span>Plugins</span></button>
           <button className="preferences-nav" onClick={onChannels} aria-label="Channels"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4V5Z"/></svg><span>Channels</span></button>
           <button className="preferences-nav" onClick={onPreferences} aria-label="Appearance"><svg viewBox="0 0 24 24"><path d="M5 4v16M12 4v16M19 4v16M2 8h6m1 8h6m1-6h6"/></svg><span>Appearance</span></button>
         </nav>
