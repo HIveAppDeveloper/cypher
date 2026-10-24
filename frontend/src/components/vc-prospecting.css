@@ -25,6 +25,8 @@
 .vc-refresh-card { display:flex; justify-content:space-between; align-items:center; gap:24px; max-width:1320px; margin:0 auto 16px; padding:18px 20px; }
 .vc-refresh-card h2, .vc-run-heading h2, .vc-panel-heading h2 { margin:0; font:550 20px/1.2 var(--cx-display); letter-spacing:-.025em; }
 .vc-refresh-card > div > p { max-width:76ch; margin:6px 0 0; color:var(--cx-label-2); font-size:12px; }
+.vc-history-card { border-color:color-mix(in srgb,var(--cx-label) 22%,var(--cx-sep)); }
+.vc-refresh-card > div > .vc-history-progress { color:var(--cx-label); font-weight:550; }
 .vc-refresh-card button, .vc-primary { flex:none; min-height:40px; padding:0 16px; border:0; border-radius:20px; background:var(--cx-label); color:var(--cx-inverse)!important; font-size:12px; font-weight:600; }
 .vc-run-card { max-width:1320px; margin:0 auto 16px; padding:18px 20px; }
 .vc-run-heading { display:flex; justify-content:space-between; align-items:flex-start; gap:18px; }

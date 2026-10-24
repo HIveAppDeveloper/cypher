@@ -73,6 +73,22 @@ class FounderLead(Base):
     refreshed_at = Column(DateTime, nullable=False, default=utcnow)
 
 
+class FounderArchiveBackfill(Base):
+    """Progress for the resumable, shared Form D archive index."""
+
+    __tablename__ = "founder_archive_backfills"
+
+    id = Column(String(32), primary_key=True, default="historical")
+    requested_by = Column(String(255), nullable=False)
+    status = Column(String(24), nullable=False, default="pending", index=True)
+    quarter_files = Column(JSON, nullable=False, default=list)
+    cursor = Column(Integer, nullable=False, default=0)
+    error = Column(Text, nullable=True)
+    created_at = Column(DateTime, nullable=False, default=utcnow)
+    started_at = Column(DateTime, nullable=True)
+    completed_at = Column(DateTime, nullable=True)
+
+
 class InvestorMatchLabel(Base, TenantScoped):
     """Per-workspace feedback on a matched VC firm."""
 
