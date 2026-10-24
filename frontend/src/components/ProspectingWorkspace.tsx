@@ -1,10 +1,10 @@
 'use client';
 
 import { useEffect, useRef, useState, type FormEvent } from 'react';
-import Image from 'next/image';
 import { request } from '../lib/api';
 import { CYPHER_VOICE_INTRO } from '../lib/cypher-voice';
 import BinaryLens from './cipher/BinaryLens';
+import CypherMark from './cipher/CypherMark';
 import CipherIntro from './cipher/CipherIntro';
 import './prospecting-workspace.css';
 
@@ -229,7 +229,7 @@ export default function ProspectingWorkspace() {
   return <main className="cipher cx-prospecting">
     <CipherIntro />
     <header className="cx-toolbar">
-      <a href="/" className="cx-word"><img className="cx-brand-image" src="/cipher-logo.png" alt=""/><span>Cypher</span></a>
+      <a href="/" className="cx-word"><CypherMark className="cx-brand-image" decorative/><span>Cypher</span></a>
       <nav className="cx-nav" aria-label="Main navigation">
         <a href="/workspace?plugins=1">Plugins</a>
         <a href="/workspace">Workspace</a>
@@ -242,7 +242,7 @@ export default function ProspectingWorkspace() {
       <p>Start with your website. Refine who you want to reach. Research real companies with public evidence.</p>
       <div className="cx-voice-control">
         <button type="button" className={`cx-voice-button is-${voiceState}`} onClick={() => void playVoice()} disabled={voiceState === 'checking' || voiceState === 'setup' || voiceState === 'loading'} aria-pressed={voiceState === 'playing'}>
-          <Image className="cx-voice-mark" src="/cipher-logo.png" alt="" aria-hidden="true" width={20} height={20} unoptimized/>
+          <CypherMark className="cx-voice-mark" decorative/>
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 9v6h3.7l4.8 4V5l-4.8 4H4.5z"/><path d="M16 9a4 4 0 010 6M18.5 6.5a7.5 7.5 0 010 11"/></svg>
           {voiceState === 'checking' ? 'Checking voice…' : voiceState === 'setup' ? 'Voice setup needed' : voiceState === 'loading' ? 'Preparing voice…' : voiceState === 'playing' ? 'Stop voice' : voiceState === 'error' ? 'Try voice again' : 'Listen to Cypher'}
         </button>

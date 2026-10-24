@@ -1,6 +1,7 @@
-import { cookies } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { AppSession, readSignedPayload } from '../../lib/auth-server';
+import { CANONICAL_APP_ORIGIN, isOffCanonicalHost, requestHostname, safeInternalReturnTo } from '../../lib/canonical-app';
 import { GoogleLogin } from '../../components/GoogleLogin';
 import { EmailLoginForm } from '../../components/EmailLoginForm';
 import CypherMark from '../../components/cipher/CypherMark';
@@ -8,10 +9,20 @@ import CypherEntrance from '../../components/cipher/CypherEntrance';
 
 export const dynamic = 'force-dynamic';
 
-export default function LoginPage({ searchParams }: { searchParams?: { error?: string } }) {
+export default function LoginPage({ searchParams }: { searchParams?: { error?: string; returnTo?: string } }) {
   let session: AppSession | null = null;
   try { session = readSignedPayload<AppSession>(cookies().get('grokbot_session')?.value); } catch { session = null; }
-  if (session) redirect('/');
+  const returnTo = safeInternalReturnTo(searchParams?.returnTo);
+  const host = requestHostname(headers());
+  const local = host === 'localhost' || host === '127.0.0.1';
+  const origin = local ? process.env.GROKBOT_PUBLIC_URL || 'http://localhost:3000' : CANONICAL_APP_ORIGIN;
+  if (!local && isOffCanonicalHost(host)) {
+    const destination = new URL(session ? returnTo || '/' : '/login', origin);
+    if (!session && searchParams?.error) destination.searchParams.set('error', searchParams.error);
+    if (!session && returnTo) destination.searchParams.set('returnTo', returnTo);
+    redirect(destination.toString());
+  }
+  if (session) redirect(returnTo || '/');
   const errors: Record<string, string> = {
     'magic-link': 'That sign-in link is invalid or expired. Request a new one.',
     google: 'Google could not complete sign-in. Try again or use email below.',
@@ -21,7 +32,8 @@ export default function LoginPage({ searchParams }: { searchParams?: { error?: s
   };
   const error = errors[searchParams?.error || ''];
   const clientId = process.env.GOOGLE_AUTH_CLIENT_ID || process.env.HIVE_GOOGLE_AUTH_CLIENT_ID;
-  const loginUri = (process.env.GROKBOT_PUBLIC_URL || 'http://localhost:3000') + '/api/auth/google/callback';
+  const loginUri = new URL('/api/auth/google/callback', origin);
+  if (returnTo) loginUri.searchParams.set('returnTo', returnTo);
   return (
     <main className="login-page">
       <CypherEntrance />
@@ -33,10 +45,10 @@ export default function LoginPage({ searchParams }: { searchParams?: { error?: s
           <h1 id="login-title">Sign in to Cypher</h1>
           <p className="login-copy">Pick up where you left off.</p>
           {clientId ? <>
-            <GoogleLogin clientId={clientId} loginUri={loginUri} />
+            <GoogleLogin clientId={clientId} loginUri={loginUri.toString()} />
             <div className="login-divider"><span>or use your email</span></div>
           </> : null}
-          <EmailLoginForm />
+          <EmailLoginForm returnTo={returnTo || undefined} />
           {error ? <p className="login-error" role="alert">{error}</p> : null}
           <p className="login-privacy">Sign in or create your workspace with a secure email link. No password needed.</p>
         </section>
