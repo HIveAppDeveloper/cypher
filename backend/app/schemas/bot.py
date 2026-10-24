@@ -1,0 +1,61 @@
+from pydantic import BaseModel, ConfigDict, Field, field_validator
+from typing import List, Optional
+from uuid import UUID
+from datetime import datetime
+
+class BotBase(BaseModel):
+    name: str = Field(default="", max_length=80)
+    role: str = Field(min_length=1, max_length=80)
+    description: Optional[str] = None
+    avatar_url: Optional[str] = None
+    system_prompt: str
+    llm_provider: str
+    llm_model: str
+    tools_enabled: List[str] = []
+    memory_enabled: bool = True
+
+class BotCreate(BotBase):
+    client_request_id: Optional[UUID] = None
+    system_prompt: str = Field(min_length=1, max_length=20000)
+
+    @field_validator('name', 'role', 'system_prompt', mode='before')
+    @classmethod
+    def normalized_text(cls, value):
+        return value.strip() if isinstance(value, str) else value
+
+    @field_validator('llm_provider', 'llm_model', mode='before')
+    @classmethod
+    def valid_model(cls, value):
+        if isinstance(value, str):
+            value = value.strip()
+            if not value:
+                raise ValueError('Choose a provider and a non-empty model ID')
+        return value
+
+class BotUpdate(BaseModel):
+    name: Optional[str] = None
+    role: Optional[str] = None
+    description: Optional[str] = None
+    avatar_url: Optional[str] = None
+    system_prompt: Optional[str] = None
+    llm_provider: Optional[str] = None
+    llm_model: Optional[str] = None
+    tools_enabled: Optional[List[str]] = None
+    memory_enabled: Optional[bool] = None
+    status: Optional[str] = None
+
+    @field_validator('llm_provider', 'llm_model', mode='before')
+    @classmethod
+    def valid_model(cls, value):
+        if not isinstance(value, str) or not value.strip():
+            raise ValueError('Choose a provider and a non-empty model ID')
+        return value.strip()
+
+class BotResponse(BotBase):
+    id: UUID
+    status: str
+    container_id: Optional[str] = None
+    created_at: datetime
+    updated_at: datetime
+    
+    model_config = ConfigDict(from_attributes=True)

@@ -1,0 +1,78 @@
+{
+  "status": "passed",
+  "environment": "Actual authorized Mac Chrome on loopback, synthetic in-memory API; separate real API/SQLite/worker harness results linked below.",
+  "desktop": {
+    "width": 1440,
+    "height": 1000,
+    "screenshot": "ux-screenshots/desktop-conversation-1440x1000.jpg"
+  },
+  "mobile": {
+    "width": 390,
+    "height": 844,
+    "documentWidth": 390,
+    "modelAndOutputControlHeights": [
+      44,
+      44
+    ],
+    "modelControlFontPx": 12,
+    "screenshot": "ux-screenshots/mobile-home-390x844.jpg"
+  },
+  "reproducedBeforeFix": {
+    "homeDraftAfterAgentNavigation": "empty string",
+    "mobileLiveLoginDocumentWidth": 408,
+    "mobileViewportWidth": 390,
+    "compositionEnter": "one unintended command, independently reproduced with actual handler",
+    "conversationOpeningFailure": "no usable retry; same-agent reselection does not rerun effect"
+  },
+  "confirmedAfterFix": {
+    "homeDraftRestoredAfterNavigation": true,
+    "createDoubleClickPosts": 1,
+    "invalidInstructions": {
+      "customizeExpanded": true,
+      "focusedElement": "bot-prompt",
+      "ariaInvalid": true,
+      "textareaFullyWithinScrollRegion": true,
+      "fieldTop": 523.6875,
+      "fieldBottom": 639.6875,
+      "scrollRegionTop": 151.296875,
+      "scrollRegionBottom": 672.203125
+    },
+    "sendFailureRetainedDraft": true,
+    "retryPosts": 2,
+    "retrySameClientMessageId": true,
+    "retryPersistedMessages": 1,
+    "stopPosts": 1,
+    "failedOpeningShowsReconnect": true,
+    "failedOpeningDoesNotShowFalseEmptyState": true,
+    "reconnectDoubleClickOpeningRequests": 1,
+    "reconnectInitialSyncRequests": 1,
+    "ordinaryIdleFollowupMilliseconds": 12212,
+    "reconnectPreservesDraftAndClearsBanner": true
+  },
+  "automated": {
+    "frontendPassed": 52,
+    "newEffectHandlerCases": 12,
+    "loginLayoutPassed": 12,
+    "loginLayoutWidths": [
+      320,
+      390,
+      768,
+      1440
+    ],
+    "realStackFunctionalPassed": 13,
+    "realStackResults": "functional-results.json",
+    "productionFrontendBuildPassed": true,
+    "detectorFindings": 0,
+    "backendPassed": 272,
+    "functionalBuildId": "9BKkhPlEIc6CcWAzFdKuX",
+    "functionalCurrentSourceHashesMatch": true
+  },
+  "limits": [
+    "No real model, Google/email sign-in, external connector action, production user-data edit, security/provider change or follow-up production deployment.",
+    "Mac screenshots use synthetic API data. Separate real-stack local tests use controlled inference and locally signed sessions, not production auth.",
+    "Live canonical origin and Google callback origin differ; see live-signin-observation.json. No configuration change made.",
+    "Core chat polls persisted messages; token streaming is not implemented by this UX change.",
+    "Native iOS/Safari, screen-reader speech output and real mobile software keyboard remain unverified."
+  ],
+  "reconciledUpstream": "912eb6df8fa0967f0412318a0e5cc4d29788b481"
+}

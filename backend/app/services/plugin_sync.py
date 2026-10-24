@@ -1,0 +1,164 @@
+"""Discover the entire catalog with bounded concurrency and durable progress.
+
+No OAuth grants are copied between apps. Credential mappings must explicitly
+bind a server URL to its own environment variable; registry text is untrusted.
+"""
+import asyncio
+import json
+import logging
+import os
+from datetime import datetime
+from sqlalchemy import select
+from app.db.session import AsyncSessionLocal
+from app.db.tenancy import current_tenant_id
+from app.models.plugin import Plugin
+from app.models.plugin_sync import PluginSync
+from app.services.plugins import discover, seal, credential_headers, authentication_failure
+
+
+def mapped_credential(url, tenant_id):
+    # Credentials imported into Vercel belong to the installation owner only.
+    from app.services.managed_connections import installation_owner
+    if not installation_owner(tenant_id): return None
+    mapping = json.loads(os.getenv('GROKBOT_PLUGIN_CREDENTIALS', '{}')).get(url)
+    if not mapping: return None
+    value = os.getenv(mapping['env'])
+    if not value: return None
+    header = mapping.get('header', 'Authorization')
+    token = value if header.lower() == 'authorization' else json.dumps({header:value})
+    credential_headers(token)
+    return token
+
+
+async def connect_entry(item, sessions=None):
+    sessions=sessions or AsyncSessionLocal
+    urls=(item['url'].rstrip('/'),item['url'].rstrip('/')+'/')
+    async with sessions() as db:
+        saved=(await db.execute(select(Plugin).where(Plugin.url.in_(urls)).order_by(Plugin.id))).scalars().all()
+        saved=[plugin for plugin in saved if item.get('auth')!='api_key' or plugin.credential]
+        if saved:
+            results=[]
+            for plugin in saved:
+                if not plugin.enabled:
+                    results.append({'status':'paused','plugin_id':plugin.id,'tool_count':len(plugin.tools),'message':'Existing connection remains paused.'})
+                else:results.append(await recheck_saved(db,plugin,item))
+            if len(results)==1:return results[0]
+            # A provider URL can represent several separately authorized accounts.
+            # Never let one successful account conceal another one's failed check.
+            status=next((state for state in ('sign_in_required','key_required','unavailable','connected') if any(r['status']==state for r in results)),'paused')
+            return {'status':status,'connections':results,'tool_count':sum(r['tool_count'] for r in results),'message':f'Checked {len(results)} saved accounts separately. Tools discovered; execution has not been tested.'}
+    token = mapped_credential(item['url'], current_tenant_id.get())
+    if item.get('setup_note'):
+        return {'status':'setup_required','message':item['setup_note']}
+    if item.get('auth')=='api_key' and not token:
+        return {'status':'key_required','message':'Add this service’s API key, or link its compatible server credential.'}
+    from app.services.managed_connections import configuration,reuse_authorized
+    config=configuration(item['url'])
+    if config:
+        async with sessions() as db:
+            result=await reuse_authorized(db,config)
+            if result:
+                plugin=await db.get(Plugin,result['plugin_id'])
+                return {'status':'connected','plugin_id':plugin.id,'tool_count':len(plugin.tools),'credential_source':'managed','message':'Existing provider access reused. Tools discovered; execution has not been tested.'}
+        return {'status':'sign_in_required','message':'Sign in once to link your provider account. Existing authorized access is reused.'}
+    if item['url'].rstrip('/')=='https://mcp.vercel.com' and not token:
+        return {'status':'setup_required','message':'The Vercel sign-in connector is not configured for this deployment.'}
+    try:
+        tools=await discover(item['url'], token)
+        if not tools:return {'status':'unavailable','message':'The server published no tools.'}
+    except Exception as error:
+        if authentication_failure(error) or item.get('auth')=='api_key':
+            return {'status':'key_required' if item.get('auth')=='api_key' else 'sign_in_required','message':'Add this service’s API key.' if item.get('auth')=='api_key' else 'Connect your account using this provider’s sign-in.'}
+        return {'status':'unavailable','message':'Tool discovery failed. Check the provider endpoint and required account setup.'}
+    async with sessions() as db:
+        # Idempotent when a browser connection finishes during catalog discovery.
+        plugin=(await db.execute(select(Plugin).where(Plugin.url.in_(urls)))).scalars().first()
+        if not plugin:
+            plugin=Plugin(name=item['name'][:80],url=item['url'],tools=tools,credential=seal(token),enabled=True)
+            db.add(plugin);await db.commit();await db.refresh(plugin)
+        elif token and not plugin.credential:
+            plugin.credential=seal(token)
+            enabled={t['name']:t.get('enabled',True) for t in plugin.tools}
+            plugin.tools=[{**t,'enabled':enabled.get(t['name'],True)} for t in tools]
+            await db.commit()
+        return {'status':'connected' if plugin.enabled else 'paused','plugin_id':plugin.id,'tool_count':len(plugin.tools),'credential_source':'server' if token else 'public','message':'Tools discovered; execution has not been tested.'}
+
+
+async def recheck_saved(db,plugin,item):
+    """Refresh through saved auth without performing provider write operations."""
+    from app.services.plugins import connection_auth
+    original_credential=plugin.credential
+    base={'plugin_id':plugin.id,'tool_count':len(plugin.tools)}
+    try:
+        token,auth=await connection_auth(db,plugin)
+        tools=await discover(plugin.url,token,auth=auth)
+        if not tools:raise ValueError('No tools advertised')
+    except Exception as error:
+        if authentication_failure(error):
+            return {**base,'status':'key_required' if item.get('auth')=='api_key' else 'sign_in_required','message':'The saved connection needs authorization again. Its credentials and tool choices were preserved.'}
+        return {**base,'status':'unavailable','message':'The saved connection did not respond to discovery. Its credentials and tool choices were preserved.'}
+    # The owner may pause, reconnect or remove the plugin while discovery runs.
+    saved=(await db.execute(select(Plugin).where(Plugin.id==plugin.id).with_for_update().execution_options(populate_existing=True))).scalar_one_or_none()
+    if not saved:return {**base,'status':'unavailable','message':'The connection was removed while it was checked.'}
+    if not saved.enabled:return {**base,'status':'paused','message':'Existing connection remains paused.'}
+    if saved.credential!=original_credential:
+        return {**base,'status':'unavailable','message':'The connection changed while it was checked. Run the check again.'}
+    enabled={tool['name']:tool.get('enabled',True) for tool in saved.tools}
+    saved.tools=[{**tool,'enabled':enabled.get(tool['name'],True)} for tool in tools]
+    from app.models.runtime import RuntimeCheck
+    stale=await db.get(RuntimeCheck,'plugin:'+saved.id)
+    if stale:await db.delete(stale)
+    await db.commit()
+    return {'status':'connected','plugin_id':saved.id,'tool_count':len(saved.tools),'credential_source':'saved','message':'Saved authorization reused. Tools discovered; execution has not been tested.'}
+
+
+def public(job, total):
+    results=job.results or {}
+    counts={}
+    for result in results.values(): counts[result['status']]=counts.get(result['status'],0)+1
+    return {'id':job.id,'status':job.status,'checked':len(results),'total':total,'counts':counts,'results':results,'updated_at':job.updated_at.isoformat()+'Z'}
+
+
+async def tick(sessions=None):
+    sessions=sessions or AsyncSessionLocal
+    from app.api.plugin_catalog import list_catalog
+    async with sessions() as db:
+        job=(await db.execute(select(PluginSync).where(PluginSync.status.in_(('pending','running'))).order_by(PluginSync.updated_at,PluginSync.created_at,PluginSync.id).limit(1))).scalar_one_or_none()
+        if not job:return False
+        tenant=job.tenant_id
+        context=current_tenant_id.set(tenant)
+        try:items=await list_catalog()
+        finally:current_tenant_id.reset(context)
+        remaining=[item for item in items if item['id'] not in job.results]
+        job.status='running' if remaining else 'completed';await db.commit()
+        job_id=job.id
+    token=current_tenant_id.set(tenant)
+    try:
+        batch=remaining[:6]
+        async def bounded_connect(item):
+            # Include saved-token refresh, not only MCP discovery, in the bound.
+            try:
+                async with asyncio.timeout(45):return await connect_entry(item,sessions)
+            except TimeoutError:
+                return {'status':'unavailable','message':'The provider timed out. Saved credentials were preserved; retry this connection later.'}
+        results=await asyncio.gather(*(bounded_connect(item) for item in batch),return_exceptions=True)
+        async with sessions() as db:
+            job=await db.get(PluginSync,job_id)
+            progress=dict(job.results)
+            for item,result in zip(batch,results):
+                progress[item['id']]=result if isinstance(result,dict) else {'status':'unavailable','message':'Connection could not be checked. Retry the catalog sync.'}
+            job.results=progress;job.updated_at=datetime.utcnow()
+            if len(remaining)<=len(batch):job.status='completed'
+            await db.commit()
+    finally:current_tenant_id.reset(token)
+    return True
+
+
+async def run(stop_event, sessions=None):
+    while not stop_event.is_set():
+        try:active=await tick(sessions)
+        except Exception:
+            logging.getLogger(__name__).exception('Catalog sync will retry from saved progress')
+            active=False
+        try:await asyncio.wait_for(stop_event.wait(),timeout=.1 if active else 60)
+        except asyncio.TimeoutError:pass
