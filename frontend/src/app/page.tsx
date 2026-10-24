@@ -9,7 +9,7 @@ export const dynamic = 'force-dynamic';
 export const metadata: Metadata = {
   title: 'Cypher',
   description: 'Your workspace for conversations, agents, and connected tools.',
-  icons: { icon: '/cipher-logo.png', apple: '/cipher-logo.png' },
+  icons: { icon: '/cypher-mark.svg', apple: '/cypher-mark.svg' },
 };
 
 // Keep the agent workspace as the default Cypher experience.

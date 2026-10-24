@@ -11,6 +11,7 @@ import { QuickStart } from './QuickStart';
 import { RunControls, DEFAULT_OPTIONS } from './RunControls';
 import { modelPolicy } from '../lib/modelPolicy';
 import { readAttachment } from '../lib/attachments';
+import { createSpeechRecognition, describeSpeechError, hasSpeechRecognition, type SpeechRecognitionLike } from '../lib/speech';
 const POLL_MS = 1500;
 const MAX_BYTES = 3 * 1024 * 1024;
 export function ChatPanel({ bot, room, bots, onCreateBot, onCreateRoom, onQuickStart, onOpenLounge, onOpenSetup, onOpenRecent, draftScope }: { draftScope?: string; bot: Bot | null; room: Conversation | null; bots: Bot[]; onCreateBot: () => void; onCreateRoom: () => void; onQuickStart: (prompt: string, options: Partial<import('../lib/types').RunOptions>) => Promise<void>; onOpenLounge: () => Promise<Conversation>; onOpenSetup?: () => void; onOpenRecent: (conversationId: string) => void }) {
@@ -18,6 +19,22 @@ export function ChatPanel({ bot, room, bots, onCreateBot, onCreateRoom, onQuickS
   const [messages, setMessages] = useState<Message[]>([]);
   const [jobs, setJobs] = useState<Job[]>([]);
   const [input, setInput] = useState('');
+  const [dictating, setDictating] = useState(false);
+  const [voiceMode, setVoiceMode] = useState(false);
+  const [voiceStatus, setVoiceStatus] = useState('');
+  const [voiceError, setVoiceError] = useState('');
+  const speechRecognitionRef = useRef<SpeechRecognitionLike | null>(null);
+  const voiceModeRef = useRef(false);
+  const skipRecognitionEndRef = useRef(false);
+  const speechFailedRef = useRef(false);
+  const speechFinalRef = useRef('');
+  const speechInterimRef = useRef('');
+  const dictationBaseRef = useRef('');
+  const pendingVoiceReplyRef = useRef(false);
+  const voiceReplyCursorRef = useRef('');
+  const voiceRestartTimerRef = useRef<number | null>(null);
+  const sendSpeechRef = useRef<(text: string) => void>(() => {});
+  const startVoiceListeningRef = useRef<() => void>(() => {});
   const [replyTo,setReplyTo]=useState<Message|null>(null);
   const [draftReady, setDraftReady] = useState(false);
   const [loading, setLoading] = useState(!!bot || !!room);
@@ -76,6 +93,11 @@ export function ChatPanel({ bot, room, bots, onCreateBot, onCreateRoom, onQuickS
   const fileInput = useRef<HTMLInputElement>(null);
   const followLatest = useRef(true);
   const title = room?.title === 'Agent lounge' ? 'Your team' : room?.title || bot?.name || 'Workspace';
+  useEffect(() => () => {
+    if (voiceRestartTimerRef.current !== null) window.clearTimeout(voiceRestartTimerRef.current);
+    speechRecognitionRef.current?.stop();
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) window.speechSynthesis.cancel();
+  }, []);
   useEffect(() => { const el = stream.current; if (!el) return; if (prependOffset.current !== null) { el.scrollTop = el.scrollHeight - prependOffset.current; prependOffset.current = null; } else if (followLatest.current) el.scrollTop = el.scrollHeight; }, [messages.length, messages[messages.length - 1]?.id]);
   useEffect(()=>{followLatest.current=true;setConversationId('');setMessages([]);setJobs([]);setAttachments([]);setError('');setLoading(!!bot || !!room);setSyncError('');setSessionExpired(false);retryNotBefore.current=0;setRetryAt(0);firstPage.current=true;},[bot?.id,room?.id]);
   useEffect(() => {
@@ -141,10 +163,105 @@ export function ChatPanel({ bot, room, bots, onCreateBot, onCreateRoom, onQuickS
     } catch (e) { setComputerError(e instanceof Error ? e.message : String(e)); }
     finally { setComputerBusy(false); }
   }
-  async function send() {
-    if ((!input.trim() && !attachments.length) || !conversationId || readingFiles || sendingRef.current) return;
+  function startSpeechCapture(voiceTurn: boolean) {
+    if (speechRecognitionRef.current) return;
+    const recognition = createSpeechRecognition();
+    if (!recognition) {
+      setVoiceError('Speech input is not available in this browser. Type your message instead.');
+      if (voiceTurn) { voiceModeRef.current = false; setVoiceMode(false); }
+      return;
+    }
+    speechFailedRef.current = false;
+    speechFinalRef.current = '';
+    speechInterimRef.current = '';
+    dictationBaseRef.current = voiceTurn ? '' : input.trim();
+    setVoiceError('');
+    setVoiceStatus(voiceTurn ? 'Listening. Speak a message.' : 'Listening. Speech recognition is handled by your browser.');
+    setDictating(true);
+    recognition.lang = navigator.language || 'en-US';
+    recognition.continuous = false;
+    recognition.interimResults = true;
+    recognition.onresult = event => {
+      const finalParts: string[] = [];
+      const interimParts: string[] = [];
+      for (let index = 0; index < event.results.length; index++) {
+        const result = event.results[index];
+        const transcript = result[0]?.transcript.trim();
+        if (!transcript) continue;
+        (result.isFinal ? finalParts : interimParts).push(transcript);
+      }
+      speechFinalRef.current = finalParts.join(' ');
+      speechInterimRef.current = interimParts.join(' ');
+      setInput([dictationBaseRef.current, speechFinalRef.current, speechInterimRef.current].filter(Boolean).join(' '));
+    };
+    recognition.onerror = event => {
+      if (event.error === 'no-speech') {
+        setVoiceStatus(voiceTurn ? 'No speech detected. Listening again…' : describeSpeechError(event.error));
+        return;
+      }
+      speechFailedRef.current = true;
+      setVoiceError(describeSpeechError(event.error));
+      if (voiceTurn) { voiceModeRef.current = false; setVoiceMode(false); pendingVoiceReplyRef.current = false; }
+    };
+    recognition.onend = () => {
+      speechRecognitionRef.current = null;
+      setDictating(false);
+      if (skipRecognitionEndRef.current) { skipRecognitionEndRef.current = false; return; }
+      if (speechFailedRef.current) return;
+      const transcript = speechFinalRef.current.trim();
+      if (voiceTurn && voiceModeRef.current) {
+        if (transcript) {
+          setVoiceStatus('Sending your message…');
+          sendSpeechRef.current(transcript);
+        } else {
+          setVoiceStatus('Listening again. Speak when ready.');
+          voiceRestartTimerRef.current = window.setTimeout(() => startVoiceListeningRef.current(), 600);
+        }
+      } else if (!voiceTurn) {
+        setVoiceStatus(transcript ? 'Dictation added. Review or edit it before sending.' : 'No speech detected. Try again.');
+      }
+    };
+    speechRecognitionRef.current = recognition;
+    try {
+      recognition.start();
+    } catch {
+      speechRecognitionRef.current = null;
+      setDictating(false);
+      setVoiceError('Could not start speech recognition. Check your browser microphone permissions.');
+      if (voiceTurn) { voiceModeRef.current = false; setVoiceMode(false); }
+    }
+  }
+  startVoiceListeningRef.current = () => startSpeechCapture(true);
+
+  function stopVoiceMode() {
+    voiceModeRef.current = false;
+    pendingVoiceReplyRef.current = false;
+    setVoiceMode(false);
+    setDictating(false);
+    setVoiceStatus('Voice mode is off.');
+    if (voiceRestartTimerRef.current !== null) window.clearTimeout(voiceRestartTimerRef.current);
+    voiceRestartTimerRef.current = null;
+    if (speechRecognitionRef.current) {
+      skipRecognitionEndRef.current = true;
+      speechRecognitionRef.current.stop();
+    }
+    if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+  }
+
+  async function send(spokenText?: string) {
+    const text = spokenText ?? input;
+    if ((!text.trim() && !attachments.length) || !conversationId || readingFiles || sendingRef.current) return;
+    if (speechRecognitionRef.current) {
+      skipRecognitionEndRef.current = true;
+      speechRecognitionRef.current.stop();
+    }
+    if (voiceModeRef.current) {
+      const latestReply = [...messages].reverse().find(message => message.senderType === 'bot' && message.messageType === MessageType.TEXT);
+      voiceReplyCursorRef.current = latestReply?.id || '';
+      pendingVoiceReplyRef.current = true;
+      setVoiceStatus('Cypher is working on your message…');
+    }
     sendingRef.current = true;
-    const text = input;
     const files = attachments;
     const previousDraft=unconfirmedDraft.current;
     const messageId=previousDraft?.text===text && JSON.stringify(previousDraft.files)===JSON.stringify(files) && previousDraft.reply===replyTo?.id?previousDraft.id:crypto.randomUUID();
@@ -168,6 +285,87 @@ export function ChatPanel({ bot, room, bots, onCreateBot, onCreateRoom, onQuickS
   }
   const visibleMessages = messages.filter(m => !m.internal && (!messageQuery.trim() || m.content.toLowerCase().includes(messageQuery.trim().toLowerCase())));
   const activeJobs = jobs.filter(j => j.status === 'pending' || j.status === 'running' || j.status === 'cancel_requested');
+  sendSpeechRef.current = text => { void send(text); };
+  const latestVoiceReply = [...messages].reverse().find(message => !message.internal && message.senderType === 'bot' && message.messageType === MessageType.TEXT && !!message.content.trim());
+  function toggleVoiceMode() {
+    if (voiceModeRef.current) { stopVoiceMode(); return; }
+    if (!conversationId || loading || sending || activeJobs.length) {
+      setVoiceError('Wait for the current work to finish before starting Voice mode.');
+      return;
+    }
+    if (input.trim() || attachments.length || replyTo) {
+      setVoiceError('Send or clear the current draft before starting Voice mode.');
+      return;
+    }
+    if (!('speechSynthesis' in window)) {
+      setVoiceError('Voice replies are not supported in this browser.');
+      return;
+    }
+    if (!hasSpeechRecognition()) {
+      setVoiceError('Speech input is not available in this browser. Type your message instead.');
+      return;
+    }
+    voiceReplyCursorRef.current = latestVoiceReply?.id || '';
+    pendingVoiceReplyRef.current = false;
+    voiceModeRef.current = true;
+    setVoiceMode(true);
+    setVoiceError('');
+    setVoiceStatus('Voice mode is on. Speak when the microphone starts.');
+    startSpeechCapture(true);
+  }
+  useEffect(() => {
+    if (!voiceMode || !pendingVoiceReplyRef.current || sending || activeJobs.length) return;
+    if (!latestVoiceReply || latestVoiceReply.id === voiceReplyCursorRef.current) {
+      const retryTimer = window.setTimeout(() => {
+        if (voiceModeRef.current && pendingVoiceReplyRef.current) setVoiceStatus('Still waiting for Cypher’s reply…');
+      }, 10000);
+      return () => window.clearTimeout(retryTimer);
+    }
+    voiceReplyCursorRef.current = latestVoiceReply.id;
+    pendingVoiceReplyRef.current = false;
+    const speechText = latestVoiceReply.content
+      .replace(/!\[([^\]]*)\]\([^)]+\)/g, '$1')
+      .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+      .replace(/https?:\/\/\S+/g, '')
+      .replace(/[#*_~]/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+    if (!speechText) {
+      setVoiceStatus('Listening again. Speak when ready.');
+      voiceRestartTimerRef.current = window.setTimeout(() => startVoiceListeningRef.current(), 500);
+      return;
+    }
+    const utterance = new SpeechSynthesisUtterance(speechText);
+    utterance.lang = navigator.language || 'en-US';
+    utterance.onend = () => {
+      if (!voiceModeRef.current) return;
+      setVoiceStatus('Listening again. Speak when ready.');
+      voiceRestartTimerRef.current = window.setTimeout(() => startVoiceListeningRef.current(), 400);
+    };
+    utterance.onerror = () => {
+      if (!voiceModeRef.current) return;
+      setVoiceError('Voice playback failed. Turn Voice mode off and on to retry.');
+      voiceModeRef.current = false;
+      pendingVoiceReplyRef.current = false;
+      setVoiceMode(false);
+    };
+    window.speechSynthesis.cancel();
+    setVoiceStatus('Cypher is speaking…');
+    window.speechSynthesis.speak(utterance);
+  }, [voiceMode, sending, activeJobs.length, latestVoiceReply?.id, latestVoiceReply?.content]);
+  useEffect(() => {
+    if (voiceModeRef.current) stopVoiceMode();
+    else if (speechRecognitionRef.current) {
+      skipRecognitionEndRef.current = true;
+      speechRecognitionRef.current.stop();
+      setDictating(false);
+    }
+    setVoiceError('');
+    setVoiceStatus('');
+  }, [bot?.id, room?.id]);
+  useEffect(() => {
+    if (error && voiceModeRef.current) stopVoiceMode();
+  }, [error]);
   const fontFamily = font === 'serif' ? 'Georgia, serif' : font === 'system' ? '-apple-system, BlinkMacSystemFont, system-ui, sans-serif' : '"Inter Variable", sans-serif';
   return <main className={`main-content ${draggingFiles ? 'files-dragging' : ''}`} style={{ fontFamily }} onDragOver={e=>{if(e.dataTransfer.types.includes('Files')){e.preventDefault();setDraggingFiles(true);}}} onDragLeave={e=>{if(!e.currentTarget.contains(e.relatedTarget as Node))setDraggingFiles(false);}} onDrop={e=>{e.preventDefault();setDraggingFiles(false);if(!readingFiles && conversationId)void addFiles(e.dataTransfer.files);}}>
     {draggingFiles?<div className="file-drop-hint">Drop files into this conversation</div>:null}
@@ -188,9 +386,9 @@ export function ChatPanel({ bot, room, bots, onCreateBot, onCreateRoom, onQuickS
     {activeJobs.length ? <div className="active-work" role="status"><span>{activeJobs.some(job => job.status === 'running') ? 'Working on your request' : activeJobs.some(job => job.status === 'cancel_requested') ? 'Stopping…' : 'Request queued'}{activeJobs.length > 1 ? ` · ${activeJobs.length} tasks` : ''}</span><button disabled={stopping || activeJobs.every(job => job.status === 'cancel_requested')} onClick={async () => { setStopping(true); const cancellable=activeJobs.filter(job => job.status !== 'cancel_requested'); const results=await Promise.allSettled(cancellable.map(job => api.cancelJob(conversationId,job.id))); if(results.some(result => result.status === 'rejected')) setError('Some work could not be stopped. Try again.'); setJobs(await api.getJobs(conversationId).catch(() => jobs)); setStopping(false); }}>Stop</button></div> : null}
     {attachments.length ? <div className="attachment-tray">{attachments.map((a,i) => <span key={`${a.name}-${i}`}>{a.mime.startsWith('image/') ? <img src={`data:${a.mime};base64,${a.data}`} alt=""/> : null}{a.name}<button aria-label={`Remove ${a.name}`} onClick={() => setAttachments(prev => prev.filter((_,index) => index !== i))}>Remove</button></span>)}</div> : null}
     {replyTo?<div className="reply-preview"><span>Replying in an isolated thread: {replyTo.content.slice(0,110)}</span><button onClick={()=>setReplyTo(null)}>Cancel reply</button></div>:null}
-    <div className="composer"><input className="visually-hidden" ref={fileInput} type="file" multiple accept=".png,.jpg,.jpeg,.webp,.pdf,.txt,.md,.csv,.json,.mp3,.wav,.m4a,.ogg,.flac,.mp4,.webm,.mov" onChange={e => void addFiles(e.target.files)}/><label className="visually-hidden" htmlFor="message">Message {title}</label><textarea id="message" rows={1} maxLength={20000} value={input} placeholder={`Message ${title}`} onChange={e => { setInput(e.target.value); e.currentTarget.style.height="auto"; e.currentTarget.style.height=Math.min(e.currentTarget.scrollHeight,150)+"px"; }} onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); void send(); } }}/><div className="composer-footer"><button className="attach-button" aria-label="Attach files" disabled={readingFiles || !conversationId} onClick={() => fileInput.current?.click()}><svg viewBox="0 0 24 24"><path d="M12 4v16M4 12h16"/></svg></button><div className="composer-options"><span>Response</span><GlassSelect aria-label="Response format" value={options.output||'text'} onChange={event=>setOptions(current=>({...current,output:event.target.value as 'text'|'image',aspect_ratio:'16:9'}))}><option value="text">Text</option><option value="image">Image</option></GlassSelect><button className="tools-toggle" aria-pressed={options.allow_tools!==false} onClick={()=>setOptions(current=>({...current,allow_tools:current.allow_tools===false}))}>{options.allow_tools===false?'Tools off':'Tools on'}</button><span className="composer-model">{options.routing==='manual'?(options.model || bot?.llmModel):'Auto · task specialists'}</span></div><button className="send-button" aria-label="Send message" disabled={!conversationId || sending || readingFiles || (!input.trim() && !attachments.length)} onClick={send}><svg viewBox="0 0 24 24"><path d="M12 19V5m-6 6 6-6 6 6"/></svg></button></div></div>
+    <div className="composer"><input className="visually-hidden" ref={fileInput} type="file" multiple accept=".png,.jpg,.jpeg,.webp,.pdf,.txt,.md,.csv,.json,.mp3,.wav,.m4a,.ogg,.flac,.mp4,.webm,.mov" onChange={e => void addFiles(e.target.files)}/><label className="visually-hidden" htmlFor="message">Message {title}</label><textarea id="message" rows={1} maxLength={20000} value={input} placeholder={`Message ${title}`} onChange={e => { setInput(e.target.value); e.currentTarget.style.height="auto"; e.currentTarget.style.height=Math.min(e.currentTarget.scrollHeight,150)+"px"; }} onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); void send(); } }}/><div className="composer-footer"><button className="attach-button" aria-label="Attach files" disabled={readingFiles || !conversationId || voiceMode} onClick={() => fileInput.current?.click()}><svg viewBox="0 0 24 24"><path d="M12 4v16M4 12h16"/></svg></button><button type="button" className="chat-speech-button" aria-label={dictating ? "Stop dictation" : "Dictate message"} aria-pressed={dictating} disabled={!conversationId || sending || readingFiles || voiceMode} onClick={() => { if (speechRecognitionRef.current) speechRecognitionRef.current.stop(); else startSpeechCapture(false); }} title="Dictate using your browser speech service"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3m-4 0h8"/></svg><span>{dictating ? "Listening…" : "Dictate"}</span></button><div className="composer-options"><span>Response</span><GlassSelect aria-label="Response format" value={options.output||'text'} onChange={event=>setOptions(current=>({...current,output:event.target.value as 'text'|'image',aspect_ratio:'16:9'}))}><option value="text">Text</option><option value="image">Image</option></GlassSelect><button className="tools-toggle" aria-pressed={options.allow_tools!==false} onClick={()=>setOptions(current=>({...current,allow_tools:current.allow_tools===false}))}>{options.allow_tools===false?'Tools off':'Tools on'}</button><span className="composer-model">{options.routing==='manual'?(options.model || bot?.llmModel):'Auto · task specialists'}</span></div><button type="button" className="voice-mode-button" aria-label={voiceMode ? "Turn voice mode off" : "Turn voice mode on"} aria-pressed={voiceMode} disabled={!conversationId || loading || sending || (activeJobs.length > 0 && !voiceMode)} onClick={toggleVoiceMode} title="Talk with Cypher; replies will be spoken"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 13v-1a9 9 0 0 1 18 0v1M3 13h4v7H5a2 2 0 0 1-2-2v-5Zm18 0h-4v7h2a2 2 0 0 0 2-2v-5Z"/></svg><span>{voiceMode ? (dictating ? "Listening" : "Voice on") : "Voice mode"}</span></button><button className="send-button" aria-label="Send message" disabled={!conversationId || sending || readingFiles || (!input.trim() && !attachments.length)} onClick={() => void send()}><svg viewBox="0 0 24 24"><path d="M12 19V5m-6 6 6-6 6 6"/></svg></button></div></div>
     {readingFiles?<p className="input-note" role="status">Reading files…</p>:null}
-    <p className="input-note">{options.output && options.output !== 'text' ? 'Media mode uses your text prompt. Choose Text to discuss attached files.' : 'Enter to send · Shift + Enter for a new line · Text drafts saved in this tab'}</p>
+    {voiceError ? <p className="voice-status" data-state="error" role="alert">{voiceError}</p> : voiceStatus ? <p className="voice-status" data-state={dictating ? 'listening' : voiceMode ? 'active' : 'idle'} role="status">{voiceStatus}{voiceMode ? <span className="voice-provider-note">Browser speech services handle listening and playback.</span> : null}</p> : <p className="input-note">{options.output && options.output !== 'text' ? 'Media mode uses your text prompt. Choose Text to discuss attached files.' : 'Enter to send · Shift + Enter for a new line · Text drafts saved in this tab'}</p>}
     </>}
   </main>;
 }
