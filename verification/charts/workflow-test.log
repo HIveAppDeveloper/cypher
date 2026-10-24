@@ -1,0 +1,76 @@
+.                                                                        [100%]
+=============================== warnings summary ===============================
+backend/app/services/worker.py:20
+  /Users/boaznovik/Documents/Codex/2026-10-24/cypher-charts/backend/app/services/worker.py:20: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    PROCESS_STARTED_AT = datetime.utcnow().isoformat()+'Z'
+
+tests/test_chart_workflow.py: 14 warnings
+  /private/tmp/prospecting-tests-venv/lib/python3.14/site-packages/sqlalchemy/sql/schema.py:4296: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    return util.wrap_callable(lambda ctx: fn(), fn)  # type: ignore[call-arg, no-any-return, no-untyped-call]  # noqa: E501
+
+tests/test_chart_workflow.py::test_requested_chart_survives_worker_and_downloads_remain_tenant_scoped
+  /Users/boaznovik/Documents/Codex/2026-10-24/cypher-charts/backend/app/services/worker.py:127: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    await db.execute(update(Task).where(Task.status == "cancel_requested").values(status="cancelled", completed_at=datetime.utcnow(), result={"note":"Worker restarted after cancellation. Review any in-flight external actions."}))
+
+tests/test_chart_workflow.py::test_requested_chart_survives_worker_and_downloads_remain_tenant_scoped
+  /Users/boaznovik/Documents/Codex/2026-10-24/cypher-charts/backend/app/services/worker.py:88: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    item = RuntimeHeartbeat(name="worker", updated_at=datetime.utcnow())
+
+tests/test_chart_workflow.py::test_requested_chart_survives_worker_and_downloads_remain_tenant_scoped
+  /Users/boaznovik/Documents/Codex/2026-10-24/cypher-charts/backend/app/services/worker.py:93: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    db.add(RuntimeCheck(name='worker_release', status='running', detail={**runtime_identity(), 'boot_id':PROCESS_BOOT_ID, 'boot_started_at':PROCESS_STARTED_AT}, updated_at=datetime.utcnow()))
+
+tests/test_chart_workflow.py::test_requested_chart_survives_worker_and_downloads_remain_tenant_scoped
+tests/test_chart_workflow.py::test_requested_chart_survives_worker_and_downloads_remain_tenant_scoped
+tests/test_chart_workflow.py::test_requested_chart_survives_worker_and_downloads_remain_tenant_scoped
+  /Users/boaznovik/Documents/Codex/2026-10-24/cypher-charts/backend/app/services/computer.py:103: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    await db.execute(delete(ComputerCommand).where(ComputerCommand.created_at<datetime.utcnow()-timedelta(hours=1)))
+
+tests/test_chart_workflow.py::test_requested_chart_survives_worker_and_downloads_remain_tenant_scoped
+tests/test_chart_workflow.py::test_requested_chart_survives_worker_and_downloads_remain_tenant_scoped
+tests/test_chart_workflow.py::test_requested_chart_survives_worker_and_downloads_remain_tenant_scoped
+  /Users/boaznovik/Documents/Codex/2026-10-24/cypher-charts/backend/app/services/automation.py:20: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    due=or_(Goal.next_run_at.is_(None),Goal.next_run_at<=datetime.utcnow())
+
+tests/test_chart_workflow.py::test_requested_chart_survives_worker_and_downloads_remain_tenant_scoped
+tests/test_chart_workflow.py::test_requested_chart_survives_worker_and_downloads_remain_tenant_scoped
+tests/test_chart_workflow.py::test_requested_chart_survives_worker_and_downloads_remain_tenant_scoped
+  /Users/boaznovik/Documents/Codex/2026-10-24/cypher-charts/backend/app/services/automation.py:87: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    d=(await db.execute(select(Delivery).where(Delivery.status=='pending',Delivery.next_attempt_at<=datetime.utcnow()).with_for_update(skip_locked=True).limit(1))).scalar_one_or_none()
+
+tests/test_chart_workflow.py::test_requested_chart_survives_worker_and_downloads_remain_tenant_scoped
+tests/test_chart_workflow.py::test_requested_chart_survives_worker_and_downloads_remain_tenant_scoped
+tests/test_chart_workflow.py::test_requested_chart_survives_worker_and_downloads_remain_tenant_scoped
+  /Users/boaznovik/Documents/Codex/2026-10-24/cypher-charts/backend/app/services/workspace.py:74: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    rows=(await db.execute(select(Routine).where(Routine.enabled==True,Routine.next_run_at<=datetime.utcnow()).limit(10).with_for_update(skip_locked=True))).scalars().all()
+
+tests/test_chart_workflow.py::test_requested_chart_survives_worker_and_downloads_remain_tenant_scoped
+tests/test_chart_workflow.py::test_requested_chart_survives_worker_and_downloads_remain_tenant_scoped
+tests/test_chart_workflow.py::test_requested_chart_survives_worker_and_downloads_remain_tenant_scoped
+  /Users/boaznovik/Documents/Codex/2026-10-24/cypher-charts/backend/app/services/worker.py:200: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    (TaskExecution.next_attempt_at.is_(None)) | (TaskExecution.next_attempt_at <= datetime.utcnow()),
+
+tests/test_chart_workflow.py::test_requested_chart_survives_worker_and_downloads_remain_tenant_scoped
+  /Users/boaznovik/Documents/Codex/2026-10-24/cypher-charts/backend/app/services/worker.py:219: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    state.updated_at = datetime.utcnow()
+
+tests/test_chart_workflow.py::test_requested_chart_survives_worker_and_downloads_remain_tenant_scoped
+  /Users/boaznovik/Documents/Codex/2026-10-24/cypher-charts/backend/app/services/worker.py:221: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    task.started_at = task.started_at or datetime.utcnow()
+
+tests/test_chart_workflow.py::test_requested_chart_survives_worker_and_downloads_remain_tenant_scoped
+  /private/tmp/prospecting-tests-venv/lib/python3.14/site-packages/pydantic/_internal/_generate_schema.py:1507: UserWarning: Item 'summary' on TypedDict class 'ChatCompletionReasoningItem' is using the `ReadOnly` qualifier. Pydantic will not protect items from any mutation on dictionary instances.
+    warnings.warn(
+
+tests/test_chart_workflow.py::test_requested_chart_survives_worker_and_downloads_remain_tenant_scoped
+tests/test_chart_workflow.py::test_requested_chart_survives_worker_and_downloads_remain_tenant_scoped
+tests/test_chart_workflow.py::test_requested_chart_survives_worker_and_downloads_remain_tenant_scoped
+  /Users/boaznovik/Documents/Codex/2026-10-24/cypher-charts/backend/app/services/execution.py:75: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    step.output, step.status, step.updated_at = result, 'completed', datetime.utcnow()
+
+tests/test_chart_workflow.py::test_requested_chart_survives_worker_and_downloads_remain_tenant_scoped
+  /Users/boaznovik/Documents/Codex/2026-10-24/cypher-charts/backend/app/services/worker.py:268: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    task.completed_at = datetime.utcnow()
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+1 passed, 40 warnings in 4.32s
