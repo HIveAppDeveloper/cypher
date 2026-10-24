@@ -18,6 +18,7 @@ export function pluginStatus(plugin: PluginEvidence, now = Date.now()) {
     tone: 'warning', detail: check.detail?.message || 'The last check failed. Retry or reconnect this app.',
   };
   if (!plugin.tools.some(tool => tool.enabled !== false)) return { label: 'No tools enabled', tone: 'neutral', detail: 'Enable a tool in Manage to use this connection.' };
+  if (check?.status === 'fallback') return { label: 'Website fallback', tone: 'neutral', detail: 'The public website responded. The MCP tool remains unavailable.' };
   const checkedAt = Date.parse(check?.checked_at || '');
   const fresh = Number.isFinite(checkedAt) && now >= checkedAt && now - checkedAt < 24 * 60 * 60 * 1000;
   if (check?.status === 'passed' && fresh) return { label: 'Test passed', tone: 'success', detail: 'A read-only tool call passed. This does not test every tool.' };

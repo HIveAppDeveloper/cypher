@@ -9,6 +9,26 @@ from .test_workspace_workflows import workspace
 
 
 @pytest.mark.asyncio
+async def test_website_fallback_is_not_reported_as_mcp_execution_pass(workspace,monkeypatch):
+    client,sessions=workspace
+    async def invoke(*_):
+        return {'success':True,'verification_mode':'public_website_fallback','source_url':'https://jobherder.com/pricing','content':'Public pricing page'}
+    monkeypatch.setattr(plugins,'invoke',invoke)
+    tenant=current_tenant_id.set('fallback-owner')
+    try:
+        async with sessions() as db:
+            plugin=Plugin(name='Jobherder',url='https://jobherder.com/mcp',enabled=True,tools=[{'name':'get_pricing','description':'Pricing'}])
+            db.add(plugin);await db.commit();pid=plugin.id
+    finally:current_tenant_id.reset(tenant)
+    response=await client.post(f'/api/plugins/{pid}/test',headers={'x-grokbot-user-id':'fallback-owner'})
+    data=response.json()
+    assert response.status_code==200 and data['status']=='fallback'
+    assert data['verification_mode']=='public_website_fallback' and data['source_url']=='https://jobherder.com/pricing'
+    saved=(await client.get('/api/plugins',headers={'x-grokbot-user-id':'fallback-owner'})).json()[0]
+    assert saved['verification']['status']=='fallback'
+
+
+@pytest.mark.asyncio
 async def test_damaged_saved_credential_does_not_hide_all_other_connections(workspace):
     client,sessions=workspace
     tenant=current_tenant_id.set('credential-list-owner')

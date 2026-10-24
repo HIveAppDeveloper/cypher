@@ -209,16 +209,23 @@ async def test_connection(id:UUID,db:AsyncSession=Depends(get_db)):
             return await finish('failed','This server did not return any tools. Refresh or reconnect it before using it.',code='no_tools',tool_count=0)
         return await finish('discovered','Tools discovered. Execution has not been tested for this service.',tool_count=len(tools))
     code=None
+    mode=None
+    source_url=None
     try:
         async with asyncio.timeout(45):
             result=await invoke(plugin.id,example[0],example[1])
         passed=result.get('success') is True
         code=result.get('code')
+        mode=result.get('verification_mode')
+        source_url=result.get('source_url')
     except Exception:
         passed=False
     message='A read-only tool returned successfully.' if passed else 'The read-only test failed. Reconnect or check the service permissions.'
     if code=='invalid_provider_output':message='The provider returned output that does not match its published tool schema.'
     elif code=='sign_in_required':message='This saved connection needs sign-in again. Reconnect it in Plugins.'
     detail={'tool':example[0]}
+    if passed and mode=='public_website_fallback':
+        return await finish('fallback','The public website returned information. The MCP tool is still unavailable.',
+                            **detail,verification_mode=mode,source_url=source_url)
     if code in {'invalid_provider_output','sign_in_required'}:detail['code']=code
     return await finish('passed' if passed else 'failed',message,**detail)

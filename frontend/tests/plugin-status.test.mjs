@@ -9,6 +9,7 @@ const base = {url:'https://service.example/mcp',enabled:true,tools:[{enabled:tru
 test('a saved connection and successful discovery do not claim execution passed',()=>{
   assert.equal(pluginStatus(base,now).label,'Not tested');
   assert.equal(pluginStatus({...base,verification:{status:'discovered'}},now).label,'Tools found');
+  assert.equal(pluginStatus({...base,verification:{status:'fallback'}},now).label,'Website fallback');
 });
 test('only a recent completed execution test gets the success state',()=>{
   const passed = checked_at => ({...base,verification:{status:'passed',checked_at}});
