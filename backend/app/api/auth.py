@@ -2,6 +2,8 @@
 
 import asyncio
 import hashlib
+from html import escape
+from email.utils import formataddr, parseaddr
 import os
 import re
 import secrets
@@ -54,11 +56,15 @@ async def send_magic_link(email: str, raw_token: str, return_to: str | None = No
     if return_to := safe_return_to(return_to):
         link += f"&return_to={quote(return_to, safe='')}"
     payload = {
-        "from": settings.GROKBOT_AUTH_FROM,
+        "from": formataddr(("Cypher", parseaddr(settings.GROKBOT_AUTH_FROM)[1])),
         "to": [email],
-        "subject": "Your Open GrokBot sign-in link",
-        "text": f"Open your workspace: {link}\n\nThis link expires in 15 minutes and works once. If you did not request it, ignore this email.",
-        "html": f"<p>Open your Open GrokBot workspace.</p><p><a href=\"{link}\">Continue securely</a></p><p>This link expires in 15 minutes and works once.</p>",
+        "subject": "Your Cypher sign-in link",
+        "text": f"Open your Cypher workspace: {link}\n\nThis link expires in 15 minutes and works once. If you did not request it, ignore this email.",
+        "html": (f'<!doctype html><html lang="en" dir="ltr"><head><meta charset="UTF-8"><title>Sign in to Cypher</title></head>'
+                 f'<body><h1>Sign in to Cypher</h1><p>Open your Cypher workspace.</p>'
+                 f'<p><a href="{escape(link, quote=True)}">Continue to Cypher</a></p>'
+                 '<p>This link expires in 15 minutes and works once.</p>'
+                 '<p>If you did not request it, ignore this email.</p></body></html>'),
     }
     try:
         async with httpx.AsyncClient(timeout=12, follow_redirects=False) as client:
