@@ -282,7 +282,7 @@ export default function ProspectingWorkspace() {
   return <main className="cipher cx-prospecting">
     <CipherIntro />
     <header className="cx-toolbar">
-      <a href="/" className="cx-word"><CypherMark className="cx-brand-image" decorative/><span>Cypher</span></a>
+      <a href="/" className="cx-word"><CypherMark className="cx-brand-image" decorative level={voiceLevel}/><span>Cypher</span></a>
       <nav className="cx-nav" aria-label="Main navigation">
         <a href="/workspace?plugins=1">Plugins</a>
         <a href="/workspace">Workspace</a>
@@ -295,7 +295,7 @@ export default function ProspectingWorkspace() {
       <p>Start with your website. Refine who you want to reach. Research real companies with public evidence.</p>
       <div className="cx-voice-control">
         <button type="button" className={`cx-voice-button is-${voiceState}`} onClick={() => void playVoice()} disabled={voiceState === 'checking' || voiceState === 'setup' || voiceState === 'loading'} aria-pressed={voiceState === 'playing'}>
-          <CypherMark className="cx-voice-mark" decorative/>
+          <CypherMark className="cx-voice-mark" decorative level={voiceLevel}/>
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 9v6h3.7l4.8 4V5l-4.8 4H4.5z"/><path d="M16 9a4 4 0 010 6M18.5 6.5a7.5 7.5 0 010 11"/></svg>
           {voiceState === 'checking' ? 'Checking voice…' : voiceState === 'setup' ? 'Voice setup needed' : voiceState === 'loading' ? 'Preparing voice…' : voiceState === 'playing' ? 'Stop voice' : voiceState === 'error' ? 'Try voice again' : 'Listen to the welcome'}
         </button>

@@ -38,10 +38,10 @@ body :is(.app-layout,.login-page,dialog) a {color:var(--cx-label);text-decoratio
 .cypher-mark {display:block;width:100%;height:auto;aspect-ratio:1624/630;overflow:hidden;flex-shrink:0}
 @media(prefers-color-scheme:dark) {:root:not([data-theme="light"]) .cypher-mark {filter:invert(1)}}
 :root[data-theme="dark"] .cypher-mark {filter:invert(1)}
-.sidebar-brand .brand-symbol,.mobile-nav-header .brand-symbol,.login-brand .brand-symbol {width:40px;height:auto;aspect-ratio:1624/630;border:0;border-radius:0;background:none;filter:none;transform:none;transition:opacity .2s ease}
+.sidebar-brand .brand-symbol,.mobile-nav-header .brand-symbol,.login-brand .brand-symbol {width:52px;height:auto;aspect-ratio:1624/630;border:0;border-radius:0;background:none;filter:contrast(1.3);transform-origin:center;transition:opacity .2s ease,transform .08s linear,filter .2s ease}
 .sidebar-brand:hover .brand-symbol {filter:none;transform:none;opacity:.65}
-@media(prefers-color-scheme:dark) {:root:not([data-theme="light"]) :is(.sidebar-brand,.mobile-nav-header,.login-brand) .brand-symbol {filter:invert(1)}}
-:root[data-theme="dark"] :is(.sidebar-brand,.mobile-nav-header,.login-brand) .brand-symbol {filter:invert(1)}
+@media(prefers-color-scheme:dark) {:root:not([data-theme="light"]) :is(.sidebar-brand,.mobile-nav-header,.login-brand) .brand-symbol {filter:invert(1) contrast(1.2)}}
+:root[data-theme="dark"] :is(.sidebar-brand,.mobile-nav-header,.login-brand) .brand-symbol {filter:invert(1) contrast(1.2)}
 .sidebar-shell .new-task-button,.btn-primary,.login-email-button,.connector-connect,.composer .send-button,.quickstart .task-composer-footer .btn-primary {background:var(--brand-action);color:var(--brand-on-action);box-shadow:none}
 .sidebar-shell .new-task-button:hover,.btn-primary:hover:not(:disabled),.connector-connect:hover {background:var(--brand-action);opacity:.84}
 .sidebar-shell .bot-row.selected,.sidebar-shell .roster-filters button[aria-pressed="true"],.glass-select-option[data-highlighted],.connector-tabs button[aria-pressed="true"] {background:var(--system-selected);color:var(--cx-label)}
