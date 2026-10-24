@@ -18,11 +18,14 @@ Import **sodikjonismoilov/VentureCruiter**, choose the repository root, and reta
 
 For the existing Hive Cypher project, use its existing environment and database configuration. For a separate installation, configure PostgreSQL, `GROKBOT_BACKEND_API_TOKEN` / backend `BACKEND_API_TOKEN`, authentication (`REQUIRE_USER_AUTH=true`, `AUTH_SESSION_SECRET`), and model credentials before making it public; see `.env.example` and `deployment/`. Google sign-in and connected providers also require the new hostname in their registered callback URLs. The current canonical sign-in hostname is `cypher-agent.vercel.app` in `frontend/src/lib/canonical-app.ts`; change it when creating a separately hosted installation.
 
+Use the [exact-candidate release gate](deployment/release-gate.md) before promotion. It checks public routes, backend binding, database access, worker freshness/release parity and required service configuration.
+
 ### HTTP endpoints
 
 | Endpoint | Purpose |
 | --- | --- |
 | `GET /api/health` | Public readiness probe; 200 when the backend health probe succeeds, otherwise 503. Returns no credentials or internal addresses. |
+| `GET /api/release` | Public frontend deployment identity and backend binding presence; no credentials or internal addresses. |
 | `GET /api/runtime` | Authenticated runtime, model and worker capability information. |
 | `/api/*` | Same-origin API proxy to the private backend, retaining existing session and service authorization. |
 | `/` | Agent workspace. |

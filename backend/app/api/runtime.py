@@ -75,7 +75,7 @@ async def runtime(db=Depends(get_db)):
     details = {}
     transport = 'omniroute' if settings.OMNIROUTE_URL else 'direct'
     recorded_checks = {item.name:item for item in (await db.execute(select(RuntimeCheck))).scalars().all()}
-    from app.services.model_connections import can_manage, public_connections, model_map
+    from app.services.model_connections import can_manage, public_connections, model_map, remote_control_available
     managed = can_manage()
     model_records = [item for name, item in recorded_checks.items() if name.startswith('model_connection:')]
     connections = {'can_manage_model_connections':managed,'model_connections':public_connections(model_records) if managed else []}
@@ -86,8 +86,9 @@ async def runtime(db=Depends(get_db)):
             details[name] = {'status':'not_checked' if stale_transport else result.status,'detail':{} if stale_transport else result.detail,'checked_at':result.updated_at.isoformat()+'Z'}
     managed_provider_key = any((item.detail or {}).get('state') == 'ready' and (item.detail or {}).get('credentials_encrypted')
                                for name, item in recorded_checks.items() if name in {'model_connection:gemini', 'model_connection:xai'})
-    model_configured = bool(settings.OMNIROUTE_URL and settings.OMNIROUTE_API_KEY) or bool(settings.LLM_API_KEY) or managed_provider_key
-    return {'checks':details, **checks, **connections, 'database':True,'worker':worker_fresh and version_ready,'worker_last_seen_seconds':int(age) if age is not None else None,'worker_version_matches':version_matches,'deployment':deployment,'worker_deployment':worker_deployment,'model_transport':transport,'model_configured':model_configured,'configured_models':list(model_map(model_records)) if settings.OMNIROUTE_URL else [],'sandbox_backend':settings.SANDBOX_BACKEND}
+    model_configured = bool(settings.OMNIROUTE_API_KEY) if settings.OMNIROUTE_URL else bool(settings.LLM_API_KEY) or managed_provider_key
+    configured_services = {'model': model_configured, 'model_control': remote_control_available(), 'backend_auth': len(settings.BACKEND_API_TOKEN) >= 32, 'atlas_engine': bool(settings.GROKBOT_ATLAS_ENGINE_ENABLED and settings.ATLAS_ENGINE_SIGNING_KEY)}
+    return {'configured_services': configured_services, 'checks':details, **checks, **connections, 'database':True,'worker':worker_fresh and version_ready,'worker_last_seen_seconds':int(age) if age is not None else None,'worker_version_matches':version_matches,'deployment':deployment,'worker_deployment':worker_deployment,'model_transport':transport,'model_configured':model_configured,'configured_models':list(model_map(model_records)) if settings.OMNIROUTE_URL else [],'sandbox_backend':settings.SANDBOX_BACKEND}
 
 @router.post('/checks', status_code=202)
 async def request_checks(db=Depends(get_db)):

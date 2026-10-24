@@ -179,3 +179,22 @@ def test_stopping_an_absent_managed_computer_is_idempotent(monkeypatch):
     monkeypatch.setattr(SyncSandboxClient,'create',lambda:Client())
     stop(str(uuid4()))
     assert closed==[True]
+
+
+@pytest.mark.asyncio
+async def test_release_service_configuration_is_explicit_and_credential_free(cloud_db, monkeypatch):
+    client, _ = cloud_db
+    monkeypatch.setattr(settings, 'OMNIROUTE_URL', 'https://router.example')
+    monkeypatch.setattr(settings, 'OMNIROUTE_API_KEY', '')
+    monkeypatch.setattr(settings, 'LLM_API_KEY', 'unreachable-direct-secret')
+    monkeypatch.setattr(settings, 'OMNIROUTE_CONTROL_KEY', '')
+    monkeypatch.setattr(settings, 'GROKBOT_ATLAS_ENGINE_ENABLED', False)
+    result = (await client.get('/api/runtime')).json()
+    assert result['model_configured'] is False  # OmniRoute is exclusive.
+    assert result['configured_services'] == {'model': False, 'model_control': False, 'backend_auth': False, 'atlas_engine': False}
+    monkeypatch.setattr(settings, 'OMNIROUTE_API_KEY', 'private-inference-secret')
+    monkeypatch.setattr(settings, 'OMNIROUTE_CONTROL_KEY', 'private-control-secret')
+    monkeypatch.setattr(settings, 'BACKEND_API_TOKEN', 'private-backend-secret-32-characters-minimum')
+    result = (await client.get('/api/runtime', headers={'Authorization': 'Bearer ' + settings.BACKEND_API_TOKEN})).json()
+    assert result['configured_services'] == {'model': True, 'model_control': True, 'backend_auth': True, 'atlas_engine': False}
+    assert 'private-' not in str(result) and 'unreachable-direct-secret' not in str(result)

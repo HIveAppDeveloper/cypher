@@ -1,0 +1,21 @@
+name: Release contract
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  release-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Test release blockers without credentials or provider traffic
+        run: node --test scripts/release-smoke.test.mjs
+      - name: Install frontend test dependencies
+        working-directory: frontend
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Test public release metadata and existing frontend contracts
+        working-directory: frontend
+        run: node --test tests/*.test.mjs
