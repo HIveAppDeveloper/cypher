@@ -106,7 +106,10 @@ export default function VcProspectingWorkspace() {
           setNotice(next.status === 'completed' || next.status === 'partial' ? 'SEC snapshot and match results are ready.' : 'The run stopped before producing results.');
         }
       } catch (failure) {
-        if (!controller.signal.aborted) setError(errorMessage(failure));
+        if (!controller.signal.aborted) {
+          setError(errorMessage(failure));
+          timer = setTimeout(poll, 5000);
+        }
       }
     };
     void poll();
