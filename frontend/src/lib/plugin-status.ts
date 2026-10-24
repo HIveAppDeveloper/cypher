@@ -6,6 +6,10 @@ export interface PluginEvidence {
   verification?: { status: string; checked_at?: string; detail?: { code?: string; message?: string } };
 }
 
+export function isAccountPlugin(plugin: PluginEvidence & { authenticated: boolean }) {
+  return plugin.authenticated || plugin.verification?.detail?.code === 'sign_in_required';
+}
+
 // A saved grant, discovered tools and a successful execution are separate facts.
 export function pluginStatus(plugin: PluginEvidence, now = Date.now()) {
   if (!plugin.enabled) return { label: 'Paused', tone: 'neutral', detail: 'Enable this connection to use its tools.' };

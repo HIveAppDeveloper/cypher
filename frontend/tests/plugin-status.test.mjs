@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { stripTypeScriptTypes } from 'node:module';
 const source=stripTypeScriptTypes(readFileSync(new URL('../src/lib/plugin-status.ts',import.meta.url),'utf8'));
-const {pluginStatus}=await import('data:text/javascript;base64,'+Buffer.from(source).toString('base64'));
+const {pluginStatus,isAccountPlugin}=await import('data:text/javascript;base64,'+Buffer.from(source).toString('base64'));
 const now = Date.parse('2026-10-24T20:00:00Z');
 const base = {url:'https://service.example/mcp',enabled:true,tools:[{enabled:true}]};
 test('a saved connection and successful discovery do not claim execution passed',()=>{
@@ -21,4 +21,6 @@ test('auth failures, paused tools and unsupported legacy websites have recovery 
   assert.equal(pluginStatus({...base,enabled:false},now).label,'Paused');
   assert.equal(pluginStatus({...base,tools:[{enabled:false}]},now).label,'No tools enabled');
   assert.equal(pluginStatus({...base,url:'site-mcp://gmail.com'},now).label,'Needs setup');
+  assert.equal(isAccountPlugin({...base,authenticated:false,verification:{status:'failed',detail:{code:'sign_in_required'}}}),true,'Expired accounts stay visible for reconnection');
+  assert.equal(isAccountPlugin({...base,authenticated:false}),false);
 });
