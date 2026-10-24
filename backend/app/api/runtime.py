@@ -12,6 +12,18 @@ from typing import Literal
 from pydantic import SecretStr
 Provider = Literal['openai', 'gemini', 'claude', 'xai']
 
+@router.get('/model-catalog/nicrron')
+async def nicrron_model_catalog():
+    """Expose only public chat-model metadata; the Nicrron key stays server-side."""
+    from app.services.nicrron import NicrronError, model_catalog
+    try:
+        return await model_catalog()
+    except NicrronError as error:
+        raise HTTPException(
+            status_code=503,
+            detail='Nicrron model catalog is temporarily unavailable. Try again shortly.',
+        ) from error
+
 @router.post('/model-connections/{provider}/verify', status_code=202)
 async def queue_model_verification(provider: Provider, db=Depends(get_db)):
     from app.services.model_connections import queue_check
