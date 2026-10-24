@@ -154,6 +154,7 @@ function chat(env, api) {
     './WorkPanel': { WorkPanel: 'work-panel' }, './GlassSelect': { GlassSelect: 'select' },
     '../lib/types': { MessageType: { TEXT: 'text' } }, '../lib/api': { api, ApiError },
     './BotAvatar': { BotAvatar: 'bot-avatar' }, './MessageBubble': { MessageBubble: 'message-bubble' },
+    './cipher/CypherMark': { __esModule: true, default: 'cypher-mark' },
     './QuickStart': { QuickStart: 'quick-start' }, './RunControls': { RunControls: 'run-controls', DEFAULT_OPTIONS: {} },
     '../lib/modelPolicy': { modelPolicy: value => value }, '../lib/attachments': { readAttachment: async () => ({ name: 'fixture.txt', mime: 'text/plain', data: 'eA==' }) } };
   const { ChatPanel } = load('../src/components/ChatPanel.tsx', { react: view.react, ...stubs }, env.globals);

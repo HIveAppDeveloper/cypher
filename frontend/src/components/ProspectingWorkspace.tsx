@@ -20,13 +20,15 @@ type Candidate = {
   contact: { status: string; email: string | null; source_url?: string | null };
   draft: Draft | null;
 };
-type RunEvent = { type: string; at: string; code?: string; source_url?: string; count?: number; result_id?: string };
+type RunEvent = { type: string; at: string; code?: string; source?: string; source_url?: string; count?: number; result_id?: string; credits_consumed?: number | null; credits_unknown?: boolean };
 type Run = {
   id: string;
   market: string;
   product: string;
   limit: number;
   status: string;
+  source?: string;
+  credits_consumed?: number | null;
   results: Candidate[];
   events: RunEvent[];
   gmail: { status: string; supported_draft?: boolean; detail?: string };
@@ -40,9 +42,10 @@ const STATUS_LABELS: Record<string, string> = {
   partial: 'Partial results', failed: 'Research stopped', cancel_requested: 'Stopping…', cancelled: 'Cancelled',
 };
 const EVENT_LABELS: Record<string, string> = {
-  queued: 'Research queued', started: 'Public source research started', discovered: 'Source candidates found',
+  queued: 'Research queued', started: 'Source research started', discovered: 'Source candidates found',
   result_saved: 'Company candidate saved', candidate_skipped: 'Candidate skipped', completed: 'Research completed',
-  source_error: 'Public source returned an error', cancel_requested: 'Stop requested', cancelled: 'Research cancelled', draft_prepared: 'App draft saved',
+  source_error: 'Research source returned an error', akta_request_started: 'Akta list request started',
+  akta_results_saved: 'Akta company records saved', cancel_requested: 'Stop requested', cancelled: 'Research cancelled', draft_prepared: 'App draft saved',
 };
 const statusLabel = (status: string) => STATUS_LABELS[status] || status.replace(/_/g, ' ');
 const errorText = (error: unknown) => error instanceof Error ? error.message : 'Something went wrong. Please try again.';
@@ -55,6 +58,8 @@ export default function ProspectingWorkspace() {
   const [market, setMarket] = useState('');
   const [product, setProduct] = useState('');
   const [confirmed, setConfirmed] = useState(false);
+  const [aktaAvailable, setAktaAvailable] = useState(false);
+  const [useAkta, setUseAkta] = useState(false);
   const [runs, setRuns] = useState<Run[]>([]);
   const [run, setRun] = useState<Run | null>(null);
   const [historyError, setHistoryError] = useState('');
@@ -85,6 +90,14 @@ export default function ProspectingWorkspace() {
       if (active) setVoiceState(data.configured ? 'ready' : 'setup');
     }).catch(() => { if (active) setVoiceState('error'); });
     return () => { active = false; };
+  }, []);
+
+  useEffect(() => {
+    let current = true;
+    request('/prospecting/settings').then((data: { akta_available?: boolean }) => {
+      if (current) setAktaAvailable(data.akta_available === true);
+    }).catch(() => { if (current) setAktaAvailable(false); });
+    return () => { current = false; };
   }, []);
 
   useEffect(() => () => {
@@ -159,7 +172,7 @@ export default function ProspectingWorkspace() {
     if (active || !confirmed || market.trim().length < 2 || product.trim().length < 2) return;
     void perform('run', async signal => {
       const next: Run = await request('/prospecting/runs', {
-        method: 'POST', signal, body: JSON.stringify({ market: market.trim(), product: product.trim(), limit: 20 }),
+        method: 'POST', signal, body: JSON.stringify({ market: market.trim(), product: product.trim(), limit: 20, use_akta: useAkta }),
       });
       if (signal.aborted) return;
       setRun(next); setSelected(''); setDraft(null);
@@ -328,7 +341,8 @@ export default function ProspectingWorkspace() {
         <label><span>Customer market or audience</span><input value={market} maxLength={300} minLength={2} required placeholder="Who benefits from this offer? Include industry, size, or region." onChange={event => { setMarket(event.target.value); setConfirmed(false); }} disabled={!!pending}/></label>
         <label><span>What you sell</span><textarea value={product} maxLength={2000} minLength={2} required rows={4} placeholder="Describe your product and the problem it solves." onChange={event => { setProduct(event.target.value); setConfirmed(false); }} disabled={!!pending}/></label>
         <label className="cx-confirm"><input type="checkbox" checked={confirmed} onChange={event => setConfirmed(event.target.checked)} disabled={!!pending}/><span>I reviewed and edited this profile. Use it to find potential customers.</span></label>
-        <button type="submit" className="cx-run" disabled={!!pending || !confirmed || active}>{pending === 'run' ? <><span className="cx-spinner" aria-hidden="true"/>Starting research…</> : 'Find up to 20 company candidates'}</button>
+        {aktaAvailable && <><label className="cx-akta-choice"><input type="checkbox" checked={useAkta} onChange={event => setUseAkta(event.target.checked)} disabled={!!pending}/><span><strong>Use Akta company data</strong><small>Paid list generation · up to 8 credits for 20 results. No enrichment is requested.</small></span></label><a className="cx-akta-pricing" href="https://docs.akta.pro/getting-started/pricing" target="_blank" rel="noopener noreferrer">See Akta pricing</a></>}
+        <button type="submit" className="cx-run" disabled={!!pending || !confirmed || active}>{pending === 'run' ? <><span className="cx-spinner" aria-hidden="true"/>Starting research…</> : useAkta ? 'Find companies with Akta' : 'Find up to 20 company candidates'}</button>
         <small className="cx-helper">Research returns source-backed company candidates. This source does not verify customer demand, contacts, or competitor status; review each result.</small>
       </form>
     </section>}
@@ -355,7 +369,7 @@ export default function ProspectingWorkspace() {
           {candidate && <article className="cx-detail-card" aria-label={`${candidate.name} research detail`}>
             <div className="cx-detail-header"><h3>{candidate.name}</h3><span className="cx-contact-status">{candidate.contact.email ? 'Public contact listed' : 'No verified contact'}</span></div>
             <div className="cx-detail-grid"><div><h4>Why it appeared</h4><p>{candidate.inferred.reason}</p><div className="cx-match-terms">{candidate.inferred.matched_terms.map(term => <span key={term}>{term}</span>)}</div></div>
-              <div><h4>Public evidence</h4><p className="cx-description">{candidate.observed.description || 'The source did not provide a readable company description.'}</p><a className="cx-evidence-link" href={candidate.source_url} target="_blank" rel="noopener noreferrer">Read {candidate.observed.source} source</a><small>Retrieved {new Date(candidate.retrieved_at).toLocaleString()}</small></div></div>
+              <div><h4>{candidate.observed.source === 'Akta' ? 'Akta company record' : 'Public evidence'}</h4><p className="cx-description">{candidate.observed.description || 'The source did not provide a readable company description.'}</p>{candidate.source_url ? <a className="cx-evidence-link" href={candidate.source_url} target="_blank" rel="noopener noreferrer">{candidate.observed.source === 'Akta' ? 'Visit listed company website' : `Read ${candidate.observed.source} source`}</a> : <small>Company details supplied by Akta · no public website was listed</small>}<small>Retrieved {new Date(candidate.retrieved_at).toLocaleString()}</small></div></div>
             {candidate.contact.email && candidate.contact.source_url && <p className="cx-verified-contact">Public business contact: <a href={`mailto:${candidate.contact.email}`}>{candidate.contact.email}</a> · <a href={candidate.contact.source_url} target="_blank" rel="noopener noreferrer">evidence</a></p>}
             {candidate.draft ? <div className="cx-draft-box"><div className="cx-draft-label"><strong>App draft preview · review required</strong><span>No recipient · not in Gmail</span></div><label>Subject<input value={draft?.subject || candidate.draft.subject} onChange={event => setDraft(current => current ? { ...current, subject: event.target.value } : candidate.draft)} disabled={!draft}/></label><label>Message<textarea rows={7} value={draft?.body || candidate.draft.body} onChange={event => setDraft(current => current ? { ...current, body: event.target.value } : candidate.draft)} disabled={!draft}/></label><div className="cx-draft-actions"><button type="button" className="cx-secondary" onClick={async () => { try { await navigator.clipboard.writeText(`Subject: ${draft?.subject || candidate.draft!.subject}\n\n${draft?.body || candidate.draft!.body}`); setNotice('Draft copied. No email was created or sent.'); } catch { setNotice('Clipboard access was unavailable.'); } }}>Copy draft</button><a href={`https://mail.google.com/mail/?view=cm&fs=1&su=${encodeURIComponent(draft?.subject || candidate.draft.subject)}&body=${encodeURIComponent(draft?.body || candidate.draft.body)}`} target="_blank" rel="noopener noreferrer">Open Gmail compose</a></div><p>Edits stay on this screen. Gmail compose opens with the text filled in; it is not a saved Gmail draft.</p></div> : <div className="cx-draft-cta"><div><strong>Prepare a source-aware introduction</strong><small>Saved in the app for review. No recipient or Gmail draft is created.</small></div><button type="button" className="cx-secondary" disabled={!!pending || active} onClick={prepareDraft}>{pending === 'draft' ? 'Preparing…' : 'Create app draft'}</button></div>}
             {notice && <p className="cx-notice" role="status">{notice}</p>}
@@ -367,7 +381,7 @@ export default function ProspectingWorkspace() {
       <aside className="cx-log" aria-label="Research activity">
         <div className="cx-log-head"><h2 className="cx-label">Activity</h2><span className={`cx-live-indicator ${active ? 'is-live' : ''}`}><i/> {active ? 'Live' : run ? statusLabel(run.status) : 'Ready'}</span></div>
         <ol>{run?.events.length ? [...run.events].reverse().map((entry, index) => <li key={`${entry.at}-${entry.type}-${index}`}>
-          <time dateTime={entry.at}>{localTime(entry.at)}</time><div><strong>{EVENT_LABELS[entry.type] || entry.type.replace(/_/g, ' ')}</strong>{entry.count !== undefined && <small>{entry.count} public candidates</small>}{entry.code && <small className="cx-event-code">{entry.code.replace(/_/g, ' ')}</small>}{entry.source_url && <a href={entry.source_url} target="_blank" rel="noopener noreferrer">Evidence source</a>}{entry.result_id && <small>Saved to this account</small>}</div>
+          <time dateTime={entry.at}>{localTime(entry.at)}</time><div><strong>{EVENT_LABELS[entry.type] || entry.type.replace(/_/g, ' ')}</strong>{entry.count !== undefined && <small>{entry.count} {entry.source === 'Akta' ? 'company records' : 'public candidates'}</small>}{entry.credits_consumed !== undefined && entry.credits_consumed !== null && <small>{entry.credits_consumed} Akta credits used</small>}{entry.credits_unknown && <small>Akta may have consumed credits before this request failed.</small>}{entry.code && <small className="cx-event-code">{entry.code.replace(/_/g, ' ')}</small>}{entry.source_url && <a href={entry.source_url} target="_blank" rel="noopener noreferrer">{entry.source === 'Akta' ? 'Akta list generation docs' : 'Evidence source'}</a>}{entry.result_id && <small>Saved to this account</small>}</div>
         </li>) : <li className="cx-activity-empty"><span>{run ? 'No activity recorded yet.' : 'Research steps and source links will appear here.'}</span></li>}</ol>
         <div className="cx-provider-status"><h3>Outreach connections</h3><div><strong>Gmail</strong><span className={run?.gmail?.status === 'connection_saved' ? 'is-connected' : 'is-setup'}>{run?.gmail?.status === 'connection_saved' ? 'Connection saved · not verified' : run?.gmail?.status === 'connection_required' ? 'Needs setup' : 'Check workspace'}</span></div><p>{run?.gmail?.detail || 'Google sign-in alone does not grant mailbox access. Check the existing workspace connection before using Gmail.'}</p><div><strong>Resend</strong><span className="is-unavailable">Unavailable in this flow</span></div><p>Sending stays disabled. The app has no verified Resend sender or authorized outreach account.</p><a href="/workspace?plugins=1">Open workspace connections</a></div>
         <div className="cx-history"><div className="cx-log-head"><h2 className="cx-label">Recent research</h2></div>{runs.length === 0 ? <p>No saved runs yet.</p> : runs.slice(0, 6).map(item => <button key={item.id} type="button" className={item.id === runId ? 'is-selected' : ''} disabled={!!pending} onClick={() => selectRun(item)} aria-pressed={item.id === runId}><strong>{item.market}</strong><span>{statusLabel(item.status)} · {item.results.length} candidates</span></button>)}</div>
