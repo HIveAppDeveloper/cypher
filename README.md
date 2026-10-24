@@ -8,7 +8,7 @@ Describe what you want to accomplish. Cypher coordinates AI models, connected ap
 
 | Item | Canonical location |
 | --- | --- |
-| Source | [sodikjonismoilov/VentureCruiter](https://github.com/sodikjonismoilov/VentureCruiter) |
+| Source | [HIveAppDeveloper/cypher](https://github.com/HIveAppDeveloper/cypher) |
 | Integration branch | `main` |
 | Production app | [cypher-agent.vercel.app](https://cypher-agent.vercel.app) |
 | Legacy app address | [open-grokbot.vercel.app](https://open-grokbot.vercel.app), kept on the same release |
@@ -30,8 +30,8 @@ App login, a saved connection, discovered tools, and a successful tool call are 
 ## Run the frontend locally
 
 ```sh
-git clone https://github.com/sodikjonismoilov/VentureCruiter.git
-cd VentureCruiter/frontend
+git clone https://github.com/HIveAppDeveloper/cypher.git
+cd cypher/frontend
 npm ci
 npm run dev
 ```

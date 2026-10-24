@@ -4,14 +4,21 @@ import { spawnSync } from 'node:child_process';
 import { smoke, expectedFromEnv, headersFromEnv } from './release-smoke.mjs';
 
 function check(ok, message) { if (!ok) throw new Error(message); }
-export function validateDeployment(deployment, expected, env) {
+export function validateDeployment(deployment, expected, env, { rollback = false } = {}) {
   check(deployment.id === expected.deploymentId, 'Deployment lookup returned another candidate');
   check(deployment.projectId === env.RELEASE_PROJECT_ID, 'Candidate belongs to another project');
   check(deployment.target === 'production' && deployment.readyState === 'READY', 'Candidate must be a staged production deployment in READY state');
   check(`https://${deployment.url}` === expected.url, 'Use the immutable candidate URL returned by Vercel');
   const meta = deployment.meta || {};
   check(meta.githubCommitSha === expected.commit, 'Vercel source commit differs from expected commit');
-  check((meta.githubCommitOrg || meta.githubOrg) === 'sodikjonismoilov' && (meta.githubCommitRepo || meta.githubRepo) === 'VentureCruiter', 'Candidate is not from the canonical VentureCruiter repository');
+  const org = meta.githubCommitOrg || meta.githubOrg;
+  const repo = meta.githubCommitRepo || meta.githubRepo;
+  // The first owned-repository release can roll back to the exact verified
+  // pre-migration build. This exception never accepts a new legacy candidate.
+  const migrationRollback = rollback && deployment.id === 'dpl_H2PdKgtNyXzVyrQRe5HyuvfemkJP'
+    && expected.commit === '2b2cec046aa6fcbf8197ecd6bf720acab6722198'
+    && org === 'sodikjonismoilov' && repo === 'VentureCruiter';
+  check((org === 'HIveAppDeveloper' && repo === 'cypher') || migrationRollback, 'Candidate is not from the canonical HIveAppDeveloper/cypher repository');
 }
 export function validateReleaseConfig(config) {
   check(config.services?.frontend?.root === 'frontend' && config.services?.backend?.root === 'backend', 'Release from the repository root with both frontend and backend services');
@@ -43,7 +50,7 @@ export async function guardedPromote(env, { fetchImpl = fetch, smokeImpl = smoke
   validateDeployment(await api(`/v13/deployments/${expected.deploymentId}`), expected, env);
   const rollbackDeployment = await api(`/v13/deployments/${previous.deploymentId}`);
   previous.url = `https://${rollbackDeployment.url}`;
-  validateDeployment(rollbackDeployment, previous, env);
+  validateDeployment(rollbackDeployment, previous, env, { rollback: true });
   await assertAliases(previous.deploymentId);
   const headers = headersFromEnv(env);
   // Vercel starts the new daemon only when this becomes the production deployment.

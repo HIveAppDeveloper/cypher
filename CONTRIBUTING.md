@@ -2,7 +2,7 @@
 
 ## Start from the canonical app
 
-Use `sodikjonismoilov/VentureCruiter`, with `main` as the integration branch. Create a focused branch from current main and keep unrelated changes out of the PR. Preserve other contributors' uncommitted work. Do not force-push or replace production with an older checkout.
+Use `HIveAppDeveloper/cypher`, with `main` as the integration branch. Create a focused branch from current main and keep unrelated changes out of the PR. Preserve other contributors' uncommitted work. Do not force-push or replace production with an older checkout.
 
 Cypher has one production app and one existing persistent PostgreSQL. A local fixture, feature worktree, or review deployment must not replace that runtime or its account grants. See the [release guide](deployment/release-gate.md) before changing deployment configuration.
 

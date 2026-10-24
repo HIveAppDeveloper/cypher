@@ -12,7 +12,7 @@ systemctl enable --now docker
 install -d -m 755 /usr/local/lib/docker/cli-plugins
 curl --fail --location --silent --show-error https://github.com/docker/compose/releases/download/v2.39.2/docker-compose-linux-x86_64 -o /usr/local/lib/docker/cli-plugins/docker-compose
 chmod 755 /usr/local/lib/docker/cli-plugins/docker-compose
-git clone --depth 1 https://github.com/HIveAppDeveloper/open-grokbot.git /opt/grokbot
+git clone --depth 1 https://github.com/HIveAppDeveloper/cypher.git /opt/grokbot
 cd /opt/grokbot
 umask 077
 GROKBOT_TOKEN=$(openssl rand -hex 32)

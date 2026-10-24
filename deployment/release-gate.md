@@ -1,8 +1,12 @@
 # Cypher production release gate
 
-The canonical source is `sodikjonismoilov/VentureCruiter`. Release from the repository root with root `vercel.json`: frontend, private backend binding, and persistent agent worker. A Next.js build, Vercel READY state, or `/api/health` alone does not establish functional readiness. Preserve the existing canonical backend and PostgreSQL; never provision a replacement database for a release.
+The canonical source is `HIveAppDeveloper/cypher`. Release from the repository root with root `vercel.json`: frontend, private backend binding, and persistent agent worker. A Next.js build, Vercel READY state, or `/api/health` alone does not establish functional readiness. Preserve the existing canonical backend and PostgreSQL; never provision a replacement database for a release.
 
 The canonical release owner stages and promotes. Other chats supply isolated commits and test evidence. Do not promote an older integration branch or move aliases during a release.
+
+The existing owned repository was renamed from `HIveAppDeveloper/open-grokbot` to `HIveAppDeveloper/cypher`; its history is preserved. Git-triggered deployments are disabled in `vercel.json`, so a source push does not replace the tested production release. Explicit CLI staging and this promotion gate remain the release path. No Vercel project binding or production database is replaced by the repository rename.
+
+For the first release after this source migration only, the gate accepts the exact verified rollback `dpl_H2PdKgtNyXzVyrQRe5HyuvfemkJP` / `2b2cec046aa6fcbf8197ecd6bf720acab6722198` with its historical VentureCruiter metadata. New candidates must identify `HIveAppDeveloper/cypher`; arbitrary builds from the old repository remain rejected.
 
 ## Stage and test the exact build
 

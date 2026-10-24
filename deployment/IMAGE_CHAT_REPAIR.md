@@ -5,7 +5,7 @@ This records an earlier Vercel AI Gateway implementation. Current model inferenc
 ## Target and isolation
 
 - Live app: https://open-grokbot-hiveapp.vercel.app/
-- Source: https://github.com/HIveAppDeveloper/open-grokbot, `main` at `a9e7e19971be672cffbf80a69286156ae5cf3fa7`.
+- Source: https://github.com/HIveAppDeveloper/cypher, `main` at `a9e7e19971be672cffbf80a69286156ae5cf3fa7`.
 - Repair branch: `fix/image-chat-validation`, isolated clone in this task workspace. The upstream Mac clone at `/Users/boaznovik/open-grokbot` is a different repository (`ishandutta2007/open-grokbot`) and was not modified.
 - Vercel: team `hiveapp`, project `open-grokbot` (`prj_9ogAU0O7roLSchWUmzGwsjIinyFM`), Python container backend and persistent `agent-worker` daemon, Next.js frontend.
 - Read-only recheck at 2026-10-21 01:55 UTC: production alias now resolves to READY deployment `dpl_6DZumbpvAAq6bEG7FnvUx7iKjcnD`, immutable URL https://open-grokbot-fka98i5uv-hiveapp.vercel.app/, still at base `a9e7e19971be672cffbf80a69286156ae5cf3fa7`. This is the pre-existing newer release, not this repair.

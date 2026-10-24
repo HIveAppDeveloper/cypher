@@ -9,7 +9,7 @@ This plan described a Vercel AI Gateway inference route. Current model inference
 - Team: `hiveapp`, ID `team_UafepbgM7cD7FhLkcShYT9re`.
 - Project: `open-grokbot`, ID `prj_9ogAU0O7roLSchWUmzGwsjIinyFM`.
 - Region: `iad1`; Next.js frontend, private Python container backend and persistent `agent-worker` daemon, declared by repository-root `vercel.json`.
-- Source: https://github.com/HIveAppDeveloper/open-grokbot.
+- Source: https://github.com/HIveAppDeveloper/cypher.
 - Base / current remote `main`: `a9e7e19971be672cffbf80a69286156ae5cf3fa7`.
 - Currently serving READY deployment: `dpl_6DZumbpvAAq6bEG7FnvUx7iKjcnD`, https://open-grokbot-fka98i5uv-hiveapp.vercel.app/.
 - Model provider/route proposed for validation: OpenAI `gpt-6.1-sol` through Vercel AI Gateway `https://ai-gateway.vercel.sh/v1`, using the existing Responses bridge and deployment OIDC. No new credential, model-policy change, Gateway routing rule, account permission, or deployment-protection change is proposed.

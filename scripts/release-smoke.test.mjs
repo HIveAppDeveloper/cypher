@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { smoke, validateRuntime } from './release-smoke.mjs';
-import { guardedPromote, validateReleaseConfig } from './promote-release.mjs';
+import { guardedPromote, validateDeployment, validateReleaseConfig } from './promote-release.mjs';
 
 const expected = { url: 'https://cypher-candidate-hiveapp.vercel.app', deploymentId: 'dpl_current', commit: 'a'.repeat(40), services: ['model', 'model_control', 'backend_auth'] };
 const identity = { deployment_id: expected.deploymentId, commit: expected.commit, environment: 'production' };
@@ -51,7 +51,7 @@ for (const [name, overrides] of [
 ]) test(name + ' blocks candidate smoke', async () => { await assert.rejects(smoke(expected, fixture(overrides)), error => !error.message.includes('private-upstream-secret')); });
 
 const env = { RELEASE_URL: expected.url, RELEASE_DEPLOYMENT_ID: expected.deploymentId, RELEASE_COMMIT: expected.commit, RELEASE_TEAM_ID: 'team_intended', RELEASE_PROJECT_ID: 'prj_intended', VERCEL_TOKEN: 'private-token', RELEASE_PREVIOUS_DEPLOYMENT_ID: 'dpl_previous', RELEASE_PREVIOUS_COMMIT: 'b'.repeat(40) };
-function deployment() { return { id: expected.deploymentId, url: new URL(expected.url).host, projectId: env.RELEASE_PROJECT_ID, target: 'production', readyState: 'READY', meta: { githubCommitSha: expected.commit, githubCommitOrg: 'sodikjonismoilov', githubCommitRepo: 'VentureCruiter' } }; }
+function deployment() { return { id: expected.deploymentId, url: new URL(expected.url).host, projectId: env.RELEASE_PROJECT_ID, target: 'production', readyState: 'READY', meta: { githubCommitSha: expected.commit, githubCommitOrg: 'HIveAppDeveloper', githubCommitRepo: 'cypher' } }; }
 function promotionFixture(change = () => {}, smokeImpl = async (_expected, options) => ({ passed: true, phase: options.activeWorker ? 'activation-preflight' : 'full-stack', candidate_worker_verified: !options.activeWorker })) {
   const meta = deployment(); change(meta);
   const calls = [];
@@ -66,12 +66,22 @@ function promotionFixture(change = () => {}, smokeImpl = async (_expected, optio
 }
 for (const [name, change] of [
   ['wrong project', d => d.projectId = 'prj_other'],
-  ['old repository', d => d.meta.githubCommitOrg = 'HIveAppDeveloper'],
+  ['old repository', d => { d.meta.githubCommitOrg = 'sodikjonismoilov'; d.meta.githubCommitRepo = 'VentureCruiter'; }],
   ['missing provenance', d => d.meta = {}],
   ['old commit', d => d.meta.githubCommitSha = 'b'.repeat(40)],
   ['preview rebuild', d => d.target = 'preview'],
   ['mutable alias URL', d => d.url = 'cypher-agent.vercel.app'],
 ]) test(name + ' never invokes promotion', async () => { const f = promotionFixture(change); await assert.rejects(guardedPromote(env, f)); assert.equal(f.calls.length, 0); });
+
+test('only the exact verified pre-migration build is accepted as a legacy rollback', () => {
+  const previous = { ...expected, url: 'https://cypher-ocb3x936n-hiveapp.vercel.app', deploymentId: 'dpl_H2PdKgtNyXzVyrQRe5HyuvfemkJP', commit: '2b2cec046aa6fcbf8197ecd6bf720acab6722198' };
+  const legacy = { ...deployment(), id: previous.deploymentId, url: new URL(previous.url).host,
+    meta: { githubCommitSha: previous.commit, githubOrg: 'sodikjonismoilov', githubRepo: 'VentureCruiter' } };
+  assert.throws(() => validateDeployment(legacy, previous, env), /canonical/);
+  assert.doesNotThrow(() => validateDeployment(legacy, previous, env, { rollback: true }));
+  assert.throws(() => validateDeployment({ ...legacy, id: 'dpl_other' }, { ...previous, deploymentId: 'dpl_other' }, env, { rollback: true }), /canonical/);
+  assert.throws(() => validateDeployment({ ...legacy, meta: { ...legacy.meta, githubCommitSha: 'c'.repeat(40) } }, { ...previous, commit: 'c'.repeat(40) }, env, { rollback: true }), /canonical/);
+});
 test('failed smoke never invokes promotion', async () => {
   const f = promotionFixture(() => {}, async () => { throw new Error('worker stale'); });
   await assert.rejects(guardedPromote(env, f), /worker stale/);
