@@ -401,3 +401,54 @@ html[data-motion="false"] .message-stream > .message:last-child { animation: non
 html[data-motion="false"] .composer,
 html[data-motion="false"] .composer .send-button,
 html[data-motion="false"] .message-actions { transition: none; }
+
+/* Group conversations use a calm, readable message rhythm. */
+.thread-subtitle { color: var(--cx-label-2); font-size: 11px; }
+.message-stream { gap: 0 !important; padding: 12px clamp(16px, 4vw, 36px) 24px; }
+.message-date { align-self: center; margin: 20px 0 14px; color: var(--cx-label-2); font-size: 11px; font-weight: 500; text-align: center; }
+.message-date time { padding: 4px 9px; border-radius: 999px; background: var(--cx-fill-2); }
+.message-date + .message { margin-top: 0; }
+.message { position: relative; width: 100%; max-width: 100% !important; margin: 13px 0 0; padding-right: 44px; }
+.message.outgoing { padding-right: 0; padding-left: 44px; }
+.message.incoming .message-content,
+.message.outgoing .message-content {
+  width: fit-content;
+  max-width: min(100%, 66ch);
+  padding: 10px 15px;
+  border: 0;
+  border-radius: 18px;
+  font-size: var(--chat-font-size, 15px);
+  line-height: 1.5;
+}
+.message.incoming .message-content { background: var(--cx-fill); color: var(--cx-label); }
+.message.outgoing .message-content { background: var(--cx-label); color: var(--cx-inverse); }
+.message.incoming.message-group-end .message-content { border-bottom-left-radius: 5px; }
+.message.outgoing.message-group-end .message-content { border-bottom-right-radius: 5px; }
+.message-sender-row { gap: 6px; margin: 0 0 5px 6px; }
+.message-sender-row .small-avatar { width: 19px; height: 19px; border-radius: 50%; font-size: 8px; }
+.message-grouped { margin-top: 4px; }
+.message-grouped .message-sender-row { display: none; }
+.thread-member-stack .small-avatar { border-color: var(--cx-card); }
+.message-actions { position: absolute; top: 0; right: 0; margin: 0; opacity: 0; transition: opacity .16s ease; }
+.message.outgoing .message-actions { right: auto; left: 0; }
+.message:hover > .message-actions,
+.message:focus-within > .message-actions,
+.message-actions[open] { opacity: 1; }
+.message-actions > summary { display: grid; width: 40px; min-height: 40px; place-items: center; padding: 9px; border-radius: 50%; font-size: 0; list-style: none; }
+.message-actions > summary::-webkit-details-marker { display: none; }
+.message-actions > summary svg { width: 19px; height: 19px; fill: currentColor; }
+.message-actions > div { position: absolute; top: 40px; right: 0; z-index: 12; min-width: 190px; padding: 8px; border: 1px solid var(--cx-sep); border-radius: 12px; background: var(--cx-card); }
+.message.outgoing .message-actions > div { right: auto; left: 0; }
+.message-actions > div > button { min-height: 40px; }
+.message-actions > div > time { display: block; margin: 8px; color: var(--cx-label-2); font-size: 11px; }
+.message-stream > .message:last-child .message-actions > div { top: auto; bottom: 40px; }
+
+@media (max-width: 760px) {
+  .message-stream { padding: 8px 12px 18px; }
+  .message { padding-right: 36px; }
+  .message.outgoing { padding-left: 36px; }
+  .message.incoming .message-content,
+  .message.outgoing .message-content { max-width: 100%; font-size: var(--chat-font-size, 15px); }
+  .message-actions { opacity: 1; }
+  .message-actions > summary { width: 36px; min-height: 44px; padding: 8px; }
+}
