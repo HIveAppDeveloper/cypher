@@ -16,6 +16,7 @@ export function QuickStart({ onStart, onOpenRecent, options, onOptions, draftSco
   const [prompt, setPrompt] = useState('');
   const logoRef = useRef<HTMLDivElement>(null);
   const [logoMotionActive, setLogoMotionActive] = useState(false);
+  const [homeHasEntered, setHomeHasEntered] = useState(false);
   const draftKey='grokbot-task-draft-v1-'+(draftScope || 'local');
   const mounted=useRef(false);
   useEffect(()=>{mounted.current=true;return()=>{mounted.current=false;};},[]);
@@ -27,7 +28,11 @@ export function QuickStart({ onStart, onOpenRecent, options, onOptions, draftSco
     if (!logo) return;
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
     let isVisible = false;
-    const syncMotion = () => setLogoMotionActive(isVisible && !document.hidden && !reducedMotion.matches && document.documentElement.dataset.motion !== 'false');
+    const syncMotion = () => {
+      const active = isVisible && !document.hidden && !reducedMotion.matches && document.documentElement.dataset.motion !== 'false';
+      setLogoMotionActive(active);
+      if (active) setHomeHasEntered(true);
+    };
     const visibilityObserver = new IntersectionObserver(([entry]) => { isVisible = entry.isIntersecting; syncMotion(); }, { threshold: 0.1 });
     const settingsObserver = new MutationObserver(syncMotion);
     visibilityObserver.observe(logo);
@@ -48,7 +53,7 @@ export function QuickStart({ onStart, onOpenRecent, options, onOptions, draftSco
   async function start(e: React.FormEvent) { e.preventDefault(); if (!prompt.trim() || busy || inFlight.current) return; inFlight.current = true; setBusy(true); setError(''); try { await onStart(prompt, { ...options, output, provider: manager === 'auto' ? 'openai' : MODEL_CHOICES.find(choice => choice.model === manager)?.provider || options.provider || 'openai', model: manager === 'auto' ? 'gpt-6.1-sol' : manager, aspect_ratio: '16:9', duration: 4 }); if(mounted.current)setPrompt(''); try { if(sessionStorage.getItem(draftKey)===prompt)sessionStorage.removeItem(draftKey); } catch {} } catch (error) { const detail = error instanceof Error ? error.message : 'The task could not start. Try again.'; setError(detail + ' Your task is still here.'); } finally { inFlight.current = false; setBusy(false); } }
   return (
     <div className="quickstart">
-      <div className="quickstart-panel">
+      <div className="quickstart-panel" data-motion-entered={homeHasEntered}>
       <div className="quickstart-mark" ref={logoRef} data-motion-active={logoMotionActive}>
         <BinaryLens className="quickstart-real-lens" active={logoMotionActive} label="Cypher binary lens" />
       </div>
