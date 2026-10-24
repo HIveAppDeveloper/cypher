@@ -15,6 +15,7 @@ import { readAttachment } from '../lib/attachments';
 import BinaryLens from './cipher/BinaryLens';
 import CypherMark from './cipher/CypherMark';
 import { playVoiceResponse, speakWithBrowser } from '../lib/voice-playback';
+import { VoiceSilenceTimer } from '../lib/voice-activity';
 const POLL_MS = 1500;
 const MAX_BYTES = 3 * 1024 * 1024;
 export function messageTime(value: string) {
@@ -304,8 +305,7 @@ export function ChatPanel({ bot, room, bots, onCreateBot, onCreateRoom, onQuickS
     let frame = 0;
     let recorder: MediaRecorder | null = null;
     let chunks: BlobPart[] = [];
-    let lastVoiceAt = 0;
-    let startedAt = 0;
+    let silenceTimer: VoiceSilenceTimer | null = null;
     let micSource: MediaStreamAudioSourceNode | null = null;
     let micAnalyser: AnalyserNode | null = null;
     let outputData: Uint8Array<ArrayBuffer> | null = null;
@@ -333,7 +333,7 @@ export function ChatPanel({ bot, room, bots, onCreateBot, onCreateRoom, onQuickS
     function beginRecording() {
       try {
         recorder = supported ? new MediaRecorder(activeStream, { mimeType: supported }) : new MediaRecorder(activeStream);
-        chunks = []; startedAt = Date.now(); lastVoiceAt = startedAt;
+        chunks = []; silenceTimer = new VoiceSilenceTimer(performance.now());
         recorder.ondataavailable = event => { if (event.data.size) chunks.push(event.data); };
         recorder.onstop = () => {
           if (stopped) return;
@@ -370,9 +370,7 @@ export function ChatPanel({ bot, room, bots, onCreateBot, onCreateRoom, onQuickS
         voiceButton.current?.style.setProperty('--voice-scale', (1 + level * .12).toFixed(3));
         if (currentStatus === 'listening' && rms > .024) beginRecording();
         else if (currentStatus === 'recording') {
-          if (rms > .016) lastVoiceAt = Date.now();
-          if (Date.now() - startedAt > 45000) finishRecording();
-          else if (Date.now() - lastVoiceAt > 850) finishRecording();
+          if (silenceTimer?.update(performance.now(), rms > .016)) finishRecording();
         }
       }
       frame = requestAnimationFrame(measure);
