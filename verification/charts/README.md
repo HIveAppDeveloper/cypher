@@ -19,3 +19,9 @@ Registry owner01a16f29 owns the separate narrow registration of create_chart fro
 27backendcharttests pass,151frontendtests pass, productionbuild passes (/workspace155kB first-load JS). Tests validate actual PNG/SVG/CSV bytes, missing/negative/zero data, numeric bounds, formula/XML injection, typed limits, and worker responsiveness. Existing voice/recovery tests remain passing. Detector returns[]. Desktop1440×1000 and mobile390×844 actual Next production-build fixture screenshots verify a loaded inline image and all four file links; CSV GET200 preserves values; mobilebody390px/image264px. Fixture data is explicitly illustrative and uses a local backend on3221, never production data. Local font-backed render samples24–38ms exclude model/queue/network time; not a production chat latency claim.
 
 No live inference/tool invocation or production chart claim until registry integration and canonical release owner’s full-stack gate.
+
+## Completed registry and workflow verification
+
+This branch now includes the registry owner's narrow registration (ported as9fd212b after521dbce+6379f5a). Default media agents discover and execute create_chart.35 focused module+registry tests pass. Full backend suite passed429 tests with4 PostgreSQL-fixture skips; see external full-suite record in cypher-feature-handoffs/charts-full-backend.log.
+
+A further real API→task→worker→create_chart→database→authenticated-download regression passes with only model output controlled. It validates actual PNG/SVG/CSV downloads, persisted final image markdown, and404 for a different tenant. This is an additional passed integration test, not live provider inference. No source changes beyond the already-tested chart/registry feature were needed.
