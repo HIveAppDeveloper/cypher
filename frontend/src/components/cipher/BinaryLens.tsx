@@ -3,10 +3,12 @@ import { useEffect, useRef } from 'react';
 
 // The Cypher mark: a lens of 0/1 digits that grow toward the centre.
 // While `active`, digits flip and a pulse sweeps across the lens.
-export default function BinaryLens({ cols = 41, rows = 17, active = false, className, label = 'Cypher' }: { cols?: number; rows?: number; active?: boolean; className?: string; label?: string }) {
+export default function BinaryLens({ cols = 41, rows = 17, active = false, level = 0, className, label = 'Cypher' }: { cols?: number; rows?: number; active?: boolean; level?: number; className?: string; label?: string }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const activeRef = useRef(active);
+  const levelRef = useRef(level);
   activeRef.current = active;
+  levelRef.current = level;
 
   useEffect(() => {
     const canvas = canvasRef.current; if (!canvas) return;
@@ -34,7 +36,8 @@ export default function BinaryLens({ cols = 41, rows = 17, active = false, class
           let s = Math.max(0, 1 - d * 1.08);
           if (s <= .02) continue;
           const pulse = Math.exp(-(((c + .5) / cols - sweep) ** 2) / .012);
-          s = Math.min(1, Math.pow(s, .75) * (1 + pulse * .55));
+          const voice = Math.max(0, Math.min(1, levelRef.current));
+          s = Math.min(1, Math.pow(s, .75) * (1 + pulse * .55 + voice * .5));
           const size = Math.max(1.2, max * s);
           ctx.globalAlpha = Math.min(1, .25 + s * 1.1);
           if (max < 6) { ctx.beginPath(); ctx.arc((c + .5) * cw, (r + .5) * rh, Math.max(.35, max * .42 * s), 0, Math.PI * 2); ctx.fill(); continue; }

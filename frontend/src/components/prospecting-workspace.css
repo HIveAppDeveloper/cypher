@@ -1,5 +1,5 @@
 .cx-prospecting { padding-bottom: 28px; }
-.cx-brand-image { display:block; width:24px; height:24px; object-fit:contain; border-radius:50%; }
+.cx-brand-image { display:block; width:36px; height:auto; aspect-ratio:1624 / 630; object-fit:contain; flex:none; }
 @media (prefers-color-scheme:dark) { :root:not([data-theme='light']) .cx-brand-image { filter:invert(1); } }
 :root[data-theme='dark'] .cx-brand-image { filter:invert(1); }
 .cx-prospecting .cx-toolbar { padding-block: 0; }
@@ -14,7 +14,7 @@
 .cx-voice-button:hover:not(:disabled) { background:var(--cx-fill-2); transform:translateY(-1px); }
 .cx-voice-button[aria-pressed='true'] { background:var(--cx-label); color:var(--cx-inverse); }
 .cx-voice-button:disabled { opacity:.58; cursor:not-allowed; }
-.cx-voice-mark { width:20px; height:20px; flex:none; object-fit:contain; border-radius:50%; }
+.cx-voice-mark { width:23px; height:auto; aspect-ratio:1624 / 630; flex:none; }
 .cx-voice-button.is-loading .cx-voice-mark, .cx-voice-button.is-playing .cx-voice-mark { animation:cx-brand-pulse 1.6s ease-in-out infinite; }
 @keyframes cx-brand-pulse { 0%,100% { transform:scale(1); filter:brightness(1); box-shadow:0 0 0 0 color-mix(in srgb,var(--cx-label) 18%,transparent); } 50% { transform:scale(1.08); filter:brightness(1.12); box-shadow:0 0 0 5px color-mix(in srgb,var(--cx-label) 9%,transparent); } }
 .cx-voice-button svg { width:16px; height:16px; fill:none; stroke:currentColor; stroke-width:1.7; stroke-linecap:round; stroke-linejoin:round; }
@@ -182,7 +182,7 @@
 @media (max-width:560px) {
   .cx-prospecting { padding-bottom:20px; }
   .cx-prospecting .cx-toolbar { height:50px; }
-  .cx-brand-image { width:21px; height:21px; }
+  .cx-brand-image { width:32px; }
   .cx-prospect-hero { padding-block:18px 22px; }
   .cx-prospect-hero .cx-lens { width:min(320px,90vw); }
   .cx-prospect-hero h1 { font-size:48px; }
