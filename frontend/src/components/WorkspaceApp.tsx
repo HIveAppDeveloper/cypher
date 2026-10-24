@@ -53,7 +53,7 @@ export default function WorkspaceApp({ accountEmail, accountId }: { accountEmail
     setCreator(null);
     const prompt=`Use only my connected ${name} service and only its read-only tools. Show me a short, plain-language preview of useful information in my account. Do not create, change, delete, send, or share anything. If no read-only tool can show account information, explain that and stop.`;
     try{await quickStart(prompt,{allow_tools:true,output:'text',max_iterations:8,max_tokens:2048});}
-    catch(error){setRoomError(error instanceof Error?error.message:'Could not open this service in Cypher.');}
+    catch(error){setRoomError(error instanceof Error?error.message:'Could not open this service.');}
   }
   useEffect(()=>{const id=new URLSearchParams(window.location.search).get('conversation');if(id)void openGoalWorkspace(id,false).catch(()=>setRoomError('Could not open the saved conversation.'));},[]);
   const commands: WorkspaceCommand[] = [

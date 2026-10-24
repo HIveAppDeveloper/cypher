@@ -5,14 +5,16 @@ RUN apt-get update && apt-get install -y --no-install-recommends     build-essen
 
 WORKDIR /app
 COPY pyproject.toml .
+RUN python -m venv /opt/venv
+ENV PATH="/opt/venv/bin:${PATH}"
 RUN python -c "import tomllib; from pathlib import Path; Path('/tmp/requirements.txt').write_text('\\n'.join(tomllib.loads(Path('pyproject.toml').read_text())['project']['dependencies']))"
 RUN pip install --no-cache-dir -r /tmp/requirements.txt
 
 FROM python:3.12-slim
 
+ENV PATH="/opt/venv/bin:${PATH}"
 WORKDIR /app
-COPY --from=builder /usr/local/lib/python3.12/site-packages /usr/local/lib/python3.12/site-packages
-COPY --from=builder /usr/local/bin /usr/local/bin
+COPY --from=builder /opt/venv /opt/venv
 COPY --from=javascript /usr/local/bin/node /usr/local/bin/node
 
 RUN apt-get update && apt-get install -y --no-install-recommends ffmpeg && rm -rf /var/lib/apt/lists/*
