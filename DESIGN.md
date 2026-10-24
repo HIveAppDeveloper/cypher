@@ -119,6 +119,12 @@ components:
 
 Cypher's original monochrome binary identity gives a functional agent workspace a quiet, recognizable center. Neutral surfaces, restrained separators, system typography, and generous space around the home task composer make the work readable. The existing binary lens and brief opening signature supply the identity's motion.
 
+## Prospecting home surface — October 24, 2026
+
+The website-first prospecting flow is the Cypher home screen. Its surface keeps the original binary mark and opening animation, then uses warm ivory paper (`#f7f1e5`, `#fffdf7`) with black ink (`#080806`) and warm, high-contrast supporting text. Cream borders, one-pixel separators, and offset soft shadows give the profile, candidate, and activity areas a continuous rounded form. Dark mode does not recolor this route; the home surface stays light and legible.
+
+Motion is feedback: the existing binary opening is the signature moment; controls respond to press and focus, the workflow line fills as steps complete, and newly recorded activity enters briefly. The motion preference and OS reduced-motion setting remain respected. The form still calls the authenticated Open GrokBot prospecting APIs; a visual treatment or animation never implies authorization, a real customer, verified demand, or an email sent.
+
 The current rules are extracted from the final imported brand stylesheet and its component sources. They supersede earlier Grok, adjustable-accent, lavender, glass, and decorative-orbit directions. This document records the implemented local candidate; final correction verification was pending at documentation time. It does not declare production activation or provider readiness.
 
 **Key Characteristics:**
