@@ -1,4 +1,5 @@
 from uuid import UUID
+from cryptography.fernet import InvalidToken
 from pydantic import BaseModel, Field
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
@@ -18,23 +19,37 @@ class TogglePlugin(BaseModel):
     enabled: bool
 
 def public(plugin):
-    from cryptography.fernet import InvalidToken
     from app.services.plugins import reveal
     from app.services.managed_connections import REFERENCE_PREFIX
+    damaged=False
     try:saved=reveal(plugin.credential) if plugin.credential else ''
-    except (ValueError,InvalidToken):saved=''
+    except (InvalidToken, ValueError):saved='';damaged=True
     connection_id=saved.removeprefix(REFERENCE_PREFIX) if saved and saved.startswith(REFERENCE_PREFIX) else None
-    return {'id': plugin.id, 'connection_id':connection_id, 'provider':'google' if saved=='grokbot-google-workspace' else None, 'name': plugin.name, 'url': plugin.url, 'enabled': plugin.enabled, 'authenticated': bool(saved), 'tools': [{'name': t['name'], 'description': t['description'], 'enabled':t.get('enabled',True)} for t in plugin.tools]}
+    return {'id': plugin.id, 'connection_id':connection_id, 'provider':'google' if saved=='grokbot-google-workspace' else None, 'name': plugin.name, 'url': plugin.url, 'enabled': plugin.enabled, 'authenticated': bool(saved), 'connection_state':'sign_in_required' if damaged else 'paused' if not plugin.enabled else 'saved' if saved else 'public', 'tools': [{'name': t['name'], 'description': t.get('description',''), 'enabled':t.get('enabled',True)} for t in (plugin.tools or [])]}
 
 @router.get('')
 async def list_plugins(db: AsyncSession = Depends(get_db)):
     from app.models.runtime import RuntimeCheck
-    authenticated=set((await db.execute(select(PluginAuthorization.plugin_id).where(PluginAuthorization.status=='connected',PluginAuthorization.payload.is_not(None)))).scalars())
+    from app.services.plugin_auth import DatabaseTokenStorage
+    authenticated=set();damaged=set()
+    for authorization in (await db.execute(select(PluginAuthorization).where(PluginAuthorization.status=='connected',PluginAuthorization.payload.is_not(None)))).scalars():
+        try:
+            saved=DatabaseTokenStorage(db,authorization).read()
+            if saved.get('tokens') or saved.get('access_token') or saved.get('managed_id'):
+                authenticated.add(authorization.plugin_id)
+            else:damaged.add(authorization.plugin_id)
+        except (InvalidToken, ValueError, AttributeError, TypeError):
+            damaged.add(authorization.plugin_id)
     output=[]
     for plugin in (await db.execute(select(Plugin))).scalars():
         item=public(plugin);item['authenticated']=item['authenticated'] or plugin.id in authenticated
+        if plugin.id in damaged:item['connection_state']='sign_in_required'
+        elif plugin.id in authenticated and plugin.enabled and item['connection_state']!='sign_in_required':item['connection_state']='saved'
         check=await db.get(RuntimeCheck,'plugin:'+plugin.id)
         item['verification']={'status':check.status,'detail':check.detail,'checked_at':check.updated_at.isoformat()+'Z'} if check else {'status':'not_tested'}
+        if item['connection_state']=='sign_in_required':
+            item['authenticated']=False
+            item['verification']={'status':'failed','detail':{'code':'sign_in_required','message':'This saved connection needs sign-in again. Reconnect it in Plugins.'}}
         output.append(item)
     return output
 
@@ -90,8 +105,8 @@ async def toggle(id: UUID, data: TogglePlugin, db: AsyncSession = Depends(get_db
 async def disconnect(id: UUID, db: AsyncSession = Depends(get_db)):
     plugin = await db.get(Plugin, str(id))
     if plugin:
-        from app.services.plugins import reveal
-        if reveal(plugin.credential)=='grokbot-google-workspace':
+        from app.services.plugins import is_google_workspace
+        if is_google_workspace(plugin):
             from app.api.google_workspace import disconnect as disconnect_google
             return await disconnect_google(db)
         from sqlalchemy import delete
@@ -101,11 +116,11 @@ async def disconnect(id: UUID, db: AsyncSession = Depends(get_db)):
 
 @router.post('/{id}/refresh')
 async def refresh_tools(id:UUID,db:AsyncSession=Depends(get_db)):
-    from app.services.plugins import reveal
     plugin=await db.get(Plugin,str(id))
     if not plugin:raise HTTPException(404,'Plugin not found')
     from app.services import google_workspace as google
-    if reveal(plugin.credential)==google.REFERENCE:
+    from app.services.plugins import is_google_workspace
+    if is_google_workspace(plugin):
         row=await google.grant(db)
         if not row:raise HTTPException(401,'Reconnect Google to refresh its tools.')
         allowed=google.allowed_tools(google.DatabaseTokenStorage(db,row).read())
@@ -116,7 +131,10 @@ async def refresh_tools(id:UUID,db:AsyncSession=Depends(get_db)):
     try:
         token,auth=await connection_auth(db,plugin)
         tools=await discover(plugin.url,token,auth=auth)
-    except Exception:raise HTTPException(502,'Could not refresh tools. The saved connection was preserved.')
+    except Exception as error:
+        from app.services.plugins import authentication_failure
+        if authentication_failure(error):raise HTTPException(401,'This saved connection needs sign-in again. Reconnect it in Plugins.') from None
+        raise HTTPException(502,'Could not refresh tools. The saved connection was preserved.') from None
     previous={t['name']:t.get('enabled',True) for t in plugin.tools}
     plugin.tools=[{**t,'enabled':previous.get(t['name'],True)} for t in tools]
     from app.models.runtime import RuntimeCheck
@@ -167,10 +185,9 @@ async def test_connection(id:UUID,db:AsyncSession=Depends(get_db)):
     from app.services.verification import save_check
     plugin=await db.get(Plugin,str(id))
     if not plugin or not plugin.enabled:raise HTTPException(409,'Enable the connection before testing it.')
-    from app.services import google_workspace as google
-    from app.services.plugins import reveal
+    from app.services.plugins import is_google_workspace
     host=urlsplit(plugin.url).hostname
-    google_tests=[('gmail_users_getProfile',{}),('calendar_calendarList_list',{'maxResults':1}),('drive_about_get',{'fields':'user(emailAddress)'}),('tasks_tasklists_list',{'maxResults':1}),('people_people_connections_list',{'resourceName':'people/me','personFields':'names','pageSize':1})] if reveal(plugin.credential)==google.REFERENCE else []
+    google_tests=[('gmail_users_getProfile',{}),('calendar_calendarList_list',{'maxResults':1}),('drive_about_get',{'fields':'user(emailAddress)'}),('tasks_tasklists_list',{'maxResults':1}),('people_people_connections_list',{'resourceName':'people/me','personFields':'names','pageSize':1})] if is_google_workspace(plugin) else []
     examples={
         'mcp.deepwiki.com': [('read_wiki_structure',{'repoName':'vercel/ai'})],
         'learn.microsoft.com': [('microsoft_docs_search',{'query':'Azure Functions overview'})],
@@ -185,9 +202,10 @@ async def test_connection(id:UUID,db:AsyncSession=Depends(get_db)):
     names={t['name'] for t in plugin.tools if t.get('enabled',True)}
     example=next(((name,args) for name,args in (google_tests or examples.get(host,[])) if name in names),None)
     started=time.monotonic()
-    async def finish(status, message, **detail):
+    async def finish(status, message, http_status=200, **detail):
         result={'message':message,'latency_ms':round((time.monotonic()-started)*1000),**detail}
         await save_check('plugin:'+plugin.id,status,result)
+        if http_status != 200:raise HTTPException(http_status,message)
         return {'status':status,**result}
     if not google_tests and urlsplit(plugin.url).scheme != 'https':
         message=('Connect Gmail through Google apps to use its authorized tools.' if host=='gmail.com' else
@@ -203,7 +221,7 @@ async def test_connection(id:UUID,db:AsyncSession=Depends(get_db)):
         except Exception as error:
             from app.services.plugins import authentication_failure
             if authentication_failure(error):
-                return await finish('failed','Sign in again to restore this connection.',code='sign_in_required')
+                return await finish('failed','This saved connection needs sign-in again. Reconnect it in Plugins.',http_status=401,code='sign_in_required')
             return await finish('failed','The connection did not respond. Retry or reconnect to check provider access.',code='unavailable')
         if not tools:
             return await finish('failed','This server did not return any tools. Refresh or reconnect it before using it.',code='no_tools',tool_count=0)

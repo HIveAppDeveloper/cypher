@@ -74,13 +74,14 @@ async def test_retest_persists_current_evidence_and_preserves_connection(workspa
             await db.commit()
     finally:current_tenant_id.reset(tenant)
     response=await client.post(f'/api/plugins/{pid}/test',headers={'x-grokbot-user-id':'readiness-owner'})
-    assert response.status_code==200
+    assert response.status_code==(401 if outcome=='auth' else 200)
     data=response.json()
-    assert data['status']==status and data.get('code')==code
-    assert data['latency_ms']>=0
+    if outcome!='auth':assert data['status']==status and data.get('code')==code
+    else:assert 'Reconnect' in data['detail']
+    if outcome!='auth':assert data['latency_ms']>=0
     assert 'secret' not in str(data) and 'private upstream' not in str(data)
     saved=(await client.get('/api/plugins',headers={'x-grokbot-user-id':'readiness-owner'})).json()[0]
     assert saved['verification']['status']==status
-    assert saved['verification']['detail']['message']==data['message']
+    assert saved['verification']['detail']['message']==data.get('message',data.get('detail'))
     assert saved['enabled'] and saved['tools'][0]['enabled'] is False
     assert (await client.get('/api/plugins',headers={'x-grokbot-user-id':'another-owner'})).json()==[]
