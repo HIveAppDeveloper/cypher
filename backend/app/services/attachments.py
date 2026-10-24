@@ -6,6 +6,13 @@ from app.services.model_routing import ModelCapabilityError
 from app.services.voice_metrics import stage, timed
 
 
+def attachment_mime(metadata, index, file):
+    """Expose only a verified audio correction, preserving the original upload."""
+    audio = {'video/webm': 'audio/webm', 'video/mp4': 'audio/mp4',
+             'video/quicktime': 'audio/mp4'}.get(file['mime'])
+    return audio if audio and (metadata.get('attachment_mime_overrides') or {}).get(str(index)) == audio else file['mime']
+
+
 @timed('transcription_total')
 async def transcribe_audio(file):
     try:
@@ -49,6 +56,25 @@ async def prepare_audio(db, message, files):
     metadata = dict(message.metadata_json or {})
     cached = dict(metadata.get('audio_transcripts') or {})
     prepared = []
+    normalized = []
+    overrides = dict(metadata.get('attachment_mime_overrides') or {})
+    for index, original in enumerate(files):
+        mime = attachment_mime(metadata, index, original)
+        video_key = 'video:' + __import__('hashlib').sha256(original['data'].encode()).hexdigest()
+        if mime.startswith('video/') and video_key not in cached:
+            from app.services.recordings import audio_only_mime, RecordingError
+            try:
+                mime = await asyncio.to_thread(audio_only_mime, base64.b64decode(original['data'], validate=True), mime) or mime
+            except (RecordingError, ValueError) as error:
+                raise ModelCapabilityError(str(error) + ' Your original recording is saved.') from error
+            if mime != original['mime']:
+                overrides[str(index)] = mime
+        normalized.append({**original, 'mime': mime})
+    if overrides != (metadata.get('attachment_mime_overrides') or {}):
+        metadata['attachment_mime_overrides'] = overrides
+        message.metadata_json = dict(metadata)
+        await db.commit()
+    files = normalized
     # Render PDF pages rather than passing an unsupported file part through an
     # OpenAI-compatible translator. The original remains the downloadable source.
     if any(file['mime']=='application/pdf' for file in files):

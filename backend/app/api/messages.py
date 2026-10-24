@@ -78,7 +78,8 @@ async def list_messages(id: UUID, limit: int = Query(50, ge=1, le=200), offset: 
         item = MessageResponse.model_validate(dict(message) if projected else message).model_dump()
         meta = dict(item.get('metadata_json') or {})
         if 'attachments' in meta:
-            meta['attachments'] = [{'name': a['name'], 'mime': a['mime'], 'url': f'/api/conversations/{id}/attachments/{message.id}/{index}'} for index, a in enumerate(meta['attachments'])]
+            from app.services.attachments import attachment_mime
+            meta['attachments'] = [{'name': a['name'], 'mime': attachment_mime(meta, index, a), 'url': f'/api/conversations/{id}/attachments/{message.id}/{index}'} for index, a in enumerate(meta['attachments'])]
         item['metadata_json'] = meta
         output.append(item)
     return output
@@ -100,8 +101,10 @@ async def get_attachment(id: UUID, message_id: UUID, index: int, db: AsyncSessio
     if message is None or message.conversation_id != str(id) or index < 0 or index >= len(files):
         raise HTTPException(status_code=404, detail='Attachment not found')
     file = files[index]
-    disposition = 'attachment' if file.get('disposition') == 'attachment' or file['mime'] not in {'image/png','image/jpeg','image/webp','audio/wav','audio/mpeg','video/mp4','application/pdf','text/plain'} else 'inline'
-    return Response(base64.b64decode(file['data']), media_type=file['mime'], headers={'Content-Disposition': disposition+"; filename*=UTF-8''" + quote(file['name'], safe=''), 'X-Content-Type-Options': 'nosniff', 'Cache-Control': 'private, no-store'})
+    from app.services.attachments import attachment_mime
+    mime = attachment_mime(message.metadata_json or {}, index, file)
+    disposition = 'attachment' if file.get('disposition') == 'attachment' or mime not in {'image/png','image/jpeg','image/webp','audio/wav','audio/mpeg','audio/webm','audio/mp4','audio/ogg','audio/flac','video/mp4','application/pdf','text/plain'} else 'inline'
+    return Response(base64.b64decode(file['data']), media_type=mime, headers={'Content-Disposition': disposition+"; filename*=UTF-8''" + quote(file['name'], safe=''), 'X-Content-Type-Options': 'nosniff', 'Cache-Control': 'private, no-store'})
 
 
 @router.post("/{id}/tasks/{task_id}/cancel", status_code=202)

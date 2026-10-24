@@ -154,6 +154,7 @@ class AgentOrchestrator:
                     # while the immutable original recording stays in its message.
                     user_message_content = self.voice_request
 
+            self.primary_request = user_message_content
             if self.options.output != "text":
                 from app.services.media import generate_media
                 self.event_key = 'media-output'
@@ -382,10 +383,15 @@ class AgentOrchestrator:
                     content = content_parts(item.content, prepared)
                     if files and item.id not in attachment_ids:
                         content += "\nEarlier attachment reference (not resent): " + ", ".join(a["name"] for a in files)
-                    if item.id == getattr(self, 'incoming_message_id', None) and (item.content == trigger_message or (self.options.voice_mode and trigger_message == self.voice_request)):
+                    if item.id == getattr(self, 'incoming_message_id', None) and (item.content == trigger_message or trigger_message == getattr(self, 'primary_request', None) or (self.options.voice_mode and trigger_message == self.voice_request)):
                         # Keep this queued turn last without dropping its prepared
                         # transcript/files or sending its attachment bytes twice.
                         trigger_content = content
+                        if trigger_message != item.content and not (self.options.voice_mode and trigger_message == self.voice_request):
+                            request_text = trigger_message
+                            if item.content and item.content not in request_text:
+                                request_text = item.content + '\n\nCurrent task instructions:\n' + request_text
+                            trigger_content = content_parts(request_text, prepared)
                         continue
                     messages.append({"role": "user", "content": content})
                 elif item.sender_bot_id == bot_id:
