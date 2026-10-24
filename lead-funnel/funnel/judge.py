@@ -63,10 +63,10 @@ def _taste(labels, firms_by_id):
     return "\n".join(rows[-20:]) or "No labels yet."
 
 
-def _verify_quote(j: Judgment, f):
-    """Drop quotes that are not literally on the firm's pages, so every quote in the report is real."""
+def _verify_quote(j, f):
+    """Drop quotes that are not literally in the evidence (pages, or a builder's repo/paper text)."""
     squash = lambda s: re.sub(r"\s+", " ", s).strip().lower()
-    hay = squash(" ".join(p["text"] for p in f.get("pages", [])))
+    hay = squash(" ".join([p["text"] for p in f.get("pages", [])] + ([f["text"]] if f.get("kind") == "builder" else [])))
     j_ok = bool(j.quote) and squash(j.quote) in hay
     return {**j.model_dump(), "quote": j.quote if j_ok else "", "quote_verified": j_ok}
 
@@ -83,7 +83,7 @@ def provider():
     return None
 
 
-def _ask_anthropic(client, effort, user):
+def _ask_anthropic(client, effort, user, schema=Judgment, system=SYSTEM):
     try:
         resp = client.beta.messages.parse(
             model=MODEL,
@@ -92,8 +92,8 @@ def _ask_anthropic(client, effort, user):
             fallbacks="default",
             thinking={"type": "adaptive"},
             output_config={"effort": effort},
-            output_format=Judgment,
-            system=SYSTEM,
+            output_format=schema,
+            system=system,
             messages=[{"role": "user", "content": user}],
         )
     except anthropic.AuthenticationError:
@@ -109,32 +109,35 @@ def _ask_anthropic(client, effort, user):
     return resp.parsed_output, None
 
 
-JSON_RULES = ("\n\nReply with one JSON object only, no prose or code fences, matching this JSON Schema:\n"
-              + json.dumps(Judgment.model_json_schema()))
+def json_rules(schema):
+    return "\n\nReply with one JSON object only, no prose or code fences, matching this JSON Schema:\n" + json.dumps(schema.model_json_schema())
 
 
-def _parse_json(text):
+def _parse_json(text, schema=Judgment):
     text = re.sub(r"^```(?:json)?|```$", "", (text or "").strip(), flags=re.M).strip()
     start, end = text.find("{"), text.rfind("}")
-    return Judgment.model_validate_json(text[start:end + 1] if start >= 0 else text)
+    return schema.model_validate_json(text[start:end + 1] if start >= 0 else text)
 
 
 class _Nicrron:
     """OpenAI-compatible chat completions on the Nicrron gateway.
     Tries strict json_schema output first; if the gateway rejects it, falls back to prompt-only JSON."""
 
-    def __init__(self):
+    def __init__(self, schema=Judgment, system=SYSTEM, max_retries=2, stream=False):
         import openai
+        self.schema, self.system, self.stream = schema, system, stream
         self.openai = openai
-        self.client = openai.OpenAI(base_url=NICRRON_BASE, api_key=os.environ["NICRRON_API_KEY"], max_retries=2, timeout=600)
+        self.client = openai.OpenAI(base_url=NICRRON_BASE, api_key=os.environ["NICRRON_API_KEY"], max_retries=max_retries, timeout=600)
         self.schema_ok = True
-        schema = Judgment.model_json_schema()
+        schema = self.schema.model_json_schema()
         schema["additionalProperties"] = False
         self.response_format = {"type": "json_schema", "json_schema": {"name": "judgment", "strict": True, "schema": schema}}
 
     def _call(self, messages):
         kw = {"model": NICRRON_MODEL, "max_tokens": 16000, "messages": messages,
               "extra_headers": {"x-nicrron-cache": "false"}}  # the funnel keeps its own cache
+        if self.stream:
+            return self._streamed(kw)
         if self.schema_ok:
             try:
                 return self.client.chat.completions.create(response_format=self.response_format, **kw)
@@ -144,9 +147,29 @@ class _Nicrron:
                 self.schema_ok = False  # gateway or model doesn't take schemas; rely on the prompt
         return self.client.chat.completions.create(**kw)
 
+    def _streamed(self, kw):
+        """Long answers: stream so the gateway sees output early and doesn't time out waiting.
+        Returns an object shaped like a non-streamed response."""
+        import types
+        extra = {"response_format": self.response_format} if self.schema_ok else {}
+        try:
+            stream = self.client.chat.completions.create(stream=True, **extra, **kw)
+        except self.openai.BadRequestError as e:
+            if not extra or ("response_format" not in str(e) and "json_schema" not in str(e)):
+                raise
+            self.schema_ok = False
+            stream = self.client.chat.completions.create(stream=True, **kw)
+        parts, finish = [], None
+        for chunk in stream:
+            if chunk.choices:
+                parts.append(chunk.choices[0].delta.content or "")
+                finish = chunk.choices[0].finish_reason or finish
+        msg = types.SimpleNamespace(content="".join(parts))
+        return types.SimpleNamespace(choices=[types.SimpleNamespace(message=msg, finish_reason=finish or "stop")])
+
     def ask(self, user):
         o = self.openai
-        messages = [{"role": "system", "content": SYSTEM + JSON_RULES}, {"role": "user", "content": user}]
+        messages = [{"role": "system", "content": self.system + json_rules(self.schema)}, {"role": "user", "content": user}]
         try:
             for attempt in range(2):
                 resp = self._call(messages)
@@ -155,7 +178,7 @@ class _Nicrron:
                 if choice.finish_reason == "length":
                     return None, "no judgment (hit max_tokens)"
                 try:
-                    return _parse_json(text), None
+                    return _parse_json(text, self.schema), None
                 except (ValidationError, ValueError) as e:
                     if attempt:
                         return None, f"invalid JSON from gateway: {str(e)[:120]}"
@@ -205,3 +228,98 @@ def judge_all(firms, thesis_text, labels, firms_by_id, cache_dir: Path, effort="
         for f, j in zip(firms, pool.map(one, firms)):
             f["judgment"] = j
     return firms, which
+
+
+# ---------- founder sourcing: a fund's thesis judged against a founder or startup ----------
+class FounderJudgment(BaseModel):
+    fit: int = Field(description="1-5 fit with the fund's thesis. 5 = building exactly what the fund's beliefs predict; 3 = right space, unclear angle; 1 = off-thesis or no evidence")
+    founder_quality: int = Field(description="1-5 from the evidence: shipped work, traction, repeat founding, domain depth. 3 if unknown")
+    why: str = Field(description="Two sentences on why this founder deserves (or doesn't deserve) a meeting, citing the evidence")
+    quote: str = Field(description="One sentence copied exactly from the evidence (their site, repo or paper) that best shows the fit. Empty string if none")
+    quote_url: str = Field(description="URL the quote came from, or empty")
+    contact: str = Field(description="Best person to contact: a name from the evidence, or empty")
+    what_they_build: str = Field(description="One plain sentence on what the company or project does")
+    stage_read: str = Field(description="pre-company, pre-seed, seed, series A, later, or unknown")
+    shared_beliefs: list[str] = Field(description="Beliefs from the fund's list this founder's work visibly supports")
+    concerns: list[str] = Field(description="Reasons to pass or check: thin evidence, wrong stage, portfolio overlap, website may be a different company")
+    conflict: bool = Field(description="True if it competes with a company in the fund's portfolio")
+
+
+FOUNDER_SYSTEM = """You are a venture associate sourcing founders for a fund. You get the fund's thesis and beliefs and the public evidence on one founder or startup:
+Form D filings, the company website, GitHub repos, Show HN launches or papers.
+- Judge fit with the fund's specific beliefs, not just the sector.
+- Judge founder quality only from evidence: shipped work, traction, repeat founding, domain depth. Do not reward polish or hype.
+- The quote must be copied exactly from the evidence provided. Never paraphrase or invent one; return an empty quote if nothing fits.
+- A website may have been guessed from the company name. If it does not look like the same company as the Form D filing, say so in concerns and judge without it.
+- Thin evidence caps both scores at 2. The fund's past labels show its taste; weigh what it liked and disliked."""
+
+
+def lead_brief(l, max_chars=12000):
+    s = l.get("signals", {})
+    facts = [f"Source: {l['source']} ({l['kind']}, {l['stage']})", f"Headline: {l['headline']}"]
+    if l.get("company"):
+        facts.append(f"Company: {l['company']}" + (f" · {l['industry']}" if l.get("industry") else ""))
+    if l.get("person"):
+        facts.append(f"People: {', '.join(l.get('people') or [l['person']])}")
+    if l.get("location"):
+        facts.append(f"Location: {l['location']}")
+    if l["kind"] == "startup":
+        facts.append(f"Incorporated: {s.get('year_inc') or 'not stated'}; filings: {s.get('filings')}; amount sold: {s.get('round_sold')}")
+        if s.get("repeat_founders"):
+            facts.append("Repeat founders (officers of another startup in the data): " + ", ".join(s["repeat_founders"]))
+        if s.get("backed_by"):
+            facts.append("Directors who are partners at venture firms: " + ", ".join(s["backed_by"]))
+    if l.get("also"):
+        facts.append(f"Also: {l['also']}")
+    for m in l.get("more", [])[:5]:
+        facts.append(f"Also: {m}")
+    if l.get("website"):
+        facts.append(f"Website: {l['website']}" + (f" ({l['website_note']})" if l.get("website_note") else ""))
+    facts.append(f"Description: {l['text'][:2000]}")
+    pages, budget = [], max_chars
+    for p in l.get("pages", []):
+        chunk = p["text"][: max(0, budget)]
+        if chunk:
+            pages.append(f"=== PAGE {p['url']} ===\n{chunk}")
+            budget -= len(chunk)
+    return "\n".join(facts) + "\n\n" + ("\n\n".join(pages) or "No web pages available.")
+
+
+def judge_founders(leads, fund_text, labels, leads_by_id, cache_dir: Path, effort="high", workers=6):
+    which = provider()
+    if which is None:
+        raise SystemExit("No judge key: set ANTHROPIC_API_KEY or NICRRON_API_KEY in lead-funnel/.env.")
+    if which == "anthropic":
+        client = anthropic.Anthropic()
+        ask = lambda user: _ask_anthropic(client, effort, user, FounderJudgment, FOUNDER_SYSTEM)
+        model_tag = f"anthropic:{MODEL}:{effort}"
+    else:
+        nic = _Nicrron(FounderJudgment, FOUNDER_SYSTEM)
+        ask, model_tag = nic.ask, f"nicrron:{NICRRON_MODEL}"
+    rows = []
+    for lid, (label, note) in labels.items():
+        l = leads_by_id.get(lid)
+        if l:
+            rows.append(f'- {"LIKED" if label > 0 else "DISLIKED"}: {l.get("person") or ""} / {l.get("company") or l["headline"]}' + (f" — {note}" if note else ""))
+    taste = "\n".join(rows[-20:]) or "No labels yet."
+    cache_dir.mkdir(parents=True, exist_ok=True)
+
+    def one(l):
+        brief = lead_brief(l)
+        key = hashlib.sha1(("founders:" + model_tag + fund_text + taste + brief).encode()).hexdigest()[:20]
+        path = cache_dir / f"{key}.json"
+        if path.exists():
+            return json.loads(path.read_text())
+        judgment, err = ask(f"FUND THESIS\n{fund_text}\n\nFUND'S PAST LABELS\n{taste}\n\nFOUNDER EVIDENCE\n{brief}")
+        if err:
+            return {"error": err}
+        out = _verify_quote(judgment, l)
+        out["fit"], out["founder_quality"] = max(1, min(5, out["fit"])), max(1, min(5, out["founder_quality"]))
+        out["provider"] = model_tag
+        path.write_text(json.dumps(out))
+        return out
+
+    with ThreadPoolExecutor(workers) as pool:
+        for l, j in zip(leads, pool.map(one, leads)):
+            l["judgment"] = j
+    return leads, which

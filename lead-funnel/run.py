@@ -1,16 +1,25 @@
 #!/usr/bin/env python3
-"""Investor lead funnel: ~12,000 venture firms -> 1,000 sourced -> 200 -> 50 -> your 10-20.
+"""Lead funnel. Two modes, picked from the thesis file you pass:
 
-  python run.py build                          download SEC data and build the universe (rerun quarterly)
-  python run.py rank [--thesis PATH] [--no-claude] [--no-akta]
-                                               run the funnel; writes out/<thesis name>/report.md
-                     [--akta-new N]            allow up to N new paid akta.pro lookups (default 0: cache only)
-  python run.py akta-budget                    show akta.pro spend so far and what is left
-  python run.py label <rank|firm_id> yes|no ["why"] [--thesis PATH]   teach it your taste for that thesis
-  python run.py show <rank|firm_id> [--thesis PATH]                   print everything known about one lead
+  Fund thesis  (has round_size_usd)  -> founder sourcing: startups raising now and builders before the round
+  Startup thesis (has fund_size_usd) -> investor matching: venture firms that think like the founder
 
---thesis defaults to thesis.toml. Each thesis file gets its own results (out/<name>/), labels and learned
-weights (data/labels/<name>.csv, data/features/<name>.json), where <name> is the file name without .toml.
+  python run.py build                      download SEC data; build firms and startups (rerun quarterly)
+  python run.py rank [--thesis PATH]       run the funnel for that thesis (default theses/fund/example_fund.toml)
+        [--no-claude] [--no-akta]          skip the Claude judge / skip akta.pro entirely
+        [--akta-list N]                    founders: add up to N companies from akta.pro List Generation (paid)
+        [--akta-new N]                     investors: allow up to N new paid akta.pro firm lookups
+  python run.py investors [--thesis PATH]  same as rank, defaulting to theses/startup/vet_clinics.toml
+  python run.py label <rank|id> yes|no ["why"] [--thesis PATH]   teach it your taste for that thesis
+  python run.py show <rank|id> [--thesis PATH]                   print everything known about one lead
+  python run.py dossier [--thesis PATH]    founders: sourced JSON dossier on each shortlisted founder (Claude)
+        [--akta-profiles]                  also buy akta.pro leadership profiles (1 credit per company)
+  python run.py chat [--thesis PATH]       chat with an assistant that answers from the dossiers
+        [--ask "question"]                 ask one question and exit
+  python run.py akta-budget                akta.pro credits used this month and what is left
+  python run.py akta-sync <remaining>      set the ledger to match the remaining balance on your akta.pro dashboard
+
+Results go to out/<mode>/<thesis name>/; labels and learned weights to data/labels/ and data/features/.
 """
 import argparse
 import csv
@@ -47,8 +56,12 @@ def universe():
     return json.loads(path.read_text())
 
 
+DEFAULT_FUND = "theses/fund/example_fund.toml"
+DEFAULT_STARTUP = "theses/startup/vet_clinics.toml"
+
+
 class Thesis:
-    """A thesis file and the per-thesis files that go with it."""
+    """A thesis file, its mode, and the per-thesis files that go with it."""
 
     def __init__(self, arg):
         p = Path(arg).expanduser()
@@ -58,20 +71,26 @@ class Thesis:
             sys.exit(f"Thesis file not found: {arg}")
         self.path = p.resolve()
         self.name = self.path.stem
-        self.out = OUT / self.name
-        self.labels = DATA / "labels" / f"{self.name}.csv"
-        self.features = DATA / "features" / f"{self.name}.json"
+        try:
+            self.t = tomllib.loads(self.path.read_text())
+        except tomllib.TOMLDecodeError as e:
+            sys.exit(f"{self.path.name} is not valid TOML: {e}")
+        if "round_size_usd" in self.t:
+            self.mode, need, example = "founders", ("one_liner", "thesis", "beliefs", "keywords", "round_size_usd"), DEFAULT_FUND
+        elif "fund_size_usd" in self.t:
+            self.mode, need, example = "investors", ("one_liner", "thesis", "beliefs", "keywords", "fund_size_usd"), DEFAULT_STARTUP
+        else:
+            sys.exit(f"{self.path.name}: add round_size_usd (a fund looking for founders) or fund_size_usd (a startup looking for investors).")
+        missing = [k for k in need if k not in self.t]
+        if missing:
+            sys.exit(f"{self.path.name} is missing: {', '.join(missing)} (see {example} for the format)")
+        self.out = OUT / self.mode / self.name
+        self.labels = DATA / "labels" / self.mode / f"{self.name}.csv"
+        self.features = DATA / "features" / self.mode / f"{self.name}.json"
         self.ranks = self.out / "last_rank.json"
 
     def load(self):
-        try:
-            t = tomllib.loads(self.path.read_text())
-        except tomllib.TOMLDecodeError as e:
-            sys.exit(f"{self.path.name} is not valid TOML: {e}")
-        missing = [k for k in ("one_liner", "thesis", "beliefs", "keywords", "fund_size_usd") if k not in t]
-        if missing:
-            sys.exit(f"{self.path.name} is missing: {', '.join(missing)} (see thesis.toml for the format)")
-        return t
+        return self.t
 
 
 def resolve(ref, th):
@@ -88,7 +107,9 @@ def cmd_build(args):
     ua = os.environ.get("SEC_USER_AGENT")
     if not ua:
         sys.exit('Set SEC_USER_AGENT in .env, e.g. SEC_USER_AGENT="Your Name you@school.edu". The SEC requires a contact.')
-    build_universe(DATA, ua, args.quarters)
+    universe = build_universe(DATA, ua, args.quarters)
+    from funnel.startups import build_startups
+    build_startups(DATA, universe)
 
 
 def cmd_label(args):
@@ -102,7 +123,11 @@ def cmd_label(args):
         w = csv.DictWriter(fh, ["firm_id", "label", "note"])
         w.writeheader()
         w.writerows(rows)
-    name = next((f["name"] for f in universe()["firms"] if f["id"] == fid), fid)
+    if th.mode == "founders":
+        lead = next((l for l in json.loads((th.out / "leads.json").read_text()) if l["id"] == fid), {}) if (th.out / "leads.json").exists() else {}
+        name = " · ".join(x for x in (lead.get("person"), lead.get("company")) if x) or fid
+    else:
+        name = next((f["name"] for f in universe()["firms"] if f["id"] == fid), fid)
     print(f"Labeled {name} as {args.label} for {th.name}. {len(rows)} labels for this thesis. "
           f"Rerun `python run.py rank --thesis {th.path.name}` to apply.")
 
@@ -110,6 +135,12 @@ def cmd_label(args):
 def cmd_show(args):
     th = Thesis(args.thesis)
     fid = resolve(args.ref, th)
+    if th.mode == "founders":
+        lead = next((l for l in json.loads((th.out / "leads.json").read_text()) if l["id"] == fid), None) if (th.out / "leads.json").exists() else None
+        if not lead:
+            sys.exit(f"Unknown lead {fid}. Run: python run.py rank --thesis {th.path.name}")
+        print(json.dumps(lead, indent=2))
+        return
     f = next((f for f in universe()["firms"] if f["id"] == fid), None)
     if not f:
         sys.exit(f"Unknown firm {fid}")
@@ -127,17 +158,101 @@ def cmd_akta_budget(args):
         print(f"  {e['at']}  {e['credits']:>7.1f} credits  {e['note']}")
 
 
+def _founder_results(args):
+    th = Thesis(args.thesis or DEFAULT_FUND)
+    if th.mode != "founders":
+        sys.exit("Dossiers and chat are for fund theses (founder sourcing).")
+    if not (th.out / "leads.json").exists() or not th.ranks.exists():
+        sys.exit(f"No shortlist yet. Run: python run.py rank --thesis {th.path}")
+    leads = {l["id"]: l for l in json.loads((th.out / "leads.json").read_text())}
+    return th, th.load(), json.loads(th.ranks.read_text()), leads
+
+
+def cmd_dossier(args):
+    from funnel import dossier
+    th, t, ids, leads = _founder_results(args)
+    client = None
+    if args.akta_profiles:
+        from funnel.akta import Akta
+        key = os.environ.get("AKTA_API_KEY") or sys.exit("--akta-profiles needs AKTA_API_KEY in .env.")
+        client = Akta(key, DATA / "akta", allow_paid=True)
+        with_site = sum(1 for i in ids if leads[i].get("website"))
+        print(f"akta.pro leadership profiles: up to {with_site} companies at 1 credit each (max {with_site} credits). "
+              f"This month: {client.ledger.used():g} used, {client.ledger.left():g} usable left. Cached profiles are free.")
+    print(f"Writing dossiers for {len(ids)} founders via Claude (cached dossiers are free; new ones are about $0.08-0.15 each)…")
+    results = dossier.build(th, t, DATA, ids, leads, client)
+    errs = [(lid, r["error"]) for lid, r, _ in results if "error" in r]
+    for lid, r, n in results:
+        if "error" not in r:
+            print(f"  #{r['rank']:>2} {r['person']['name'][:24]:<24} {r['company']['name'][:28]:<28} fit {r['fit_score']}/5  {n} sources  "
+                  f"{len(r['background']) + len(r['founder_signals'])} facts" + (f", {r['dropped_unsourced_facts']} unsourced dropped" if r["dropped_unsourced_facts"] else ""))
+    for lid, e in errs:
+        print(f"  {lid}: not written ({e})")
+    if client:
+        print(f"akta.pro: {client.credits:g} credits this run; {client.ledger.left():g} usable left.")
+    print(f"\nWrote {th.out / 'dossiers.json'} and {th.out / 'dossiers'}/")
+
+
+def cmd_chat(args):
+    from funnel import dossier
+    th = Thesis(args.thesis or DEFAULT_FUND)
+    path = th.out / "dossiers.json"
+    if not path.exists():
+        sys.exit(f"No dossiers yet. Run: python run.py dossier --thesis {th.path}")
+    bundle = json.loads(path.read_text())
+    complete, via = dossier.completer()
+    history, last = [], None
+    questions = [args.ask] if args.ask else None
+    print(f"{bundle['fund']}: {len(bundle['founders'])} founder dossiers. Answers via {via}; each question costs a few cents.")
+    if not questions:
+        print("Ask about any founder by name, company or rank (e.g. 'Compare #2 and #4', 'What should I ask Lockchain?'). Empty line to quit.\n")
+    while True:
+        q = questions.pop(0) if questions is not None and questions else (None if questions is not None else input("you> ").strip())
+        if not q:
+            break
+        answer, last = dossier.reply(history, q, bundle, last, complete)
+        print(f"\nassistant> {answer}\n")
+        history += [{"role": "user", "content": q}, {"role": "assistant", "content": answer}]
+        history = history[-12:]  # keep the last six exchanges
+
+
+def cmd_akta_sync(args):
+    """The dashboard is the truth; record one adjustment so this month's count matches it."""
+    from funnel import akta
+    led = akta.Ledger(DATA / "akta")
+    target = akta.MONTHLY_CREDITS - args.remaining
+    if target < 0:
+        sys.exit(f"Remaining {args.remaining:g} is more than the monthly allowance {akta.MONTHLY_CREDITS:g}. Set AKTA_MONTHLY_CREDITS in .env.")
+    delta = round(target - led.used(), 2)
+    if delta:
+        led.add(delta, f"synced to akta.pro dashboard: {args.remaining:g} remaining")
+    print(f"Ledger was {target - delta:g} used; dashboard says {target:g} used ({args.remaining:g} remaining). Adjusted by {delta:+g}.")
+    print(f"Usable now: {led.left():g} credits (keeps {akta.RESERVE_CREDITS:g} in reserve).")
+
+
 def money(v):
     return "undisclosed" if not v else f"${v / 1e9:.1f}B" if v >= 1e9 else f"${v / 1e6:.0f}M"
 
 
 def cmd_rank(args):
+    th = Thesis(args.thesis or (DEFAULT_STARTUP if args.cmd == "investors" else DEFAULT_FUND))
+    print(f"Thesis: {th.path} ({'fund looking for founders' if th.mode == 'founders' else 'startup looking for investors'})  ->  {th.out}")
+    if th.mode == "founders":
+        if args.akta_new:
+            sys.exit("--akta-new is for investor matching; for founders use --akta-list N.")
+        universe()  # needs `build` first
+        from funnel.founder_pipeline import run as run_founders
+        return run_founders(th, th.load(), args, DATA, HERE)
+    if args.akta_list:
+        sys.exit("--akta-list is for founder sourcing; for investors use --akta-new N.")
+    return cmd_investors(args, th)
+
+
+def cmd_investors(args, th):
     from funnel import score as S
     from funnel.web import enrich as web_enrich
 
-    th = Thesis(args.thesis)
     t = th.load()
-    print(f"Thesis: {th.path}  ->  results in {th.out}")
     run = {"sourced": 1000, "screen": 200, "deep": 50, "shortlist": 15, "judge_effort": "high", **t.get("run", {})}
     today = date.today()
     firms = universe()["firms"]
@@ -303,14 +418,23 @@ def main():
     sub = ap.add_subparsers(dest="cmd", required=True)
     b = sub.add_parser("build"); b.add_argument("--quarters", type=int, default=8)
     th_arg = argparse.ArgumentParser(add_help=False)
-    th_arg.add_argument("--thesis", default="thesis.toml", metavar="PATH", help="thesis file to use (default thesis.toml)")
-    r = sub.add_parser("rank", parents=[th_arg]); r.add_argument("--no-claude", action="store_true"); r.add_argument("--no-akta", action="store_true")
-    r.add_argument("--akta-new", type=int, default=0, metavar="N", help="allow up to N new paid akta.pro lookups (default 0)")
+    th_arg.add_argument("--thesis", default=None, metavar="PATH", help=f"thesis file (default {DEFAULT_FUND})")
+    for cmd in ("rank", "investors"):
+        r = sub.add_parser(cmd, parents=[th_arg]); r.add_argument("--no-claude", action="store_true")
+        r.add_argument("--no-akta", action="store_true")
+        r.add_argument("--akta-new", type=int, default=0, metavar="N", help="investors: allow up to N new paid akta.pro lookups (default 0)")
+        r.add_argument("--akta-list", type=int, default=0, metavar="N", help="founders: add up to N companies from akta.pro List Generation (paid)")
+    d = sub.add_parser("dossier", parents=[th_arg]); d.add_argument("--akta-profiles", action="store_true", help="also buy akta.pro leadership profiles (1 credit each)")
+    c = sub.add_parser("chat", parents=[th_arg]); c.add_argument("--ask", metavar="QUESTION", help="ask one question and exit")
     sub.add_parser("akta-budget")
+    sy = sub.add_parser("akta-sync"); sy.add_argument("remaining", type=float, help="remaining credits shown on your akta.pro dashboard")
     l = sub.add_parser("label", parents=[th_arg]); l.add_argument("ref"); l.add_argument("label", choices=["yes", "no"]); l.add_argument("note", nargs="?")
     s = sub.add_parser("show", parents=[th_arg]); s.add_argument("ref")
     args = ap.parse_args()
-    {"build": cmd_build, "rank": cmd_rank, "label": cmd_label, "show": cmd_show, "akta-budget": cmd_akta_budget}[args.cmd](args)
+    if getattr(args, "thesis", "x") is None and args.cmd in ("label", "show"):
+        args.thesis = DEFAULT_FUND
+    {"build": cmd_build, "rank": cmd_rank, "investors": cmd_rank, "label": cmd_label, "show": cmd_show, "akta-budget": cmd_akta_budget, "akta-sync": cmd_akta_sync,
+     "dossier": cmd_dossier, "chat": cmd_chat}[args.cmd](args)
 
 
 if __name__ == "__main__":
