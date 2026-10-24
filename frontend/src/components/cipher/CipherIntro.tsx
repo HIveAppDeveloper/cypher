@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from 'react';
 const COLS = 41, ROWS = 17;
 const FLOW_END = 300, GATHER_END = 760, LIFT_AT = 760, DONE_AT = 1180;
 const ease = (t: number) => 1 - Math.pow(1 - Math.min(1, Math.max(0, t)), 3);
-const SEEN_KEY = 'cypher-intro-seen-v2';
+const SEEN_KEY = 'cypher-intro-seen-v3';
 
 export default function CipherIntro() {
   const [phase, setPhase] = useState<'play' | 'lift' | 'gone'>('play');
