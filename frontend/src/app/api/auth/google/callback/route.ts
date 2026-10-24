@@ -1,13 +1,19 @@
 import { timingSafeEqual } from 'node:crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { cookieOptions, signPayload, getSessionFromCookieHeader } from '../../../../../lib/auth-server';
+import { safeInternalReturnTo } from '../../../../../lib/canonical-app';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration=120;
 const SESSION_SECONDS = 60 * 60 * 24 * 7;
 export async function POST(request: NextRequest) {
   const origin = process.env.GROKBOT_PUBLIC_URL || request.nextUrl.origin;
-  const failure = (error: string) => NextResponse.redirect(new URL('/login?error=' + error, origin), 303);
+  const returnTo = safeInternalReturnTo(request.nextUrl.searchParams.get('returnTo'));
+  const failure = (error: string) => {
+    const destination = new URL('/login', origin); destination.searchParams.set('error', error);
+    if (returnTo) destination.searchParams.set('returnTo', returnTo);
+    return NextResponse.redirect(destination, 303);
+  };
   let form: FormData;
   try { form = await request.formData(); } catch { return failure('google'); }
   const cookie = request.cookies.get('g_csrf_token')?.value || '';
@@ -26,7 +32,7 @@ export async function POST(request: NextRequest) {
     if (!response.ok) return failure(response.status === 409 ? 'email-required' : 'google');
     const account = await response.json() as { id?: string; email?: string; display_name?: string };
     if (!account.id || !account.email) return failure('google');
-    const result = NextResponse.redirect(new URL('/connect/google?welcome=1', origin), 303);
+    const result = NextResponse.redirect(new URL(returnTo || '/connect/google?welcome=1', origin), 303);
     result.cookies.set('grokbot_session', signPayload({ sub: account.id, email: account.email, name: account.display_name, exp: Math.floor(Date.now() / 1000) + SESSION_SECONDS }), cookieOptions(SESSION_SECONDS));
     result.cookies.delete('g_csrf_token');
     result.headers.set('Cache-Control', 'private, no-store');

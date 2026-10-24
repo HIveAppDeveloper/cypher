@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { approveConnection, enrollDevice } from '../lib/device';
 import { api } from '../lib/api';
 import { PLUGIN_SIGN_IN_KEY, PLUGIN_SIGN_IN_TTL, readPluginSignIn, type PluginSignIn } from '../lib/pluginAuthorization';
+import { CANONICAL_APP_ORIGIN, isOffCanonicalHost } from '../lib/canonical-app';
 import CypherMark from './cipher/CypherMark';
 import BinaryLens from './cipher/BinaryLens';
 import { McpDirectory } from './McpDirectory';
@@ -86,6 +87,13 @@ export function PluginPanel({onClose,onExploreConnection}:{onClose:()=>void;onEx
     api.accountStatus().then(s=>{if(active)setAccountState(s);}).catch(()=>{});
     fetch('/api/connections').then(r=>r.json()).then(data=>{if(active)setVariables(data.variables||[]);}).catch(()=>{});
     const params=new URLSearchParams(window.location.search);const result=params.get('plugins');
+    const connectTarget=params.get('connect');
+    if(connectTarget){
+      if(connectTarget==='custom'){setView('custom');const server=params.get('server');if(server)setUrl(server);setNotice('Your MCP address is ready. Choose Connect server to start secure sign-in.');}
+      else if(connectTarget==='search'){const requested=params.get('q')||'';setSearch(requested);setNotice('Your service search is ready on Cypher’s main address. Choose Find connector to continue.');}
+      else {setSearch(connectTarget);if(params.get('reconnect')==='1')setView('connected');setNotice(`Continue with ${connectTarget} from Cypher’s main address. Choose Connect ${connectTarget} to start again.`);}
+      const clean=new URL(window.location.href);clean.searchParams.delete('connect');clean.searchParams.delete('server');clean.searchParams.delete('reconnect');clean.searchParams.delete('q');window.history.replaceState(window.history.state,'',clean.pathname+clean.search+clean.hash);
+    }
     let saved:PluginSignIn|null=null;
     try{saved=readPluginSignIn(sessionStorage);}catch{}
     if(result&&['connected','cancelled','failed'].includes(result)){
@@ -235,6 +243,12 @@ export function PluginPanel({onClose,onExploreConnection}:{onClose:()=>void;onEx
       return;
     }
     const connectionItem=!connected&&result?.status==='key_required'?{...item,auth:'api_key'}:item;
+    if(!connected&&connectionItem.auth!=='api_key'&&isOffCanonicalHost(window.location.hostname)){
+      const destination=new URL('/',CANONICAL_APP_ORIGIN);
+      destination.searchParams.set('workspace','1');destination.searchParams.set('connect',item.name);
+      if(reconnect)destination.searchParams.set('reconnect','1');
+      window.location.replace(destination.toString());return;
+    }
     connecting.current=true;setBusy(true);setConnectingName(item.name);setError('');setRefreshableError(false);
     if(connectionItem.auth!=='api_key')preparePopup(item.name);
     try{await begin(connectionItem,reconnect);setRegistration(null);}catch(e){popup.current?.close();setBusy(false);setNotice('');connectionFailure(e,item,reconnect);}finally{connecting.current=false;setConnectingName('');}
@@ -250,6 +264,10 @@ export function PluginPanel({onClose,onExploreConnection}:{onClose:()=>void;onEx
       setRefreshableError(false);setNotice(filtered.length?`Choose a service below to connect${filtered.length===1?`: ${filtered[0].name}`:'.'}`:'No matching service. Enter a provider website to check for a published connector.');
       setError('');return;
     }
+    if(isOffCanonicalHost(window.location.hostname)){
+      const destination=new URL('/',CANONICAL_APP_ORIGIN);destination.searchParams.set('workspace','1');destination.searchParams.set('connect','search');destination.searchParams.set('q',query);
+      window.location.replace(destination.toString());return;
+    }
     connecting.current=true;setBusy(true);setError('');setRefreshableError(false);setNotice('');preparePopup();
     let resolved:CatalogEntry|null=null;
     try{resolved=await api.resolvePlugin(query);await begin(resolved);}
@@ -257,7 +275,6 @@ export function PluginPanel({onClose,onExploreConnection}:{onClose:()=>void;onEx
   }
   async function connectCustom(event:FormEvent){
     event.preventDefault();if(connecting.current||flow)return;connecting.current=true;setBusy(true);setError('');setRefreshableError(false);setNotice('');
-    if(!token.trim())preparePopup();
     try{
       const parsed=new URL(url.trim());
       if(parsed.protocol!=='https:')throw new Error('Use the HTTPS server address supplied by the company.');
@@ -266,7 +283,10 @@ export function PluginPanel({onClose,onExploreConnection}:{onClose:()=>void;onEx
       const item={id:'custom',name:name.trim()||parsed.hostname,url:url.trim(),description:'',category:'Custom',domains:[parsed.hostname]};
       if(token.trim()){
         const approval_id=await approveConnection('connect_plugin:'+item.url);const connection=await api.connectPlugin({name:item.name,url:item.url,token:token.trim(),auth_header:authHeader,approval_id});setPlugins(current=>[...current,connection]);setView('connected');setToken('');setNotice(`${connection.name} connected.`);setBusy(false);
-      }else{await begin(item);}
+      }else if(isOffCanonicalHost(window.location.hostname)){
+        const destination=new URL('/',CANONICAL_APP_ORIGIN);destination.searchParams.set('workspace','1');destination.searchParams.set('connect','custom');destination.searchParams.set('server',parsed.toString());
+        window.location.replace(destination.toString());
+      }else{preparePopup(item.name);await begin(item);}
     }catch(e){popup.current?.close();setBusy(false);setError(e instanceof Error?e.message:'Connection failed.');}finally{connecting.current=false;}
   }
   async function connectionAction(action:()=>Promise<unknown>){setBusy(true);setError('');setRefreshableError(false);try{await action();setPlugins(await api.getPlugins());}catch(e){setError(e instanceof Error?e.message:'Could not update this connection.');}finally{setBusy(false);}}

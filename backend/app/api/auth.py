@@ -26,6 +26,7 @@ LEGACY_TENANT_ID = "legacy-owner"
 
 class EmailLoginRequest(BaseModel):
     email: str = Field(min_length=3, max_length=254)
+    return_to: str | None = Field(default=None, max_length=2048)
 
 
 def normalize_email(value: str) -> str:
@@ -39,11 +40,19 @@ def account_id_for(email: str) -> str:
     return "email:" + hashlib.sha256(email.encode("utf-8")).hexdigest()
 
 
-async def send_magic_link(email: str, raw_token: str) -> None:
+def safe_return_to(value: str | None) -> str | None:
+    if not value or not value.startswith("/") or value.startswith("//") or "\\" in value or any(ord(char) < 32 or ord(char) == 127 for char in value):
+        return None
+    return value
+
+
+async def send_magic_link(email: str, raw_token: str, return_to: str | None = None) -> None:
     key = os.getenv("GROKBOT_RESEND_API_KEY", "").strip()
     if not key:
         raise HTTPException(status_code=503, detail="Email sign-in is not configured yet.")
     link = f"{settings.GROKBOT_PUBLIC_URL.rstrip('/')}/api/auth/email/verify?token={quote(raw_token, safe='')}"
+    if return_to := safe_return_to(return_to):
+        link += f"&return_to={quote(return_to, safe='')}"
     payload = {
         "from": settings.GROKBOT_AUTH_FROM,
         "to": [email],
@@ -72,7 +81,7 @@ async def request_email_login(data: EmailLoginRequest, request: Request, db: Asy
     db.add(challenge)
     await db.commit()
     try:
-        await send_magic_link(email, raw_token)
+        await send_magic_link(email, raw_token, data.return_to)
     except HTTPException:
         await db.delete(challenge)
         await db.commit()

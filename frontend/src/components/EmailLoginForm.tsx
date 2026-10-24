@@ -4,7 +4,7 @@ import { FormEvent, useRef, useState } from 'react';
 // Match the backend's per-address request window in app/api/auth.py.
 const RESEND_INTERVAL_MS = 60_000;
 
-export function EmailLoginForm() {
+export function EmailLoginForm({ returnTo }: { returnTo?: string }) {
   const [email, setEmail] = useState('');
   const [state, setState] = useState<'idle' | 'sending' | 'sent'>('idle');
   const [error, setError] = useState('');
@@ -14,7 +14,7 @@ export function EmailLoginForm() {
     if (busy.current) return;
     busy.current = true; setState('sending'); setError('');
     try {
-      const response = await fetch('/api/auth/email/request', { method: 'POST', signal: AbortSignal.timeout(30000), headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: email.trim() }) });
+      const response = await fetch('/api/auth/email/request', { method: 'POST', signal: AbortSignal.timeout(30000), headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: email.trim(), return_to: returnTo }) });
       const payload = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(typeof payload.detail === 'string' ? payload.detail : 'Could not send a sign-in link. Please try again.');
       setSentAt(Date.now()); setState('sent');

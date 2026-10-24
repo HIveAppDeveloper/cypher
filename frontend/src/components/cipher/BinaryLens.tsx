@@ -1,9 +1,10 @@
 'use client';
 import { useEffect, useRef } from 'react';
+import { createCypherDigitField } from './digitField';
 
 // The Cypher mark: a lens of 0/1 digits that grow toward the centre.
 // While `active`, digits flip and a pulse sweeps across the lens.
-export default function BinaryLens({ cols = 41, rows = 17, active = false, className, label = 'Cypher' }: { cols?: number; rows?: number; active?: boolean; className?: string; label?: string }) {
+export default function BinaryLens({ cols = 41, rows = 21, active = false, className, label = 'Cypher', decorative = false }: { cols?: number; rows?: number; active?: boolean; className?: string; label?: string; decorative?: boolean }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const activeRef = useRef(active);
   activeRef.current = active;
@@ -12,7 +13,7 @@ export default function BinaryLens({ cols = 41, rows = 17, active = false, class
     const canvas = canvasRef.current; if (!canvas) return;
     const ctx = canvas.getContext('2d'); if (!ctx) return;
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
-    const digits = Array.from({ length: cols * rows }, () => (Math.random() < .5 ? '0' : '1'));
+    const digits = createCypherDigitField(cols, rows);
     let frame = 0, raf = 0, width = 0, height = 0, ink = '#000', last = 0;
 
     const resize = () => {
@@ -72,5 +73,5 @@ export default function BinaryLens({ cols = 41, rows = 17, active = false, class
     return () => { if (raf) cancelAnimationFrame(raf); observer.disconnect(); themeObserver.disconnect(); scheme.removeEventListener('change', recolor); reduce.removeEventListener('change', syncMotion); document.removeEventListener('visibilitychange', onVisibility); };
   }, [active, cols, rows]);
 
-  return <canvas ref={canvasRef} className={className} role="img" aria-label={label} />;
+  return <canvas ref={canvasRef} className={className} role={decorative ? undefined : 'img'} aria-label={decorative ? undefined : label} aria-hidden={decorative || undefined} />;
 }

@@ -35,13 +35,9 @@ input,textarea,select,button,progress {accent-color:var(--brand-action);caret-co
 :is(button,a,input,textarea,select,summary,[tabindex]):focus-visible {outline-color:var(--cx-label)}
 ::-webkit-scrollbar-thumb {background:var(--cx-sep)}
 body :is(.app-layout,.login-page,dialog) a {color:var(--cx-label);text-decoration-color:currentColor}
-.cypher-mark {display:block;width:100%;height:auto;aspect-ratio:1624/806;overflow:visible;flex-shrink:0}
-@media(prefers-color-scheme:dark) {:root:not([data-theme="light"]) .cypher-mark {filter:invert(1)}}
-:root[data-theme="dark"] .cypher-mark {filter:invert(1)}
+.cypher-mark {display:block;width:100%;height:auto;aspect-ratio:41/21;overflow:visible;flex-shrink:0;color:var(--cx-label)}
 .sidebar-brand .brand-symbol,.mobile-nav-header .brand-symbol,.login-brand .brand-symbol {width:40px;height:20px;border:0;border-radius:0;background:none;filter:none;transform:none;transition:opacity .2s ease}
 .sidebar-brand:hover .brand-symbol {filter:none;transform:none;opacity:.65}
-@media(prefers-color-scheme:dark) {:root:not([data-theme="light"]) :is(.sidebar-brand,.mobile-nav-header,.login-brand) .brand-symbol {filter:invert(1)}}
-:root[data-theme="dark"] :is(.sidebar-brand,.mobile-nav-header,.login-brand) .brand-symbol {filter:invert(1)}
 .sidebar-shell .new-task-button,.btn-primary,.login-email-button,.connector-connect,.composer .send-button,.quickstart .task-composer-footer .btn-primary {background:var(--brand-action);color:var(--brand-on-action);box-shadow:none}
 .sidebar-shell .new-task-button:hover,.btn-primary:hover:not(:disabled),.connector-connect:hover {background:var(--brand-action);opacity:.84}
 .sidebar-shell .bot-row.selected,.sidebar-shell .roster-filters button[aria-pressed="true"],.glass-select-option[data-highlighted],.connector-tabs button[aria-pressed="true"] {background:var(--system-selected);color:var(--cx-label)}
@@ -103,7 +99,7 @@ body :is(.app-layout,.login-page,dialog) a {color:var(--cx-label);text-decoratio
 /* The original animated binary lens and one wordmark, as in the reference. */
 .quickstart {background:var(--cx-bg);justify-content:flex-start;padding-block:clamp(32px,7vh,72px) 40px}
 .quickstart-panel {width:min(620px,100%);padding-block:0}
-.quickstart .quickstart-mark {display:block;position:relative;width:min(560px,100%);height:auto;aspect-ratio:560/210;margin:0 auto 20px;padding:0;background:none;border:0;border-radius:0;box-shadow:none;animation:none}
+.quickstart .quickstart-mark {display:block;position:relative;width:min(560px,100%);height:auto;aspect-ratio:41/21;margin:0 auto 20px;padding:0;background:none;border:0;border-radius:0;box-shadow:none;animation:none}
 .quickstart-mark::before,.quickstart-mark::after {display:none}
 .quickstart .quickstart-real-lens {display:block;width:100%;height:100%;color:var(--cx-label)}
 .quickstart h1 {margin:0 0 12px;font-size:clamp(48px,6vw,72px);line-height:1.05;font-weight:500;letter-spacing:-.04em;color:var(--cx-label);animation:none}
