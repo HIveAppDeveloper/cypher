@@ -24,6 +24,7 @@ async function proxy(request: NextRequest, { params }: { params: { path: string[
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
   if (process.env.GROKBOT_BACKEND_API_TOKEN) headers.Authorization = `Bearer ${process.env.GROKBOT_BACKEND_API_TOKEN}`;
   if (session) headers['x-grokbot-user-id'] = session.sub;
+  if(path==='google/mcp')for(const name of ['accept','mcp-protocol-version','mcp-session-id','last-event-id']){const value=request.headers.get(name);if(value)headers[name]=value;}
   if (path==='plugins/authorize') headers['x-grokbot-public-origin']=request.nextUrl.origin;
   const channelKey=request.headers.get('x-grokbot-channel-key');
   if(channelKey) headers['x-grokbot-channel-key']=channelKey;

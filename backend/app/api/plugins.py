@@ -23,7 +23,7 @@ def public(plugin):
     try:saved=reveal(plugin.credential) if plugin.credential else ''
     except ValueError:saved=''
     connection_id=saved.removeprefix(REFERENCE_PREFIX) if saved and saved.startswith(REFERENCE_PREFIX) else None
-    return {'id': plugin.id, 'connection_id':connection_id, 'name': plugin.name, 'url': plugin.url, 'enabled': plugin.enabled, 'authenticated': bool(plugin.credential), 'tools': [{'name': t['name'], 'description': t['description'], 'enabled':t.get('enabled',True)} for t in plugin.tools]}
+    return {'id': plugin.id, 'connection_id':connection_id, 'provider':'google' if saved=='grokbot-google-workspace' else None, 'name': plugin.name, 'url': plugin.url, 'enabled': plugin.enabled, 'authenticated': bool(plugin.credential), 'tools': [{'name': t['name'], 'description': t['description'], 'enabled':t.get('enabled',True)} for t in plugin.tools]}
 
 @router.get('')
 async def list_plugins(db: AsyncSession = Depends(get_db)):
@@ -89,6 +89,10 @@ async def toggle(id: UUID, data: TogglePlugin, db: AsyncSession = Depends(get_db
 async def disconnect(id: UUID, db: AsyncSession = Depends(get_db)):
     plugin = await db.get(Plugin, str(id))
     if plugin:
+        from app.services.plugins import reveal
+        if reveal(plugin.credential)=='grokbot-google-workspace':
+            from app.api.google_workspace import disconnect as disconnect_google
+            return await disconnect_google(db)
         from sqlalchemy import delete
         await db.execute(delete(PluginAuthorization).where(PluginAuthorization.plugin_id==str(id)))
         await db.delete(plugin); await db.commit()
@@ -99,6 +103,14 @@ async def refresh_tools(id:UUID,db:AsyncSession=Depends(get_db)):
     from app.services.plugins import reveal
     plugin=await db.get(Plugin,str(id))
     if not plugin:raise HTTPException(404,'Plugin not found')
+    from app.services import google_workspace as google
+    if reveal(plugin.credential)==google.REFERENCE:
+        row=await google.grant(db)
+        if not row:raise HTTPException(401,'Reconnect Google to refresh its tools.')
+        allowed=google.allowed_tools(google.DatabaseTokenStorage(db,row).read())
+        previous={t['name']:t.get('enabled',True) for t in plugin.tools}
+        plugin.tools=[{k:t[k] for k in ('name','description','schema','read_only')}|{'enabled':previous.get(t['name'],True)} for t in allowed]
+        await db.commit();return public(plugin)
     from app.services.plugins import connection_auth
     try:
         token,auth=await connection_auth(db,plugin)
@@ -154,7 +166,10 @@ async def test_connection(id:UUID,db:AsyncSession=Depends(get_db)):
     from app.services.verification import save_check
     plugin=await db.get(Plugin,str(id))
     if not plugin or not plugin.enabled:raise HTTPException(409,'Enable the connection before testing it.')
+    from app.services import google_workspace as google
+    from app.services.plugins import reveal
     host=urlsplit(plugin.url).hostname
+    google_tests=[('gmail_users_getProfile',{}),('calendar_calendarList_list',{'maxResults':1}),('drive_about_get',{'fields':'user(emailAddress)'}),('tasks_tasklists_list',{'maxResults':1}),('people_people_connections_list',{'resourceName':'people/me','personFields':'names','pageSize':1})] if reveal(plugin.credential)==google.REFERENCE else []
     examples={
         'mcp.deepwiki.com': [('read_wiki_structure',{'repoName':'vercel/ai'})],
         'learn.microsoft.com': [('microsoft_docs_search',{'query':'Azure Functions overview'})],
@@ -167,7 +182,7 @@ async def test_connection(id:UUID,db:AsyncSession=Depends(get_db)):
         'mcp.windsor.ai': [('get_connectors',{'include_actions':False,'include_options':False})],
     }
     names={t['name'] for t in plugin.tools if t.get('enabled',True)}
-    example=next(((name,args) for name,args in examples.get(host,[]) if name in names),None)
+    example=next(((name,args) for name,args in (google_tests or examples.get(host,[])) if name in names),None)
     if not example:
         # Protocol discovery alone is explicitly labelled, not a tool-call pass.
         from app.services.plugins import connection_auth

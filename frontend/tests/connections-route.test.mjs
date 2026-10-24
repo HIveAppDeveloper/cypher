@@ -19,7 +19,7 @@ test('OmniRoute management link is usable and never exposes URL credentials or q
   const { GET } = route({ OMNIROUTE_URL: 'https://omni.example/v1?token=url-secret', OMNIROUTE_API_KEY: 'server-secret' });
   const result = await GET();
   assert.equal(result.body.models.transport, 'omniroute');
-  assert.equal(result.body.models.manageUrl, 'https://omni.example');
+  assert.equal(result.body.models.manageUrl, 'https://omni.example/dashboard/providers');
   assert.equal(JSON.stringify(result.body).includes('server-secret'), false);
   assert.equal(JSON.stringify(result.body).includes('url-secret'), false);
 });

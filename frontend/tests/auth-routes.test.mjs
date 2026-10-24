@@ -17,7 +17,7 @@ function load(relative, env = BASE, fetch = async () => { throw new Error('Unexp
   const compiled = ts.transpileModule(source, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.CommonJS, esModuleInterop: true } }).outputText;
   const exports = {};
   runInNewContext(compiled, { exports, Buffer, URL, Date, FormData, AbortSignal, Request, Response, process: { env }, fetch,
-    require: name => name === 'node:crypto' ? crypto : name === 'next/server' ? next : name.endsWith('/lib/auth-server') ? load('../src/lib/auth-server.ts', env) : (() => { throw new Error('Unexpected import ' + name); })(),
+    require: name => name === 'node:crypto' ? crypto : name === 'next/server' ? next : name.endsWith('/lib/auth-server') ? load('../src/lib/auth-server.ts', env) : name.endsWith('/lib/canonical-app') ? load('../src/lib/canonical-app.ts', env) : (() => { throw new Error('Unexpected import ' + name); })(),
   });
   return exports;
 }
@@ -108,7 +108,7 @@ test('synthetic Google callback success sets a session, clears CSRF and ignores 
   const route = load('../src/app/api/auth/google/callback/route.ts', BASE, async () => Response.json({ id: 'fixture-google-owner', email: 'owner@gmail.com' }));
   const response = await route.POST(google());
   assert.equal(response.status, 303);
-  assert.equal(response.headers.get('location'), 'https://grokbot.fixture/');
+  assert.equal(response.headers.get('location'), 'https://grokbot.fixture/connect/google?welcome=1');
   assert.equal(load('../src/lib/auth-server.ts').readSignedPayload(response.cookies.get('grokbot_session').value).sub, 'fixture-google-owner');
   assert.equal(response.cookies.get('g_csrf_token').value, '');
   assert.equal(response.headers.get('cache-control'), 'private, no-store');
@@ -120,4 +120,29 @@ test('logout expires the correct cookie and returns to login', async () => {
   assert.equal(response.headers.get('location'), 'https://grokbot.fixture/login');
   const cookie = response.headers.get('set-cookie');
   for (const flag of ['grokbot_session=;', 'Max-Age=0', 'HttpOnly', 'Secure', 'SameSite=lax', 'Path=/']) assert.ok(cookie.includes(flag), flag);
+});
+
+test('Google permissions require a session and bind consent to a protected browser cookie',async()=>{
+ const path='../src/app/api/google/connect/route.ts';let calls=0,received;
+ const route=load(path,BASE,async(url,options)=>{calls++;received={url:String(url),options};return Response.json({flow_id:'e52dad3f-b0db-4cf8-a0f0-f9b88c16f230',binding:'fixture-browser-binding',authorization_url:'https://accounts.google.com/o/oauth2/v2/auth?state=fixture'});});
+ assert.equal((await route.POST(request('/api/google/connect',{method:'POST',body:'{}'}))).status,401);
+ const session=load('../src/lib/auth-server.ts').signPayload({sub:'fixture-owner',email:'owner@example.test',exp:Date.now()/1000+300});
+ const headers={Cookie:'grokbot_session='+session,Origin:'https://grokbot.fixture','Content-Type':'application/json'};
+ assert.equal((await route.POST(request('/api/google/connect',{method:'POST',headers:{...headers,Origin:'https://evil.fixture'},body:'{}'}))).status,403);
+ const response=await route.POST(request('/api/google/connect',{method:'POST',headers,body:JSON.stringify({services:['gmail','drive'],user_id:'other-owner'})}));
+ assert.equal(response.status,200);assert.equal(calls,1);assert.equal(received.options.headers['x-grokbot-user-id'],'fixture-owner');
+ assert.deepEqual(JSON.parse(received.options.body),{services:['gmail','drive']});assert.equal((await response.json()).binding,undefined);
+ for(const flag of ['HttpOnly','Secure','SameSite=lax','Path=/api/auth/google/callback','Max-Age=600'])assert.ok(response.headers.get('set-cookie').includes(flag));
+});
+
+test('Google API callback requires browser and session binding, strips codes and handles denial',async()=>{
+ const flow='e52dad3f-b0db-4cf8-a0f0-f9b88c16f230';let calls=0,body;
+ const route=load('../src/app/api/auth/google/callback/route.ts',BASE,async(url,options)=>{calls++;body=JSON.parse(options.body);assert.equal(options.headers['x-grokbot-user-id'],'fixture-owner');return Response.json({status:body.denied?'cancelled':'connected'});});
+ const url='/api/auth/google/callback?state='+flow+'.fixture-state&code=fixture-code&returnTo=https://evil.fixture';
+ assert.equal((await route.GET(request(url))).headers.get('location'),'https://grokbot.fixture/connect/google?result=failed');assert.equal(calls,0);
+ const session=load('../src/lib/auth-server.ts').signPayload({sub:'fixture-owner',email:'owner@example.test',exp:Date.now()/1000+300});
+ const headers={Cookie:'grokbot_session='+session+'; cypher-google-'+flow+'=fixture-browser-binding'};
+ const response=await route.GET(request(url,{headers}));assert.equal(calls,1);assert.equal(body.binding,'fixture-browser-binding');assert.equal(body.code,'fixture-code');
+ assert.equal(response.headers.get('location'),'https://grokbot.fixture/connect/google?result=connected');assert.ok(response.headers.get('set-cookie').includes('Max-Age=0'));
+ const denial=await route.GET(request('/api/auth/google/callback?state='+flow+'.fixture-state&error=access_denied',{headers}));assert.equal(denial.headers.get('location'),'https://grokbot.fixture/connect/google?result=cancelled');assert.equal(body.denied,true);
 });

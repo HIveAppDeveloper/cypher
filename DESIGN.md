@@ -2,14 +2,14 @@
 name: Cypher
 description: A quiet monochrome agent workspace with the original Cypher identity and functional connected tools.
 colors:
-  conversation: "#f4f4f4"
+  conversation: "#f2f2f7"
   panel: "#fff"
   sidebar: "#eee"
   subtle: "#e8e8e8"
-  text: "#171717"
+  text: "#000000"
   text-secondary: "#626262"
   text-tertiary: "#737373"
-  separator: "#dedede"
+  separator: "#dedee4"
   selected: "rgba(0,0,0,.075)"
   dark-conversation: "#111"
   dark-panel: "#1c1c1c"
@@ -23,7 +23,7 @@ colors:
 typography:
   display:
     fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, "Segoe UI", sans-serif'
-    fontSize: "clamp(42px,4.5vw,58px)"
+    fontSize: "clamp(48px,6vw,72px)"
     fontWeight: 500
     lineHeight: 1.05
     letterSpacing: "-.04em"
@@ -104,7 +104,7 @@ components:
     textColor: "{colors.text}"
     rounded: "{rounded.composer}"
     padding: "9px 14px"
-    height: "80px"
+    height: "auto"
   dialog:
     backgroundColor: "{colors.panel}"
     textColor: "{colors.text}"
@@ -552,3 +552,7 @@ Callbacks retain the same-origin workspace/conversation and remove provider code
 ## Plugin motion refinement — October 23, 2026
 
 The plugin surface stays Operate and monochrome. Prefer compact list rows to elevated service cards, show account connections first, and put secondary management under disclosure. Original binary motion remains the signature; fast overlays, a moving tab underline, capped list arrivals and tactile controls explain interaction. Respect both OS reduced motion and the saved app preference. Callback registration failures reveal a bounded own-client setup form without printing a long callback error banner or claiming access. See verification/plugin-motion-release.md for exact evidence and provider limits.
+
+## Reference composition — October 24, 2026
+
+The supplied Claude Cipher artifact is the visual authority for this refinement. Preserve its pale gray canvas, original animated BinaryLens, large single wordmark, restrained controls and generous space. QuickStart uses a 620px task form with a white, lightly divided input area and a separate full-width black pill action. Keep the working model/output choices, recent work and accessible collapsible navigation. The Google service chooser belongs to the same visual world: simple permission rows, original CypherMark, and one clear continuation to Google. Preserve the original PNG bytes and visibility/reduced-motion gates.

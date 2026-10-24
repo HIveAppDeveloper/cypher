@@ -1,11 +1,11 @@
 'use client';
 
 import { useEffect, useRef, useState, type FormEvent } from 'react';
-import Image from 'next/image';
 import { request } from '../lib/api';
 import { CYPHER_VOICE_INTRO } from '../lib/cypher-voice';
 import BinaryLens from './cipher/BinaryLens';
 import CipherIntro from './cipher/CipherIntro';
+import CypherMark from './cipher/CypherMark';
 import './prospecting-workspace.css';
 
 type Draft = { subject: string; body: string; status: 'local_draft'; recipient: null; review_required: boolean; source_urls: string[] };
@@ -20,13 +20,15 @@ type Candidate = {
   contact: { status: string; email: string | null; source_url?: string | null };
   draft: Draft | null;
 };
-type RunEvent = { type: string; at: string; code?: string; source_url?: string; count?: number; result_id?: string };
+type RunEvent = { type: string; at: string; code?: string; source?: string; source_url?: string; count?: number; result_id?: string; credits_consumed?: number | null; credits_unknown?: boolean };
 type Run = {
   id: string;
   market: string;
   product: string;
   limit: number;
   status: string;
+  source?: string;
+  credits_consumed?: number | null;
   results: Candidate[];
   events: RunEvent[];
   gmail: { status: string; supported_draft?: boolean; detail?: string };
@@ -40,9 +42,10 @@ const STATUS_LABELS: Record<string, string> = {
   partial: 'Partial results', failed: 'Research stopped', cancel_requested: 'Stopping…', cancelled: 'Cancelled',
 };
 const EVENT_LABELS: Record<string, string> = {
-  queued: 'Research queued', started: 'Public source research started', discovered: 'Source candidates found',
+  queued: 'Research queued', started: 'Source research started', discovered: 'Source candidates found',
   result_saved: 'Company candidate saved', candidate_skipped: 'Candidate skipped', completed: 'Research completed',
-  source_error: 'Public source returned an error', cancel_requested: 'Stop requested', cancelled: 'Research cancelled', draft_prepared: 'App draft saved',
+  source_error: 'Research source returned an error', akta_request_started: 'Akta list request started',
+  akta_results_saved: 'Akta company records saved', cancel_requested: 'Stop requested', cancelled: 'Research cancelled', draft_prepared: 'App draft saved',
 };
 const statusLabel = (status: string) => STATUS_LABELS[status] || status.replace(/_/g, ' ');
 const errorText = (error: unknown) => error instanceof Error ? error.message : 'Something went wrong. Please try again.';
@@ -55,6 +58,8 @@ export default function ProspectingWorkspace() {
   const [market, setMarket] = useState('');
   const [product, setProduct] = useState('');
   const [confirmed, setConfirmed] = useState(false);
+  const [aktaAvailable, setAktaAvailable] = useState(false);
+  const [useAkta, setUseAkta] = useState(false);
   const [runs, setRuns] = useState<Run[]>([]);
   const [run, setRun] = useState<Run | null>(null);
   const [historyError, setHistoryError] = useState('');
@@ -67,10 +72,14 @@ export default function ProspectingWorkspace() {
   const [notice, setNotice] = useState('');
   const [voiceState, setVoiceState] = useState<VoiceState>('checking');
   const [voiceError, setVoiceError] = useState('');
+  const [voiceLevel, setVoiceLevel] = useState(0);
   const inFlight = useRef(false);
   const operation = useRef<AbortController | null>(null);
   const voiceAudio = useRef<HTMLAudioElement | null>(null);
   const voiceObjectUrl = useRef('');
+  const voiceContext = useRef<AudioContext | null>(null);
+  const voiceMeter = useRef<AnalyserNode | null>(null);
+  const voiceFrame = useRef(0);
   const active = !!run && !terminal(run.status);
   const candidate = run?.results.find(item => item.id === selected) || run?.results[0];
   const runId = run?.id;
@@ -83,9 +92,19 @@ export default function ProspectingWorkspace() {
     return () => { active = false; };
   }, []);
 
+  useEffect(() => {
+    let current = true;
+    request('/prospecting/settings').then((data: { akta_available?: boolean }) => {
+      if (current) setAktaAvailable(data.akta_available === true);
+    }).catch(() => { if (current) setAktaAvailable(false); });
+    return () => { current = false; };
+  }, []);
+
   useEffect(() => () => {
     voiceAudio.current?.pause();
     if (voiceObjectUrl.current) URL.revokeObjectURL(voiceObjectUrl.current);
+    if (voiceFrame.current) cancelAnimationFrame(voiceFrame.current);
+    if (voiceContext.current && voiceContext.current.state !== 'closed') void voiceContext.current.close();
   }, []);
 
   useEffect(() => {
@@ -153,7 +172,7 @@ export default function ProspectingWorkspace() {
     if (active || !confirmed || market.trim().length < 2 || product.trim().length < 2) return;
     void perform('run', async signal => {
       const next: Run = await request('/prospecting/runs', {
-        method: 'POST', signal, body: JSON.stringify({ market: market.trim(), product: product.trim(), limit: 20 }),
+        method: 'POST', signal, body: JSON.stringify({ market: market.trim(), product: product.trim(), limit: 20, use_akta: useAkta }),
       });
       if (signal.aborted) return;
       setRun(next); setSelected(''); setDraft(null);
@@ -179,11 +198,22 @@ export default function ProspectingWorkspace() {
     });
   }
 
+  function clearVoiceMeter() {
+    if (voiceFrame.current) cancelAnimationFrame(voiceFrame.current);
+    voiceFrame.current = 0;
+    voiceMeter.current = null;
+    const context = voiceContext.current;
+    voiceContext.current = null;
+    if (context && context.state !== 'closed') void context.close();
+    setVoiceLevel(0);
+  }
+
   function stopVoice() {
     voiceAudio.current?.pause();
     voiceAudio.current = null;
     if (voiceObjectUrl.current) URL.revokeObjectURL(voiceObjectUrl.current);
     voiceObjectUrl.current = '';
+    clearVoiceMeter();
     setVoiceState('ready');
   }
 
@@ -202,14 +232,49 @@ export default function ProspectingWorkspace() {
       voiceObjectUrl.current = audioUrl;
       const audio = new Audio(audioUrl);
       voiceAudio.current = audio;
+      if (typeof AudioContext !== 'undefined') {
+        try {
+          const context = new AudioContext();
+          const meter = context.createAnalyser();
+          meter.fftSize = 256;
+          const source = context.createMediaElementSource(audio);
+          source.connect(meter);
+          meter.connect(context.destination);
+          voiceContext.current = context;
+          voiceMeter.current = meter;
+          await context.resume();
+          const samples = new Uint8Array(meter.fftSize);
+          let lastUiUpdate = 0;
+          const animateFromAudio = (now: number) => {
+            if (voiceAudio.current !== audio || voiceMeter.current !== meter) return;
+            meter.getByteTimeDomainData(samples);
+            let squareSum = 0;
+            for (let index = 0; index < samples.length; index++) {
+              const value = (samples[index] - 128) / 128;
+              squareSum += value * value;
+            }
+            const level = Math.min(1, Math.sqrt(squareSum / samples.length) * 4.5);
+            if (now - lastUiUpdate > 60) { setVoiceLevel(level); lastUiUpdate = now; }
+            voiceFrame.current = requestAnimationFrame(animateFromAudio);
+          };
+          voiceFrame.current = requestAnimationFrame(animateFromAudio);
+        } catch {
+          const context = voiceContext.current;
+          voiceContext.current = null;
+          voiceMeter.current = null;
+          if (context && context.state !== 'closed') void context.close();
+        }
+      }
       audio.onended = () => {
         if (voiceAudio.current !== audio) return;
         voiceAudio.current = null; URL.revokeObjectURL(audioUrl); voiceObjectUrl.current = '';
+        clearVoiceMeter();
         setVoiceState('ready');
       };
       audio.onerror = () => {
         if (voiceAudio.current !== audio) return;
         voiceAudio.current = null; URL.revokeObjectURL(audioUrl); voiceObjectUrl.current = '';
+        clearVoiceMeter();
         setVoiceError('The audio could not play. Try again.'); setVoiceState('error');
       };
       setVoiceState('playing');
@@ -218,6 +283,7 @@ export default function ProspectingWorkspace() {
       voiceAudio.current?.pause(); voiceAudio.current = null;
       if (voiceObjectUrl.current) URL.revokeObjectURL(voiceObjectUrl.current);
       voiceObjectUrl.current = '';
+      clearVoiceMeter();
       setVoiceError(errorText(failure)); setVoiceState('error');
     }
   }
@@ -229,7 +295,7 @@ export default function ProspectingWorkspace() {
   return <main className="cipher cx-prospecting">
     <CipherIntro />
     <header className="cx-toolbar">
-      <a href="/" className="cx-word"><img className="cx-brand-image" src="/cipher-logo.png" alt=""/><span>Cypher</span></a>
+      <a href="/" className="cx-word"><CypherMark className="cx-brand-image" decorative level={voiceLevel}/><span>Cypher</span></a>
       <nav className="cx-nav" aria-label="Main navigation">
         <a href="/workspace?plugins=1">Plugins</a>
         <a href="/workspace">Workspace</a>
@@ -237,23 +303,23 @@ export default function ProspectingWorkspace() {
     </header>
 
     <section className="cx-hero cx-prospect-hero">
-      <BinaryLens className="cx-lens" active={pending === 'profile' || active || voiceState === 'loading' || voiceState === 'playing'} label="Cypher lens"/>
-      <h1>Cypher</h1>
+      <BinaryLens className="cx-lens" active={pending === 'profile' || active || voiceState === 'loading' || voiceState === 'playing'} level={voiceLevel} label="Cypher lens"/>
+      <h1>Find your next customers</h1>
       <p>Start with your website. Refine who you want to reach. Research real companies with public evidence.</p>
       <div className="cx-voice-control">
         <button type="button" className={`cx-voice-button is-${voiceState}`} onClick={() => void playVoice()} disabled={voiceState === 'checking' || voiceState === 'setup' || voiceState === 'loading'} aria-pressed={voiceState === 'playing'}>
-          <Image className="cx-voice-mark" src="/cipher-logo.png" alt="" aria-hidden="true" width={20} height={20} unoptimized/>
+          <CypherMark className="cx-voice-mark" decorative level={voiceLevel}/>
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 9v6h3.7l4.8 4V5l-4.8 4H4.5z"/><path d="M16 9a4 4 0 010 6M18.5 6.5a7.5 7.5 0 010 11"/></svg>
-          {voiceState === 'checking' ? 'Checking voice…' : voiceState === 'setup' ? 'Voice setup needed' : voiceState === 'loading' ? 'Preparing voice…' : voiceState === 'playing' ? 'Stop voice' : voiceState === 'error' ? 'Try voice again' : 'Listen to Cypher'}
+          {voiceState === 'checking' ? 'Checking voice…' : voiceState === 'setup' ? 'Voice setup needed' : voiceState === 'loading' ? 'Preparing voice…' : voiceState === 'playing' ? 'Stop voice' : voiceState === 'error' ? 'Try voice again' : 'Listen to the welcome'}
         </button>
-        {voiceState === 'setup' ? <span className="cx-voice-note" role="status">Add your ElevenLabs API key and voice ID in Vercel to enable this.</span> : null}
+        {voiceState === 'setup' ? <span className="cx-voice-note" role="status">Add your ElevenLabs API key in Vercel to enable this.</span> : null}
         {voiceError ? <span className="cx-voice-note" role="status">{voiceError}</span> : null}
       </div>
       <form className="cx-command" onSubmit={understand}>
         <div className="cx-group">
           <label className="cx-field" htmlFor="prospecting-url"><span>Company site</span><input id="prospecting-url" type="url" required maxLength={2048} placeholder="https://yourcompany.com" value={url} onChange={event => { setUrl(event.target.value); setProfile(null); setConfirmed(false); }} disabled={!!pending}/></label>
+          <button type="submit" className="cx-run" disabled={!!pending}>{pending === 'profile' ? <><span className="cx-spinner" aria-hidden="true"/>Reading site…</> : <>Read company site<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></>}</button>
         </div>
-        <button type="submit" className="cx-run" disabled={!!pending}>{pending === 'profile' ? <><span className="cx-spinner" aria-hidden="true"/>Reading site…</> : 'Go'}</button>
         <small className="cx-helper">Reads public HTTPS pages that allow automated access. Your extracted offer stays editable before research.</small>
       </form>
       {error && <div role="alert" className="cx-error">{error}{/sign in|session/i.test(error) ? <> <a href="/login">Sign in</a></> : null}</div>}
@@ -275,7 +341,8 @@ export default function ProspectingWorkspace() {
         <label><span>Customer market or audience</span><input value={market} maxLength={300} minLength={2} required placeholder="Who benefits from this offer? Include industry, size, or region." onChange={event => { setMarket(event.target.value); setConfirmed(false); }} disabled={!!pending}/></label>
         <label><span>What you sell</span><textarea value={product} maxLength={2000} minLength={2} required rows={4} placeholder="Describe your product and the problem it solves." onChange={event => { setProduct(event.target.value); setConfirmed(false); }} disabled={!!pending}/></label>
         <label className="cx-confirm"><input type="checkbox" checked={confirmed} onChange={event => setConfirmed(event.target.checked)} disabled={!!pending}/><span>I reviewed and edited this profile. Use it to find potential customers.</span></label>
-        <button type="submit" className="cx-run" disabled={!!pending || !confirmed || active}>{pending === 'run' ? <><span className="cx-spinner" aria-hidden="true"/>Starting research…</> : 'Find up to 20 company candidates'}</button>
+        {aktaAvailable && <><label className="cx-akta-choice"><input type="checkbox" checked={useAkta} onChange={event => setUseAkta(event.target.checked)} disabled={!!pending}/><span><strong>Use Akta company data</strong><small>Paid list generation · up to 8 credits for 20 results. No enrichment is requested.</small></span></label><a className="cx-akta-pricing" href="https://docs.akta.pro/getting-started/pricing" target="_blank" rel="noopener noreferrer">See Akta pricing</a></>}
+        <button type="submit" className="cx-run" disabled={!!pending || !confirmed || active}>{pending === 'run' ? <><span className="cx-spinner" aria-hidden="true"/>Starting research…</> : useAkta ? 'Find companies with Akta' : 'Find up to 20 company candidates'}</button>
         <small className="cx-helper">Research returns source-backed company candidates. This source does not verify customer demand, contacts, or competitor status; review each result.</small>
       </form>
     </section>}
@@ -302,7 +369,7 @@ export default function ProspectingWorkspace() {
           {candidate && <article className="cx-detail-card" aria-label={`${candidate.name} research detail`}>
             <div className="cx-detail-header"><h3>{candidate.name}</h3><span className="cx-contact-status">{candidate.contact.email ? 'Public contact listed' : 'No verified contact'}</span></div>
             <div className="cx-detail-grid"><div><h4>Why it appeared</h4><p>{candidate.inferred.reason}</p><div className="cx-match-terms">{candidate.inferred.matched_terms.map(term => <span key={term}>{term}</span>)}</div></div>
-              <div><h4>Public evidence</h4><p className="cx-description">{candidate.observed.description || 'The source did not provide a readable company description.'}</p><a className="cx-evidence-link" href={candidate.source_url} target="_blank" rel="noopener noreferrer">Read {candidate.observed.source} source</a><small>Retrieved {new Date(candidate.retrieved_at).toLocaleString()}</small></div></div>
+              <div><h4>{candidate.observed.source === 'Akta' ? 'Akta company record' : 'Public evidence'}</h4><p className="cx-description">{candidate.observed.description || 'The source did not provide a readable company description.'}</p>{candidate.source_url ? <a className="cx-evidence-link" href={candidate.source_url} target="_blank" rel="noopener noreferrer">{candidate.observed.source === 'Akta' ? 'Visit listed company website' : `Read ${candidate.observed.source} source`}</a> : <small>Company details supplied by Akta · no public website was listed</small>}<small>Retrieved {new Date(candidate.retrieved_at).toLocaleString()}</small></div></div>
             {candidate.contact.email && candidate.contact.source_url && <p className="cx-verified-contact">Public business contact: <a href={`mailto:${candidate.contact.email}`}>{candidate.contact.email}</a> · <a href={candidate.contact.source_url} target="_blank" rel="noopener noreferrer">evidence</a></p>}
             {candidate.draft ? <div className="cx-draft-box"><div className="cx-draft-label"><strong>App draft preview · review required</strong><span>No recipient · not in Gmail</span></div><label>Subject<input value={draft?.subject || candidate.draft.subject} onChange={event => setDraft(current => current ? { ...current, subject: event.target.value } : candidate.draft)} disabled={!draft}/></label><label>Message<textarea rows={7} value={draft?.body || candidate.draft.body} onChange={event => setDraft(current => current ? { ...current, body: event.target.value } : candidate.draft)} disabled={!draft}/></label><div className="cx-draft-actions"><button type="button" className="cx-secondary" onClick={async () => { try { await navigator.clipboard.writeText(`Subject: ${draft?.subject || candidate.draft!.subject}\n\n${draft?.body || candidate.draft!.body}`); setNotice('Draft copied. No email was created or sent.'); } catch { setNotice('Clipboard access was unavailable.'); } }}>Copy draft</button><a href={`https://mail.google.com/mail/?view=cm&fs=1&su=${encodeURIComponent(draft?.subject || candidate.draft.subject)}&body=${encodeURIComponent(draft?.body || candidate.draft.body)}`} target="_blank" rel="noopener noreferrer">Open Gmail compose</a></div><p>Edits stay on this screen. Gmail compose opens with the text filled in; it is not a saved Gmail draft.</p></div> : <div className="cx-draft-cta"><div><strong>Prepare a source-aware introduction</strong><small>Saved in the app for review. No recipient or Gmail draft is created.</small></div><button type="button" className="cx-secondary" disabled={!!pending || active} onClick={prepareDraft}>{pending === 'draft' ? 'Preparing…' : 'Create app draft'}</button></div>}
             {notice && <p className="cx-notice" role="status">{notice}</p>}
@@ -314,12 +381,12 @@ export default function ProspectingWorkspace() {
       <aside className="cx-log" aria-label="Research activity">
         <div className="cx-log-head"><h2 className="cx-label">Activity</h2><span className={`cx-live-indicator ${active ? 'is-live' : ''}`}><i/> {active ? 'Live' : run ? statusLabel(run.status) : 'Ready'}</span></div>
         <ol>{run?.events.length ? [...run.events].reverse().map((entry, index) => <li key={`${entry.at}-${entry.type}-${index}`}>
-          <time dateTime={entry.at}>{localTime(entry.at)}</time><div><strong>{EVENT_LABELS[entry.type] || entry.type.replace(/_/g, ' ')}</strong>{entry.count !== undefined && <small>{entry.count} public candidates</small>}{entry.code && <small className="cx-event-code">{entry.code.replace(/_/g, ' ')}</small>}{entry.source_url && <a href={entry.source_url} target="_blank" rel="noopener noreferrer">Evidence source</a>}{entry.result_id && <small>Saved to this account</small>}</div>
+          <time dateTime={entry.at}>{localTime(entry.at)}</time><div><strong>{EVENT_LABELS[entry.type] || entry.type.replace(/_/g, ' ')}</strong>{entry.count !== undefined && <small>{entry.count} {entry.source === 'Akta' ? 'company records' : 'public candidates'}</small>}{entry.credits_consumed !== undefined && entry.credits_consumed !== null && <small>{entry.credits_consumed} Akta credits used</small>}{entry.credits_unknown && <small>Akta may have consumed credits before this request failed.</small>}{entry.code && <small className="cx-event-code">{entry.code.replace(/_/g, ' ')}</small>}{entry.source_url && <a href={entry.source_url} target="_blank" rel="noopener noreferrer">{entry.source === 'Akta' ? 'Akta list generation docs' : 'Evidence source'}</a>}{entry.result_id && <small>Saved to this account</small>}</div>
         </li>) : <li className="cx-activity-empty"><span>{run ? 'No activity recorded yet.' : 'Research steps and source links will appear here.'}</span></li>}</ol>
         <div className="cx-provider-status"><h3>Outreach connections</h3><div><strong>Gmail</strong><span className={run?.gmail?.status === 'connection_saved' ? 'is-connected' : 'is-setup'}>{run?.gmail?.status === 'connection_saved' ? 'Connection saved · not verified' : run?.gmail?.status === 'connection_required' ? 'Needs setup' : 'Check workspace'}</span></div><p>{run?.gmail?.detail || 'Google sign-in alone does not grant mailbox access. Check the existing workspace connection before using Gmail.'}</p><div><strong>Resend</strong><span className="is-unavailable">Unavailable in this flow</span></div><p>Sending stays disabled. The app has no verified Resend sender or authorized outreach account.</p><a href="/workspace?plugins=1">Open workspace connections</a></div>
         <div className="cx-history"><div className="cx-log-head"><h2 className="cx-label">Recent research</h2></div>{runs.length === 0 ? <p>No saved runs yet.</p> : runs.slice(0, 6).map(item => <button key={item.id} type="button" className={item.id === runId ? 'is-selected' : ''} disabled={!!pending} onClick={() => selectRun(item)} aria-pressed={item.id === runId}><strong>{item.market}</strong><span>{statusLabel(item.status)} · {item.results.length} candidates</span></button>)}</div>
       </aside>
     </section>
-    <footer className="cx-footer"><span>Cypher</span><span>Research runs through Open GrokBot’s authenticated backend.</span><a href="/workspace">Open full workspace</a></footer>
+    <footer className="cx-footer"><span>Research runs through Open GrokBot’s authenticated backend.</span><a href="/workspace">Open full workspace</a></footer>
   </main>;
 }

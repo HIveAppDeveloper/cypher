@@ -11,11 +11,12 @@ const STARTER_PROMPTS = [
   { text: 'Build', prompt: 'Help me plan and build ' },
 ];
 
-export function QuickStart({ onStart, onOpenRecent, options, onOptions, draftScope }: { draftScope?: string; options: RunOptions; onOptions: (options: RunOptions) => void; onStart: (prompt: string, options: Partial<RunOptions>) => Promise<void>; onOpenRecent: (conversationId: string) => void }) {
+export function QuickStart({ onStart, onOpenRecent, onVoiceStart, options, onOptions, draftScope }: { draftScope?: string; options: RunOptions; onOptions: (options: RunOptions) => void; onStart: (prompt: string, options: Partial<RunOptions>) => Promise<void>; onOpenRecent: (conversationId: string) => void; onVoiceStart: (stream: MediaStream) => Promise<void> }) {
   const manager = options.routing==='manual'?(options.model || 'gpt-6.1-sol'):'auto';
   const [prompt, setPrompt] = useState('');
   const logoRef = useRef<HTMLDivElement>(null);
   const [logoMotionActive, setLogoMotionActive] = useState(false);
+  const [homeHasEntered, setHomeHasEntered] = useState(false);
   const draftKey='grokbot-task-draft-v1-'+(draftScope || 'local');
   const mounted=useRef(false);
   useEffect(()=>{mounted.current=true;return()=>{mounted.current=false;};},[]);
@@ -27,7 +28,11 @@ export function QuickStart({ onStart, onOpenRecent, options, onOptions, draftSco
     if (!logo) return;
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
     let isVisible = false;
-    const syncMotion = () => setLogoMotionActive(isVisible && !document.hidden && !reducedMotion.matches && document.documentElement.dataset.motion !== 'false');
+    const syncMotion = () => {
+      const active = isVisible && !document.hidden && !reducedMotion.matches && document.documentElement.dataset.motion !== 'false';
+      setLogoMotionActive(active);
+      if (active) setHomeHasEntered(true);
+    };
     const visibilityObserver = new IntersectionObserver(([entry]) => { isVisible = entry.isIntersecting; syncMotion(); }, { threshold: 0.1 });
     const settingsObserver = new MutationObserver(syncMotion);
     visibilityObserver.observe(logo);
@@ -45,17 +50,33 @@ export function QuickStart({ onStart, onOpenRecent, options, onOptions, draftSco
   const [busy, setBusy] = useState(false);
   const inFlight = useRef(false);
   const [error, setError] = useState('');
+  const [voiceBusy, setVoiceBusy] = useState(false);
+  const [voiceError, setVoiceError] = useState('');
+  async function startVoice() {
+    if (voiceBusy) return;
+    if (!navigator.mediaDevices?.getUserMedia || !window.MediaRecorder) { setVoiceError('Voice chat needs a browser that supports microphone recording.'); return; }
+    setVoiceBusy(true); setVoiceError('');
+    let stream: MediaStream | null = null;
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } });
+      await onVoiceStart(stream);
+    } catch (failure) {
+      stream?.getTracks().forEach(track => track.stop());
+      setVoiceError(failure instanceof Error ? failure.message : 'Microphone access was not available.');
+    } finally { setVoiceBusy(false); }
+  }
   async function start(e: React.FormEvent) { e.preventDefault(); if (!prompt.trim() || busy || inFlight.current) return; inFlight.current = true; setBusy(true); setError(''); try { await onStart(prompt, { ...options, output, provider: manager === 'auto' ? 'openai' : MODEL_CHOICES.find(choice => choice.model === manager)?.provider || options.provider || 'openai', model: manager === 'auto' ? 'gpt-6.1-sol' : manager, aspect_ratio: '16:9', duration: 4 }); if(mounted.current)setPrompt(''); try { if(sessionStorage.getItem(draftKey)===prompt)sessionStorage.removeItem(draftKey); } catch {} } catch (error) { const detail = error instanceof Error ? error.message : 'The task could not start. Try again.'; setError(detail + ' Your task is still here.'); } finally { inFlight.current = false; setBusy(false); } }
   return (
     <div className="quickstart">
-      <div className="quickstart-panel">
+      <div className="quickstart-panel" data-motion-entered={homeHasEntered}>
       <div className="quickstart-mark" ref={logoRef} data-motion-active={logoMotionActive}>
         <BinaryLens className="quickstart-real-lens" active={logoMotionActive} label="Cypher binary lens" />
       </div>
-      <h1>Cypher</h1>
-      <p className="quickstart-intro">What would you like to work on?</p>
+      <h1>What are you working on?</h1>
+      <p className="quickstart-intro">Start with a goal, question, or file.</p>
 
       <form onSubmit={start} className="task-composer" aria-busy={busy} data-motion-active={logoMotionActive}>
+        <div className="task-composer-fields">
         <label className="visually-hidden" htmlFor="first-task">Your task</label>
         <textarea
           disabled={busy}
@@ -95,12 +116,20 @@ export function QuickStart({ onStart, onOpenRecent, options, onOptions, draftSco
             <option value="text">Text</option>
             <option value="image">Create an image</option>
           </GlassSelect>
-          <button aria-label={busy ? 'Starting task' : 'Start task'} disabled={busy || !prompt.trim()} type="submit" className="btn-primary">
+          <button aria-label={busy ? 'Starting task' : 'Start task'} disabled={busy || !prompt.trim()} type="submit" className="btn-primary quickstart-submit">
             <span>{busy ? 'Starting…' : 'Start task'}</span>
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6" /></svg>
           </button>
         </div>
+        </div>
       </form>
+
+      <button type="button" className="quickstart-voice" onClick={() => void startVoice()} disabled={voiceBusy}>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3m-4 0h8"/></svg>
+        <span>{voiceBusy ? 'Connecting microphone…' : 'Talk to Cypher'}</span>
+      </button>
+      <p className="quickstart-voice-note">Speak naturally. Cypher will listen, work, and reply out loud.</p>
+      {voiceError ? <p className="quickstart-error" role="alert">{voiceError}</p> : null}
 
       {error ? <p className="quickstart-error" role="alert">{error}</p> : null}
 

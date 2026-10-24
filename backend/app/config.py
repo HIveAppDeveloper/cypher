@@ -33,6 +33,8 @@ class Settings(BaseSettings):
     }
     AUDIO_TRANSCRIPTION_MODEL: str = "openai/gpt-4o-mini-transcribe"
     IMAGE_MODEL: str = "openai/gpt-image-2"
+    # Server-only Akta key. Prospecting uses this only after a per-run opt-in.
+    AKTA_API_KEY: str = Field(default="", repr=False)
     SANDBOX_BACKEND: Literal["docker", "vercel"] = "docker"
     SANDBOX_IMAGE: str = "open-grokbot-sandbox:latest"
     BACKEND_API_TOKEN: str = ""

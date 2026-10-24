@@ -171,6 +171,10 @@ async def invoke(plugin_id, tool_name, arguments):
         if not plugin or not plugin.enabled or tool_name not in {t['name'] for t in plugin.tools if t.get('enabled',True)}:
             return {'success':False, 'error': 'Plugin or tool is disabled.', 'code':'disabled'}
         tool = next(t for t in plugin.tools if t['name'] == tool_name)
+        from app.services import google_workspace
+        if reveal(plugin.credential)==google_workspace.REFERENCE:
+            try:return await google_workspace.invoke(db,tool_name,arguments)
+            except Exception as error:return {'success':False,'error':str(getattr(error,'detail','Google did not complete this operation.')),'code':'google_unavailable'}
         from jsonschema import Draft202012Validator, ValidationError, SchemaError
         try:
             Draft202012Validator(tool['schema']).validate(arguments)

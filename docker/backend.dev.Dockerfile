@@ -15,6 +15,8 @@ RUN apt-get update \
 WORKDIR /app
 
 COPY backend/pyproject.toml ./
+RUN python -m venv /opt/venv
+ENV PATH="/opt/venv/bin:${PATH}"
 RUN python -c "import tomllib; from pathlib import Path; Path('/tmp/requirements.txt').write_text('\n'.join(tomllib.loads(Path('pyproject.toml').read_text())['project']['dependencies']))" \
     && pip install --no-cache-dir -r /tmp/requirements.txt
 

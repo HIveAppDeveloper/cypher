@@ -120,7 +120,7 @@ export function BotRoster({ bots, selectedBot, onSelectBot, onCreateNew, rooms, 
           <button className="preferences-nav" onClick={onGoals} aria-label="Goals"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><path d="m12 12 8-8"/></svg><span>Goals</span></button>
         </nav>
         <nav className="workspace-tools" aria-label="Tools and settings">
-          <button className="plugins-nav" onClick={onPlugins} aria-label="Plugins" title="Plugins"><svg viewBox="0 0 24 24"><path d="M8 3v5m8-5v5M6 8h12v4a6 6 0 0 1-12 0V8Zm6 10v3"/></svg><span>Plugins</span></button>
+          <button className="plugins-nav" onClick={onPlugins} aria-label="Connect tools" title="Connect tools"><svg viewBox="0 0 24 24"><path d="M8 3v5m8-5v5M6 8h12v4a6 6 0 0 1-12 0V8Zm6 10v3"/></svg><span>Connect tools</span></button>
           <button className="preferences-nav" onClick={onChannels} aria-label="Channels"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4V5Z"/></svg><span>Channels</span></button>
           <button className="preferences-nav" onClick={onPreferences} aria-label="Appearance"><svg viewBox="0 0 24 24"><path d="M5 4v16M12 4v16M19 4v16M2 8h6m1 8h6m1-6h6"/></svg><span>Appearance</span></button>
         </nav>

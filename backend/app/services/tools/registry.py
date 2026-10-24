@@ -121,21 +121,27 @@ class ToolRegistry:
             plugin.id: bool(plugin.credential) or plugin.id in oauth_connections
             for plugin in connections
         }
-        from app.services.plugins import is_read_only
-        manifest = [{**tool, 'plugin_id':p.id, 'service':p.name, 'authenticated':account_linked[p.id], 'read_only':is_read_only(p.url, tool)} for p in connections for tool in p.tools if tool.get('enabled', True)]
+        from app.services.plugins import is_read_only, reveal
+        google_ids={p.id for p in connections if p.credential and reveal(p.credential)=='grokbot-google-workspace'}
+        manifest = [{**tool, 'plugin_id':p.id, 'service':p.name, 'authenticated':account_linked[p.id], 'provider':'google' if p.id in google_ids else None, 'read_only':is_read_only(p.url, tool)} for p in connections for tool in p.tools if tool.get('enabled', True)]
         self._plugin_manifest = manifest
         if not manifest:
             return
         async def search(arguments, bot_id):
             query=str(arguments.get('query','')).strip()
             scoped=[t for t in manifest if not arguments.get('plugin_id') or t['plugin_id']==arguments['plugin_id']]
+            google_aliases={'gmail':'gmail_','google gmail':'gmail_','calendar':'calendar_','google calendar':'calendar_','drive':'drive_','google drive':'drive_','docs':'docs_','google docs':'docs_','sheets':'sheets_','google sheets':'sheets_','slides':'slides_','google slides':'slides_','contacts':'people_','google contacts':'people_','tasks':'tasks_','google tasks':'tasks_'}
+            requested_service=str(arguments.get('service','')).strip().casefold()
+            google_prefix=google_aliases.get(requested_service)
+            google_scope=bool(google_prefix and any(t.get('provider')=='google' for t in scoped))
+            if google_scope:scoped=[t for t in scoped if (t.get('provider')=='google' and t['name'].startswith(google_prefix)) or (t.get('provider')!='google' and t['service'].casefold()==requested_service)]
             if not scoped:return {'tools':[],'total_matches':0,'error':'No enabled tools for that plugin_id. Discover existing services first; do not search unrelated services as a fallback.'}
             if not query and not arguments.get('service') and not arguments.get('plugin_id'):
                 services=sorted([{'plugin_id':p.id,'service':p.name,'authenticated':bool(p.credential) or p.id in oauth_connections,'tool_count':sum(t['plugin_id']==p.id for t in manifest)} for p in connections],key=lambda p:(not p['authenticated'],p['service'].casefold()))
                 return {'tools':[],'services':services[:30],'total_services':len(services),'instruction':'Existing account-backed connections are listed first. Search with the exact service/account name or its plugin_id and the desired operation. Connected grants are server-side; sandbox CLI authentication is separate and must not be used to rediscover credentials.'}
             # An exact connection ID is authoritative. A shortened or outdated
             # display label must not hide tools in that already selected account.
-            ranked=rank_plugin_tools(scoped,query,None if arguments.get('plugin_id') else arguments.get('service'))
+            ranked=rank_plugin_tools(scoped,query,None if arguments.get('plugin_id') or google_scope else arguments.get('service'))
             return {'tools': [{'plugin_id':t['plugin_id'], 'service':t['service'], 'authenticated':t['authenticated'], 'name':t['name'], 'description':t.get('description',''), 'parameters':t['schema'],'read_only':t['read_only']} for t in ranked[:12]], 'total_matches':len(ranked), 'instruction':'Call plugin_call with the exact returned plugin_id, tool_name and parameters. Bare service names include existing account variants; select the correct account. Use service or plugin_id to keep follow-up discovery scoped. Prefer account-backed services for private account actions. Search is discovery, not evidence that an action ran. If an exact operation is unavailable, use a relevant supported operation or report the limit; do not invent a tool or hunt for tokens in the sandbox.'}
         async def call(arguments, bot_id):
             if not any(t['plugin_id']==arguments.get('plugin_id') and t['name']==arguments.get('tool_name') for t in manifest):
@@ -158,10 +164,66 @@ class ToolRegistry:
             return any(t['plugin_id'] == arguments.get('plugin_id') and t['name'] == arguments.get('tool_name') and t.get('read_only') for t in getattr(self, '_plugin_manifest', []))
         return name in {'read_file', 'list_directory', 'search_files', 'search_web',
                         'search_chat_history', 'list_context', 'forget_context', 'consult_specialist', 'plugin_search', 'publish_file',
-                        'complete_goal', 'remember_context'}
+                        'complete_goal', 'remember_context', 'get_vc_investor_match', 'prepare_vc_outreach', 'search_vc_founders'}
 
     def register_default_tools(self):
         """Register all built-in tools."""
+        from app.services.tools.investor_funnel import start_investor_match, get_investor_match, label_investor_match, prepare_investor_outreach, search_vc_founders
+        thesis_properties = {
+            "direction": {"type": "string", "enum": ["investors_for_thesis", "companies_for_thesis"], "description": "investors_for_thesis finds VCs for a company; companies_for_thesis finds SEC filing prospects for a VC mandate."},
+            "one_liner": {"type": "string", "minLength": 4, "maxLength": 300},
+            "thesis": {"type": "string", "minLength": 20, "maxLength": 4000},
+            "beliefs": {"type": "array", "maxItems": 10, "items": {"type": "string", "maxLength": 400}},
+            "keywords": {"type": "array", "maxItems": 40, "items": {"type": "string", "maxLength": 100}},
+            "industries": {"type": "array", "maxItems": 20, "items": {"type": "string", "maxLength": 100}},
+            "competitors": {"type": "array", "maxItems": 30, "items": {"type": "string", "maxLength": 100}},
+            "exclusions": {"type": "array", "maxItems": 30, "items": {"type": "string", "maxLength": 100}},
+            "stage": {"type": "string", "maxLength": 40},
+            "raise_usd": {"type": "integer", "minimum": 0, "maximum": 10000000000},
+            "fund_size_usd": {"type": "array", "items": {"type": "integer", "minimum": 1}, "minItems": 2, "maxItems": 2},
+            "geo_preferred": {"type": "array", "maxItems": 30, "items": {"type": "string", "maxLength": 40}},
+            "geo_required": {"type": "array", "maxItems": 30, "items": {"type": "string", "maxLength": 40}},
+            "max_months_since_fund": {"type": "integer", "minimum": 1, "maximum": 120},
+            "limit": {"type": "integer", "minimum": 1, "maximum": 20},
+            "candidate_limit": {"type": "integer", "minimum": 20, "maximum": 200},
+        }
+        self.register(
+            "search_vc_founders",
+            "Search Cypher's shared recent SEC Form D people database by person, issuer, title, industry, or state. Results name public filing-related persons; founder_only=true filters to filed role/title text that explicitly says founder or co-founder. Other results are labeled related_person_only and may be executives or directors, not founders. Returns SEC filing evidence and source links; it does not provide personal contact details or verify current status.",
+            {"type": "object", "properties": {
+                "q": {"type": "string", "maxLength": 120, "description": "Optional name, company, or title substring; use two or more characters."},
+                "industry": {"type": "string", "maxLength": 160},
+                "state": {"type": "string", "maxLength": 80},
+                "founder_only": {"type": "boolean", "default": False},
+                "limit": {"type": "integer", "minimum": 1, "maximum": 100, "default": 25},
+                "offset": {"type": "integer", "minimum": 0, "maximum": 100000, "default": 0},
+            }, "required": [], "additionalProperties": False},
+            search_vc_founders,
+        )
+        self.register(
+            "start_vc_investor_match",
+            "Queue public-source matching. Set direction=investors_for_thesis to find VCs for a company seeking investment, or direction=companies_for_thesis to find company prospects for a VC mandate. Requires one_liner and at least 20 characters of thesis. If the user names a VC but has not given its criteria, first research the firm's official public site and summarize its stated focus; confirm the extracted mandate with the user before starting. Optional beliefs, keywords, geography, raise_usd, fund_size_usd [min,max], competitors and exclusions improve ranking. Reads public SEC filings and, for investor results, robots-allowed public firm websites; it does not find personal contact details, read email, or send messages. Return the run ID and use get_vc_investor_match later; do not wait for completion in this call.",
+            {"type": "object", "properties": thesis_properties, "required": ["one_liner", "thesis"], "additionalProperties": False},
+            start_investor_match,
+        )
+        self.register(
+            "get_vc_investor_match",
+            "Read a VC sourcing run and its saved evidence, progress, limitations, and results. It may contain investor matches or company prospects. Only returns runs in this workspace. Use the run ID returned by start_vc_investor_match.",
+            {"type": "object", "properties": {"run_id": {"type": "string", "minLength": 1, "maxLength": 36}}, "required": ["run_id"], "additionalProperties": False},
+            get_investor_match,
+        )
+        self.register(
+            "label_vc_investor_match",
+            "Only when the user explicitly asks, save workspace feedback on an investor firm for future matching. Use label 1 when useful or -1 when not useful. This only adjusts that exact firm's future score slightly; it does not retrain a model.",
+            {"type": "object", "properties": {"run_id": {"type": "string", "minLength": 1, "maxLength": 36}, "firm_id": {"type": "string", "minLength": 1, "maxLength": 80}, "label": {"type": "integer", "enum": [-1, 1]}, "note": {"type": "string", "maxLength": 500}}, "required": ["run_id", "firm_id", "label"], "additionalProperties": False},
+            label_investor_match,
+        )
+        self.register(
+            "prepare_vc_outreach",
+            "Prepare an editable, source-grounded outreach email and meeting brief for one completed company or investor match. This returns a draft only and never sends it. Use only when requested; do not invent contact details or claims. A separately connected email action may send only when the user explicitly asks.",
+            {"type": "object", "properties": {"run_id": {"type": "string", "minLength": 1, "maxLength": 36}, "result_id": {"type": "string", "minLength": 1, "maxLength": 80}}, "required": ["run_id", "result_id"], "additionalProperties": False},
+            prepare_investor_outreach,
+        )
         from app.services.tools.artifacts import publish_file
         self.register('publish_file', 'Attach an actual completed file from /workspace to this chat as a durable download (up to 5 MB). Use for requested code, CSV, JSON, reports and other deliverables after checking them. A sandbox path alone is not a download. Only publish files the user requested or needs for this task; never credentials or browser profiles. Returns the authenticated download URL.', {'type':'object','properties':{'path':{'type':'string','maxLength':1000}},'required':['path']}, publish_file)
         from app.services.local_device import local_device_tool
@@ -431,6 +493,7 @@ class ToolRegistry:
             "plugins": "plugin_",
             "media": ["generate_image"],
             "browser": ["search_web", "browse_url", "browser_click", "browser_type", "browser_screenshot", "browser_extract", "browser_fill_form"],
+            "prospecting": ["search_vc_founders", "start_vc_investor_match", "get_vc_investor_match", "label_vc_investor_match", "prepare_vc_outreach"],
             "shell": "shell",
             "filesystem": ["local_device", "workspace_files", "publish_file", "read_file", "write_file", "list_directory", "search_files"],
         }
@@ -479,7 +542,12 @@ class ToolRegistry:
             # Deleting exact IDs is safe to replay after a crash, but is still
             # a write under the owner's approval policy.
             approval_safe=self.replay_safe(name,arguments) and name!='forget_context'
-            if not await approve_tool(name,arguments,bot_id,approval_safe):
+            google_outbound=False
+            if name=='plugin_call':
+                selected=next((t for t in getattr(self,'_plugin_manifest',[]) if t['plugin_id']==arguments.get('plugin_id') and t['name']==arguments.get('tool_name')),None)
+                google_outbound=bool(selected and selected.get('provider')=='google' and (arguments.get('tool_name') in {'gmail_users_messages_send','gmail_users_drafts_send','drive_permissions_create','drive_permissions_update'} or (arguments.get('tool_name') in {'calendar_events_insert','calendar_events_patch'} and (arguments.get('arguments',{}).get('body') or {}).get('attendees'))))
+            approval=await approve_tool(name,arguments,bot_id,approval_safe,force=True) if google_outbound else await approve_tool(name,arguments,bot_id,approval_safe)
+            if not approval:
                 return {'error':'The owner did not approve this tool action. No action was performed.'}
             computer_tools={'browse_url','browser_click','browser_type','browser_screenshot','browser_extract','browser_fill_form','shell_exec','read_file','write_file','list_directory','publish_file'}
             from app.services.usage import active

@@ -19,6 +19,8 @@ from .accounts import router as accounts_router
 from .auth import router as auth_router
 
 router = APIRouter()
+from .google_workspace import router as google_workspace_router
+router.include_router(google_workspace_router,prefix="/google",tags=["google"])
 from .atlas_engine import router as atlas_engine_router
 router.include_router(atlas_engine_router, prefix="/integrations/atlas/v1", tags=["atlas-engine"])
 router.include_router(accounts_router,prefix="/accounts",tags=["accounts"])
@@ -45,3 +47,5 @@ router.include_router(local_device_router,prefix='/local-device',tags=['local-de
 
 from .prospecting import router as prospecting_router
 router.include_router(prospecting_router, prefix='/prospecting', tags=['prospecting'])
+from .investor_funnel import router as investor_funnel_router
+router.include_router(investor_funnel_router, prefix='/prospecting/investors', tags=['investor-matching'])

@@ -1,0 +1,24 @@
+'use client';
+import {useEffect,useState} from 'react';
+import CypherMark from './cipher/CypherMark';
+import {approveConnection} from '../lib/device';
+type GoogleStatus={configured:boolean;connected:boolean;email?:string;services:string[];offline_access:boolean;verified_at?:number;failures:Record<string,string>;tool_count:number;choices:{id:string;name:string;description:string}[]};
+export function GoogleConnections({welcome=false,result=''}:{welcome?:boolean;result?:string}){
+ const [status,setStatus]=useState<GoogleStatus|null>(null);const [selected,setSelected]=useState(['gmail','calendar','drive']);
+ const [busy,setBusy]=useState(false);const [error,setError]=useState('');
+ useEffect(()=>{let active=true;fetch('/api/google/status',{cache:'no-store'}).then(async r=>{if(!r.ok)throw Error('Google connections could not load. Refresh to try again.');return r.json();}).then(data=>{if(!active)return;setStatus(data);if(data.connected){setSelected(data.services);if(welcome)window.location.replace('/');}}).catch(e=>{if(active)setError(e.message);});return()=>{active=false;};},[welcome]);
+ async function connect(){setBusy(true);setError('');try{const approval_id=await approveConnection('connect_plugin:google-workspace');const r=await fetch('/api/google/connect',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({services:selected,approval_id})});const j=await r.json();if(!r.ok)throw Error(j.detail||'Google could not start this permission request.');window.location.assign(j.authorization_url);}catch(e){setError(e instanceof Error?e.message:'Could not connect Google.');setBusy(false);}}
+ async function disconnect(){setBusy(true);setError('');try{const r=await fetch('/api/google',{method:'DELETE'});if(!r.ok){const j=await r.json();throw Error(j.detail||'Google could not disconnect.');}setStatus(await (await fetch('/api/google/status')).json());}catch(e){setError(e instanceof Error?e.message:'Could not disconnect Google.');}finally{setBusy(false);}}
+ return <main className="google-permissions-page"><a className="google-permissions-brand" href="/" aria-label="Cypher home"><CypherMark decorative/><span>Cypher</span></a><section className="google-permissions-content" aria-labelledby="google-permissions-title"><h1 id="google-permissions-title">Connect your Google apps</h1><p className="google-permissions-intro">Choose which apps to connect. Google will show the exact permissions before you allow access.</p>
+ {result==='cancelled'?<p className="google-permissions-notice" role="status">Access wasn’t allowed. Your existing connections are unchanged.</p>:null}
+ {result==='failed'?<p className="google-permissions-error" role="alert">Google access could not be verified. Choose your services and try again. Existing connections are preserved.</p>:null}
+ {error?<p className="google-permissions-error" role="alert">{error}</p>:null}
+ {status?.connected?<div className="google-permissions-connected"><strong>Connected as {status.email}</strong><p>{status.tool_count} tools available{status.verified_at?' · Checked '+new Date(status.verified_at*1000).toLocaleString():''}</p>{!status.offline_access?<p>Google did not grant background access. Reconnect to keep goals working after this session expires.</p>:<p>Access is saved securely for cloud tasks while the app is closed.</p>}</div>:null}
+ {!status&&!error?<p role="status">Loading Google connections…</p>:null}
+ <div className="google-permissions-services">{status?.choices.map(item=><label key={item.id} className="google-permission-row"><span><strong>{item.name}</strong><span>{item.description}</span>{status.failures[item.id]?<span className="google-permission-failure">{status.failures[item.id]}</span>:null}</span><input type="checkbox" checked={selected.includes(item.id)} disabled={busy} onChange={e=>setSelected(current=>e.target.checked?[...current,item.id]:current.filter(id=>id!==item.id))}/></label>)}</div>
+ {status&&!status.configured?<p className="google-permissions-error" role="status">Google permissions are being configured. Your sign-in still works; you can continue and connect later from Plugins.</p>:null}
+ <div className="google-permissions-actions"><button className="btn-primary" disabled={busy||!status?.configured||!selected.length} onClick={()=>void connect()}>{busy?'Opening Google…':status?.connected?'Update permissions':'Continue to Google'}</button><a href="/">{status?.connected?'Continue to workspace':'Skip for now'}</a></div>
+ <p className="google-permissions-help">You can choose fewer services on Google’s consent screen and disconnect at any time. Connecting does not send email or create events by itself. Relevant task data is processed by your configured AI provider. <a href="/privacy">Privacy details</a>.</p>
+ {status?.connected?<button className="google-disconnect" disabled={busy} onClick={()=>void disconnect()}>Disconnect Google</button>:null}
+ </section></main>;
+}

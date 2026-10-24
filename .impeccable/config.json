@@ -7,7 +7,7 @@
         "rule": "design-system-font",
         "value": "inter variable",
         "createdAt": "2026-10-23T14:39:50.951Z",
-        "reason": "Agent: PRODUCT.md Appearance section documents the existing self-hosted Inter conversation option; this change adds no font."
+        "reason": "Inter Variable is documented in DESIGN.md as an optional conversation typeface; the detector does not account for that documented exception."
       },
       {
         "rule": "overused-font",

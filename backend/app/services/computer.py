@@ -27,7 +27,7 @@ async def agent_access(bot_id,sessions):
                 return
         await asyncio.sleep(2)
 
-async def approve_tool(name,args,bot_id,replay_safe):
+async def approve_tool(name,args,bot_id,replay_safe,force=False):
     from app.services.usage import active
     from app.services.workspace import preferences
     current=active.get()
@@ -35,7 +35,7 @@ async def approve_tool(name,args,bot_id,replay_safe):
     task_id,sessions=current
     async with sessions() as db:
         policy=(await preferences(db)).get('tool_approval','never')
-        if policy=='never' or (policy=='writes' and replay_safe):return True
+        if not force and (policy=='never' or (policy=='writes' and replay_safe)):return True
         digest=hashlib.sha256(json.dumps([name,args],sort_keys=True).encode()).hexdigest()
         id=str(uuid5(NAMESPACE_URL,task_id+':approval:'+digest))
         row=await db.get(ToolApproval,id)

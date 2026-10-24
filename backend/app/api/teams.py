@@ -26,7 +26,7 @@ async def default_team(db: AsyncSession = Depends(get_db)):
     for name,role,provider,model,prompt in TEAM:
         bot=(await db.execute(select(Bot).where(Bot.name==name))).scalar_one_or_none()
         if not bot:
-            bot=Bot(name=name,role=role,llm_provider=provider,llm_model=model,system_prompt=prompt,description=role,tools_enabled=['browser','shell','filesystem','media','plugins'])
+            bot=Bot(name=name,role=role,llm_provider=provider,llm_model=model,system_prompt=prompt,description=role,tools_enabled=['browser','shell','filesystem','media','plugins','prospecting'])
             db.add(bot); await db.flush()
         ids.append(bot.id)
     room=Conversation(title='Agent lounge',is_group=True)

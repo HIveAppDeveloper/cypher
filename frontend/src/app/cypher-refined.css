@@ -823,6 +823,96 @@
   .login-story h1 { font-size: clamp(39px, 11vw, 48px); }
   .login-card { border-radius: 21px; }
 }
+
+/* Keep the primary task and its model/output controls inside one calm composer. */
+.quickstart { padding-inline: clamp(20px, 4vw, 44px); }
+.quickstart-panel { width: min(100%, 760px); }
+.quickstart-mark { width: 136px; height: 50px; margin-bottom: 12px; }
+.quickstart-real-lens { display: block; width: 100%; height: 100%; color: var(--text-primary); }
+.quickstart h1 { margin-bottom: 7px; font-size: clamp(34px, 4vw, 46px); }
+.quickstart-intro { margin-bottom: 24px; }
+.quickstart .task-composer {
+  display: flex;
+  width: 100%;
+  height: auto;
+  min-height: 122px;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+  padding: 12px 14px 10px;
+  border-color: var(--system-separator);
+  border-radius: 17px;
+  background: var(--bg-surface);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, .035);
+}
+.quickstart .task-composer-fields { display: flex; width: 100%; min-width: 0; flex-direction: column; gap: 6px; }
+.quickstart .task-composer textarea {
+  width: 100%;
+  height: auto;
+  min-height: 52px;
+  padding: 9px 5px 4px;
+  font-size: 15px;
+  line-height: 1.55;
+}
+.quickstart .task-composer-footer { display: flex; width: 100%; min-height: 40px; align-items: center; gap: 5px; }
+.quickstart .task-composer-footer .glass-select-trigger {
+  min-width: 104px;
+  min-height: 36px;
+  height: 36px;
+  padding-inline: 9px;
+  border: 1px solid var(--system-separator);
+  border-radius: 9px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+.quickstart .task-composer-footer .glass-select-trigger:hover { background: var(--system-subtle); color: var(--text-primary); }
+.quickstart .task-composer-footer .btn-primary {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  min-height: 40px;
+  flex: 0 0 40px;
+  place-items: center;
+  margin-left: auto;
+  padding: 9px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--brand-action);
+  color: var(--brand-on-action);
+  transition: transform .18s cubic-bezier(.16,1,.3,1), background-color .18s ease, opacity .16s ease;
+}
+.quickstart .task-composer-footer .btn-primary > span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.quickstart .task-composer-footer .btn-primary > svg { width: 19px; height: 19px; transform: rotate(-45deg); }
+.quickstart .task-composer-footer .btn-primary:hover:not(:disabled) { background: #333; box-shadow: none; transform: translateY(-1px); }
+.quickstart .task-composer-footer .btn-primary:active:not(:disabled) { transform: scale(.96); }
+.quickstart .task-composer-footer .btn-primary:disabled { background: var(--system-subtle); color: var(--text-secondary); opacity: 1; }
+.quickstart .starter-prompts { gap: 8px; margin-top: 20px; }
+.quickstart .starter-prompts button {
+  min-height: 38px;
+  padding: 0 13px;
+  border: 1px solid var(--system-separator);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 12px;
+  transition: background-color .16s ease, border-color .16s ease, color .16s ease, transform .16s ease;
+}
+.quickstart .starter-prompts button::before,
+.quickstart .starter-prompts button::after { display: none; }
+.quickstart .starter-prompts button:hover:not(:disabled) { border-color: var(--cx-label-3); background: var(--bg-surface); color: var(--text-primary); transform: translateY(-1px); }
+:root[data-theme="dark"] .quickstart .task-composer { background: var(--bg-surface); box-shadow: none; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .quickstart .task-composer { background: var(--bg-surface); box-shadow: none; }
+}
+@media (max-width: 760px) {
+  .quickstart .task-composer { min-height: 130px; grid-template-rows: none; }
+  .quickstart .task-composer textarea { height: auto; min-height: 60px; padding: 10px 4px 5px; }
+  .quickstart .task-composer-footer { display: flex; grid-column: auto; grid-row: auto; gap: 4px; }
+  .quickstart .task-composer-footer .glass-select-trigger { min-width: 0; max-width: min(37vw, 154px); }
+  .quickstart .task-composer-footer .btn-primary { width: 42px; height: 42px; min-height: 42px; flex-basis: 42px; }
+  .quickstart .starter-prompts { justify-content: center; flex-wrap: wrap; }
+}
 @media (prefers-reduced-motion: reduce) {
   .login-brandbar, .login-story, .login-card, .login-orb, .login-kicker span { animation: none; }
   .login-card *, .login-brand-mark img { transition: none !important; }

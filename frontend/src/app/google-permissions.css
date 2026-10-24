@@ -1,0 +1,31 @@
+.google-permissions-page {min-height:100dvh;background:var(--cx-bg);color:var(--cx-label);padding:30px clamp(22px,5vw,72px)}
+.google-permissions-brand {display:inline-flex;align-items:center;gap:12px;text-decoration:none;font-size:14px;font-weight:550;color:var(--cx-label)}
+.google-permissions-brand .cypher-mark {width:48px;height:24px}
+.google-permissions-content {width:min(100%,600px);margin:56px auto 48px}
+.google-permissions-content h1 {font-size:clamp(25px,4vw,34px);letter-spacing:-.03em;font-weight:550;line-height:1.2;margin:0 0 14px}
+.google-permissions-intro {color:var(--cx-label-2);font-size:15px;line-height:1.7;max-width:55ch;margin:0 0 26px}
+.google-permissions-services {border-top:1px solid var(--cx-sep)}
+.google-permission-row {display:flex;align-items:center;justify-content:space-between;gap:24px;padding:19px 0;border-bottom:1px solid var(--cx-sep);cursor:pointer;min-height:82px}
+.google-permission-row>span {display:grid;gap:7px}
+.google-permission-row strong {font-size:14px;font-weight:550}
+.google-permission-row>span>span {font-size:12px;line-height:1.6;color:var(--cx-label-2);max-width:58ch}
+.google-permission-row input {width:20px;height:20px;margin:12px;flex-shrink:0;accent-color:var(--cx-label)}
+.google-permissions-actions {display:flex;align-items:center;gap:24px;flex-wrap:wrap;margin-top:26px}
+.google-permissions-actions .btn-primary {min-height:44px;font-size:13px;border-radius:10px;border:1px solid var(--cx-label);background:var(--cx-label);color:var(--cx-inverse)}
+.google-permissions-actions a,.google-disconnect {font-size:13px;color:var(--cx-label-2);text-underline-offset:3px;min-height:44px;display:inline-flex;align-items:center}
+.google-permissions-help {font-size:12px;color:var(--cx-label-2);line-height:1.7;margin-top:22px;max-width:65ch}
+.google-permissions-connected {padding:0 0 22px;font-size:13px;line-height:1.6}
+.google-permissions-connected p {color:var(--cx-label-2);margin:6px 0 0;font-size:12px}
+.google-permissions-notice,.google-permissions-error {font-size:13px;line-height:1.7;padding:12px 0;margin:0 0 18px;color:var(--cx-label)}
+.google-permissions-error {color:var(--status-red,#b82840)}
+.google-permission-failure {color:var(--status-red,#b82840)!important}
+.google-connect-entry {display:flex;align-items:center;justify-content:space-between;gap:20px;border-bottom:1px solid var(--cx-sep);padding:0 0 20px;margin-bottom:20px}
+.google-connect-entry h3 {font-size:14px;font-weight:550;margin:0 0 6px}
+.google-connect-entry p {font-size:12px;line-height:1.6;color:var(--cx-label-2);margin:0}
+.google-connect-entry a {font-size:12px;min-height:44px;display:inline-flex;align-items:center;white-space:nowrap;text-underline-offset:3px}
+@media(max-width:600px){.google-permissions-content{margin-top:38px}.google-permission-row{gap:14px}.google-permissions-actions{gap:14px}.google-connect-entry{gap:12px}.google-connect-entry p{max-width:27ch}}
+.google-privacy {line-height:1.75;font-size:14px}
+.google-privacy h2 {font-size:18px;font-weight:550;line-height:1.4;margin:30px 0 10px}
+.google-privacy p {color:var(--cx-label-2);margin:0 0 16px}
+.google-privacy a {color:var(--cx-label);text-underline-offset:3px}
+.google-permissions-help a {color:var(--cx-label);text-underline-offset:3px}
