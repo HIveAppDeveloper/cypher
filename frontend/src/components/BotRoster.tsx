@@ -121,7 +121,7 @@ export function BotRoster({ bots, selectedBot, onSelectBot, onCreateNew, rooms, 
           return section && section !== prior ? <div className="agent-section-label">{section}</div> : null;
         })()}
         <button aria-label={bot.name} aria-current={selectedBot?.id === bot.id ? 'page' : undefined} title={[bot.name, bot.description || bot.role].filter(Boolean).join(' · ')} className={`bot-row ${selectedBot?.id === bot.id ? 'selected' : ''}`} onClick={() => onSelectBot(bot)}>
-          <BotAvatar name={bot.name}/><span className="bot-row-text"><strong>{bot.name}</strong><span>{bot.status === 'working' ? 'Working…' : bot.description || bot.role}</span></span>
+          <BotAvatar name={bot.name} agentRole={bot.role} status={bot.status === 'working' ? 'working' : undefined}/><span className="bot-row-text"><strong>{bot.name}</strong><span>{bot.status === 'working' ? 'Working…' : bot.description || bot.role}</span></span>
         </button>
         <button className="pin-agent" aria-label={`${pinned.includes(bot.id) ? 'Unpin' : 'Pin'} ${bot.name}`} aria-pressed={pinned.includes(bot.id)} title={`${pinned.includes(bot.id) ? 'Unpin' : 'Pin'} ${bot.name}`} onClick={() => setPinned(current => current.includes(bot.id) ? current.filter(id => id !== bot.id) : [...current, bot.id])}>
           <svg viewBox="0 0 24 24"><path d="m8 3 8 0-1 6 4 4v2H5v-2l4-4-1-6Zm4 12v7"/></svg>
