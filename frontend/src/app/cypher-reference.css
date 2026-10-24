@@ -30,6 +30,7 @@
 
 html, body { min-height: 100%; background: var(--cx-bg); color: var(--cx-label); }
 body { overflow: hidden; }
+body:has(.app-layout) { display: flow-root; }
 
 .app-layout {
   position: relative;
@@ -654,6 +655,7 @@ html[data-motion="false"] .new-task-button { animation: none !important; transit
 }
 @media (max-width: 560px) { .apps-workspace .apps-connected-grid,.apps-workspace .connector-catalog { grid-template-columns: minmax(0, 1fr); } }
 .workspace-conversation { display: flex; flex: 1; min-width: 0; min-height: 0; flex-direction: column; }
+.workspace-conversation > .main-content { min-height: 0; }
 .workspace-conversation[hidden] { display: none !important; }
 .home-attachments button svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; }
 
