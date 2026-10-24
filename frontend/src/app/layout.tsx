@@ -1,4 +1,3 @@
-import '@fontsource-variable/inter';
 import './globals.css';
 import './workspace-ux.css';
 import './grok-workspace.css';
@@ -14,6 +13,7 @@ import type { Metadata } from 'next';
 export const metadata: Metadata = {
   title: 'Cypher',
   description: 'Your workspace for conversations, agents, and connected tools.',
+  icons: { icon: '/cypher-favicon.png', apple: '/cypher-favicon.png' },
 };
 
 export default function RootLayout({

@@ -6,8 +6,8 @@
   --cx-label: #000000; --cx-label-2: rgba(60, 60, 67, .62); --cx-label-3: rgba(60, 60, 67, .32); --cx-sep: rgba(60, 60, 67, .18);
   --cx-watch-dot: #c7c7cc; --cx-seg: #ffffff; --cx-inverse: #ffffff; --cx-green: #248a3d; --cx-orange: #c93400; --cx-material: rgba(242, 242, 247, .78);
   --cx-shadow: 0 0 0 .5px rgba(0, 0, 0, .04), 0 1px 3px rgba(0, 0, 0, .05), 0 6px 20px rgba(0, 0, 0, .04);
-  --cx-sans: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', 'Inter Variable', system-ui, sans-serif;
-  --cx-display: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', 'Inter Variable', system-ui, sans-serif;
+  --cx-sans: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', system-ui, sans-serif;
+  --cx-display: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', system-ui, sans-serif;
   --cx-mono: ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, monospace;
 }
 @media (prefers-color-scheme: dark) {

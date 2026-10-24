@@ -41,8 +41,7 @@ export default function LoginPage({ searchParams }: { searchParams?: { error?: s
 
       <div className="login-layout">
         <section className="login-card" aria-labelledby="login-title">
-          <CypherMark className="login-hero-mark" decorative />
-          <h1 id="login-title">Sign in to Cypher</h1>
+          <h1 id="login-title">Sign in</h1>
           <p className="login-copy">Pick up where you left off.</p>
           {clientId ? <>
             <GoogleLogin clientId={clientId} loginUri={loginUri.toString()} />

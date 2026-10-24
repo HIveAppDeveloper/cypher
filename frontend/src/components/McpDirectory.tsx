@@ -159,7 +159,7 @@ export function McpDirectory({
       <label htmlFor="mcp-directory-kind">Show</label>
       <select id="mcp-directory-kind" value={kind} onChange={event => setKind(event.target.value as typeof kind)}><option value="all">Everything</option><option value="hosted">Hosted services</option><option value="verified">Connection checked</option><option value="auth">Sign-in required</option><option value="local">Needs setup or hosting</option></select>
     </div>
-    <p className="mcp-directory-permissions">Choose a service, sign in, then review and approve the access it asks for. Cypher requests the permissions the service publishes. You can turn off tools later.</p>
+    <p className="mcp-directory-permissions">Choose a service, sign in, then review and approve its requested permissions. You can turn off tools later.</p>
     <p className="catalog-results" role="status">{loading ? 'Loading the directory…' : `${items.length.toLocaleString()} of ${total.toLocaleString()} matches · ${count.toLocaleString()} listings total`}{fetchedAt ? ` · updated ${new Date(fetchedAt).toLocaleDateString()}` : ''}</p>
     {error ? <p className="connector-error" role="alert">{error} <button type="button" className="connector-retry" onClick={() => setRetry(value => value + 1)}>Retry</button></p> : null}
     {loading ? <p className="connector-empty" role="status">Getting services…</p> : !items.length ? <p className="connector-empty">No services match that search. Try another name or choose “Everything”.</p> : <div className="connector-catalog">{items.map(entry => {

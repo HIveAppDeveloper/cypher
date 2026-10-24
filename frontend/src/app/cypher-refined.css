@@ -56,7 +56,9 @@
   text-transform: uppercase;
 }
 .sidebar-shell .roster-toolbar .round-button,
-.sidebar-shell .roster-filter-details > summary {
+.sidebar-shell .roster-filter-details > summary,
+.mobile-navigation .roster-toolbar .round-button,
+.mobile-navigation .roster-filter-details > summary {
   display: grid;
   width: 28px;
   height: 28px;
@@ -73,7 +75,9 @@
 .sidebar-shell .roster-toolbar .round-button:hover,
 .sidebar-shell .roster-filter-details > summary:hover { background: var(--system-hover); color: var(--text-primary); }
 .sidebar-shell .roster-toolbar .round-button svg,
-.sidebar-shell .roster-filter-details > summary svg {
+.sidebar-shell .roster-filter-details > summary svg,
+.mobile-navigation .roster-toolbar .round-button svg,
+.mobile-navigation .roster-filter-details > summary svg {
   width: 16px;
   height: 16px;
   fill: none;
@@ -82,10 +86,14 @@
   stroke-linecap: round;
   stroke-linejoin: round;
 }
-.sidebar-shell .roster-filter-details { position: relative; }
+.sidebar-shell .roster-filter-details,
+.mobile-navigation .roster-filter-details { position: relative; }
 .sidebar-shell .roster-filter-details > summary::-webkit-details-marker,
-.sidebar-shell .sidebar-more > summary::-webkit-details-marker { display: none; }
-.sidebar-shell .roster-filter-details .roster-filters {
+.mobile-navigation .roster-filter-details > summary::-webkit-details-marker,
+.sidebar-shell .sidebar-more > summary::-webkit-details-marker,
+.mobile-navigation .sidebar-more > summary::-webkit-details-marker { display: none; }
+.sidebar-shell .roster-filter-details .roster-filters,
+.mobile-navigation .roster-filter-details .roster-filters {
   position: absolute;
   z-index: 20;
   top: 32px;
@@ -131,8 +139,15 @@
 .sidebar-shell .rooms-label button { min-height: 28px; color: #6a6a6a; }
 .sidebar-shell .roster-empty,
 .sidebar-shell .roster-no-results { padding-inline: 7px; color: var(--text-secondary); font-size: 11px; line-height: 1.5; }
+.mobile-navigation .roster-empty button {
+  min-height: 44px;
+  color: var(--cx-label);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
 .sidebar-shell .rooms-show-all { margin-bottom: 8px; }
-.sidebar-shell .sidebar-more { flex: 0 0 auto; border-top: 1px solid rgba(89,89,89,.1); }
+.sidebar-shell .sidebar-more,
+.mobile-navigation .sidebar-more { flex: 0 0 auto; border-top: 1px solid rgba(89,89,89,.1); }
 .sidebar-shell .sidebar-more > summary {
   min-height: 40px;
   padding: 10px 8px;
@@ -141,9 +156,20 @@
   font-size: 12px;
   list-style: none;
 }
-.sidebar-shell .sidebar-more > summary::after { content: "+"; float: right; color: #898989; font-size: 15px; line-height: 1; }
-.sidebar-shell .sidebar-more[open] > summary::after { content: "−"; }
-.sidebar-shell .sidebar-more-content { padding: 2px 0 7px; }
+.mobile-navigation .sidebar-more > summary {
+  min-height: 40px;
+  padding: 10px 8px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 12px;
+  list-style: none;
+}
+.sidebar-shell .sidebar-more > summary::after,
+.mobile-navigation .sidebar-more > summary::after { content: "+"; float: right; color: #898989; font-size: 15px; line-height: 1; }
+.sidebar-shell .sidebar-more[open] > summary::after,
+.mobile-navigation .sidebar-more[open] > summary::after { content: "−"; }
+.sidebar-shell .sidebar-more-content,
+.mobile-navigation .sidebar-more-content { padding: 2px 0 7px; }
 .sidebar-shell .sidebar-more .workspace-destinations,
 .sidebar-shell .sidebar-more .workspace-tools { display: flex; flex-direction: column; margin: 0; }
 .sidebar-shell .sidebar-more .roster-group-label { display: none; }
@@ -153,6 +179,7 @@
 .sidebar-shell .sidebar-more .plugins-nav svg { width: 15px; height: 15px; }
 .sidebar-shell .roster-footer { min-height: 44px; margin-top: 3px; padding: 8px 3px 0; border: 0; }
 .sidebar-shell .owner-avatar { width: 27px; height: 27px; background: #717171; }
+.mobile-navigation .owner-avatar { background: #717171; color: #fff; }
 .sidebar-shell .workspace-label > span { font-size: 12px; font-weight: 500; }
 .sidebar-shell .workspace-label > small { display: none; }
 .sidebar-shell[data-collapsed="true"] .sidebar-more > summary { display: none; }

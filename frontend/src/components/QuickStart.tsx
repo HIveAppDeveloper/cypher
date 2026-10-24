@@ -57,8 +57,7 @@ export function QuickStart({ onStart, onOpenRecent, options, onOptions, draftSco
       <div className="quickstart-mark" ref={logoRef} data-motion-active={logoMotionActive}>
         <BinaryLens className="quickstart-real-lens" active={logoMotionActive} label="Cypher binary lens" />
       </div>
-      <h1>Cypher</h1>
-      <p className="quickstart-intro">What would you like to work on?</p>
+      <h1>What would you like to work on?</h1>
 
       <form onSubmit={start} className="task-composer" aria-busy={busy} data-motion-active={logoMotionActive}>
         <div className="task-composer-fields">

@@ -244,7 +244,7 @@ export default function ProspectingWorkspace() {
         <button type="button" className={`cx-voice-button is-${voiceState}`} onClick={() => void playVoice()} disabled={voiceState === 'checking' || voiceState === 'setup' || voiceState === 'loading'} aria-pressed={voiceState === 'playing'}>
           <CypherMark className="cx-voice-mark" decorative/>
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 9v6h3.7l4.8 4V5l-4.8 4H4.5z"/><path d="M16 9a4 4 0 010 6M18.5 6.5a7.5 7.5 0 010 11"/></svg>
-          {voiceState === 'checking' ? 'Checking voice…' : voiceState === 'setup' ? 'Voice setup needed' : voiceState === 'loading' ? 'Preparing voice…' : voiceState === 'playing' ? 'Stop voice' : voiceState === 'error' ? 'Try voice again' : 'Listen to Cypher'}
+          {voiceState === 'checking' ? 'Checking voice…' : voiceState === 'setup' ? 'Voice setup needed' : voiceState === 'loading' ? 'Preparing voice…' : voiceState === 'playing' ? 'Stop voice' : voiceState === 'error' ? 'Try voice again' : 'Listen to welcome'}
         </button>
         {voiceState === 'setup' ? <span className="cx-voice-note" role="status">Add your ElevenLabs API key in Vercel to enable this.</span> : null}
         {voiceError ? <span className="cx-voice-note" role="status">{voiceError}</span> : null}
@@ -320,6 +320,5 @@ export default function ProspectingWorkspace() {
         <div className="cx-history"><div className="cx-log-head"><h2 className="cx-label">Recent research</h2></div>{runs.length === 0 ? <p>No saved runs yet.</p> : runs.slice(0, 6).map(item => <button key={item.id} type="button" className={item.id === runId ? 'is-selected' : ''} disabled={!!pending} onClick={() => selectRun(item)} aria-pressed={item.id === runId}><strong>{item.market}</strong><span>{statusLabel(item.status)} · {item.results.length} candidates</span></button>)}</div>
       </aside>
     </section>
-    <footer className="cx-footer"><span>Cypher</span><span>Research runs through Open GrokBot’s authenticated backend.</span><a href="/workspace">Open full workspace</a></footer>
   </main>;
 }
