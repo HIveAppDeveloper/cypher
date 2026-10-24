@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
+import { LoadingState } from './LoadingState';
 import { Bot, Conversation } from '../lib/types';
 import { BotAvatar } from './BotAvatar';
 import { request } from '../lib/api';
 import type { WorkspacePreferences } from './WorkspaceHub';
 
-export function BotRoster({ bots, selectedBot, onSelectBot, onCreateNew, rooms, selectedRoom, onSelectRoom, onCreateRoom, onHome, onSetup, onPlugins, onPreferences, onGoals, onChannels, onWorkspace, onComputer, accountEmail }: { onWorkspace:()=>void; onComputer:()=>void; accountEmail?: string; bots: Bot[]; selectedBot: Bot | null; onSelectBot: (bot: Bot) => void; onCreateNew: () => void; rooms: Conversation[]; selectedRoom: Conversation | null; onSelectRoom: (room: Conversation) => void; onCreateRoom: () => void; onHome: () => void; onSetup: () => void; onPlugins: () => void; onPreferences: () => void; onGoals: () => void; onChannels: () => void }) {
+export function BotRoster({ bots, selectedBot, onSelectBot, onCreateNew, rooms, selectedRoom, onSelectRoom, onCreateRoom, onHome, onSetup, onPlugins, onPreferences, onGoals, onChannels, onWorkspace, onComputer, accountEmail, loadingAgents = false, loadingRooms = false, agentsError = false, roomsError = false }: { loadingAgents?: boolean; loadingRooms?: boolean; agentsError?: boolean; roomsError?: boolean; onWorkspace:()=>void; onComputer:()=>void; accountEmail?: string; bots: Bot[]; selectedBot: Bot | null; onSelectBot: (bot: Bot) => void; onCreateNew: () => void; rooms: Conversation[]; selectedRoom: Conversation | null; onSelectRoom: (room: Conversation) => void; onCreateRoom: () => void; onHome: () => void; onSetup: () => void; onPlugins: () => void; onPreferences: () => void; onGoals: () => void; onChannels: () => void }) {
   const [prefs, setPrefs] = useState<WorkspacePreferences>({});
   const [query, setQuery] = useState('');
   const [searching, setSearching] = useState(false);
@@ -84,6 +85,7 @@ export function BotRoster({ bots, selectedBot, onSelectBot, onCreateNew, rooms, 
     </details>
 
     <nav className="roster-list" aria-label="Agents and team rooms">
+      {loadingAgents && !bots.length ? <LoadingState label="Loading your agents…" variant="roster"/> : null}
       {renderedBots.map((bot, index) => <div className="agent-roster-item" key={bot.id}>
         {(() => {
           const section = Object.entries(prefs.bot_sections || {}).find(([, ids]) => ids.includes(bot.id))?.[0];
@@ -99,16 +101,17 @@ export function BotRoster({ bots, selectedBot, onSelectBot, onCreateNew, rooms, 
       </div>)}
       {bots.length && !visibleBots.length ? <p className="roster-no-results">{onlyWorking ? 'No matching agents are working.' : 'No matching agents.'}</p> : null}
       {showAgentToggle ? <button className="roster-show-all" onClick={() => setShowAllAgents(value => !value)}>{showAllAgents ? 'Show fewer' : `Show all ${visibleBots.length} agents`}</button> : null}
-      {!bots.length ? <div className="roster-empty">Your team starts here.<button onClick={onCreateNew}>Create your first agent</button></div> : null}
+      {!loadingAgents && !agentsError && !bots.length ? <div className="roster-empty">Your team starts here.<button onClick={onCreateNew}>Create your first agent</button></div> : null}
 
       <div className="section-label rooms-label"><span>Team rooms</span><button aria-label="Create team room" onClick={onCreateRoom}>New</button></div>
+      {loadingRooms && !rooms.length ? <LoadingState label="Loading your team rooms…" variant="roster" rows={1}/> : null}
       {renderedRooms.map(room => <button aria-label={room.title} aria-current={selectedRoom?.id === room.id ? 'page' : undefined} title={room.title} key={room.id} className={`bot-row ${selectedRoom?.id === room.id ? 'selected' : ''}`} onClick={() => onSelectRoom(room)}>
         <span className="room-avatar"><svg viewBox="0 0 24 24"><path d="M4 7h16v12H4zM7 3v4m10-4v4M8 11h8m-8 4h5"/></svg></span>
         <span className="bot-row-text"><strong>{room.title === 'Agent lounge' ? 'Your team' : room.title}</strong><span>{room.bot_ids.length} agents · shared context</span></span>
       </button>)}
       {showRoomToggle ? <button className="roster-show-all rooms-show-all" onClick={() => setShowAllRooms(value => !value)}>{showAllRooms ? 'Show fewer rooms' : `Show all ${visibleRooms.length} rooms`}</button> : null}
-      {normalizedQuery && !visibleRooms.length ? <p className="roster-no-results">No matching rooms.</p> : null}
-      {!rooms.length ? <p className="roster-no-results">No team rooms yet.</p> : null}
+      {!loadingRooms && normalizedQuery && !visibleRooms.length ? <p className="roster-no-results">No matching rooms.</p> : null}
+      {!loadingRooms && !roomsError && !rooms.length ? <p className="roster-no-results">No team rooms yet.</p> : null}
     </nav>
 
     <details className="sidebar-more">

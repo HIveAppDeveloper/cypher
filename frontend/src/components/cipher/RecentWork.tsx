@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { request } from '../../lib/api';
+import { LoadingState } from '../LoadingState';
 import styles from './RecentWork.module.css';
 
 interface RecentRun {
@@ -44,20 +45,18 @@ export function RecentWork({ onOpen }: { onOpen: (conversationId: string) => voi
 
   useEffect(() => { void load(); }, [load]);
 
-  if (loading || (!runs.length && !error)) return null;
-
   return (
     <section className={styles.recentWork} aria-labelledby="recent-work-heading" aria-busy={loading}>
       <div className={styles.headingRow}>
         <h2 id="recent-work-heading">Continue</h2>
         <span>Recent work</span>
       </div>
-      {error ? (
+      {loading ? <LoadingState label="Loading recent work…" variant="recent"/> : error ? (
         <div className={styles.errorRow} role="status">
           <span>{error}</span>
           <button type="button" onClick={() => void load()} disabled={loading}>Retry</button>
         </div>
-      ) : (
+      ) : !runs.length ? <p className={styles.empty}>Your recent tasks will appear here.</p> : (
         <div className={styles.runList}>
           {runs.map((run, index) => (
             <button

@@ -1,0 +1,54 @@
+
+> open-grokbot-ui@0.1.0 build
+> next build
+
+  ▲ Next.js 14.2.35
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully
+   Linting and checking validity of types ...
+   Collecting page data ...
+   Generating static pages (0/12) ...
+   Generating static pages (3/12) 
+   Generating static pages (6/12) 
+   Generating static pages (9/12) 
+ ✓ Generating static pages (12/12)
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                              Size     First Load JS
+┌ ƒ /                                    148 B           230 kB
+├ ○ /_not-found                          874 B          88.3 kB
+├ ƒ /api/[...path]                       0 B                0 B
+├ ƒ /api/auth/email/request              0 B                0 B
+├ ƒ /api/auth/email/verify               0 B                0 B
+├ ƒ /api/auth/google/callback            0 B                0 B
+├ ƒ /api/auth/logout                     0 B                0 B
+├ ƒ /api/cipher/ai                       0 B                0 B
+├ ƒ /api/cipher/ask                      0 B                0 B
+├ ƒ /api/cipher/dispatch                 0 B                0 B
+├ ƒ /api/cipher/research                 0 B                0 B
+├ ƒ /api/cipher/run                      0 B                0 B
+├ ƒ /api/connections                     0 B                0 B
+├ ƒ /api/google/connect                  0 B                0 B
+├ ƒ /api/integrations/atlas/v1/chat      0 B                0 B
+├ ƒ /api/plugin-oauth/callback           0 B                0 B
+├ ƒ /api/runtime                         0 B                0 B
+├ ƒ /api/voice                           0 B                0 B
+├ ○ /cipher                              140 B          87.5 kB
+├ ƒ /connect/google                      6.39 kB        93.8 kB
+├ ƒ /login                               7.24 kB         125 kB
+├ ○ /privacy                             140 B          87.5 kB
+├ ƒ /prospecting                         7.89 kB         100 kB
+├ ƒ /prospecting/investors               7.79 kB        95.2 kB
+├ ƒ /templates/[id]                      3.85 kB        91.2 kB
+└ ƒ /workspace                           148 B           230 kB
++ First Load JS shared by all            87.4 kB
+  ├ chunks/1507476f-3291e217eca088c2.js  53.7 kB
+  ├ chunks/778-d4f3ca6c37381f77.js       31.7 kB
+  └ other shared chunks (total)          2 kB
+
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+

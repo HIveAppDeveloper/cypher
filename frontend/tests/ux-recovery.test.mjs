@@ -151,7 +151,7 @@ const bot = { id: 'synthetic-agent', name: 'Coordinator', llmProvider: 'openai',
 const message = { id: 'source-message', content: 'Existing synthetic response', senderType: 'bot', messageType: 'text', createdAt: '2026-10-22T00:00:00Z' };
 function chat(env, api) {
   const view = renderer(env);
-  const stubs = { '../lib/presets': presets, './ContextPanel': { ContextPanel: 'context-panel' },
+  const stubs = { './LoadingState': { LoadingState: 'loading-state' }, '../lib/presets': presets, './ContextPanel': { ContextPanel: 'context-panel' },
     './WorkPanel': { WorkPanel: 'work-panel' }, './GlassSelect': { GlassSelect: 'select' },
     '../lib/types': { MessageType: { TEXT: 'text' } }, '../lib/api': { api, ApiError },
     './BotAvatar': { BotAvatar: 'bot-avatar' }, './MessageBubble': { MessageBubble: 'message-bubble' },

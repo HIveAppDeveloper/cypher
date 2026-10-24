@@ -14,7 +14,7 @@ function panel({saved={},popupBlocked=false,api:overrides={}}={}){
   env.window.history={state:null,replaceState(){}};
   const api={getPluginCatalog:async()=>[item],getPlugins:async()=>[],deviceStatus:async()=>({enrolled:false}),getAvailableConnections:async()=>[],pluginSyncStatus:async()=>null,accountStatus:async()=>({}),authorizePlugin:async()=>({status:'awaiting_login',flow_id:id,authorization_url:pending.url,name:item.name}),pluginAuthStatus:async()=>({status:'awaiting_login',name:item.name}),cancelPluginAuth:async()=>({status:'cancelled'}),...overrides};
   const scopedAuth=load('../src/lib/pluginAuthorization.ts',{}, {URL,Date:env.globals.Date});
-  const {PluginPanel}=load('../src/components/PluginPanel.tsx',{react:view.react,'../lib/api':{api},'../lib/device':{approveConnection:async()=>undefined,enrollDevice:async()=>{}},'../lib/pluginAuthorization':scopedAuth,'./McpDirectory':{McpDirectory:'mcp-directory'},'./cipher/CypherMark':{__esModule:true,default:'cypher-mark'},'./cipher/BinaryLens':{__esModule:true,default:'binary-lens'}},{...env.globals,URL,URLSearchParams,React:view.react.default,fetch:async()=>({json:async()=>({})})});
+  const {PluginPanel}=load('../src/components/PluginPanel.tsx',{react:view.react,'./LoadingState':{LoadingState:'loading-state'},'../lib/api':{api},'../lib/device':{approveConnection:async()=>undefined,enrollDevice:async()=>{}},'../lib/pluginAuthorization':scopedAuth,'./McpDirectory':{McpDirectory:'mcp-directory'},'./cipher/CypherMark':{__esModule:true,default:'cypher-mark'},'./cipher/BinaryLens':{__esModule:true,default:'binary-lens'}},{...env.globals,URL,URLSearchParams,React:view.react.default,fetch:async()=>({json:async()=>({})})});
   view.mount(()=>PluginPanel({onClose(){}}));
   return {env,view,api,session,popup,get opens(){return opens;},get closed(){return closed;}};
 }
@@ -83,9 +83,11 @@ test('restoring the callback conversation does not dismiss its plugin result pan
   const imports=Object.fromEntries(components.map(name=>['../components/'+name,{[name]:name}]));imports['./CommandPalette']={CommandPalette:'CommandPalette'};imports['./WorkspaceHub']={WorkspaceHub:'WorkspaceHub'};imports['./ComputerPanel']={ComputerPanel:'ComputerPanel'};
   imports['../hooks/useBots']={useBots:()=>({bots:[],selectedBot:null,setSelectedBot(){},createBot(){},refreshBots(){}})};
   imports['../components/PreferencesPanel']={PreferencesPanel:'PreferencesPanel',restoreAppearance(){}};imports['../components/RunControls']={DEFAULT_OPTIONS:{}};imports['../lib/types']={};imports['../lib/api']={request:async()=>[],api:{getConversations:async()=>[{id:'123',title:'Fixture conversation',is_group:true}]}};
+  for (const name of components) imports['./'+name] = { [name]: name };
+  imports['./PanelBoundary']={PanelBoundary:'panel-boundary'};
   imports['./cipher/CypherEntrance']={__esModule:true,default:'CypherEntrance'};
-  const {default:WorkspaceApp}=load('../src/components/WorkspaceApp.tsx',{react:view.react,...imports},{...env.globals,URLSearchParams,setInterval:()=>1,clearInterval(){}});
-  view.mount(()=>WorkspaceApp({}));await view.flush();assert.ok(find(view.tree,n=>n.type==='PluginPanel'),'callback result remains visible after conversation restoration');view.unmount();
+  const {default:WorkspaceApp}=load('../src/components/WorkspaceApp.tsx',{react:{...view.react,lazy:loader=>{const component={};loader().then(module=>{component.resolved=module.default;});return component;}},...imports},{...env.globals,URLSearchParams,setInterval:()=>1,clearInterval(){}});
+  view.mount(()=>WorkspaceApp({}));await view.flush();assert.ok(find(view.tree,n=>n.type?.resolved==='PluginPanel'),'callback result remains visible after conversation restoration');view.unmount();
 });
 
 test('provider registration errors open an actionable OAuth form without claiming connection',async()=>{

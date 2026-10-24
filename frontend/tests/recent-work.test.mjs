@@ -13,6 +13,7 @@ test('recent work lists the latest runs and opens the selected conversation', as
   }));
   const { RecentWork } = load('../src/components/cipher/RecentWork.tsx', {
     react: view.react,
+    '../LoadingState': { LoadingState: 'loading-state' },
     '../../lib/api': { request: async path => { assert.equal(path, '/workspace/runs'); return runs; } },
     './RecentWork.module.css': {},
   }, { ...env.globals, React: view.react.default });
