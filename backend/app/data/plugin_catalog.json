@@ -7493,5 +7493,122 @@
     "iconSource": null,
     "auth": "auto",
     "verification": "not_tested"
+  },
+  {
+    "id": "gmailmcp",
+    "name": "Gmail MCP (Google preview)",
+    "url": "https://gmailmcp.googleapis.com/mcp/v1",
+    "description": "Official Google-hosted Gmail MCP server.",
+    "category": "Productivity",
+    "domains": [
+      "gmailmcp.googleapis.com"
+    ],
+    "auth": "oauth",
+    "source": "https://developers.google.com/workspace/guides/configure-mcp-servers",
+    "setup_note": "Google’s hosted MCP requires its Workspace developer preview. Use Connect Google above for Cypher’s supported Google tools."
+  },
+  {
+    "id": "drivemcp",
+    "name": "Google Drive MCP (Google preview)",
+    "url": "https://drivemcp.googleapis.com/mcp/v1",
+    "description": "Official Google-hosted Google Drive MCP server.",
+    "category": "Productivity",
+    "domains": [
+      "drivemcp.googleapis.com"
+    ],
+    "auth": "oauth",
+    "source": "https://developers.google.com/workspace/guides/configure-mcp-servers",
+    "setup_note": "Google’s hosted MCP requires its Workspace developer preview. Use Connect Google above for Cypher’s supported Google tools."
+  },
+  {
+    "id": "docsmcp",
+    "name": "Google Docs MCP (Google preview)",
+    "url": "https://docsmcp.googleapis.com/mcp/v1",
+    "description": "Official Google-hosted Google Docs MCP server.",
+    "category": "Productivity",
+    "domains": [
+      "docsmcp.googleapis.com"
+    ],
+    "auth": "oauth",
+    "source": "https://developers.google.com/workspace/guides/configure-mcp-servers",
+    "setup_note": "Google’s hosted MCP requires its Workspace developer preview. Use Connect Google above for Cypher’s supported Google tools."
+  },
+  {
+    "id": "sheetsmcp",
+    "name": "Google Sheets MCP (Google preview)",
+    "url": "https://sheetsmcp.googleapis.com/mcp/v1",
+    "description": "Official Google-hosted Google Sheets MCP server.",
+    "category": "Productivity",
+    "domains": [
+      "sheetsmcp.googleapis.com"
+    ],
+    "auth": "oauth",
+    "source": "https://developers.google.com/workspace/guides/configure-mcp-servers",
+    "setup_note": "Google’s hosted MCP requires its Workspace developer preview. Use Connect Google above for Cypher’s supported Google tools."
+  },
+  {
+    "id": "slidesmcp",
+    "name": "Google Slides MCP (Google preview)",
+    "url": "https://slidesmcp.googleapis.com/mcp/v1",
+    "description": "Official Google-hosted Google Slides MCP server.",
+    "category": "Productivity",
+    "domains": [
+      "slidesmcp.googleapis.com"
+    ],
+    "auth": "oauth",
+    "source": "https://developers.google.com/workspace/guides/configure-mcp-servers",
+    "setup_note": "Google’s hosted MCP requires its Workspace developer preview. Use Connect Google above for Cypher’s supported Google tools."
+  },
+  {
+    "id": "calendarmcp",
+    "name": "Google Calendar MCP (Google preview)",
+    "url": "https://calendarmcp.googleapis.com/mcp/v1",
+    "description": "Official Google-hosted Google Calendar MCP server.",
+    "category": "Productivity",
+    "domains": [
+      "calendarmcp.googleapis.com"
+    ],
+    "auth": "oauth",
+    "source": "https://developers.google.com/workspace/guides/configure-mcp-servers",
+    "setup_note": "Google’s hosted MCP requires its Workspace developer preview. Use Connect Google above for Cypher’s supported Google tools."
+  },
+  {
+    "id": "chatmcp",
+    "name": "Google Chat MCP (Google preview)",
+    "url": "https://chatmcp.googleapis.com/mcp/v1",
+    "description": "Official Google-hosted Google Chat MCP server.",
+    "category": "Productivity",
+    "domains": [
+      "chatmcp.googleapis.com"
+    ],
+    "auth": "oauth",
+    "source": "https://developers.google.com/workspace/guides/configure-mcp-servers",
+    "setup_note": "Google’s hosted MCP requires its Workspace developer preview. Use Connect Google above for Cypher’s supported Google tools."
+  },
+  {
+    "id": "peoplemcp",
+    "name": "Google People MCP (Google preview)",
+    "url": "https://peoplemcp.googleapis.com/mcp/v1",
+    "description": "Official Google-hosted Google People MCP server.",
+    "category": "Productivity",
+    "domains": [
+      "peoplemcp.googleapis.com"
+    ],
+    "auth": "oauth",
+    "source": "https://developers.google.com/workspace/guides/configure-mcp-servers",
+    "setup_note": "Google’s hosted MCP requires its Workspace developer preview. Use Connect Google above for Cypher’s supported Google tools."
+  },
+  {
+    "id": "classroommcp",
+    "name": "Google Classroom MCP (Google preview)",
+    "url": "https://classroommcp.googleapis.com/mcp/v1",
+    "description": "Official Google-hosted Google Classroom MCP server.",
+    "category": "Productivity",
+    "domains": [
+      "classroommcp.googleapis.com"
+    ],
+    "auth": "oauth",
+    "source": "https://developers.google.com/workspace/guides/configure-mcp-servers",
+    "setup_note": "Google’s hosted MCP requires its Workspace developer preview. Use Connect Google above for Cypher’s supported Google tools."
   }
 ]

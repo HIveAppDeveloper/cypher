@@ -121,21 +121,27 @@ class ToolRegistry:
             plugin.id: bool(plugin.credential) or plugin.id in oauth_connections
             for plugin in connections
         }
-        from app.services.plugins import is_read_only
-        manifest = [{**tool, 'plugin_id':p.id, 'service':p.name, 'authenticated':account_linked[p.id], 'read_only':is_read_only(p.url, tool)} for p in connections for tool in p.tools if tool.get('enabled', True)]
+        from app.services.plugins import is_read_only, reveal
+        google_ids={p.id for p in connections if p.credential and reveal(p.credential)=='grokbot-google-workspace'}
+        manifest = [{**tool, 'plugin_id':p.id, 'service':p.name, 'authenticated':account_linked[p.id], 'provider':'google' if p.id in google_ids else None, 'read_only':is_read_only(p.url, tool)} for p in connections for tool in p.tools if tool.get('enabled', True)]
         self._plugin_manifest = manifest
         if not manifest:
             return
         async def search(arguments, bot_id):
             query=str(arguments.get('query','')).strip()
             scoped=[t for t in manifest if not arguments.get('plugin_id') or t['plugin_id']==arguments['plugin_id']]
+            google_aliases={'gmail':'gmail_','google gmail':'gmail_','calendar':'calendar_','google calendar':'calendar_','drive':'drive_','google drive':'drive_','docs':'docs_','google docs':'docs_','sheets':'sheets_','google sheets':'sheets_','slides':'slides_','google slides':'slides_','contacts':'people_','google contacts':'people_','tasks':'tasks_','google tasks':'tasks_'}
+            requested_service=str(arguments.get('service','')).strip().casefold()
+            google_prefix=google_aliases.get(requested_service)
+            google_scope=bool(google_prefix and any(t.get('provider')=='google' for t in scoped))
+            if google_scope:scoped=[t for t in scoped if (t.get('provider')=='google' and t['name'].startswith(google_prefix)) or (t.get('provider')!='google' and t['service'].casefold()==requested_service)]
             if not scoped:return {'tools':[],'total_matches':0,'error':'No enabled tools for that plugin_id. Discover existing services first; do not search unrelated services as a fallback.'}
             if not query and not arguments.get('service') and not arguments.get('plugin_id'):
                 services=sorted([{'plugin_id':p.id,'service':p.name,'authenticated':bool(p.credential) or p.id in oauth_connections,'tool_count':sum(t['plugin_id']==p.id for t in manifest)} for p in connections],key=lambda p:(not p['authenticated'],p['service'].casefold()))
                 return {'tools':[],'services':services[:30],'total_services':len(services),'instruction':'Existing account-backed connections are listed first. Search with the exact service/account name or its plugin_id and the desired operation. Connected grants are server-side; sandbox CLI authentication is separate and must not be used to rediscover credentials.'}
             # An exact connection ID is authoritative. A shortened or outdated
             # display label must not hide tools in that already selected account.
-            ranked=rank_plugin_tools(scoped,query,None if arguments.get('plugin_id') else arguments.get('service'))
+            ranked=rank_plugin_tools(scoped,query,None if arguments.get('plugin_id') or google_scope else arguments.get('service'))
             return {'tools': [{'plugin_id':t['plugin_id'], 'service':t['service'], 'authenticated':t['authenticated'], 'name':t['name'], 'description':t.get('description',''), 'parameters':t['schema'],'read_only':t['read_only']} for t in ranked[:12]], 'total_matches':len(ranked), 'instruction':'Call plugin_call with the exact returned plugin_id, tool_name and parameters. Bare service names include existing account variants; select the correct account. Use service or plugin_id to keep follow-up discovery scoped. Prefer account-backed services for private account actions. Search is discovery, not evidence that an action ran. If an exact operation is unavailable, use a relevant supported operation or report the limit; do not invent a tool or hunt for tokens in the sandbox.'}
         async def call(arguments, bot_id):
             if not any(t['plugin_id']==arguments.get('plugin_id') and t['name']==arguments.get('tool_name') for t in manifest):
@@ -479,7 +485,12 @@ class ToolRegistry:
             # Deleting exact IDs is safe to replay after a crash, but is still
             # a write under the owner's approval policy.
             approval_safe=self.replay_safe(name,arguments) and name!='forget_context'
-            if not await approve_tool(name,arguments,bot_id,approval_safe):
+            google_outbound=False
+            if name=='plugin_call':
+                selected=next((t for t in getattr(self,'_plugin_manifest',[]) if t['plugin_id']==arguments.get('plugin_id') and t['name']==arguments.get('tool_name')),None)
+                google_outbound=bool(selected and selected.get('provider')=='google' and (arguments.get('tool_name') in {'gmail_users_messages_send','gmail_users_drafts_send','drive_permissions_create','drive_permissions_update'} or (arguments.get('tool_name') in {'calendar_events_insert','calendar_events_patch'} and (arguments.get('arguments',{}).get('body') or {}).get('attendees'))))
+            approval=await approve_tool(name,arguments,bot_id,approval_safe,force=True) if google_outbound else await approve_tool(name,arguments,bot_id,approval_safe)
+            if not approval:
                 return {'error':'The owner did not approve this tool action. No action was performed.'}
             computer_tools={'browse_url','browser_click','browser_type','browser_screenshot','browser_extract','browser_fill_form','shell_exec','read_file','write_file','list_directory','publish_file'}
             from app.services.usage import active

@@ -1,9 +1,9 @@
 /* Cypher's original monochrome identity. Imported last so older workspace
    palettes cannot recolor the brand or its controls. Status colors retain meaning. */
 :root {
-  --cx-bg:#f4f4f4; --cx-card:#fff; --cx-label:#171717; --cx-label-2:#626262;
+  --cx-bg:#f2f2f7; --cx-card:#fff; --cx-label:#000; --cx-label-2:#626267;
   --cx-label-3:#737373; --cx-fill:rgba(0,0,0,.07); --cx-fill-2:rgba(0,0,0,.04);
-  --cx-sep:#dedede; --cx-inverse:#fff; --cx-material:rgba(244,244,244,.94);
+  --cx-sep:#dedee4; --cx-inverse:#fff; --cx-material:rgba(242,242,247,.94);
   --bg-main:var(--cx-bg); --bg-panel:var(--cx-card); --bg-surface:var(--cx-card);
   --bg-card:#ebebeb; --bg-card-hover:#e5e5e5; --system-sidebar:#eee;
   --system-subtle:#e8e8e8; --system-hover:rgba(0,0,0,.045); --system-selected:rgba(0,0,0,.075);
@@ -76,20 +76,25 @@ body :is(.app-layout,.login-page,dialog) a {color:var(--cx-label);text-decoratio
 .sidebar-shell :is(.roster-toolbar .section-label,.rooms-label,.rooms-label button,.sidebar-more>summary,.sidebar-more>summary::after,.sidebar-layout-tools>button,.sidebar-layout-menu>summary) {color:var(--cx-label-2)}
 
 /* The original animated binary lens and one wordmark, as in the reference. */
-.quickstart {background:var(--cx-bg)}
-.quickstart-panel {width:min(660px,100%);padding-block:24px}
-.quickstart .quickstart-mark {display:block;position:relative;width:min(460px,78vw);height:auto;aspect-ratio:560/210;margin:0 auto 24px;padding:0;background:none;border:0;border-radius:0;box-shadow:none;animation:none}
+.quickstart {background:var(--cx-bg);justify-content:flex-start;padding-block:clamp(32px,7vh,72px) 40px}
+.quickstart-panel {width:min(620px,100%);padding-block:0}
+.quickstart .quickstart-mark {display:block;position:relative;width:min(560px,100%);height:auto;aspect-ratio:560/210;margin:0 auto 20px;padding:0;background:none;border:0;border-radius:0;box-shadow:none;animation:none}
 .quickstart-mark::before,.quickstart-mark::after {display:none}
 .quickstart .quickstart-real-lens {display:block;width:100%;height:100%;color:var(--cx-label)}
-.quickstart h1 {margin:0 0 15px;font-size:clamp(42px,4.5vw,58px);line-height:1.05;font-weight:500;letter-spacing:-.04em;color:var(--cx-label);animation:none}
-.quickstart-intro {margin:0 0 32px;max-width:46ch;font-size:16px;color:var(--cx-label-2);animation:none}
-.quickstart .task-composer {height:80px;border:1px solid var(--cx-sep);border-radius:14px;background:var(--cx-card);box-shadow:0 3px 12px rgba(0,0,0,.035);animation:none;transition:border-color .2s ease,box-shadow .2s ease}
-.quickstart .task-composer:hover {border-color:var(--cx-label-3)}
-.quickstart .task-composer:focus-within {border-color:var(--cx-label);box-shadow:0 3px 16px rgba(0,0,0,.065)}
-.quickstart .task-composer textarea {color:var(--cx-label)}
+.quickstart h1 {margin:0 0 12px;font-size:clamp(48px,6vw,72px);line-height:1.05;font-weight:500;letter-spacing:-.04em;color:var(--cx-label);animation:none}
+.quickstart-intro {margin:0 0 28px;max-width:46ch;font-size:14px;color:var(--cx-label-2);animation:none}
+.quickstart .task-composer {display:flex;flex-direction:column;gap:14px;height:auto;padding:0;border:0;border-radius:0;background:transparent;box-shadow:none;animation:none;transform:none}
+.quickstart .task-composer:hover,.quickstart .task-composer:focus-within {border:0;box-shadow:none;transform:none}
+.task-composer-fields {width:100%;border:1px solid var(--cx-sep);border-radius:14px;background:var(--cx-card);overflow:hidden;transition:border-color .2s ease}
+.task-composer-fields:focus-within {border-color:var(--cx-label)}
+.quickstart .task-composer textarea {display:block;width:100%;height:76px;min-height:76px;max-height:240px;padding:18px 18px 12px;color:var(--cx-label);resize:vertical;border:0;border-radius:0;background:transparent;line-height:1.5}
 .quickstart .task-composer textarea::placeholder {color:var(--cx-label-2)}
-.quickstart .task-composer-footer .glass-select-trigger {color:var(--cx-label-2)}
-.quickstart .task-composer-footer .btn-primary:disabled {background:var(--system-subtle);color:var(--cx-label-2);opacity:1}
+.quickstart .task-composer-footer {display:flex;flex-wrap:wrap;min-height:52px;margin-inline:16px;padding:4px 0;border-top:1px solid var(--cx-sep);gap:10px}
+.quickstart .task-composer-footer .glass-select-trigger {min-height:44px;height:44px;color:var(--cx-label);font-size:13px}
+.quickstart .task-composer-footer .glass-select-trigger:hover {background:var(--cx-fill-2)}
+.quickstart .quickstart-submit {display:flex;align-items:center;justify-content:center;gap:12px;width:100%;height:50px;min-height:50px;margin:0;padding:12px 20px;border:0;border-radius:999px;background:var(--cx-label);color:var(--cx-inverse);font-size:15px;font-weight:550}
+.quickstart-submit svg {width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.6}
+.quickstart .quickstart-submit:disabled {background:var(--cx-label);color:var(--cx-inverse);opacity:.45;cursor:default}
 .quickstart .task-composer-footer .btn-primary svg,.quickstart .task-composer[aria-busy="true"] .btn-primary::after {animation:none}
 .quickstart .task-composer[aria-busy="true"] .btn-primary::after {display:none}
 .quickstart .starter-prompts button {color:var(--cx-label-2);animation:none}
@@ -123,9 +128,9 @@ body :is(.app-layout,.login-page,dialog) a {color:var(--cx-label);text-decoratio
 .login-skip,.login-page .login-card a {color:var(--cx-label)}
 .login-email-sent {background:var(--cx-bg);border-color:var(--cx-sep)}
 @media(max-width:760px) {
-  .quickstart .quickstart-mark {width:min(320px,82vw);margin-bottom:24px}
-  .quickstart h1 {font-size:44px}
-  .quickstart-intro {margin-bottom:26px;font-size:15px}
+  .quickstart .quickstart-mark {width:100%;margin-bottom:20px}
+  .quickstart h1 {font-size:52px}
+  .quickstart-intro {margin-bottom:24px;font-size:14px}
   .quickstart .task-composer {height:auto}
   .quickstart .task-composer-footer .btn-primary {width:44px;height:44px;min-height:44px}
   .quickstart .task-composer-footer .glass-select-trigger {min-height:44px;font-size:12px}

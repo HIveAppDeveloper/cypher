@@ -50,7 +50,9 @@ async def lifespan(app: FastAPI):
     from app.services.atlas_admission import run_admission_janitor
     admission_janitor = asyncio.create_task(run_admission_janitor()) if settings.GROKBOT_ATLAS_ENGINE_ENABLED and settings.GROKBOT_ATLAS_ENGINE_ADMISSION == "postgres" else None
     try:
-        yield
+        from app.services.google_mcp import manager as google_mcp_manager
+        async with google_mcp_manager.run():
+            yield
     finally:
         if admission_janitor:
             admission_janitor.cancel()
@@ -126,6 +128,8 @@ async def database_error(request: Request, error):
     logger.error('Database request failed code=%s type=%s', detail['code'], type(error).__name__)
     return JSONResponse(detail, status_code=503, headers={'Retry-After':str(detail['retry_after'])})
 
+from app.services.google_mcp import app as google_mcp_app
+app.mount("/api/google/mcp",google_mcp_app)
 app.include_router(api_router, prefix="/api")
 app.include_router(ws_router)
 

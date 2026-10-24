@@ -56,6 +56,7 @@ export function QuickStart({ onStart, onOpenRecent, options, onOptions, draftSco
       <p className="quickstart-intro">What would you like to work on?</p>
 
       <form onSubmit={start} className="task-composer" aria-busy={busy} data-motion-active={logoMotionActive}>
+        <div className="task-composer-fields">
         <label className="visually-hidden" htmlFor="first-task">Your task</label>
         <textarea
           disabled={busy}
@@ -95,11 +96,12 @@ export function QuickStart({ onStart, onOpenRecent, options, onOptions, draftSco
             <option value="text">Text</option>
             <option value="image">Create an image</option>
           </GlassSelect>
-          <button aria-label={busy ? 'Starting task' : 'Start task'} disabled={busy || !prompt.trim()} type="submit" className="btn-primary">
+        </div>
+        </div>
+          <button aria-label={busy ? 'Starting task' : 'Start task'} disabled={busy || !prompt.trim()} type="submit" className="btn-primary quickstart-submit">
             <span>{busy ? 'Starting…' : 'Start task'}</span>
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6" /></svg>
           </button>
-        </div>
       </form>
 
       {error ? <p className="quickstart-error" role="alert">{error}</p> : null}
