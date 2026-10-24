@@ -246,7 +246,7 @@ export default function ProspectingWorkspace() {
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 9v6h3.7l4.8 4V5l-4.8 4H4.5z"/><path d="M16 9a4 4 0 010 6M18.5 6.5a7.5 7.5 0 010 11"/></svg>
           {voiceState === 'checking' ? 'Checking voice…' : voiceState === 'setup' ? 'Voice setup needed' : voiceState === 'loading' ? 'Preparing voice…' : voiceState === 'playing' ? 'Stop voice' : voiceState === 'error' ? 'Try voice again' : 'Listen to Cypher'}
         </button>
-        {voiceState === 'setup' ? <span className="cx-voice-note" role="status">Add your ElevenLabs API key and voice ID in Vercel to enable this.</span> : null}
+        {voiceState === 'setup' ? <span className="cx-voice-note" role="status">Add your ElevenLabs API key in Vercel to enable this.</span> : null}
         {voiceError ? <span className="cx-voice-note" role="status">{voiceError}</span> : null}
       </div>
       <form className="cx-command" onSubmit={understand}>
