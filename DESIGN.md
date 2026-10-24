@@ -565,3 +565,7 @@ Operate refinement: warm off-white canvas (`#f7f7f5`), graphite ink (`#242423`),
 ## Group-text conversation surface
 
 The conversation is an Operate surface with a group-text composition: quiet title and agent count, a narrow centered message stream, compact gray incoming and black outgoing bubbles, and one white composer. Names and small neutral avatars identify incoming senders; consecutive messages stay close and timestamps separate clusters. The info button holds secondary controls. A subtle message menu preserves actions and technical evidence without repeating text under every bubble. Keep dark appearance, keyboard access, 44px mobile controls and reduced-motion behavior.
+
+
+## Live voice motion
+The voice console renders BinaryLens with a live audio-level ref from the microphone or playback analyser. Activity changes start and stop the existing canvas loop without recreating the digit field. Offscreen, hidden, OS reduced-motion, and saved motion-off states pause the loop; text status remains visible. Stop cancels the pending speech request and audio playback. Browser WebM/MP4/Ogg recordings are normalized server-side before speech recognition; the original attachment remains intact.
