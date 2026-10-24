@@ -31,7 +31,7 @@ test('blocked popup leaves a working provider link and the conversation in place
 test('Lovable opens its official MCP OAuth flow and waits for verified tools after Allow',async()=>{
   let request,status='awaiting_login';
   const p=panel({api:{authorizePlugin:async input=>{request=input;return {status:'awaiting_login',flow_id:id,authorization_url:'https://lovable.example/authorize?state=synthetic',name:'Lovable'};},pluginAuthStatus:async()=>({status,name:'Lovable'})}});
-  await p.view.flush();button(p.view.tree,'Connect Lovable').props.onClick();await p.view.flush();await p.view.flush();
+  await p.view.flush();find(p.view.tree,n=>n.type==='button'&&n.props?.['aria-label']==='Connect Lovable').props.onClick();await p.view.flush();await p.view.flush();
   assert.equal(request.url,'https://mcp.lovable.dev');assert.equal(request.name,'Lovable');
   assert.match(textOf(p.view.tree),/review the permissions Lovable lists and press Allow/i);
   assert.match(textOf(p.view.tree),/only (?:the )?tools Lovable authorizes/i);
@@ -91,7 +91,7 @@ test('restoring the callback conversation does not dismiss its plugin result pan
 test('provider registration errors open an actionable OAuth form without claiming connection',async()=>{
   let calls=0,input;
   const p=panel({api:{authorizePlugin:async data=>{input=data;if(++calls===1)throw Object.assign(Error('Registered client required'),{details:{code:'oauth_registration_required',callback_url:'https://app.example/api/plugin-oauth/callback'}});return {status:'awaiting_login',flow_id:id,authorization_url:pending.url,name:'Lovable'};}}});
-  await p.view.flush();button(p.view.tree,'Connect Lovable').props.onClick();await p.view.flush();
+  await p.view.flush();find(p.view.tree,n=>n.type==='button'&&n.props?.['aria-label']==='Connect Lovable').props.onClick();await p.view.flush();
   assert.match(textOf(p.view.tree),/Finish Lovable setup/);
   assert.equal(find(p.view.tree,n=>n.props?.role==='alert'),undefined);
   const field=label=>find(find(p.view.tree,n=>n.type==='label'&&textOf(n).startsWith(label)),n=>n.type==='input');

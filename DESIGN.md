@@ -2,14 +2,14 @@
 name: Cypher
 description: A quiet monochrome agent workspace with the original Cypher identity and functional connected tools.
 colors:
-  conversation: "#f2f2f7"
+  conversation: "#f6f5ef"
   panel: "#fff"
-  sidebar: "#eee"
-  subtle: "#e8e8e8"
+  sidebar: "#f0efe9"
+  subtle: "#e9e8e1"
   text: "#000000"
   text-secondary: "#626262"
   text-tertiary: "#737373"
-  separator: "#dedee4"
+  separator: "#e2e0d8"
   selected: "rgba(0,0,0,.075)"
   dark-conversation: "#111"
   dark-panel: "#1c1c1c"
@@ -129,7 +129,7 @@ The current rules are extracted from the final imported brand stylesheet and its
 
 ## Colors
 
-The palette is achromatic: soft neutral fields support graphite actions in light appearance and light actions in dark appearance. The frontmatter is the normative token layer; the source authority is `frontend/src/app/cypher-brand.css`, imported last by the root layout.
+The palette uses very light ivory and white surfaces with black actions in light appearance, then charcoal surfaces and light actions in dark appearance. The frontmatter is the normative token layer; the source authority is `frontend/src/app/cypher-brand.css`, imported last by the root layout.
 
 ### Primary
 
@@ -561,3 +561,7 @@ The supplied Claude Cipher artifact is the visual authority for this refinement.
 ## VentureCruiter release · October 24, 2026
 
 Operate refinement: warm off-white canvas (`#f7f7f5`), graphite ink (`#242423`), pale neutral navigation, original binary lens, and existing dark appearance. The home wordmark is 40–52px with one 620px composer. Model, output, and a labeled Start task share its footer; voice is a quiet text action below. Prospecting and Connect tools remain directly accessible; advanced workspace functions stay under More. Controls retain keyboard focus and mobile touch targets. Repeated staggered entrances, decorative pulsing, and navigation movement are removed. The original intro and binary lens remain, with OS and saved reduced-motion settings respected. No new brand assets or functional claims were introduced.
+
+## Group-text conversation surface
+
+The conversation is an Operate surface with a group-text composition: quiet title and agent count, a narrow centered message stream, compact gray incoming and black outgoing bubbles, and one white composer. Names and small neutral avatars identify incoming senders; consecutive messages stay close and timestamps separate clusters. The info button holds secondary controls. A subtle message menu preserves actions and technical evidence without repeating text under every bubble. Keep dark appearance, keyboard access, 44px mobile controls and reduced-motion behavior.
