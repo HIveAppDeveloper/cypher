@@ -16,7 +16,7 @@ PROVIDERS = {
     'openai': ('OpenAI', 'openai/gpt-6.1-sol', 'https://chatgpt.com/'),
     'gemini': ('Gemini', 'google/gemini-3.8-flash', 'https://aistudio.google.com/api-keys'),
     'claude': ('Claude', 'anthropic/claude-sonnet-5.5', 'https://platform.claude.com/settings/keys'),
-    'xai': ('Grok (xAI)', 'xai/grok-4.7', 'https://console.x.ai/'),
+    'xai': ('Grok (xAI)', 'xai/grok-4.5', 'https://console.x.ai/'),
 }
 LOCAL_KEY_PROVIDERS = {'gemini', 'xai'}
 PREFIX = 'model_connection:'
@@ -28,7 +28,7 @@ ROUTES = {
         'cc/claude-sonnet-4-6',
     },
     'anthropic/claude-haiku-4.5': {'ddgw/claude-haiku-4-5'},
-    'xai/grok-4.7': {'xai/grok-4.7', 'xao/grok-4.7'},
+    'xai/grok-4.5': {'xai/grok-4.5', 'xao/grok-4.5'},\n    'xai/grok-4.7': {'xai/grok-4.7'},
 }
 PROVIDER_MODELS = {provider:{info[1]} for provider,info in PROVIDERS.items()}
 PROVIDER_MODELS['claude'].add('anthropic/claude-haiku-4.5')
