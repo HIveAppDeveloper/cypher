@@ -13,7 +13,15 @@ async def transcribe_audio(file):
         raise ModelCapabilityError('This recording is not valid audio data. Your original audio is saved.') from error
     if settings.OMNIROUTE_URL:
         from app.services import omniroute
-        result = await omniroute.request('/audio/transcriptions', {'model':'omniroute/whisper-base-local','file':file})
+        from app.services.recordings import normalize_recording, RecordingError
+        try:
+            speech_data, mime, extension = await asyncio.to_thread(normalize_recording, data, file['mime'])
+        except RecordingError as error:
+            raise ModelCapabilityError(str(error) + ' Your original audio is saved.') from error
+        speech_file = {**file, 'mime': mime, 'data': base64.b64encode(speech_data).decode()}
+        if extension:
+            speech_file['name'] = file['name'].rsplit('.', 1)[0] + '.' + extension
+        result = await omniroute.request('/audio/transcriptions', {'model':'omniroute/whisper-base-local','file':speech_file})
         text = result.get('text', '').strip()
         if not text:
             raise ModelCapabilityError('No speech was detected in this audio. Your original audio is saved.')

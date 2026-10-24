@@ -1,14 +1,17 @@
 'use client';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, type RefObject } from 'react';
 
 // The Cypher mark: a lens of 0/1 digits that grow toward the centre.
 // While `active`, digits flip and a pulse sweeps across the lens.
-export default function BinaryLens({ cols = 41, rows = 17, active = false, level = 0, className, label = 'Cypher' }: { cols?: number; rows?: number; active?: boolean; level?: number; className?: string; label?: string }) {
+export default function BinaryLens({ cols = 41, rows = 17, active = false, level = 0, levelSource, className, label = 'Cypher' }: { cols?: number; rows?: number; active?: boolean; level?: number; levelSource?: RefObject<number>; className?: string; label?: string }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const activeRef = useRef(active);
   const levelRef = useRef(level);
+  const sourceRef = useRef(levelSource);
+  const syncRef = useRef<() => void>(() => {});
   activeRef.current = active;
   levelRef.current = level;
+  sourceRef.current = levelSource;
 
   useEffect(() => {
     const canvas = canvasRef.current; if (!canvas) return;
@@ -36,7 +39,7 @@ export default function BinaryLens({ cols = 41, rows = 17, active = false, level
           let s = Math.max(0, 1 - d * 1.08);
           if (s <= .02) continue;
           const pulse = Math.exp(-(((c + .5) / cols - sweep) ** 2) / .012);
-          const voice = Math.max(0, Math.min(1, levelRef.current));
+          const voice = Math.max(0, Math.min(1, sourceRef.current?.current ?? levelRef.current));
           s = Math.min(1, Math.pow(s, .75) * (1 + pulse * .55 + voice * .5));
           const size = Math.max(1.2, max * s);
           ctx.globalAlpha = Math.min(1, .25 + s * 1.1);
@@ -48,7 +51,8 @@ export default function BinaryLens({ cols = 41, rows = 17, active = false, level
       ctx.globalAlpha = 1;
     };
     let motionEnabled = document.documentElement.dataset.motion !== 'false';
-    const shouldAnimate = () => activeRef.current && motionEnabled && !reduce.matches && !document.hidden;
+    let visible = true;
+    const shouldAnimate = () => activeRef.current && visible && motionEnabled && !reduce.matches && !document.hidden;
     const tick = (t: number) => {
       if (shouldAnimate()) {
         if (t - last > 70) { for (let i = 0; i < Math.ceil(digits.length / 18); i++) { const k = Math.floor(Math.random() * digits.length); digits[k] = digits[k] === '0' ? '1' : '0'; } last = t; }
@@ -65,6 +69,9 @@ export default function BinaryLens({ cols = 41, rows = 17, active = false, level
       else if (!shouldAnimate() && raf) { cancelAnimationFrame(raf); raf = 0; if (frame) { draw(0); frame = 0; } }
     };
     const onVisibility = () => syncMotion();
+    syncRef.current = syncMotion;
+    const intersection = new IntersectionObserver(([entry]) => { visible = entry.isIntersecting; syncMotion(); });
+    intersection.observe(canvas);
     const observer = new ResizeObserver(resize); observer.observe(canvas);
     const scheme = window.matchMedia('(prefers-color-scheme: dark)'); const recolor = () => requestAnimationFrame(resize);
     scheme.addEventListener('change', recolor);
@@ -72,8 +79,9 @@ export default function BinaryLens({ cols = 41, rows = 17, active = false, level
     reduce.addEventListener('change', syncMotion);
     document.addEventListener('visibilitychange', onVisibility);
     resize(); syncMotion();
-    return () => { if (raf) cancelAnimationFrame(raf); observer.disconnect(); themeObserver.disconnect(); scheme.removeEventListener('change', recolor); reduce.removeEventListener('change', syncMotion); document.removeEventListener('visibilitychange', onVisibility); };
-  }, [active, cols, rows]);
+    return () => { syncRef.current = () => {}; if (raf) cancelAnimationFrame(raf); intersection.disconnect(); observer.disconnect(); themeObserver.disconnect(); scheme.removeEventListener('change', recolor); reduce.removeEventListener('change', syncMotion); document.removeEventListener('visibilitychange', onVisibility); };
+  }, [cols, rows]);
+  useEffect(() => { syncRef.current(); }, [active]);
 
   return <canvas ref={canvasRef} className={className} role="img" aria-label={label} />;
 }

@@ -327,7 +327,7 @@
 .voice-console-copy,
 .voice-stop-button { position: relative; z-index: 1; }
 .voice-console-mark { display: grid; width: 128px; flex: 0 0 128px; place-items: center; color: var(--cx-label); transform: scale(var(--voice-scale)); transform-origin: center; transition: transform 90ms linear; }
-.voice-console-mark .cypher-mark { display: block; width: 100%; height: auto; overflow: visible; }
+.voice-console-mark .voice-binary-lens { display:block;width:100%;height:auto;aspect-ratio:560/210; }
 .voice-console-copy { min-width: 0; flex: 1; }
 .voice-console-copy strong { color: var(--cx-label); font-size: 13px; font-weight: 600; }
 .voice-console-copy p { margin: 3px 0 0; color: var(--cx-label-2); font-size: 12px; line-height: 1.45; }

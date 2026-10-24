@@ -137,7 +137,7 @@ function quickStart(env, onStart, initialScope = 'local') {
   const { QuickStart } = load('../src/components/QuickStart.tsx', {
     react: view.react, '../lib/presets': presets, './GlassSelect': { GlassSelect: 'select' },
     './cipher/BinaryLens': { __esModule: true, default: 'binary-lens' },
-    './cipher/CypherMark': { __esModule: true, default: 'cypher-mark' },
+    './cipher/BinaryLens': { __esModule: true, default: 'binary-lens' },
     './cipher/RecentWork': { RecentWork: 'recent-work' },
   }, { ...env.globals, React: view.react.default });
   view.mount(() => QuickStart({ draftScope, options: { routing: 'auto', provider: 'openai', model: 'gpt-6.1-sol' },
@@ -150,7 +150,7 @@ const bot = { id: 'synthetic-agent', name: 'Coordinator', llmProvider: 'openai',
 const message = { id: 'source-message', content: 'Existing synthetic response', senderType: 'bot', messageType: 'text', createdAt: '2026-10-22T00:00:00Z' };
 function chat(env, api) {
   const view = renderer(env);
-  const stubs = { './cipher/CypherMark': { __esModule: true, default: 'cypher-mark' }, '../lib/presets': presets, './ContextPanel': { ContextPanel: 'context-panel' },
+  const stubs = { './cipher/BinaryLens': { __esModule: true, default: 'binary-lens' }, '../lib/presets': presets, './ContextPanel': { ContextPanel: 'context-panel' },
     './WorkPanel': { WorkPanel: 'work-panel' }, './GlassSelect': { GlassSelect: 'select' },
     '../lib/types': { MessageType: { TEXT: 'text' } }, '../lib/api': { api, ApiError },
     './BotAvatar': { BotAvatar: 'bot-avatar' }, './MessageBubble': { MessageBubble: 'message-bubble' },

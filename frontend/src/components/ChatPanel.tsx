@@ -11,7 +11,7 @@ import { QuickStart } from './QuickStart';
 import { RunControls, DEFAULT_OPTIONS } from './RunControls';
 import { modelPolicy } from '../lib/modelPolicy';
 import { readAttachment } from '../lib/attachments';
-import CypherMark from './cipher/CypherMark';
+import BinaryLens from './cipher/BinaryLens';
 const POLL_MS = 1500;
 const MAX_BYTES = 3 * 1024 * 1024;
 export function messageTime(value: string) {
@@ -95,6 +95,9 @@ export function ChatPanel({ bot, room, bots, onCreateBot, onCreateRoom, onQuickS
   const voicePanel = useRef<HTMLDivElement>(null);
   const voiceAudio = useRef<HTMLAudioElement>(null);
   const voiceObjectUrl = useRef('');
+  const voiceLevel = useRef(0);
+  const voiceRequest = useRef<AbortController | null>(null);
+  const voicePlaybackEnd = useRef<(() => void) | null>(null);
   const voiceContext = useRef<AudioContext | null>(null);
   const voiceOutputAnalyser = useRef<AnalyserNode | null>(null);
   const voiceOutputSource = useRef<MediaElementAudioSourceNode | null>(null);
@@ -231,12 +234,16 @@ export function ChatPanel({ bot, room, bots, onCreateBot, onCreateRoom, onQuickS
   async function speakReply(content: string) {
     const text = speechText(content);
     if (!text) { updateVoiceStatus('listening'); return; }
+    const controller = new AbortController();
+    voiceRequest.current?.abort();
+    voiceRequest.current = controller;
     try {
-      const response = await fetch('/api/voice', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text }) });
+      const response = await fetch('/api/voice', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text }), signal: controller.signal });
       if (!response.ok) {
         const detail = await response.json().catch(() => ({}));
         throw new Error(typeof detail.detail === 'string' ? detail.detail : 'Cypher’s voice could not be generated.');
       }
+      if (controller.signal.aborted || !voiceModeRef.current) return;
       const audio = voiceAudio.current;
       if (!audio) throw new Error('Audio playback is unavailable.');
       if (voiceObjectUrl.current) URL.revokeObjectURL(voiceObjectUrl.current);
@@ -245,14 +252,17 @@ export function ChatPanel({ bot, room, bots, onCreateBot, onCreateRoom, onQuickS
       audio.src = url;
       updateVoiceStatus('speaking');
       await new Promise<void>((resolve, reject) => {
+        voicePlaybackEnd.current = resolve;
         audio.onended = () => resolve();
         audio.onerror = () => reject(new Error('Cypher’s reply could not be played.'));
         void audio.play().catch(reject);
       });
+      voicePlaybackEnd.current = null;
       audio.onended = null; audio.onerror = null; audio.removeAttribute('src'); audio.load();
       URL.revokeObjectURL(url); voiceObjectUrl.current = '';
       if (voiceModeRef.current) updateVoiceStatus('listening');
     } catch (failure) {
+      if (controller.signal.aborted || !voiceModeRef.current) return;
       const fallback = typeof window !== 'undefined' && 'speechSynthesis' in window;
       if (fallback) {
         const utterance = new SpeechSynthesisUtterance(text);
@@ -277,7 +287,7 @@ export function ChatPanel({ bot, room, bots, onCreateBot, onCreateRoom, onQuickS
     const replies = userIndex < 0 ? [] : messages.slice(userIndex + 1).filter(message => message.senderType !== 'user' && message.messageType === MessageType.TEXT && !message.internal && message.content.trim());
     const reply = replies[replies.length - 1];
     if (reply) { voicePending.current = null; void speakReply(reply.content); }
-    else if (['failed','cancelled'].includes(job.status)) { voicePending.current = null; setVoiceError('Cypher could not finish that request. Try again or type a message.'); updateVoiceStatus('listening'); }
+    else if (['failed','cancelled','interrupted','completed'].includes(job.status)) { voicePending.current = null; setVoiceError('Cypher could not return a spoken answer. Check the task details, then try again or type a message.'); updateVoiceStatus('listening'); }
   }, [jobs, messages, voiceMode]);
   useEffect(() => {
     if (!voiceMode || !voiceStream || !conversationId) {
@@ -345,6 +355,7 @@ export function ChatPanel({ bot, room, bots, onCreateBot, onCreateRoom, onQuickS
         for (let index = 0; index < data.length; index++) { const value = (data[index] - 128) / 128; sum += value * value; }
         const rms = Math.sqrt(sum / data.length);
         const level = Math.max(0, Math.min(1, (rms - .008) * 9));
+        voiceLevel.current = level;
         const panel = voicePanel.current;
         if (panel) {
           panel.style.setProperty('--voice-level', level.toFixed(3));
@@ -366,7 +377,9 @@ export function ChatPanel({ bot, room, bots, onCreateBot, onCreateRoom, onQuickS
     return () => {
       stopped = true; cancelAnimationFrame(frame); activeStream.getAudioTracks().forEach(track => track.removeEventListener('ended', ended));
       if (recorder && recorder.state !== 'inactive') { recorder.onstop = null; recorder.stop(); }
-      micSource?.disconnect();
+      micSource?.disconnect(); micAnalyser?.disconnect();
+      voiceLevel.current = 0; voiceRequest.current?.abort();
+      voicePlaybackEnd.current?.(); voicePlaybackEnd.current = null;
       const audio = voiceAudio.current; if (audio) { audio.pause(); audio.onended = null; audio.onerror = null; audio.removeAttribute('src'); audio.load(); }
       if (voiceObjectUrl.current) URL.revokeObjectURL(voiceObjectUrl.current); voiceObjectUrl.current = '';
       window.speechSynthesis?.cancel(); voicePending.current = null;
@@ -385,7 +398,7 @@ export function ChatPanel({ bot, room, bots, onCreateBot, onCreateRoom, onQuickS
     <details className="thread-options"><summary>Message options <span>{options.output === 'image' ? 'Image' : 'Automatic'} · {options.routing!=='manual'?'Auto specialists':options.model}</span></summary><div className="output-controls"><label>Manager<GlassSelect aria-label="Manager model" value={options.routing!=='manual'?'auto':options.model || bot?.llmModel || 'gpt-6.1-sol'} onChange={e => { setOptions({...options,routing:e.target.value==='auto'?'auto':'manual',provider:MODEL_CHOICES.find(m=>m.model===e.target.value)?.provider||'openai',model:e.target.value==='auto'?'gpt-6.1-sol':e.target.value}); try { localStorage.setItem('grokbot-manager',e.target.value); } catch {} }}><option value="auto">Auto · task specialists</option>{MODEL_CHOICES.map(m=><option key={m.id} value={m.model}>{m.label}</option>)}</GlassSelect></label><label>Output<GlassSelect aria-label="Output type" value={options.output || 'text'} onChange={e => setOptions({ ...options, output: e.target.value as 'text' | 'image', aspect_ratio: '16:9' })}><option value="text">Automatic</option><option value="image">Create an image</option></GlassSelect></label>{options.output && options.output !== 'text' ? <><label>Shape<GlassSelect aria-label="Media shape" value={options.aspect_ratio || '16:9'} onChange={e => setOptions({ ...options, aspect_ratio: e.target.value })}><option value="16:9">Landscape</option><option value="9:16">Portrait</option>{options.output === 'image' ? <option value="1:1">Square</option> : null}</GlassSelect></label><span className="media-cost-note">Uses generation credits</span></> : null}</div></details>
 </div></details></div></header>
     {searchOpen?<div className="conversation-search"><input autoFocus type="search" aria-label="Search loaded messages" placeholder="Search loaded messages…" value={messageQuery} onChange={event=>setMessageQuery(event.target.value)} onKeyDown={event=>{if(event.key==='Escape')closeSearch();}}/><span role="status">{visibleMessages.length} results</span><button onClick={closeSearch}>Close</button></div>:null}
-    {voiceMode?<section ref={voicePanel} className={`voice-console voice-${voiceStatus}`} aria-label="Cypher voice chat"><div className="voice-console-mark"><CypherMark decorative/></div><div className="voice-console-copy"><strong role="status" aria-live="polite">{VOICE_STATUS_LABEL[voiceStatus]}</strong><p>{voiceStatus==='listening'?'Say what you need. I’ll listen and take care of it.':voiceStatus==='recording'?'Listening to your request…':voiceStatus==='thinking'?'Working on your request now.':voiceStatus==='speaking'?'Here’s the answer.':voiceStatus==='error'?'Check the message below and try again.':'Voice chat is ready.'}</p>{voiceError?<span role="alert">{voiceError}</span>:null}</div><button type="button" className="voice-stop-button" onClick={onVoiceStop}>Stop talking</button><audio ref={voiceAudio} className="voice-audio" preload="none"/></section>:null}
+    {voiceMode?<section ref={voicePanel} className={`voice-console voice-${voiceStatus}`} aria-label="Cypher voice chat"><div className="voice-console-mark"><BinaryLens className="voice-binary-lens" active={voiceStatus!=='off'} levelSource={voiceLevel} label="Cypher voice activity"/></div><div className="voice-console-copy"><strong role="status" aria-live="polite">{VOICE_STATUS_LABEL[voiceStatus]}</strong><p>{voiceStatus==='listening'?'Say what you need. I’ll listen and take care of it.':voiceStatus==='recording'?'Listening to your request…':voiceStatus==='thinking'?'Working on your request now.':voiceStatus==='speaking'?'Here’s the answer.':voiceStatus==='error'?'Check the message below and try again.':'Voice chat is ready.'}</p>{voiceError?<span role="alert">{voiceError}</span>:null}</div><button type="button" className="voice-stop-button" onClick={onVoiceStop}>Stop talking</button><audio ref={voiceAudio} className="voice-audio" preload="none"/></section>:null}
     {!voiceMode && voiceError ? <p className="voice-inline-error" role="alert">{voiceError}</p> : null}
     {conversationId?<WorkPanel open={workOpen} onClose={()=>setWorkOpen(false)} conversationId={conversationId} jobs={jobs} options={options} onChange={setOptions} onRefresh={async()=>setJobs(await api.getJobs(conversationId))}/>:null}
     {!bot && !room ? <QuickStart key={draftScope || 'local'} draftScope={draftScope} options={options} onOptions={setOptions} onStart={onQuickStart} onOpenRecent={onOpenRecent} onVoiceStart={onVoiceStart}/> : <>
