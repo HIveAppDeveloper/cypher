@@ -1,0 +1,12 @@
+.panel-loading-dialog { width: min(640px, calc(100vw - 32px)); padding: 24px; box-sizing: border-box; }
+.panel-loading-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 24px; }
+.panel-loading-header h2 { margin: 0; }
+.panel-loading-header button { min-height: 44px; }
+.workspace-loading-sidebar { width: 256px; flex: 0 0 256px; padding: 24px 16px; box-sizing: border-box; background: var(--system-sidebar); border-inline-end: 1px solid var(--border-light); }
+.workspace-loading-sidebar > strong { display: block; margin-bottom: 48px; }
+.workspace-recovery { min-height: 100dvh; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 20px; padding: 32px; text-align: center; box-sizing: border-box; }
+.workspace-recovery h1, .workspace-recovery p { margin: 0; }
+.workspace-recovery p { color: var(--text-secondary); max-width: 44ch; }
+.workspace-recovery :is(a, button) { min-height: 44px; display: inline-flex; align-items: center; }
+.message-text-fallback { white-space: pre-wrap; overflow-wrap: anywhere; }
+@media (max-width: 760px) { .workspace-loading-sidebar { display: none; } }

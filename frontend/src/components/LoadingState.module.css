@@ -1,0 +1,28 @@
+.loading { width: 100%; min-width: 0; }
+.shapes { display: grid; gap: 12px; animation: breathe 1.8s ease-in-out infinite; }
+.row { display: flex; align-items: center; gap: 12px; min-height: 56px; padding: 10px 4px; }
+.avatar, .line { display: block; background: var(--system-selected); border-radius: 4px; }
+.avatar { width: 32px; height: 32px; flex: 0 0 32px; border-radius: 50%; }
+.lines { display: grid; gap: 9px; flex: 1; min-width: 0; }
+.line { width: 64%; max-width: 280px; height: 11px; }
+.line + .line { width: 42%; height: 8px; }
+.row:nth-child(2n) .line { width: 49%; }
+.row:nth-child(2n) .line + .line { width: 70%; }
+.loading[data-loading-variant="messages"] { width: min(100%, 720px); margin: 30px auto; padding: 0 24px; box-sizing: border-box; }
+.loading[data-loading-variant="messages"] .shapes { gap: 30px; }
+.loading[data-loading-variant="messages"] .row { width: 68%; min-height: 76px; padding: 18px; box-sizing: border-box; background: var(--system-hover); border-radius: 14px; }
+.loading[data-loading-variant="messages"] .row:nth-child(2n) { justify-self: end; width: 48%; }
+.loading[data-loading-variant="messages"] .line { width: 86%; }
+.loading[data-loading-variant="messages"] .line + .line { width: 64%; }
+.loading[data-loading-variant="roster"] .shapes { gap: 0; }
+.loading[data-loading-variant="roster"] .row { min-height: 54px; }
+.loading[data-loading-variant="recent"] .shapes { gap: 0; }
+.loading[data-loading-variant="recent"] .row { min-height: 52px; box-sizing: border-box; border-bottom: 1px solid var(--border-light); }
+.loading[data-loading-variant="recent"] .line { height: 9px; }
+@keyframes breathe { 0%, 100% { opacity: 1; } 50% { opacity: .5; } }
+@media (prefers-reduced-motion: reduce) { .shapes { animation: none; } }
+:global(html[data-motion="false"]) .shapes { animation: none; }
+@media (max-width: 600px) {
+  .loading[data-loading-variant="messages"] { padding-inline: 16px; }
+  .loading[data-loading-variant="messages"] .row { width: 80%; }
+}

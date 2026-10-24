@@ -10,6 +10,7 @@ import './cypher-conversation.css';
 import './cypher-motion.css';
 import './google-permissions.css';
 import './cypher-store.css';
+import './cypher-loading.css';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {

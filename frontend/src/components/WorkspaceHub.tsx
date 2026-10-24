@@ -1,4 +1,5 @@
 'use client';
+import { LoadingState } from './LoadingState';
 import { useEffect, useRef, useState } from 'react';
 import { api, request } from '../lib/api';
 import { Bot, Conversation } from '../lib/types';
@@ -50,7 +51,7 @@ export function WorkspaceHub({bots,rooms,ensureRoom,onRefresh,onOpenWorkspace,on
  return <dialog ref={dialog} className="bot-dialog workspace-hub" aria-labelledby="workspace-hub-title" onCancel={event=>{event.preventDefault();if(!busy)onClose();}}>
   <header className="hub-header"><div><h2 id="workspace-hub-title">Your workspace</h2><p>Agents, knowledge and work that lasts beyond this chat.</p></div><button className="btn-secondary" disabled={busy} onClick={onClose}>Done</button></header>
   <nav className="hub-tabs" aria-label="Workspace pages">{tabs.map(item=><button key={item} aria-pressed={tab===item} onClick={()=>chooseTab(item)}>{item}{item==='Activity'&&notices.length?` (${notices.length})`:''}</button>)}</nav>
-  <div className="hub-body" aria-busy={loading||busy}>{error?<p className="form-error" role="alert">{error}</p>:null}{status?<p role="status">{status}</p>:null}{loading?<p role="status">Loading workspace…</p>:null}
+  <div className="hub-body" aria-busy={loading||busy}>{error?<p className="form-error" role="alert">{error}</p>:null}{status?<p role="status">{status}</p>:null}{loading?<LoadingState label="Loading workspace…"/>:null}
   {tab==='Memory'||tab==='Skills'?<>
    <p>{tab==='Memory'?'Keep facts and preferences across conversations. Workspace memory is shared; private agent memory is available only to that agent.':'Save recipes you can run with /skill-name key="value". Parameters use {{key}} in the recipe. Saved skills use the current tools and permissions.'}</p>
    <div className="hub-list">{knowledge.filter(k=>k.kind===(tab==='Skills'?'skill':'memory')).map(item=><article key={item.id}><div className="hub-row"><strong>{item.kind==='skill'?'/':''}{item.name}</strong><span>{item.scope==='workspace'?'Workspace':bots.find(b=>'bot:'+b.id===item.scope)?.name||'Private agent'}</span></div><p className="hub-prewrap">{item.content}</p>{item.parameters.length?<small>Parameters: {item.parameters.join(', ')}</small>:null}<div className="hub-row"><button disabled={busy} onClick={()=>{setName(item.name);setContent(item.content);setScope(item.scope);setParameters(item.parameters.join(', '));}}>Edit</button><button disabled={busy} onClick={()=>void act(async()=>{await request('/workspace/knowledge/'+item.id,{method:'DELETE'});await load();})}>Delete</button></div></article>)}</div>
