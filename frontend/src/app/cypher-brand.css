@@ -120,6 +120,11 @@ body :is(.app-layout,.login-page,dialog) a {color:var(--cx-label);text-decoratio
 .quickstart .quickstart-submit {display:flex;align-items:center;justify-content:center;gap:12px;width:100%;height:50px;min-height:50px;margin:0;padding:12px 20px;border:0;border-radius:999px;background:var(--cx-label);color:var(--cx-inverse);font-size:15px;font-weight:550}
 .quickstart-submit svg {width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.6}
 .quickstart .quickstart-submit:disabled {background:var(--cx-label);color:var(--cx-inverse);opacity:.45;cursor:default}
+.quickstart-voice {display:flex;align-items:center;justify-content:center;gap:10px;width:100%;height:48px;min-height:48px;margin:10px 0 0;padding:10px 18px;border:1px solid var(--cx-sep);border-radius:999px;background:var(--cx-card);color:var(--cx-label);font:inherit;font-size:14px;font-weight:550;cursor:pointer}
+.quickstart-voice:hover:not(:disabled) {background:var(--cx-fill-2)}
+.quickstart-voice:disabled {opacity:.58;cursor:wait}
+.quickstart-voice:focus-visible {outline:2px solid var(--cx-label);outline-offset:3px}
+.quickstart-voice-note {margin:7px 0 0;text-align:center;color:var(--cx-label-2);font-size:11px;line-height:1.4}
 .quickstart .starter-prompts button {color:var(--cx-label-2);animation:none}
 .quickstart .starter-prompts button:hover:not(:disabled) {color:var(--cx-label);transform:none}
 .quickstart .quickstart-status:not(.visually-hidden) {display:flex;align-items:center;justify-content:center;gap:10px;color:var(--cx-label-2)}
