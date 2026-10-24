@@ -36,7 +36,7 @@ input,textarea,select,button,progress {accent-color:var(--brand-action);caret-co
 ::-webkit-scrollbar-thumb {background:var(--cx-sep)}
 body :is(.app-layout,.login-page,dialog) a {color:var(--cx-label);text-decoration-color:currentColor}
 .cypher-mark {display:block;width:100%;height:auto;aspect-ratio:1600/632;overflow:visible;flex-shrink:0;color:var(--cx-label)}
-.sidebar-brand .brand-symbol,.mobile-nav-header .brand-symbol,.login-brand .brand-symbol {width:40px;height:auto;aspect-ratio:1600/632;border:0;border-radius:0;background:none;filter:none;transform:none;transition:opacity .2s ease}
+.sidebar-brand .brand-symbol,.mobile-nav-header .brand-symbol,.login-brand .brand-symbol {width:46px;height:auto;aspect-ratio:1600/632;border:0;border-radius:0;background:none;filter:none;transform:none;transition:opacity .2s ease}
 .sidebar-brand:hover .brand-symbol {filter:none;transform:none;opacity:.65}
 .sidebar-shell .new-task-button,.btn-primary,.login-email-button,.connector-connect,.composer .send-button,.quickstart .task-composer-footer .btn-primary {background:var(--brand-action);color:var(--brand-on-action);box-shadow:none}
 .sidebar-shell .new-task-button:hover,.btn-primary:hover:not(:disabled),.connector-connect:hover {background:var(--brand-action);opacity:.84}
@@ -46,7 +46,6 @@ body :is(.app-layout,.login-page,dialog) a {color:var(--cx-label);text-decoratio
 .message.outgoing .message-content a {color:inherit}
 .message-markdown a,.model-connection-link,.sidebar-shell .roster-filters button[aria-pressed="true"] {color:var(--cx-label)}
 .bot-avatar.agent-initials {background:var(--system-subtle)!important;color:var(--cx-label)!important}
-.connector-logo img,.google-login {filter:grayscale(1)}
 .glass-select-content,.bot-dialog,.connectors-dialog,.work-panel,.command-dialog {background:var(--cx-card);color:var(--cx-label);border-color:var(--cx-sep)}
 .connector-authorization {background:var(--cx-bg);border-color:var(--cx-sep)}
 .connector-authorization h3 {font-weight:500}
@@ -97,12 +96,12 @@ body :is(.app-layout,.login-page,dialog) a {color:var(--cx-label);text-decoratio
 .sidebar-shell :is(.roster-toolbar .section-label,.rooms-label,.rooms-label button,.sidebar-more>summary,.sidebar-more>summary::after,.sidebar-layout-tools>button,.sidebar-layout-menu>summary) {color:var(--cx-label-2)}
 
 /* The original animated binary lens and one wordmark, as in the reference. */
-.quickstart {background:var(--cx-bg);justify-content:flex-start;padding-block:clamp(32px,7vh,72px) 40px}
-.quickstart-panel {width:min(620px,100%);padding-block:0}
-.quickstart .quickstart-mark {display:block;position:relative;width:min(560px,100%);height:auto;aspect-ratio:41/21;margin:0 auto 20px;padding:0;background:none;border:0;border-radius:0;box-shadow:none;animation:none}
+.quickstart {background:var(--cx-bg);justify-content:center;padding-block:clamp(22px,5vh,48px) 32px}
+.quickstart-panel {width:min(700px,100%);padding-block:0}
+.quickstart .quickstart-mark {display:block;position:relative;width:min(320px,82%);height:auto;aspect-ratio:41/21;margin:0 auto 12px;padding:0;background:none;border:0;border-radius:0;box-shadow:none;animation:none}
 .quickstart-mark::before,.quickstart-mark::after {display:none}
 .quickstart .quickstart-real-lens {display:block;width:100%;height:100%;color:var(--cx-label)}
-.quickstart h1 {margin:0 0 12px;font-size:clamp(48px,6vw,72px);line-height:1.05;font-weight:500;letter-spacing:-.04em;color:var(--cx-label);animation:none}
+.quickstart h1 {max-width:none;margin:0 0 16px;font-size:clamp(34px,4vw,44px);line-height:1.12;font-weight:500;letter-spacing:-.035em;color:var(--cx-label);animation:none}
 .quickstart-intro {margin:0 0 28px;max-width:46ch;font-size:14px;color:var(--cx-label-2);animation:none}
 .quickstart .task-composer {display:flex;flex-direction:column;gap:14px;height:auto;padding:0;border:0;border-radius:0;background:transparent;box-shadow:none;animation:none;transform:none}
 .quickstart .task-composer:hover,.quickstart .task-composer:focus-within {border:0;box-shadow:none;transform:none}
@@ -147,8 +146,8 @@ body :is(.app-layout,.login-page,dialog) a {color:var(--cx-label);text-decoratio
 .login-skip,.login-page .login-card a {color:var(--cx-label)}
 .login-email-sent {background:var(--cx-bg);border-color:var(--cx-sep)}
 @media(max-width:760px) {
-  .quickstart .quickstart-mark {width:100%;margin-bottom:20px}
-  .quickstart h1 {font-size:52px}
+  .quickstart .quickstart-mark {width:min(260px,78vw);margin-bottom:12px}
+  .quickstart h1 {font-size:clamp(30px,8vw,38px)}
   .quickstart-intro {margin-bottom:24px;font-size:14px}
   .quickstart .task-composer {height:auto}
   .quickstart .task-composer-footer .btn-primary {width:44px;height:44px;min-height:44px}
