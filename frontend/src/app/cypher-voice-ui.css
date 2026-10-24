@@ -1,0 +1,294 @@
+:root {
+  --cypher-content-width: 900px;
+}
+
+.quickstart {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding: clamp(12px, 3vh, 22px) 24px 18px;
+}
+
+.quickstart-panel {
+  width: min(100%, 900px);
+  min-height: 0;
+  margin: auto;
+  padding-block: 0;
+  justify-content: flex-start;
+}
+
+.quickstart .quickstart-mark {
+  width: min(250px, 70vw);
+  height: auto;
+  aspect-ratio: 560 / 210;
+  margin: auto auto 8px;
+}
+
+.quickstart h1 { margin-bottom: 10px; }
+.quickstart-intro { margin-bottom: 20px; }
+
+.quickstart .task-composer {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(52px, 1fr) auto;
+  height: auto;
+  min-height: 112px;
+  padding: 10px 13px;
+}
+
+.quickstart .task-composer textarea {
+  grid-column: 1;
+  grid-row: 1;
+  width: 100%;
+  height: 52px;
+  min-height: 52px;
+  padding: 12px 4px 6px;
+}
+
+.quickstart .task-composer-footer {
+  display: grid;
+  grid-column: 1;
+  grid-row: 2;
+  grid-template-columns: minmax(72px, 1fr) auto minmax(42px, 1fr);
+  gap: 8px;
+  width: 100%;
+  min-height: 42px;
+}
+
+.task-composer-options {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.quickstart .task-composer-footer .glass-select-trigger {
+  min-height: 38px;
+  height: 38px;
+  padding-inline: 10px;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  font-size: 12px;
+}
+
+.task-dictate-button,
+.chat-speech-button,
+.voice-mode-button {
+  display: inline-flex;
+  min-height: 40px;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 0 10px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--cx-label-2);
+  font: inherit;
+  font-size: 11px;
+  font-weight: 550;
+  white-space: nowrap;
+  transition: color .16s ease, background-color .16s ease, border-color .16s ease, transform .16s ease;
+}
+
+.task-dictate-button { justify-self: start; }
+.quickstart .task-composer-footer .btn-primary { justify-self: end; }
+
+.task-dictate-button svg,
+.chat-speech-button svg,
+.voice-mode-button svg {
+  width: 17px;
+  height: 17px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.task-dictate-button:hover:not(:disabled),
+.chat-speech-button:hover:not(:disabled),
+.voice-mode-button:hover:not(:disabled) {
+  border-color: var(--cx-sep);
+  background: var(--cx-fill-2);
+  color: var(--cx-label);
+  transform: translateY(-1px);
+}
+
+.task-dictate-button[aria-pressed="true"],
+.chat-speech-button[aria-pressed="true"],
+.voice-mode-button[aria-pressed="true"] {
+  background: var(--cx-label);
+  color: var(--cx-inverse);
+  animation: cypher-voice-pulse 1.8s ease-in-out infinite;
+}
+
+.task-dictate-button:disabled,
+.chat-speech-button:disabled,
+.voice-mode-button:disabled { opacity: .52; cursor: not-allowed; }
+
+.task-dictate-button:focus-visible,
+.chat-speech-button:focus-visible,
+.voice-mode-button:focus-visible {
+  outline: 2px solid var(--cx-label);
+  outline-offset: 2px;
+}
+
+.quickstart .task-composer-footer .btn-primary {
+  box-sizing: border-box;
+  width: 42px;
+  height: 42px;
+  min-height: 42px;
+  border-radius: 12px;
+  padding: 0;
+  flex-basis: auto;
+  margin: 0;
+}
+
+.quickstart .starter-prompts {
+  gap: 9px;
+  margin-top: 16px;
+  margin-bottom: auto;
+}
+
+.quickstart .starter-prompts button {
+  min-height: 36px;
+  padding: 0 13px;
+  border: 1px solid var(--cx-sep);
+  border-radius: 10px;
+  background: var(--cx-card);
+  color: var(--cx-label);
+  font-size: 12px;
+}
+
+.quickstart .starter-prompts button::after { display: none; }
+.quickstart .starter-prompts button:not(:first-child)::before { display: none; }
+.quickstart .starter-prompts button:hover:not(:disabled) {
+  border-color: var(--cx-label-3);
+  background: var(--cx-fill-2);
+  color: var(--cx-label);
+}
+
+.speech-status,
+.voice-status {
+  width: min(var(--cypher-content-width), calc(100% - 48px));
+  margin: 8px auto 12px;
+  color: var(--cx-label-2);
+  font-size: 11px;
+  line-height: 1.5;
+  text-align: center;
+}
+
+.voice-status[data-state="error"] { color: #8b3340; }
+.voice-provider-note { display: block; margin-top: 2px; color: var(--cx-label-3); font-size: 10px; }
+.voice-status[data-state="listening"]::before {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin: 0 7px 1px 0;
+  border-radius: 50%;
+  background: currentColor;
+  content: "";
+  animation: cypher-voice-dot 1.2s ease-in-out infinite;
+}
+
+.message-stream {
+  box-sizing: border-box;
+  width: min(var(--cypher-content-width), 100%);
+  max-width: var(--cypher-content-width);
+  align-self: center;
+}
+
+.composer,
+.active-work {
+  box-sizing: border-box;
+  width: min(var(--cypher-content-width), calc(100% - 48px));
+  max-width: var(--cypher-content-width);
+}
+
+.composer-footer {
+  display: grid;
+  grid-template-columns: auto auto minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 6px;
+}
+
+.composer-options {
+  min-width: 0;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.composer .chat-speech-button,
+.composer .voice-mode-button { min-height: 40px; }
+
+.thread-members,
+.conversation-computer,
+.sync-status,
+.conversation-alert,
+.reply-preview,
+.attachment-tray {
+  box-sizing: border-box;
+  width: min(var(--cypher-content-width), calc(100% - 48px));
+  max-width: var(--cypher-content-width);
+  align-self: center;
+}
+
+@keyframes cypher-voice-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(45, 45, 45, .12); }
+  50% { box-shadow: 0 0 0 4px rgba(45, 45, 45, .06); }
+}
+
+@keyframes cypher-voice-dot {
+  0%, 100% { opacity: .45; transform: scale(.82); }
+  50% { opacity: 1; transform: scale(1.12); }
+}
+
+@media (max-width: 760px) {
+  .quickstart { padding: 14px 18px max(22px, env(safe-area-inset-bottom)); }
+  .quickstart-panel { width: 100%; }
+  .quickstart .quickstart-mark { width: min(260px, 72vw); margin-bottom: 10px; }
+  .quickstart-intro { margin-bottom: 22px; }
+  .quickstart .task-composer { min-height: 112px; }
+  .quickstart .task-composer-footer { grid-template-columns: minmax(54px, 1fr) minmax(0, auto) 42px; gap: 4px; }
+  .quickstart .task-composer-options { max-width: 100%; }
+  .quickstart .task-composer-options .glass-select-trigger { min-width: 0; max-width: min(42vw, 170px); }
+  .quickstart .task-composer-footer .btn-primary { grid-column: 3; width: 42px; min-width: 42px; justify-self: end; }
+  .task-dictate-button { gap: 5px; padding-inline: 7px; }
+  .quickstart .task-composer-footer .glass-select-trigger { max-width: 42vw; padding-inline: 7px; font-size: 11px; }
+  .quickstart .starter-prompts { flex-wrap: wrap; gap: 7px; margin-top: 20px; }
+  .quickstart .starter-prompts button { min-height: 40px; padding-inline: 12px; }
+  .composer-footer {
+    grid-template-columns: 44px 44px minmax(0, 1fr) auto 44px;
+    grid-template-rows: auto auto;
+    gap: 4px;
+  }
+  .composer-options { grid-column: 1 / -1; grid-row: 1; }
+  .composer .attach-button { grid-column: 1; grid-row: 2; }
+  .composer .chat-speech-button { grid-column: 2; grid-row: 2; width: 44px; min-width: 44px; height: 44px; padding: 0; border-radius: 14px; }
+  .composer .chat-speech-button span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .composer .voice-mode-button { grid-column: 3 / 5; grid-row: 2; justify-self: end; min-width: 88px; padding-inline: 9px; }
+  .composer .send-button { grid-column: 5; grid-row: 2; }
+  .composer,
+  .active-work,
+  .voice-status,
+  .thread-members,
+  .conversation-computer,
+  .sync-status,
+  .conversation-alert,
+  .reply-preview,
+  .attachment-tray { width: calc(100% - 24px); }
+  .message-stream { width: 100%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .task-dictate-button[aria-pressed="true"],
+  .chat-speech-button[aria-pressed="true"],
+  .voice-mode-button[aria-pressed="true"],
+  .voice-status[data-state="listening"]::before { animation: none; }
+}
+
+html[data-motion="false"] .task-dictate-button[aria-pressed="true"],
+html[data-motion="false"] .chat-speech-button[aria-pressed="true"],
+html[data-motion="false"] .voice-mode-button[aria-pressed="true"],
+html[data-motion="false"] .voice-status[data-state="listening"]::before { animation: none; }

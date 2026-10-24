@@ -18,7 +18,7 @@ function panel({saved={},popupBlocked=false,api:overrides={}}={}){
   view.mount(()=>PluginPanel({onClose(){}}));
   return {env,view,api,session,popup,get opens(){return opens;},get closed(){return closed;}};
 }
-async function connect(p){await p.view.flush();button(p.view.tree,'Connect').props.onClick();await p.view.flush();await p.view.flush();}
+async function connect(p){await p.view.flush();const browse=find(p.view.tree,n=>n.type==='button'&&textOf(n).startsWith('Browse all services'));if(browse){browse.props.onClick();await p.view.flush();}button(p.view.tree,'Connect').props.onClick();await p.view.flush();await p.view.flush();}
 
 test('blocked popup leaves a working provider link and the conversation in place',async()=>{
   const p=panel({popupBlocked:true});await connect(p);
@@ -62,7 +62,7 @@ test('focus checks coalesce with an in-flight status request and recover after r
   wait.resolve({status:'connected',name:item.name});await p.view.flush();assert.match(textOf(p.view.tree),/Fixture Service connected/);p.view.unmount();assert.equal(p.env.time.pending,0);
 });
 test('rapid Connect clicks start only one approval and authorization',async()=>{
-  const wait=deferred();let starts=0;const p=panel({api:{authorizePlugin:()=>{starts++;return wait.promise;}}});await p.view.flush();const connect=button(p.view.tree,'Connect');connect.props.onClick();connect.props.onClick();await p.view.flush();assert.equal(starts,1);
+  const wait=deferred();let starts=0;const p=panel({api:{authorizePlugin:()=>{starts++;return wait.promise;}}});await p.view.flush();const browse=find(p.view.tree,n=>n.type==='button'&&textOf(n).startsWith('Browse all services'));if(browse){browse.props.onClick();await p.view.flush();}const connect=button(p.view.tree,'Connect');connect.props.onClick();connect.props.onClick();await p.view.flush();assert.equal(starts,1);
   wait.resolve({status:'connected',name:item.name});await p.view.flush();p.view.unmount();
 });
 test('failed cancellation keeps a resumable flow; successful cancellation clears it',async()=>{
