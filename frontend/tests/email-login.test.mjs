@@ -19,7 +19,7 @@ function fixture(fetch) {
   const source = readFileSync(new URL('../src/components/EmailLoginForm.tsx', import.meta.url), 'utf8');
   const compiled = ts.transpileModule(source, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.React } }).outputText;
   runInNewContext(compiled, { exports, React: react, Date: FixtureDate, AbortSignal, Error, fetch, require: name => { assert.equal(name, 'react'); return react; } });
-  return { render: () => { index = 0; return exports.EmailLoginForm(); }, advance: ms => { now += ms; } };
+  return { render: () => { index = 0; return exports.EmailLoginForm({}); }, advance: ms => { now += ms; } };
 }
 
 function find(tree, predicate) {

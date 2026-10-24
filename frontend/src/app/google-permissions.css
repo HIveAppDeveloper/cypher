@@ -29,3 +29,14 @@
 .google-privacy p {color:var(--cx-label-2);margin:0 0 16px}
 .google-privacy a {color:var(--cx-label);text-underline-offset:3px}
 .google-permissions-help a {color:var(--cx-label);text-underline-offset:3px}
+
+.google-permissions-error button {display:inline-flex;align-items:center;min-height:44px;margin:8px 0 0;padding:0;border:0;background:transparent;color:var(--cx-label);font:inherit;text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+.google-permissions-error>span {display:block}
+
+.google-hosted-connection {margin:0 0 28px}
+.google-hosted-connection h2 {margin:0 0 10px;font-size:18px;font-weight:550;letter-spacing:-.02em}
+.google-hosted-connection>p:not(.google-permissions-help) {margin:0;color:var(--cx-label-2);font-size:14px;line-height:1.7}
+.google-hosted-connection .google-permissions-actions {margin-top:18px}
+.google-direct-connection {border-top:1px solid var(--cx-sep);padding-top:12px}
+.google-direct-connection>summary {min-height:44px;padding:12px 0;color:var(--cx-label-2);font-size:13px;cursor:pointer}
+.google-direct-connection[open]>summary {margin-bottom:16px;color:var(--cx-label)}
