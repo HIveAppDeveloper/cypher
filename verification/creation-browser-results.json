@@ -1,0 +1,321 @@
+{
+  "baselineRef": "35ca34e",
+  "fixedCommit": "e65981a10f6b2aa0eb03b45a02afe8115e47e30e",
+  "scope": "Fresh Chromium contexts, actual Next production application/cookie proxy and FastAPI routes, temporary SQLite. Only creation modules differ.",
+  "variants": {
+    "baseline": {
+      "cases": {
+        "defaultPreset": {
+          "status": 200,
+          "botCount": 1,
+          "requestBody": {
+            "name": "",
+            "role": "Assistant",
+            "description": "A capable all-rounder",
+            "system_prompt": "Complete the user’s task using the available tools. Make reasonable decisions without routine clarification. Check your work and give a concise result. Never claim an action succeeded without evidence. Explain a blocker clearly when a required connection is unavailable.",
+            "llm_provider": "openai",
+            "llm_model": "gpt-6.1-sol",
+            "tools_enabled": [
+              "browser",
+              "shell",
+              "filesystem",
+              "media",
+              "plugins"
+            ]
+          },
+          "observation": "Unmodified default creation succeeds locally in both versions."
+        },
+        "collapsedEmptyInstructions": {
+          "submit": 0,
+          "invalid": 1,
+          "detailsOpen": false,
+          "activeElement": "",
+          "validationMessage": "Please fill out this field.",
+          "alert": "",
+          "postCount": 0
+        },
+        "lost-unnamed": {
+          "firstServerStatus": 200,
+          "retryStatus": 200,
+          "botCount": 2,
+          "sameAgentId": false,
+          "replyDetail": null,
+          "requestBodies": [
+            {
+              "name": "",
+              "role": "Assistant",
+              "description": "A capable all-rounder",
+              "system_prompt": "Complete the user’s task using the available tools. Make reasonable decisions without routine clarification. Check your work and give a concise result. Never claim an action succeeded without evidence. Explain a blocker clearly when a required connection is unavailable.",
+              "llm_provider": "openai",
+              "llm_model": "gpt-6.1-sol",
+              "tools_enabled": [
+                "browser",
+                "shell",
+                "filesystem",
+                "media",
+                "plugins"
+              ]
+            },
+            {
+              "name": "",
+              "role": "Assistant",
+              "description": "A capable all-rounder",
+              "system_prompt": "Complete the user’s task using the available tools. Make reasonable decisions without routine clarification. Check your work and give a concise result. Never claim an action succeeded without evidence. Explain a blocker clearly when a required connection is unavailable.",
+              "llm_provider": "openai",
+              "llm_model": "gpt-6.1-sol",
+              "tools_enabled": [
+                "browser",
+                "shell",
+                "filesystem",
+                "media",
+                "plugins"
+              ]
+            }
+          ]
+        },
+        "lost-named": {
+          "firstServerStatus": 200,
+          "retryStatus": 409,
+          "botCount": 1,
+          "sameAgentId": false,
+          "replyDetail": "That agent name is already in use. Choose another name or leave it blank.",
+          "requestBodies": [
+            {
+              "name": "Synthetic researcher",
+              "role": "Assistant",
+              "description": "A capable all-rounder",
+              "system_prompt": "Complete the user’s task using the available tools. Make reasonable decisions without routine clarification. Check your work and give a concise result. Never claim an action succeeded without evidence. Explain a blocker clearly when a required connection is unavailable.",
+              "llm_provider": "openai",
+              "llm_model": "gpt-6.1-sol",
+              "tools_enabled": [
+                "browser",
+                "shell",
+                "filesystem",
+                "media",
+                "plugins"
+              ]
+            },
+            {
+              "name": "Synthetic researcher",
+              "role": "Assistant",
+              "description": "A capable all-rounder",
+              "system_prompt": "Complete the user’s task using the available tools. Make reasonable decisions without routine clarification. Check your work and give a concise result. Never claim an action succeeded without evidence. Explain a blocker clearly when a required connection is unavailable.",
+              "llm_provider": "openai",
+              "llm_model": "gpt-6.1-sol",
+              "tools_enabled": [
+                "browser",
+                "shell",
+                "filesystem",
+                "media",
+                "plugins"
+              ]
+            }
+          ]
+        },
+        "sameTickDoubleSubmit": {
+          "postCount": 2,
+          "statuses": [
+            200,
+            409
+          ],
+          "botCount": 1
+        },
+        "concurrentOptionalNames": {
+          "statuses": [
+            409,
+            409,
+            200,
+            409
+          ],
+          "botCount": 1,
+          "names": [
+            "Assistant"
+          ],
+          "schedule": "Four real SQLite optional-name SELECTs held until all four complete, then inserts continue."
+        },
+        "cookieAuthAndIsolation": {
+          "unsignedStatus": 401,
+          "spoofedHeaderStatus": 200,
+          "otherTenantVisibleCount": 0
+        }
+      },
+      "externalBrowserRequestsBlocked": [],
+      "passedCases": 7,
+      "creationSourceSha256": {
+        "frontend/src/components/BotCreator.tsx": "a87efe91e6a3da421c3869fe2ecb83bbd0e5e720f8ee36cf64e59d30a90b14b9",
+        "frontend/src/components/WorkspaceApp.tsx": "0ca2af9b1077fea0bfb9da2566551159795f83eed2710d0fd288451cb77d9278",
+        "frontend/src/hooks/useBots.ts": "40d59c5a068b984e49c4b657ef4130504062933dcaec33fa641f39319f8500ba",
+        "frontend/src/lib/api.ts": "f0444e9a7f467d4b71d23e17a52f4dfc42342c3123a84629bc0e024d28857f80",
+        "backend/app/api/bots.py": "7facdff08e5ba81132730cbea3351cc5020305fff37f5ec02fb2d33babed275c",
+        "backend/app/schemas/bot.py": "5cc9ce36a267c364ac347af5554c4c66a2481c4509c1ded3d3c8d64fcf641cb8"
+      },
+      "productionBuild": "passed",
+      "integratedProxyBuilt": true
+    },
+    "fixed": {
+      "cases": {
+        "defaultPreset": {
+          "status": 200,
+          "botCount": 1,
+          "requestBody": {
+            "name": "",
+            "role": "Assistant",
+            "description": "A capable all-rounder",
+            "system_prompt": "Complete the user’s task using the available tools. Make reasonable decisions without routine clarification. Check your work and give a concise result. Never claim an action succeeded without evidence. Explain a blocker clearly when a required connection is unavailable.",
+            "llm_provider": "openai",
+            "llm_model": "gpt-6.1-sol",
+            "tools_enabled": [
+              "browser",
+              "shell",
+              "filesystem",
+              "media",
+              "plugins"
+            ],
+            "client_request_id": "cfa6d551-fb8b-4409-8ce6-b05413653c5a"
+          },
+          "observation": "Unmodified default creation succeeds locally in both versions."
+        },
+        "collapsedEmptyInstructions": {
+          "submit": 1,
+          "invalid": 0,
+          "detailsOpen": false,
+          "activeElement": "",
+          "validationMessage": "Please fill out this field.",
+          "alert": "Add instructions before creating this agent.",
+          "postCount": 0
+        },
+        "lost-unnamed": {
+          "firstServerStatus": 200,
+          "retryStatus": 200,
+          "botCount": 1,
+          "sameAgentId": true,
+          "replyDetail": null,
+          "requestBodies": [
+            {
+              "name": "",
+              "role": "Assistant",
+              "description": "A capable all-rounder",
+              "system_prompt": "Complete the user’s task using the available tools. Make reasonable decisions without routine clarification. Check your work and give a concise result. Never claim an action succeeded without evidence. Explain a blocker clearly when a required connection is unavailable.",
+              "llm_provider": "openai",
+              "llm_model": "gpt-6.1-sol",
+              "tools_enabled": [
+                "browser",
+                "shell",
+                "filesystem",
+                "media",
+                "plugins"
+              ],
+              "client_request_id": "04de44d1-dde0-48ba-b289-d206c643d57b"
+            },
+            {
+              "name": "",
+              "role": "Assistant",
+              "description": "A capable all-rounder",
+              "system_prompt": "Complete the user’s task using the available tools. Make reasonable decisions without routine clarification. Check your work and give a concise result. Never claim an action succeeded without evidence. Explain a blocker clearly when a required connection is unavailable.",
+              "llm_provider": "openai",
+              "llm_model": "gpt-6.1-sol",
+              "tools_enabled": [
+                "browser",
+                "shell",
+                "filesystem",
+                "media",
+                "plugins"
+              ],
+              "client_request_id": "04de44d1-dde0-48ba-b289-d206c643d57b"
+            }
+          ]
+        },
+        "lost-named": {
+          "firstServerStatus": 200,
+          "retryStatus": 200,
+          "botCount": 1,
+          "sameAgentId": true,
+          "replyDetail": null,
+          "requestBodies": [
+            {
+              "name": "Synthetic researcher",
+              "role": "Assistant",
+              "description": "A capable all-rounder",
+              "system_prompt": "Complete the user’s task using the available tools. Make reasonable decisions without routine clarification. Check your work and give a concise result. Never claim an action succeeded without evidence. Explain a blocker clearly when a required connection is unavailable.",
+              "llm_provider": "openai",
+              "llm_model": "gpt-6.1-sol",
+              "tools_enabled": [
+                "browser",
+                "shell",
+                "filesystem",
+                "media",
+                "plugins"
+              ],
+              "client_request_id": "b7ed401e-33e5-4585-8bf7-db9897f06559"
+            },
+            {
+              "name": "Synthetic researcher",
+              "role": "Assistant",
+              "description": "A capable all-rounder",
+              "system_prompt": "Complete the user’s task using the available tools. Make reasonable decisions without routine clarification. Check your work and give a concise result. Never claim an action succeeded without evidence. Explain a blocker clearly when a required connection is unavailable.",
+              "llm_provider": "openai",
+              "llm_model": "gpt-6.1-sol",
+              "tools_enabled": [
+                "browser",
+                "shell",
+                "filesystem",
+                "media",
+                "plugins"
+              ],
+              "client_request_id": "b7ed401e-33e5-4585-8bf7-db9897f06559"
+            }
+          ]
+        },
+        "sameTickDoubleSubmit": {
+          "postCount": 1,
+          "statuses": [
+            200
+          ],
+          "botCount": 1
+        },
+        "concurrentOptionalNames": {
+          "statuses": [
+            200,
+            200,
+            200,
+            200
+          ],
+          "botCount": 4,
+          "names": [
+            "Assistant",
+            "Assistant 2",
+            "Assistant 3",
+            "Assistant 4"
+          ],
+          "schedule": "Four real SQLite optional-name SELECTs held until all four complete, then inserts continue."
+        },
+        "cookieAuthAndIsolation": {
+          "unsignedStatus": 401,
+          "spoofedHeaderStatus": 200,
+          "otherTenantVisibleCount": 0
+        }
+      },
+      "externalBrowserRequestsBlocked": [],
+      "passedCases": 7,
+      "creationSourceSha256": {
+        "frontend/src/components/BotCreator.tsx": "cb5670647d4eb99efa9f40385546de609e0affc9882553acdecd49f64db6a70c",
+        "frontend/src/components/WorkspaceApp.tsx": "ce3e07631db0a26c56e7dbace348893c3576e3b2cc3292b0a3e2d1decac4111d",
+        "frontend/src/hooks/useBots.ts": "fb3bc676d8f4341c1ce0466561829994aff68f5d506f34156edcb5159e661d98",
+        "frontend/src/lib/api.ts": "6de663c7d7381222bfd398d89fcb65871abcb16ea9dd933b77f0648571540764",
+        "backend/app/api/bots.py": "93487a113a8e88029005b97ecc50214b4b24550ab6a4b73ac765cc1eac2abc5e",
+        "backend/app/schemas/bot.py": "459b0058a1e11893c8253bfe0b9f01b37204eaec1334ef8ed05d71534b46a316"
+      },
+      "productionBuild": "passed",
+      "integratedProxyBuilt": true
+    }
+  },
+  "limits": [
+    "The original production Create Agent error remains unverified; these are confirmed local symptoms.",
+    "Synthetic locally signed sessions test cookie validation and tenant forwarding, not Google/email sign-in.",
+    "Concurrent-name case holds real SELECT results at a fixture barrier to guarantee the race interleaving.",
+    "No hosted database, production deployment, paid model/provider, migration, or user data was used.",
+    "Chromium desktop behavior does not establish Safari, mobile focus, or production screenshot acceptance."
+  ],
+  "status": "passed",
+  "manualVisualObservation": "The fixed inline validation error is in the DOM but below the old form scroll viewport in creation-fixed-invalid.png. Persistent footer visibility is being handled by the separate UI redesign and is not claimed verified by this comparison."
+}

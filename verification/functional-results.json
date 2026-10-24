@@ -1,0 +1,103 @@
+{
+  "status": "passed",
+  "cases": {
+    "unsigned-gate": {
+      "workspaceRedirectsToLogin": true,
+      "protectedApiStatus": 401
+    },
+    "fresh-workspace": {
+      "agents": 0,
+      "conversations": 0,
+      "newTaskVisible": true
+    },
+    "create-lost-response-recovery": {
+      "postCount": 2,
+      "persistedAgents": 1,
+      "sameRequestKeyAndPayload": true,
+      "nativeDialogRecovered": true
+    },
+    "draft-navigation": {
+      "conversationDraftRestored": true,
+      "homeTaskDraftRestored": true
+    },
+    "actual-worker-reply": {
+      "taskCompleted": true,
+      "renderedReply": true,
+      "localRenderedMilliseconds": 1954,
+      "providerCalls": 1
+    },
+    "active-stop": {
+      "realRunningTaskCancelled": true,
+      "controlledProviderCancelled": true,
+      "agentIdle": true,
+      "localCancelMilliseconds": 3276
+    },
+    "after-stop-recovery": {
+      "freshTurnCompleted": true
+    },
+    "lost-send-retry": {
+      "sameClientMessageId": true,
+      "posts": 2,
+      "userMessages": 1,
+      "tasks": 1,
+      "providerCalls": 1
+    },
+    "provider-error-next-turn": {
+      "failedTaskShown": true,
+      "rawProviderBodyHidden": true,
+      "freshTurnCompleted": true
+    },
+    "attachment-stage-remove": {
+      "staged": true,
+      "removed": true,
+      "uploadedToProvider": false
+    },
+    "tenant-isolation": {
+      "foreignListsEmpty": true,
+      "foreignConversation": 404,
+      "foreignSync": {
+        "status": 200,
+        "messages": 0,
+        "tasks": 0
+      },
+      "foreignStop": 404,
+      "forgedBrowserTenantIgnored": true
+    },
+    "mobile-navigation": {
+      "width": 390,
+      "documentWidth": 390,
+      "drawerClosesAfterSelection": true,
+      "composerReachable": true
+    },
+    "local-runtime": {
+      "connected": true,
+      "database": true,
+      "worker": true,
+      "productionClaimed": false
+    }
+  },
+  "scope": "Actual Next production cookie/API proxy, FastAPI, temporary SQLite, queue/journal/worker; controlled provider responses only.",
+  "limits": [
+    "No real provider response, model charge, Google/email sign-in, external account, hosted database or production workflow is verified.",
+    "Synthetic locally signed sessions test the existing session verifier and forwarding; they are not proof of live OAuth/email configuration.",
+    "Transport-loss scenarios intentionally discard successful responses after the actual API/database write.",
+    "Desktop/mobile Chromium software checks do not establish Safari, native mobile or production visual acceptance."
+  ],
+  "buildId": "9BKkhPlEIc6CcWAzFdKuX",
+  "sourceSha256": {
+    "src/components/QuickStart.tsx": "40c5ae7f5d3bfbb1ecf9ffd0d1430321f1618b92e1b802aa86ec9d41cabc79a0",
+    "src/components/ChatPanel.tsx": "b83c4ff6b49e7f58992d0d81e2a726268407ffbe5d9796bf0d67d3ad5d64771c",
+    "src/components/BotCreator.tsx": "516b59e55c70c1e7a15f602cc4bde68917aaf7666aa238fe08d2d121b39d87d2",
+    "src/app/page.tsx": "649d1004435945b33f5b92f3217bcb40d2a7fecdb6acbb0b0eec25f23e3d1fb3",
+    "src/components/WorkspaceApp.tsx": "b606aac52f21a6c774e366a404ef3c3c5b2308dd1ddcbb7cc4dce66ec958bfc1"
+  },
+  "finalCounts": {
+    "agents": 1,
+    "conversations": 1,
+    "tasks": 6,
+    "providerCalls": 6,
+    "activeControlledCalls": 0
+  },
+  "passedCases": 13,
+  "allFixtureProcessesStopped": true
+}

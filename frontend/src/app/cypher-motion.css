@@ -1,0 +1,175 @@
+/* Cypher motion: the lens owns the signature; controls explain state changes. */
+:root {--cypher-ease:cubic-bezier(.16,1,.3,1)}
+@media(prefers-reduced-motion:no-preference) {
+ .cx-prospecting .cx-toolbar {animation:cx-micro-enter .42s var(--cypher-ease) both}
+ .cx-prospect-hero > :is(.cx-lens,h1,p,.cx-voice-control,.cx-command) {animation:cx-micro-enter .48s var(--cypher-ease) both}
+ .cx-prospect-hero > h1 {animation-delay:55ms}
+ .cx-prospect-hero > p {animation-delay:105ms}
+ .cx-prospect-hero > .cx-voice-control {animation-delay:155ms}
+ .cx-prospect-hero > .cx-command {animation-delay:205ms}
+ .cx-prospect-hero > .cx-lens {animation:cx-micro-enter .48s var(--cypher-ease) both}
+ .cx-prospect-flow {animation:cx-micro-enter .45s var(--cypher-ease) 120ms both}
+ .cx-step > span {position:relative;transition:transform .28s var(--cypher-ease),background-color .2s ease,color .2s ease}
+ .cx-step.is-current > span {transform:scale(1.06)}
+ .cx-result-row:nth-child(-n+8) {animation:cx-row-in .26s var(--cypher-ease) both}
+ .cx-result-row:nth-child(2) {animation-delay:25ms}
+ .cx-result-row:nth-child(3) {animation-delay:50ms}
+ .cx-result-row:nth-child(4) {animation-delay:75ms}
+ .cx-result-row:nth-child(5) {animation-delay:100ms}
+ .cx-result-row:nth-child(6) {animation-delay:125ms}
+ .cx-prospecting .cx-run:not(:disabled),.cx-prospecting .cx-secondary:not(:disabled) {transition:transform .2s var(--cypher-ease),background-color .2s ease,box-shadow .2s ease}
+ .cx-prospecting .cx-run:hover:not(:disabled),.cx-prospecting .cx-secondary:hover:not(:disabled) {transform:translateY(-1px)}
+ .cx-prospecting .cx-run:active:not(:disabled),.cx-prospecting .cx-secondary:active:not(:disabled) {transform:scale(.975)}
+ .cx-prospecting .cx-voice-button:active:not(:disabled) {transform:scale(.96)}
+ .cx-prospecting .cx-nav a {transition:background-color .18s ease,transform .18s var(--cypher-ease)}
+ .cx-prospecting .cx-nav a:hover {transform:translateY(-1px)}
+ .cx-prospecting .cx-field {transition:background-color .2s ease}
+ .cx-prospecting .cx-group {transition:box-shadow .22s ease}
+ .cx-prospecting .cx-group:focus-within {box-shadow:0 0 0 3px color-mix(in srgb,var(--cx-label) 10%,transparent),var(--cx-shadow)}
+ .cx-prospecting .cx-result-row:focus-visible {z-index:1;box-shadow:inset 0 0 0 2px color-mix(in srgb,var(--cx-label) 42%,transparent)}
+ .cx-prospecting .cx-word:hover .cx-brand-image {filter:contrast(1.55)}
+ .login-brand:hover .brand-symbol,.sidebar-brand:hover .brand-symbol {transform:scale(1.06)}
+ .login-card .login-email-button:active:not(:disabled) {transform:scale(.98)}
+}
+@keyframes cx-micro-enter {from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes cx-row-in {from{opacity:.45;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+@media(prefers-reduced-motion:no-preference) {
+ .quickstart-panel[data-motion-entered="true"] > .task-composer {animation:cypher-view-in .24s var(--cypher-ease) both}
+}
+.quickstart .quickstart-submit {position:relative}
+.quickstart .quickstart-submit:hover:not(:disabled)>svg {transform:translateX(3px)}
+.quickstart .task-composer[aria-busy="true"] .quickstart-submit>svg {visibility:hidden}
+.quickstart .task-composer[aria-busy="true"][data-motion-active="true"] .btn-primary::after {
+ position:absolute;right:20px;top:calc(50% - 8px);width:16px;height:16px;border:1.5px solid currentColor;border-top-color:transparent;border-radius:50%;content:"";animation:cypher-send-spin .75s linear infinite
+}
+.quickstart .starter-prompts button {transition:color .18s ease,transform .2s var(--cypher-ease)}
+.quickstart .starter-prompts button:hover:not(:disabled) {transform:translateY(-1px)}
+.quickstart .task-composer-footer .btn-primary:active:not(:disabled) {transform:scale(.96)}
+.quickstart-error {animation:cypher-view-in .2s var(--cypher-ease)}
+.login-brandbar {animation:cypher-view-in .28s var(--cypher-ease)}
+.login-card {animation:cypher-view-in .32s var(--cypher-ease) 50ms both}
+.connectors-dialog {width:min(850px,calc(100vw - 32px));border-radius:16px;box-shadow:0 20px 70px rgba(0,0,0,.16)}
+.connectors-dialog[open],.mobile-navigation[open],.bot-dialog[open],.command-dialog[open] {animation:cypher-panel-open .26s var(--cypher-ease)}
+.work-drawer[open] {animation:cypher-drawer-open .3s var(--cypher-ease)}
+.task-composer .btn-primary svg,.composer .send-button svg {transition:transform .2s var(--cypher-ease)}
+.task-composer .btn-primary:not(:disabled):hover svg {transform:translateX(3px)}
+.composer .send-button:not(:disabled):hover svg {transform:translateY(-2px)}
+.task-composer .btn-primary:not(:disabled):active,.composer .send-button:not(:disabled):active {transform:scale(.96)}
+.connectors-dialog::backdrop {background:rgba(0,0,0,.22);backdrop-filter:none}
+.connectors-dialog :is(.connectors-header,.connectors-body) {background:var(--cx-card)}
+.connectors-dialog :is(.connector-discovery,.connector-entry,.connected-service) {box-shadow:none;background:transparent}
+.connectors-dialog .lovable-connect {background:transparent}
+.connectors-dialog :is(.connected-service-header p,.connected-tool p,.connected-service summary,.connected-service-actions button) {color:var(--cx-label-2)}
+.connectors-dialog :is(.connected-service-header>button,.connected-tool>button,.connector-close) {background:var(--cx-fill);color:var(--cx-label);border:0}
+.connectors-dialog :is(.connected-tool,.connected-service-actions) {border-color:var(--cx-sep)}
+.connectors-dialog .connected-service-actions button:hover {color:var(--cx-label)}
+.connectors-header {padding:24px 26px 20px}
+.connectors-header p {font-size:13px}
+.connectors-body {padding:22px 26px;animation:cypher-view-in .18s var(--cypher-ease)}
+.connector-tabs {display:grid;grid-template-columns:repeat(4,minmax(0,1fr));position:relative;gap:0;padding:0 24px;overflow:visible}
+.connector-tabs button {min-width:0;background:none!important;border:0!important;min-height:44px;padding:10px 4px;font-size:12px}
+.connectors-dialog .connector-tabs button[aria-pressed=true] {background:none;color:var(--cx-label)}
+.connector-tabs button[aria-pressed=true]::after {display:none}
+.plugin-tab-marker {position:absolute;bottom:-1px;left:24px;height:2px;width:calc((100% - 48px)/4);background:var(--cx-label);transition:transform .24s var(--cypher-ease);pointer-events:none}
+.connectors-dialog .connector-discovery {border:0;padding:0 0 22px;margin-bottom:18px;border-bottom:1px solid var(--cx-sep);border-radius:0}
+.discovery-heading {display:none}
+.website-connect>p {font-size:11px}
+.lovable-connect {grid-template-columns:minmax(0,1fr) auto;gap:16px;padding:0 0 18px;margin:0 0 20px;border:0;border-bottom:1px solid var(--cx-sep);border-radius:0;box-shadow:none;animation:none}
+.lovable-connect-copy>p {font-size:12px;margin:5px 0 0}
+.lovable-connect-actions {display:flex;align-items:center;gap:14px}
+.lovable-connect-actions>a {display:none}
+.lovable-connect-actions .connector-connect {min-height:38px;padding:8px 12px;font-size:12px}
+.lovable-cypher-mark {width:84px;height:34px;flex-basis:84px}
+.lovable-binary-lens {aspect-ratio:560/210}
+.lovable-connect-progress,.connector-authorization {border:0;border-radius:12px;background:var(--cx-fill-2);padding:18px;animation:cypher-view-in .2s var(--cypher-ease)}
+.connector-authorization>ol {font-size:13px;line-height:1.8}
+.connector-authorization>p {font-size:12px}
+.connector-custom-advanced,.mcp-directory-disclosure {border-top:1px solid var(--cx-sep);margin-top:14px}
+.connector-custom-advanced summary,.mcp-directory-disclosure>summary {cursor:pointer;min-height:42px;padding:13px 0;color:var(--cx-label-2);font-size:12px}
+.connector-custom-actions {display:flex;align-items:center;gap:10px;margin-top:18px}
+.connector-custom-actions button {min-height:40px}
+.mcp-directory-disclosure>p {margin:0 0 12px;color:var(--cx-label-2);font-size:12px;line-height:1.6}
+.connector-catalog {display:flex;flex-direction:column;gap:0}
+.connectors-dialog .connector-entry {display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 20px;padding:16px 0;border:0;border-bottom:1px solid var(--cx-sep);border-radius:0;min-height:0;background:transparent}
+.connector-entry-title {align-self:center}
+.connector-entry-title h4 {font-weight:550}
+.connector-entry>p {grid-column:1;min-height:0;margin:0 0 0 48px;font-size:12px}
+.connector-entry-footer {grid-column:2;grid-row:1/3;align-self:center;gap:10px}
+.connector-entry-footer>a {display:none}
+.connector-entry .connector-connect {min-height:36px;background:var(--cx-fill);color:var(--cx-label);padding:7px 12px}
+.connector-entry .connector-connect:hover {background:var(--cx-fill);opacity:.7}
+.connector-entry .connector-logo {width:34px;height:34px;background:var(--cx-fill-2);font-size:10px}
+.connector-catalog>.connector-entry:nth-child(-n+6) {animation:cypher-row-in .2s var(--cypher-ease) both}
+.connector-catalog>.connector-entry:nth-child(2) {animation-delay:20ms}
+.connector-catalog>.connector-entry:nth-child(3) {animation-delay:40ms}
+.connector-catalog>.connector-entry:nth-child(4) {animation-delay:60ms}
+.connector-catalog>.connector-entry:nth-child(5) {animation-delay:80ms}
+.connector-catalog>.connector-entry:nth-child(6) {animation-delay:100ms}
+.connector-state {font-size:10px;white-space:nowrap;padding:3px 6px}
+.connector-close,.connector-connect,.connected-service button,.plugin-registration button,.starter-prompts button {transition:background-color .15s ease,opacity .15s ease,transform .15s var(--cypher-ease)}
+.connector-connect:active:not(:disabled),.connector-close:active,.plugin-registration button:active {transform:scale(.97)}
+.connector-connect svg {transition:transform .18s var(--cypher-ease)}
+.connector-connect:hover:not(:disabled) svg {transform:translateX(2px)}
+.connector-notice,.connector-error {padding:12px 14px;font-size:12px;border-radius:10px;animation:cypher-view-in .2s var(--cypher-ease)}
+.connected-service {padding:18px 0;margin:0;border:0;border-bottom:1px solid var(--cx-sep);border-radius:0;background:transparent}
+.connected-service-header h3 {font-size:14px;font-weight:550}
+.connected-service-header p {font-size:11px;line-height:1.6}
+.connected-service-actions {padding-top:14px}
+.connected-tool {padding-block:12px}
+.connected-tool strong {font-size:12px}
+.connected-tool p {font-size:11px;max-width:65ch}
+.connection-kind-toggle {padding:4px 0;margin-top:5px;font-size:11px;color:var(--cx-label-2);text-decoration:underline;text-underline-offset:3px}
+.plugin-registration {padding:18px 0 22px;margin-bottom:22px;border-bottom:1px solid var(--cx-sep);animation:cypher-view-in .22s var(--cypher-ease)}
+.plugin-registration-heading {display:flex;align-items:flex-start;gap:14px;justify-content:space-between}
+.plugin-registration-heading h3 {margin:0 0 8px;font-size:16px;font-weight:550}
+.plugin-registration-heading p {margin:0 0 18px;font-size:12px;color:var(--cx-label-2);line-height:1.6;max-width:65ch}
+.plugin-registration-heading>button {min-width:36px;min-height:36px;font-size:20px;color:var(--cx-label-2)}
+.plugin-registration-heading>button svg {width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.5}
+.plugin-registration form {display:grid;gap:10px}
+.plugin-registration label,.plugin-registration summary {font-size:12px;color:var(--cx-label-2)}
+.plugin-registration input {width:100%;min-height:42px;padding:10px 12px;margin-top:5px;border:1px solid var(--cx-sep);border-radius:8px;background:var(--cx-card);color:var(--cx-label);font:inherit;font-size:13px}
+.plugin-registration input[readonly] {font-size:11px;background:var(--cx-fill-2)}
+.oauth-client-fields {display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.plugin-registration-actions {display:flex;align-items:center;gap:16px;margin-top:5px}
+.plugin-registration-actions a {font-size:12px;text-underline-offset:3px}
+.plugin-registration .field-help {font-size:11px;color:var(--cx-label-2);line-height:1.6;margin:6px 0 0}
+@keyframes cypher-panel-open {from{opacity:.5;transform:translateY(10px) scale(.99)}to{opacity:1;transform:none}}
+@keyframes cypher-view-in {from{opacity:.55;transform:translateY(3px)}to{opacity:1;transform:none}}
+@keyframes cypher-row-in {from{opacity:.6;transform:translateX(-5px)}to{opacity:1;transform:none}}
+@keyframes cypher-drawer-open {from{opacity:.7;transform:translateX(24px)}to{opacity:1;transform:none}}
+@media(max-width:600px) {
+ .connectors-dialog {width:calc(100vw - 16px);max-height:calc(100dvh - 16px)}
+ .connectors-header {padding:20px 18px 16px}
+ .connectors-body {padding:20px 18px}
+ .connector-tabs {padding-inline:12px}
+ .plugin-tab-count {display:none}
+ .plugin-tab-marker {left:12px;width:calc((100% - 24px)/4)}
+ .lovable-connect {grid-template-columns:minmax(0,1fr) auto;gap:10px}
+ .lovable-connect-actions {grid-column:auto;padding:0}
+ .lovable-connect-copy>p {max-width:24ch;font-size:11px}
+ .lovable-connect-actions .connector-connect {min-height:44px;font-size:11px;padding-inline:10px}
+ .connector-entry>p {margin-left:0}
+ .connector-entry-title h4 {font-size:12px}
+ .connector-entry .connector-logo {width:30px;height:30px}
+ .connector-entry .connector-connect {min-height:44px}
+ .connector-state {display:none}
+ .oauth-client-fields {grid-template-columns:1fr}
+ .catalog-heading {flex-wrap:wrap;gap:14px}
+ .catalog-heading input {width:100%}
+}
+@media(prefers-reduced-motion:reduce) {
+ .connectors-dialog,.connectors-body,.connector-entry,.mobile-navigation,.plugin-registration,.connector-notice,.connector-error,.lovable-connect-progress,.connector-authorization,.bot-dialog,.command-dialog,.work-drawer {animation:none!important}
+ .plugin-tab-marker,.connector-connect,.connector-close,.connected-service button,.plugin-registration button,.connector-connect svg,.task-composer .btn-primary svg,.composer .send-button svg {transition:none!important;transform:none!important}
+ .quickstart-panel > *, .quickstart-error, .login-brandbar, .login-card {animation:none!important}
+ .quickstart .task-composer,.quickstart .starter-prompts button,.quickstart .task-composer-footer .btn-primary {transition:none!important;transform:none!important}
+ .quickstart .starter-prompts button:hover:not(:disabled),.quickstart .task-composer-footer .btn-primary:hover:not(:disabled),.quickstart .task-composer-footer .btn-primary:active:not(:disabled) {transform:none!important}
+ .quickstart .task-composer-footer .btn-primary > svg,.quickstart .task-composer[aria-busy="true"] .btn-primary::after {animation:none!important}
+ .cx-prospecting *, .cx-prospecting *::before, .cx-prospecting *::after {animation:none!important;transition:none!important;scroll-behavior:auto!important}
+ .login-brand .brand-symbol,.sidebar-brand .brand-symbol {transform:none!important}
+}
+html[data-motion=false] :is(.connectors-dialog,.connectors-body,.connector-entry,.mobile-navigation,.plugin-registration,.connector-notice,.connector-error,.lovable-connect-progress,.connector-authorization,.bot-dialog,.command-dialog,.work-drawer) {animation:none!important}
+html[data-motion=false] :is(.plugin-tab-marker,.connector-connect,.connector-close,.connected-service button,.plugin-registration button,.connector-connect svg,.task-composer .btn-primary svg,.composer .send-button svg) {transition:none!important;transform:none!important}
+html[data-motion=false] :is(.cx-prospecting,.cx-prospecting *, .cx-prospecting *::before,.cx-prospecting *::after) {animation:none!important;transition:none!important;transform:none!important}
+
+/* The saved setting governs all interface motion, including pseudo-elements. */
+html[data-motion=false] *,html[data-motion=false] *::before,html[data-motion=false] *::after {animation:none!important;transition:none!important;scroll-behavior:auto!important}

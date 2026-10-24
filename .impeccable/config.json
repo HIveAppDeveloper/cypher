@@ -1,0 +1,20 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "design-system-font",
+        "value": "inter variable",
+        "createdAt": "2026-10-23T14:39:50.951Z",
+        "reason": "Inter Variable is documented in DESIGN.md as an optional conversation typeface; the detector does not account for that documented exception."
+      },
+      {
+        "rule": "overused-font",
+        "value": "inter",
+        "createdAt": "2026-10-23T16:27:18.305Z",
+        "reason": "Agent: PRODUCT.md and design.json document Inter as an optional conversation typeface; the workspace default remains the platform font stack."
+      }
+    ]
+  }
+}

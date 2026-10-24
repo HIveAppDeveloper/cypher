@@ -1,0 +1,30 @@
+# Run on a trusted Docker host. Frontend can alternatively deploy from frontend/ to Vercel.
+services:
+  redis:
+    image: redis:7-alpine
+    volumes: [redis_data:/data]
+    command: redis-server --appendonly yes
+    restart: unless-stopped
+  backend:
+    build: ./backend
+    env_file:
+      - .env.vercel.local
+      - .env
+    environment:
+      REDIS_URL: redis://redis:6379/0
+    ports: ["127.0.0.1:8000:8000"]
+    volumes: ["/var/run/docker.sock:/var/run/docker.sock"]
+    depends_on: [redis]
+    restart: unless-stopped
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-}
+    environment:
+      GROKBOT_BACKEND_URL: http://backend:8000
+    ports: ["127.0.0.1:3000:3000"]
+    depends_on: [backend]
+    restart: unless-stopped
+volumes:
+  redis_data:
