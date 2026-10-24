@@ -22,7 +22,10 @@ const server=http.createServer(async(req,res)=>{
  if(path.endsWith('/cancel')){posts.push({path,body});jobs=jobs.map(j=>({...j,status:'cancelled'}));return json(res,{ok:true});}
  if(path.endsWith('/steer')){posts.push({path,body});return json(res,{status:'accepted'});}
  if(path.endsWith('/tasks'))return json(res,jobs);
+ if(path==='/prospecting/investors/founders')return json(res,{database:{records:0,explicit_founder_signals:0,matched_records:0,snapshot_ready:false,snapshot_built_at:null,quarters:[],quarter_count:0,historical:{status:'idle',total_quarters:0,processed_quarters:0,current_quarter:null,error:null},source:'Synthetic UI fixture'},items:[],page:{limit:25,offset:0,returned:0},limitations:[]});
+ if(path==='/prospecting/investors/runs'||path==='/prospecting/jobs')return json(res,[]);
  if(path==='/workspace/settings')return json(res,{});
+ if(path==='/workspace/runs'||path==='/workspace/goals'||path==='/workspace/artifacts')return json(res,[]);
  if(path==='/plugins/catalog'||path==='/plugins/available-connections'||path==='/plugins')return json(res,[]);
  if(path==='/plugins/catalog/sync')return json(res,null);
  if(path==='/computer/approvals/pending')return json(res,[]);

@@ -17,5 +17,5 @@ export default function VcProspectingPage() {
   let session: AppSession | null = null;
   try { session = readSignedPayload<AppSession>(cookies().get('grokbot_session')?.value); } catch { session = null; }
   if (process.env.REQUIRE_USER_AUTH === 'true' && !session) redirect('/login');
-  return <VcProspectingWorkspace />;
+  return <VcProspectingWorkspace accountId={session?.sub} />;
 }

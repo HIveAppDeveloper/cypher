@@ -10,3 +10,6 @@
 .workspace-recovery :is(a, button) { min-height: 44px; display: inline-flex; align-items: center; }
 .message-text-fallback { white-space: pre-wrap; overflow-wrap: anywhere; }
 @media (max-width: 760px) { .workspace-loading-sidebar { display: none; } }
+
+.panel-loading-inline {box-sizing:border-box;flex:1;min-width:0;padding:24px 28px;background:var(--cx-bg)}
+@media(max-width:600px){.panel-loading-inline {padding:20px 16px}.panel-loading-inline .panel-loading-header {padding-left:44px}}

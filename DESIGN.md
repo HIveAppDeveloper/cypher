@@ -573,3 +573,9 @@ The voice console renders BinaryLens with a live audio-level ref from the microp
 ## Live binary and voice stage
 
 The user's animation direction takes precedence over the earlier static identity treatment: all Cypher symbol instances render real animated 0/1 digits, with the original uploaded asset retained as reference. Compact symbols adapt their grid to preserve readable digits. Voice opens a large, centered binary lens in the conversation region; the existing message list stays mounted and returns when voice stops. Keep the composer and Stop action reachable at mobile and short viewport sizes. Respect reduced motion and pause offscreen animation.
+
+## Reference workspace integration
+
+Operate mode follows the supplied Cypher dashboard reference: warm ivory surfaces, one inset desktop frame with a narrow navigation rail, a readable animated binary mark, one task composer and four desktop shortcuts. Apps is an inline workspace with saved connections first and a browsable catalog. Connection labels distinguish saved access, discovery, current execution evidence, reauthentication, public-website fallback and unsupported legacy placeholders. Real recent tasks and source-backed research data determine populated states; no illustrative counts or meeting progress are seeded. Mobile uses two shortcut columns and a reachable navigation control.
+
+Keep the expanded main-chat binary Voice stage and reduced-motion controls. Saved audio uses native playback with an original-file fallback. Account actions expose the existing sign-in, switch-account and sign-out flows. Verification emails identify Cypher while retaining the configured sender mailbox and one-time-link security.

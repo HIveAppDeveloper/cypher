@@ -83,5 +83,3 @@ async def test_valid_oauth_is_saved_access_and_not_claimed_as_execution_verified
     assert row['authenticated'] and row['connection_state'] == 'paused'
     assert row['verification'] == {'status':'not_tested'}
     assert not any(secret in response.text for secret in ('OAUTH-SECRET','GOOGLE-SECRET','REFRESH-SECRET','managed-fixture'))
-
-

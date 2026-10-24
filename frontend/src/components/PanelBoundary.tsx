@@ -17,11 +17,19 @@ function PanelNotice({ title, onClose, failed = false }: { title: string; onClos
   </dialog>;
 }
 
-export class PanelBoundary extends Component<{ title: string; onClose: () => void; children: ReactNode }, { failed: boolean }> {
+export function InlinePanelNotice({ title, onClose, failed = false }: { title: string; onClose: () => void; failed?: boolean }) {
+  return <section className="panel-loading-inline" aria-label={title}>
+    <div className="panel-loading-header"><h2>{title}</h2><button type="button" className="btn-secondary" onClick={onClose}>Close</button></div>
+    {failed ? <div role="alert"><p>This panel couldn’t load. Check your connection and reload to try again. Your saved work is kept.</p><button type="button" className="btn-primary" onClick={() => window.location.reload()}>Reload Cypher</button></div> : <LoadingState label={`Opening ${title.toLowerCase()}…`} rows={4}/>}
+  </section>;
+}
+
+export class PanelBoundary extends Component<{ title: string; onClose: () => void; children: ReactNode; inline?: boolean }, { failed: boolean }> {
   state = { failed: false };
   static getDerivedStateFromError() { return { failed: true }; }
   render() {
-    if (this.state.failed) return <PanelNotice title={this.props.title} onClose={this.props.onClose} failed/>;
-    return <Suspense fallback={<PanelNotice title={this.props.title} onClose={this.props.onClose}/>}>{this.props.children}</Suspense>;
+    const Notice = this.props.inline ? InlinePanelNotice : PanelNotice;
+    if (this.state.failed) return <Notice title={this.props.title} onClose={this.props.onClose} failed/>;
+    return <Suspense fallback={<Notice title={this.props.title} onClose={this.props.onClose}/>}>{this.props.children}</Suspense>;
   }
 }
