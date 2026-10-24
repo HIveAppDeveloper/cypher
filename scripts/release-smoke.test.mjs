@@ -50,16 +50,19 @@ for (const [name, overrides] of [
   ['error-shaped JSON with HTTP 200', { '/api/conversations': { detail: 'database failed' } }],
 ]) test(name + ' blocks candidate smoke', async () => { await assert.rejects(smoke(expected, fixture(overrides)), error => !error.message.includes('private-upstream-secret')); });
 
-const env = { RELEASE_URL: expected.url, RELEASE_DEPLOYMENT_ID: expected.deploymentId, RELEASE_COMMIT: expected.commit, RELEASE_TEAM_ID: 'team_intended', RELEASE_PROJECT_ID: 'prj_intended', VERCEL_TOKEN: 'private-token' };
+const env = { RELEASE_URL: expected.url, RELEASE_DEPLOYMENT_ID: expected.deploymentId, RELEASE_COMMIT: expected.commit, RELEASE_TEAM_ID: 'team_intended', RELEASE_PROJECT_ID: 'prj_intended', VERCEL_TOKEN: 'private-token', RELEASE_PREVIOUS_DEPLOYMENT_ID: 'dpl_previous', RELEASE_PREVIOUS_COMMIT: 'b'.repeat(40) };
 function deployment() { return { id: expected.deploymentId, url: new URL(expected.url).host, projectId: env.RELEASE_PROJECT_ID, target: 'production', readyState: 'READY', meta: { githubCommitSha: expected.commit, githubCommitOrg: 'sodikjonismoilov', githubCommitRepo: 'VentureCruiter' } }; }
-function promotionFixture(change = () => {}, smokeImpl = async () => ({ passed: true })) {
+function promotionFixture(change = () => {}, smokeImpl = async (_expected, options) => ({ passed: true, phase: options.activeWorker ? 'activation-preflight' : 'full-stack', candidate_worker_verified: !options.activeWorker })) {
   const meta = deployment(); change(meta);
   const calls = [];
-  return { calls, fetchImpl: async (url, options) => {
+  let active = env.RELEASE_PREVIOUS_DEPLOYMENT_ID;
+  return { calls, attempts: 2, pause: async () => {}, fetchImpl: async (url, options) => {
     assert.equal(new URL(url).searchParams.get('teamId'), env.RELEASE_TEAM_ID);
     assert.equal(options.headers.Authorization, 'Bearer private-token');
+    if (new URL(url).pathname.includes('/aliases/')) return Response.json({ projectId: env.RELEASE_PROJECT_ID, deploymentId: active });
+    if (new URL(url).pathname.endsWith(env.RELEASE_PREVIOUS_DEPLOYMENT_ID)) return Response.json({ ...deployment(), id: env.RELEASE_PREVIOUS_DEPLOYMENT_ID, url: 'cypher-previous-hiveapp.vercel.app', meta: { ...deployment().meta, githubCommitSha: env.RELEASE_PREVIOUS_COMMIT } });
     return Response.json(meta);
-  }, smokeImpl, run: (...args) => { calls.push(args); return { status: 0 }; } };
+  }, smokeImpl, run: (...args) => { calls.push(args); active = args[1][0] === 'promote' ? expected.deploymentId : env.RELEASE_PREVIOUS_DEPLOYMENT_ID; return { status: 0 }; } };
 }
 for (const [name, change] of [
   ['wrong project', d => d.projectId = 'prj_other'],
@@ -76,7 +79,7 @@ test('failed smoke never invokes promotion', async () => {
 });
 test('promotion uses precisely the tested deployment ID after smoke succeeds', async () => {
   let checked;
-  const f = promotionFixture(() => {}, async e => { checked = e; return { passed: true }; });
+  const f = promotionFixture(() => {}, async (e, options) => { checked = e; return { passed: true, phase: options.activeWorker ? 'activation-preflight' : 'full-stack', candidate_worker_verified: !options.activeWorker }; });
   await guardedPromote(env, f);
   assert.equal(checked.deploymentId, expected.deploymentId);
   assert.deepEqual(f.calls[0].slice(0, 2), ['vercel', ['promote', expected.deploymentId, '--scope', env.RELEASE_TEAM_ID, '--yes']]);
@@ -102,4 +105,57 @@ test('frontend-only effective source config fails before release', () => {
   validateReleaseConfig(config);
   delete config.daemons;
   assert.throws(() => validateReleaseConfig(config), /worker/);
+});
+
+
+test('activation preflight verifies the exact existing worker without certifying candidate worker', async () => {
+  const r = runtime(); r.worker = false; r.worker_version_matches = false;
+  const previous = { deploymentId: env.RELEASE_PREVIOUS_DEPLOYMENT_ID, commit: env.RELEASE_PREVIOUS_COMMIT };
+  r.worker_deployment = { deployment_id: previous.deploymentId, commit: previous.commit, environment: 'production' };
+  assert.throws(() => validateRuntime(r, expected), /Worker/);
+  validateRuntime(r, expected, { activeWorker: previous });
+  const report = await smoke(expected, { ...fixture({ '/api/runtime': r }), activeWorker: previous });
+  assert.equal(report.phase, 'activation-preflight');
+  assert.equal(report.candidate_worker_verified, false);
+  assert.throws(() => validateRuntime(r, expected, { activeWorker: { ...previous, deploymentId: 'dpl_unrelated' } }), /differs/);
+  r.worker_last_seen_seconds = 90;
+  assert.throws(() => validateRuntime(r, expected, { activeWorker: previous }), /stale/);
+});
+test('activation waits for strict candidate worker and then verifies both canonical aliases', async () => {
+  const seen = []; let postAttempts = 0;
+  const f = promotionFixture(() => {}, async (e, options) => {
+    seen.push({ url: e.url, preflight: !!options.activeWorker });
+    if (options.activeWorker) return { passed: true, phase: 'activation-preflight' };
+    if (postAttempts++ === 0) throw new Error('old worker still draining');
+    return { passed: true, phase: 'full-stack', candidate_worker_verified: true };
+  });
+  await guardedPromote(env, f);
+  assert.deepEqual(seen.slice(-2).map(s => s.url), ['https://cypher-agent.vercel.app', 'https://open-grokbot.vercel.app']);
+  assert.deepEqual(f.calls.map(c => c[1][0]), ['promote']);
+});
+test('strict post-activation failure rolls back the exact verified previous deployment', async () => {
+  const f = promotionFixture(() => {}, async (_e, options) => {
+    if (options.activeWorker) return { passed: true, phase: 'activation-preflight' };
+    throw new Error('new worker never starts');
+  });
+  await assert.rejects(guardedPromote(env, f), /rollback requested/);
+  assert.deepEqual(f.calls.map(c => c[1].slice(0, 2)), [['promote', expected.deploymentId], ['rollback', env.RELEASE_PREVIOUS_DEPLOYMENT_ID]]);
+});
+test('missing explicit rollback identity blocks all mutations', async () => {
+  const f = promotionFixture();
+  await assert.rejects(guardedPromote({ ...env, RELEASE_PREVIOUS_DEPLOYMENT_ID: undefined }, f), /deployment ID/);
+  assert.equal(f.calls.length, 0);
+});
+test('a concurrent different release prevents rollback over its aliases', async () => {
+  const f = promotionFixture(() => {}, async (_e, options) => {
+    if (options.activeWorker) return { passed: true, phase: 'activation-preflight' };
+    throw new Error('new worker failed');
+  });
+  const fetchOriginal = f.fetchImpl;
+  f.fetchImpl = async (url, options) => {
+    if (f.calls.length && new URL(url).pathname.includes('/aliases/')) return Response.json({ projectId: env.RELEASE_PROJECT_ID, deploymentId: 'dpl_concurrent' });
+    return fetchOriginal(url, options);
+  };
+  await assert.rejects(guardedPromote(env, f), /Canonical alias changed/);
+  assert.deepEqual(f.calls.map(c => c[1][0]), ['promote']);
 });

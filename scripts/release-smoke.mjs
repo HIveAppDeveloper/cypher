@@ -8,22 +8,27 @@ export function validateExpected(expected) {
   check(url.protocol === 'https:' && url.origin === expected.url && !url.username && !url.password, 'Use the exact HTTPS candidate origin');
   check(Array.isArray(expected.services) && expected.services.length > 0, 'Required services must be explicit');
 }
-export function validateRuntime(runtime, expected) {
+export function validateRuntime(runtime, expected, { activeWorker } = {}) {
   check(runtime.connected === true && runtime.state === 'connected', 'Frontend is not connected to the backend');
   check(runtime.database === true, 'Database query did not succeed');
-  check(runtime.worker === true && runtime.worker_version_matches === true, 'Worker is unavailable or belongs to another release');
+  check(activeWorker ? runtime.worker === false && runtime.worker_version_matches === false : runtime.worker === true && runtime.worker_version_matches === true, 'Worker is unavailable or belongs to another release');
   check(Number.isInteger(runtime.worker_last_seen_seconds) && runtime.worker_last_seen_seconds >= 0 && runtime.worker_last_seen_seconds < 90, 'Worker heartbeat is stale or invalid');
   for (const key of ['deployment', 'worker_deployment']) {
-    check(runtime[key]?.deployment_id === expected.deploymentId, `${key} deployment ID differs from candidate`);
-    check(runtime[key]?.commit === expected.commit, `${key} commit differs from candidate`);
+    const identity = key === 'worker_deployment' && activeWorker ? activeWorker : expected;
+    check(runtime[key]?.deployment_id === identity.deploymentId, `${key} deployment ID differs from candidate`);
+    check(runtime[key]?.commit === identity.commit, `${key} commit differs from candidate`);
     check(runtime[key]?.environment === 'production', `${key} was not staged for production`);
   }
   check(runtime.model_configured === true, 'Model inference is unconfigured');
   for (const service of expected.services) check(runtime.configured_services?.[service] === true, `Required service is unconfigured: ${service}`);
 }
 
-export async function smoke(expected, { fetchImpl = fetch, headers = {} } = {}) {
+export async function smoke(expected, { fetchImpl = fetch, headers = {}, activeWorker } = {}) {
   validateExpected(expected);
+  if (activeWorker) {
+    validateExpected({ ...expected, ...activeWorker });
+    check(activeWorker.deploymentId !== expected.deploymentId, 'Activation preflight requires the distinct current production worker');
+  }
   const rows = [];
   async function get(path, json = true, publicLogin = false) {
     let response;
@@ -55,12 +60,12 @@ export async function smoke(expected, { fetchImpl = fetch, headers = {} } = {}) 
   const health = await get('/api/health');
   check(health.service === 'cypher' && health.status === 'ok', 'Backend process health failed');
   const runtime = await get('/api/runtime');
-  validateRuntime(runtime, expected);
+  validateRuntime(runtime, expected, { activeWorker });
   for (const path of ['/api/bots', '/api/plugins', '/api/plugins/catalog', '/api/conversations']) {
     const body = await get(path);
     check(Array.isArray(body), `${path}: expected a list, got an error or incompatible payload`);
   }
-  return { passed: true, candidate: expected.url, deployment_id: expected.deploymentId, commit: expected.commit, required_services: expected.services, routes: rows };
+  return { passed: true, phase: activeWorker ? 'activation-preflight' : 'full-stack', candidate_worker_verified: !activeWorker, candidate: expected.url, deployment_id: expected.deploymentId, commit: expected.commit, required_services: expected.services, routes: rows };
 }
 
 export function expectedFromEnv(env) {
