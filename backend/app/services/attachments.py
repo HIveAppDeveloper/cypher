@@ -3,8 +3,10 @@ import asyncio
 import base64
 from app.config import settings
 from app.services.model_routing import ModelCapabilityError
+from app.services.voice_metrics import stage, timed
 
 
+@timed('transcription_total')
 async def transcribe_audio(file):
     try:
         data=base64.b64decode(file['data'],validate=True)
@@ -15,13 +17,15 @@ async def transcribe_audio(file):
         from app.services import omniroute
         from app.services.recordings import normalize_recording, RecordingError
         try:
-            speech_data, mime, extension = await asyncio.to_thread(normalize_recording, data, file['mime'])
+            with stage('normalize'):
+                speech_data, mime, extension = await asyncio.to_thread(normalize_recording, data, file['mime'])
         except RecordingError as error:
             raise ModelCapabilityError(str(error) + ' Your original audio is saved.') from error
         speech_file = {**file, 'mime': mime, 'data': base64.b64encode(speech_data).decode()}
         if extension:
             speech_file['name'] = file['name'].rsplit('.', 1)[0] + '.' + extension
-        result = await omniroute.request('/audio/transcriptions', {'model':'omniroute/whisper-base-local','file':speech_file})
+        with stage('stt_provider'):
+            result = await omniroute.request('/audio/transcriptions', {'model':'omniroute/whisper-base-local','file':speech_file})
         text = result.get('text', '').strip()
         if not text:
             raise ModelCapabilityError('No speech was detected in this audio. Your original audio is saved.')
@@ -32,7 +36,8 @@ async def transcribe_audio(file):
     if connection.get('api_base') not in (None, 'https://api.openai.com/v1'):
         raise ModelCapabilityError('Audio transcription needs the direct OpenAI API connection. Your original audio is saved.')
     async with AsyncOpenAI(api_key=connection['api_key'], base_url='https://api.openai.com/v1', max_retries=0) as client:
-        result = await client.audio.transcriptions.create(model=settings.AUDIO_TRANSCRIPTION_MODEL.removeprefix('openai/'), file=(file['name'], data, file['mime']), timeout=90)
+        with stage('stt_provider'):
+            result = await client.audio.transcriptions.create(model=settings.AUDIO_TRANSCRIPTION_MODEL.removeprefix('openai/'), file=(file['name'], data, file['mime']), timeout=90)
     text = result.text
     if not text.strip():
         raise ModelCapabilityError('No speech could be transcribed from this audio. Your original file is saved; send a clearer recording or text.')

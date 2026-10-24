@@ -3,6 +3,7 @@ import logging
 import asyncio
 import litellm
 from app.config import settings
+from app.services.voice_metrics import stage, timed
 from app.services.model_routing import (
     ModelConfigurationError, ModelNotConfiguredError, ModelCapabilityError, validate_capabilities, retryable,
 )
@@ -77,6 +78,7 @@ def generation_options(options, provider, model):
 
 class LLMGateway:
     @staticmethod
+    @timed('model_gateway')
     async def complete(messages, tools=None, model=None, provider=None, options=None, fallback=None, allow_fallback=True, **run_options):
         from app.services import omniroute
         from app.services.usage import check_allowance,record
@@ -154,10 +156,11 @@ class LLMGateway:
                         # unsupported level or let "medium" become maximum.
                         effort = requested if requested in efforts else ('low' if requested in {'none','low','medium'} and 'low' in efforts else 'high' if 'high' in efforts else efforts[0])
                         generation['reasoning_effort']=effort
-                if omniroute.enabled() and not direct_managed:
-                    response = await omniroute.complete(messages, tools, route_provider, route_model, generation)
-                else:
-                    response = await litellm.acompletion(messages=messages, tools=tools, **generation, **connection, num_retries=0)
+                with stage('model_provider'):
+                    if omniroute.enabled() and not direct_managed:
+                        response = await omniroute.complete(messages, tools, route_provider, route_model, generation)
+                    else:
+                        response = await litellm.acompletion(messages=messages, tools=tools, **generation, **connection, num_retries=0)
                 # Keep routing observable without changing the provider's result shape.
                 if isinstance(getattr(response, "_hidden_params", None), dict):
                     response._hidden_params["grokbot_route"] = {"provider": route_provider, "model": route_model, "fallback": bool(index)}
