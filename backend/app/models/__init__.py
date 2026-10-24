@@ -3,6 +3,7 @@ from .automation import Goal,Channel,ChannelEvent,Delivery
 from .runtime import RuntimeHeartbeat
 from .plugin import Plugin
 from .plugin_sync import PluginSync
+from .mcp_directory import McpDirectoryEntry
 from .bot import Bot
 from .conversation import Conversation, ConversationParticipant
 from .message import Message

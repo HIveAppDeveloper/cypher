@@ -28,6 +28,8 @@ export const api = {
   getDeliveries: (id:string): Promise<{id:string;status:string;attempts:number;detail:string}[]> => request('/channels/'+id+'/deliveries'),
   defaultTeam: (): Promise<Conversation> => request('/teams/default', { method: 'POST' }),
   getPluginCatalog: (): Promise<import('../components/PluginPanel').CatalogEntry[]> => request('/plugins/catalog'),
+  getMcpDirectory: (params:{q?:string;category?:string;kind?:'all'|'hosted'|'local'|'verified'|'auth';offset?:number;limit?:number}={}): Promise<import('../components/McpDirectory').McpDirectoryPage> => {const query=new URLSearchParams();for(const [key,value] of Object.entries(params))if(value!==undefined&&value!=='')query.set(key,String(value));const encoded=query.toString();return request('/plugins/directory'+(encoded?'?'+encoded:''));},
+  getMcpDirectoryPreview: (id:string): Promise<import('../components/McpDirectory').McpToolPreview> => request('/plugins/directory/'+encodeURIComponent(id)+'/preview'),
   searchMcpRegistry: (query:string,cursor?:string): Promise<{items:import('../components/PluginPanel').CatalogEntry[];next_cursor:string|null}> => request('/plugins/registry/search?q='+encodeURIComponent(query)+(cursor?'&cursor='+encodeURIComponent(cursor):'')),
   getAvailableConnections: (): Promise<import('../components/PluginPanel').AvailableConnection[]> => request('/plugins/available-connections'),
   pluginSyncStatus: (): Promise<import('../components/PluginPanel').PluginSync|null> => request('/plugins/catalog/sync'),
