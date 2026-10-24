@@ -11,7 +11,7 @@ export async function GET() {
    const parsed=new URL(configured);
    if(parsed.protocol==='https:'||parsed.hostname==='localhost'||parsed.hostname==='127.0.0.1'){
     parsed.username='';parsed.password='';parsed.search='';parsed.hash='';
-    if(!process.env.OMNIROUTE_DASHBOARD_URL||parsed.pathname==='/'||parsed.pathname==='')parsed.pathname='/providers';
+    if(!process.env.OMNIROUTE_DASHBOARD_URL||parsed.pathname==='/'||parsed.pathname==='')parsed.pathname='/dashboard/providers';
     manageUrl=parsed.toString().replace(/\/$/,'');
    }
   }
