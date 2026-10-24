@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { load, renderer, environment, find, textOf } from './support/component-harness.mjs';
 const stubs=Object.fromEntries(['./LoadingState','../lib/presets','./ContextPanel','./WorkPanel','./GlassSelect','../lib/types','../lib/api','./BotAvatar','./MessageBubble','./QuickStart','./RunControls','../lib/modelPolicy','../lib/attachments','../lib/voice-playback','../lib/voice-activity','./cipher/CypherMark'].map(name=>[name,{}]));
+stubs['./AgentConversationActivity']={...load('../src/lib/agent-conversation.ts'),AgentConversationActivity:'agent-conversation-activity'};
 stubs['./cipher/BinaryLens']={__esModule:true,default:'binary-lens'};
 stubs['./cipher/CypherMark']={__esModule:true,default:'cypher-mark'};
 const {messageTime,sameMessageGroup}=load('../src/components/ChatPanel.tsx',{...stubs,react:{}});

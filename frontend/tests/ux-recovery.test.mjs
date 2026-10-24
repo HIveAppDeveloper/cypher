@@ -160,6 +160,7 @@ function chat(env, api) {
     './cipher/CypherMark': { __esModule: true, default: 'cypher-mark' },
     './QuickStart': { QuickStart: 'quick-start' }, './RunControls': { RunControls: 'run-controls', DEFAULT_OPTIONS: {} },
     '../lib/modelPolicy': { modelPolicy: value => value }, '../lib/attachments': { readAttachment: async () => ({ name: 'fixture.txt', mime: 'text/plain', data: 'eA==' }) } };
+  stubs['./AgentConversationActivity']={...load('../src/lib/agent-conversation.ts'),AgentConversationActivity:'agent-conversation-activity'};
   const { ChatPanel } = load('../src/components/ChatPanel.tsx', { react: view.react, ...stubs }, env.globals);
   view.mount(() => ChatPanel({ bot, room: null, bots: [bot], onCreateBot() {}, onCreateRoom() {},
     onQuickStart: async () => {}, onOpenLounge: async () => {} }));

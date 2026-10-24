@@ -8,6 +8,7 @@ import { Bot, Message, MessageType, Attachment, Conversation, Job, RunOptions } 
 import { api, ApiError } from '../lib/api';
 import { BotAvatar } from './BotAvatar';
 import { MessageBubble } from './MessageBubble';
+import { AgentConversationActivity, conversationMessages, isAgentActivityMessage } from './AgentConversationActivity';
 import { QuickStart } from './QuickStart';
 import { RunControls, DEFAULT_OPTIONS } from './RunControls';
 import { modelPolicy } from '../lib/modelPolicy';
@@ -389,7 +390,7 @@ export function ChatPanel({ bot, room, bots, onCreateBot, onCreateRoom, onQuickS
     };
   }, [voiceMode, voiceStream, conversationId]);
   useEffect(() => () => { voiceSession.current++; voiceRequest.current?.abort(); voiceContext.current?.close().catch(() => {}); }, []);
-  const visibleMessages = messages.filter(m => !m.internal && (!messageQuery.trim() || m.content.toLowerCase().includes(messageQuery.trim().toLowerCase())));
+  const visibleMessages = conversationMessages(messages, bots, !!room?.is_group, messageQuery);
   const activeJobs = jobs.filter(j => j.status === 'pending' || j.status === 'running' || j.status === 'cancel_requested');
   const fontFamily = font === 'serif' ? 'Georgia, serif' : font === 'system' ? '-apple-system, BlinkMacSystemFont, system-ui, sans-serif' : '"Inter Variable", sans-serif';
   return <main className={`main-content ${draggingFiles ? 'files-dragging' : ''}`} style={{ fontFamily }} onDragOver={e=>{if(e.dataTransfer.types.includes('Files')){e.preventDefault();setDraggingFiles(true);}}} onDragLeave={e=>{if(!e.currentTarget.contains(e.relatedTarget as Node))setDraggingFiles(false);}} onDrop={e=>{e.preventDefault();setDraggingFiles(false);if(!readingFiles && conversationId)void addFiles(e.dataTransfer.files);}}>
@@ -409,7 +410,7 @@ export function ChatPanel({ bot, room, bots, onCreateBot, onCreateRoom, onQuickS
     {room?.is_group ? <details className="thread-members"><summary><span className="thread-member-stack" aria-hidden="true">{roomMembers.slice(0, 4).map(member => <BotAvatar key={member.id} name={member.name} small/>)}</span><span>{room.bot_ids.length} teammates</span></summary><div className="team-members">{roomMembers.map(member => <span key={member.id} title={`${member.llmProvider} · ${member.llmModel}`}><BotAvatar name={member.name} small/>{member.name}</span>)}</div></details> : null}
     {computerError ? <p role="alert">{computerError}</p> : null}
     {error ? <div className="conversation-alert" role="alert"><span>{error.replace(/^Error: /, '')}</span><button aria-label="Dismiss error" onClick={() => setError('')}>Dismiss</button></div> : null}{syncError ? <div className="sync-status" role="status"><span>{syncError}</span>{sessionExpired?<a href="/login">Sign in</a>:<button disabled={refreshing || retryAt>Date.now()} onClick={()=>window.dispatchEvent(new Event('grokbot:refresh'))}>{refreshing?'Reconnecting…':retryAt>Date.now()?'Waiting to retry…':'Reconnect'}</button>}</div> : null}
-    <div ref={stream} hidden={voiceMode} onScroll={() => { const el = stream.current; if (el) followLatest.current = el.scrollHeight - el.scrollTop - el.clientHeight < 100; setAwayFromLatest(!followLatest.current); }} className="message-stream" style={{ flex:1,overflowY:'auto',display:'flex',flexDirection:'column' }}>{hasEarlier ? <button className="load-earlier" disabled={loadingEarlier} onClick={loadEarlier}>{loadingEarlier ? 'Loading…' : 'Load earlier messages'}</button> : null}{messages.some(m => m.internal) ? <details className="fleet-activity"><summary>Background activity</summary>{messages.filter(m => m.internal).map(m => <MessageBubble key={m.id} message={m} bot={bots.find(b => b.id === m.senderBotId)}/>)}</details> : null}{visibleMessages.map((m,index) => {
+    <div ref={stream} hidden={voiceMode} onScroll={() => { const el = stream.current; if (el) followLatest.current = el.scrollHeight - el.scrollTop - el.clientHeight < 100; setAwayFromLatest(!followLatest.current); }} className="message-stream" style={{ flex:1,overflowY:'auto',display:'flex',flexDirection:'column' }}>{hasEarlier ? <button className="load-earlier" disabled={loadingEarlier} onClick={loadEarlier}>{loadingEarlier ? 'Loading…' : 'Load earlier messages'}</button> : null}{visibleMessages.map((m,index) => {
         const previous = visibleMessages[index - 1];
         const next = visibleMessages[index + 1];
         const grouped = sameMessageGroup(previous, m);
@@ -418,7 +419,7 @@ export function ChatPanel({ bot, room, bots, onCreateBot, onCreateRoom, onQuickS
         const showDate = !previous || !previousTime || previousTime.toDateString() !== currentTime.toDateString() || currentTime.getTime() - previousTime.getTime() >= 300000;
         return <React.Fragment key={m.id}>
           {showDate ? <div className="message-date"><time dateTime={m.createdAt}>{messageDateLabel(m.createdAt)}</time></div> : null}
-          <MessageBubble message={m} onReply={message=>{setReplyTo(message);document.getElementById("message")?.focus();}} grouped={grouped} groupEnd={!sameMessageGroup(m, next)} showTimestamp={false} bot={bots.find(b => b.id === m.senderBotId)}/>
+          {room?.is_group && isAgentActivityMessage(m) ? <AgentConversationActivity message={m} bots={bots}/> : <MessageBubble message={m} onReply={message=>{setReplyTo(message);document.getElementById("message")?.focus();}} grouped={grouped} groupEnd={!sameMessageGroup(m, next)} showTimestamp={false} bot={bots.find(b => b.id === m.senderBotId)}/>}
         </React.Fragment>;
       })}{!loading && messageQuery.trim() && !visibleMessages.length ? <div className="work-empty"><h3>No matching messages</h3><p>Try a different search. Only loaded messages are included.</p></div> : null}{loading ? <LoadingState label="Loading conversation…" variant="messages"/> : null}{!loading && !syncError && !error && !visibleMessages.length && !messageQuery.trim() ? <div className="conversation-empty"><strong>{room ? 'What should we take care of?' : 'What should I take care of?'}</strong><p>Send the outcome you want, or drop in a file.</p><span>Work continues in the cloud when you close this tab.</span></div> : null}</div>
     {awayFromLatest && !voiceMode ? <button className="jump-latest" onClick={() => { followLatest.current=true; setAwayFromLatest(false); stream.current?.scrollTo({top:stream.current.scrollHeight, behavior:document.documentElement.dataset.motion==='false' || window.matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'}); }}>Jump to latest</button> : null}
