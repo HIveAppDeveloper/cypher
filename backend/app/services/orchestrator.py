@@ -70,6 +70,7 @@ class AgentOrchestrator:
         task_id: str | None = None,
         incoming_message_id: str | None = None,
         execution_attempt: int | None = None,
+        participant_bot_ids: list[str] | None = None,
     ) -> list[dict]:
         """Main entry point — process an incoming message in a conversation.
 
@@ -135,6 +136,12 @@ class AgentOrchestrator:
             if not conversation:
                 logger.error(f"Conversation {conversation_id} not found")
                 return []
+            # The worker serializes the bots it claimed. Membership edits must
+            # not introduce unclaimed responders while that task is starting.
+            responding_ids = list(participant_bot_ids) if participant_bot_ids is not None else [p.bot_id for p in conversation.participants]
+            if not responding_ids:
+                return []
+            note('participant_count', len(responding_ids))
 
             if self.options.voice_mode:
                 from app.services.attachments import prepare_audio
@@ -152,23 +159,18 @@ class AgentOrchestrator:
                 self.event_key = 'media-output'
                 files = await self.journal.run('media-output', 'generate_image', False,
                     lambda: generate_media(self.options.output, user_message_content, self.options.aspect_ratio, self.options.duration))
-                message = await self._save_message(db, conversation_id, "bot", conversation.participants[0].bot_id, "Your image is ready.", metadata={"attachments": files})
+                message = await self._save_message(db, conversation_id, "bot", responding_ids[0], "Your image is ready.", metadata={"attachments": files})
                 return [message]
 
             # Determine responding bots
-            participant_bot_ids = [p.bot_id for p in conversation.participants]
-
             if conversation.is_group:
                 return await self._handle_group_chat(
-                    db, conversation, participant_bot_ids,
+                    db, conversation, responding_ids,
                     user_message_content, sender_type, sender_bot_id,
                 )
             else:
                 # 1:1 chat — single bot responds
-                if not participant_bot_ids:
-                    logger.error("No bots in conversation")
-                    return []
-                bot_id = participant_bot_ids[0]
+                bot_id = responding_ids[0]
                 return await self._run_agent_loop(
                     db, conversation_id, bot_id, user_message_content
                 )
@@ -204,8 +206,12 @@ class AgentOrchestrator:
             return responses
         coordinator = next((b for b in bots if b.role.casefold() == "coordinator"), None)
         lead = coordinator or (bots[0] if bots else None)
-        if self.options.voice_mode and lead and not requests_teammates(message, bots, lead):
-            return await self._run_agent_loop(db, str(conversation.id), lead.id, message)
+        if lead and (self.options.voice_mode or coordinator) and not requests_teammates(message, bots, lead):
+            first = await self._run_agent_loop(db, str(conversation.id), lead.id, message)
+            cached_plan = bool(first and (first[-1].get('metadata') or {}).get('internal'))
+            if coordinator and (cached_plan or any(self._parse_handoffs(item.get('content', '')) for item in first)):
+                return await self._coordinate_team(db, conversation, bots, coordinator, message, initial_responses=first)
+            return first
         if coordinator:
             return await self._coordinate_team(db, conversation, bots, coordinator, message)
         all_responses = []
@@ -227,14 +233,20 @@ class AgentOrchestrator:
                         pending = [target_id] + [id for id in pending if id != target_id]
         return all_responses
 
-    async def _coordinate_team(self, db, conversation, bots, coordinator, message):
+    async def _coordinate_team(self, db, conversation, bots, coordinator, message, initial_responses=None):
         cid = str(conversation.id)
         responses = []
         try:
-            self.phase_instructions = "Plan this task briefly. Delegate only useful independent work. Choose up to 3 teammates using HANDOFF[exact teammate name: concrete assigned task]. Include one specific task per handoff. Do not claim the task is done."
             self.internal_activity = True
-            self.planning = True
-            plan = await self._run_agent_loop(db, cid, coordinator.id, message)
+            if initial_responses is None:
+                self.phase_instructions = "Plan this task briefly. Delegate only useful independent work. Choose up to 3 teammates using HANDOFF[exact teammate name: concrete assigned task]. Include one specific task per handoff. Do not claim the task is done."
+                self.planning = True
+                plan = await self._run_agent_loop(db, cid, coordinator.id, message)
+            else:
+                # The normal tool-enabled turn already produced the handoff.
+                # Reuse it rather than asking a second model to plan it again.
+                self.planning = False
+                plan = initial_responses
             responses.extend(plan)
 
             by_name = {bot.name.casefold(): bot for bot in bots if bot.id != coordinator.id}
