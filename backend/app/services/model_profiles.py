@@ -17,7 +17,7 @@ PROFILES = {
     'research': Profile('gemini', 'gemini-3.8-flash', ('openai', 'gpt-6.1-sol')),
     'writing': Profile('anthropic', 'claude-sonnet-5.5', ('openai', 'gpt-6.1-sol')),
     'analysis': Profile('deepseek', 'deepseek-v4.1-flash', ('openai', 'gpt-6.1-sol')),
-    'review': Profile('xai', 'grok-4.7', ('openai', 'gpt-6.1-sol')),
+    'review': Profile('xai', 'grok-4.5', ('openai', 'gpt-6.1-sol')),
     'execution': Profile('openai', 'gpt-6-luna', ('openai', 'gpt-6.1-sol')),
     'vision': Profile('gemini', 'gemini-3.8-flash', ('openai', 'gpt-6.1-sol')),
 }
