@@ -1,4 +1,4 @@
-"""Single-worker persisted job runner for the persistent backend host."""
+"""Single-leader persisted runner with bounded independent chat execution."""
 import asyncio
 import logging
 import os
@@ -6,6 +6,7 @@ import time
 import uuid
 from contextlib import suppress
 from datetime import datetime
+from dataclasses import dataclass
 from sqlalchemy import select, update, text
 from app.db.session import AsyncSessionLocal, engine
 from app.db.tenancy import current_tenant_id
@@ -16,6 +17,7 @@ from app.services.execution import retry_or_interrupt, ExecutionSuperseded
 from app.services.orchestrator import AgentOrchestrator
 logger = logging.getLogger(__name__)
 POLL_SECONDS = 2
+MAX_ACTIVE_TASKS = 2
 PROCESS_BOOT_ID = uuid.uuid4().hex
 PROCESS_STARTED_AT = datetime.utcnow().isoformat()+'Z'
 
@@ -150,134 +152,211 @@ async def _run_worker_loop(lock_connection=None, owner_pid=None, stop_event=None
     if os.getenv("GROKBOT_VERIFY_CLOUD") == "true":
         await run_checks()
     from app.db.wakeup import wait_for_work
-    from app.services.computer import tick_commands
     from app.models.workspace import ComputerCommand
     async with AsyncSessionLocal() as db:
         await db.execute(update(ComputerCommand).where(ComputerCommand.status=='running').values(status='interrupted',payload='',result=None))
         await db.commit()
-    last_maintenance = 0
-    while not stop_event.is_set():
-        await pulse()
-        await tick_commands(AsyncSessionLocal)
-        from app.services.prospecting import tick as tick_prospecting
-        prospecting_work = await tick_prospecting(AsyncSessionLocal)
-        from app.services.investor_funnel import tick as tick_investor_funnel
-        investor_funnel_work = await tick_investor_funnel(AsyncSessionLocal, pulse)
-        from app.services.investor_funnel import tick_founder_archive
-        founder_archive_work = await tick_founder_archive(AsyncSessionLocal, pulse)
-        maintenance_due = lock_connection is None or time.monotonic()-last_maintenance >= 60 or (wake is not None and wake.is_set())
-        requested = False
-        if maintenance_due:
-          last_maintenance = time.monotonic()
-          async with AsyncSessionLocal() as commands:
-              request_check = await commands.get(RuntimeCheck, 'check_request')
-              requested = request_check is not None and request_check.status == 'pending'
-              if requested:
-                  request_check.status = 'running'
-                  await commands.commit()
-          from app.services.model_connections import run_requested_check
-          if not requested and await run_requested_check(AsyncSessionLocal, pulse):
-              last_maintenance = 0
-              continue
-        if requested:
-            from app.services.verification import save_check, safe_error
-            try:
-                await run_checks(force=True)
-                await save_check('check_request','completed',{})
-            except Exception as error:
-                await save_check('check_request','failed',safe_error(error))
-            continue
-        from app.services.automation import tick_goals,tick_deliveries
-        if maintenance_due:
-            await tick_goals(AsyncSessionLocal)
-            await tick_deliveries(AsyncSessionLocal)
-            from app.services.workspace import tick_routines
-            await tick_routines(AsyncSessionLocal)
-        if stop_event.is_set(): break
-        async with AsyncSessionLocal() as db:
-            task = (await db.execute(select(Task).outerjoin(TaskExecution, TaskExecution.task_id == Task.id).where(
-                Task.status == 'pending',
-                (TaskExecution.next_attempt_at.is_(None)) | (TaskExecution.next_attempt_at <= datetime.utcnow()),
-            ).order_by(Task.created_at).limit(1).with_for_update(of=Task, skip_locked=True))).scalar_one_or_none()
+    # Only this scheduler touches the leader connection. Provider calls and
+    # maintenance get their own tasks/sessions, never this asyncpg connection.
+    active = {}
+    maintenance = None
+    next_maintenance = 0
+    maintenance_requested = True
+    try:
+        while not stop_event.is_set() or active or maintenance is not None:
+            await pulse()
+            for execution in list(active):
+                if execution.done():
+                    await execution  # Lease loss must reach the supervisor.
+                    del active[execution]
+            if maintenance is not None and maintenance.done():
+                did_work = await maintenance
+                maintenance = None
+                next_maintenance = time.monotonic() + (0 if did_work else (60 if lock_connection is not None else POLL_SECONDS))
+            if not stop_event.is_set():
+                if maintenance is None and (maintenance_requested or time.monotonic() >= next_maintenance):
+                    maintenance = asyncio.create_task(_maintenance_pass())
+                    maintenance_requested = False
+                while len(active) < MAX_ACTIVE_TASKS:
+                    busy_rooms = {claim.conversation_id for claim in active.values()}
+                    busy_bots = set().union(*(claim.bot_ids for claim in active.values())) if active else set()
+                    claim = await _claim_next_task(busy_rooms, busy_bots)
+                    if claim is None:
+                        break
+                    execution = asyncio.create_task(_run_claimed_task(claim))
+                    active[execution] = claim
             if stop_event.is_set():
-                await db.rollback()
-                break
-            if task is None:
-                await db.commit()
-                signaled = await wait_for_work(wake,stop_event,0 if prospecting_work or investor_funnel_work or founder_archive_work else (30 if lock_connection is not None else POLL_SECONDS))
-                if signaled:last_maintenance = 0
-                continue
-            tenant_token = current_tenant_id.set(getattr(task, "tenant_id", "legacy-owner"))
-            try:
-                state = await db.get(TaskExecution, task.id)
-                if state is None:
-                    state = TaskExecution(task_id=task.id, attempts=0, recoveries=0)
-                    db.add(state)
-                state.attempts += 1
-                claimed_attempt = state.attempts
-                state.next_attempt_at = None
-                state.updated_at = datetime.utcnow()
-                task.status = 'running'
-                task.started_at = task.started_at or datetime.utcnow()
-                await db.commit()
-                request = (task.result or {}).get("request", {})
-                execution = asyncio.create_task(AgentOrchestrator().process_message(task.conversation_id, task.description, attachments=request.get("attachments", []), options=request.get("options", {}), goal_id=request.get("goal_id"), task_id=task.id, incoming_message_id=request.get("incoming_message_id"), execution_attempt=state.attempts))
+                # Drain work already claimed, including any ambiguous external
+                # maintenance write. The process supervisor owns the deadline.
+                pending = [job for job in active if not job.done()]
+                if maintenance is not None and not maintenance.done(): pending.append(maintenance)
+                if pending: await asyncio.wait(pending, timeout=1)
+            else:
+                # A finished background pass is not a notification of new work;
+                # treating both as the same event would continuously poll SQL.
+                notification = asyncio.create_task(wait_for_work(wake, stop_event, 30 if lock_connection is not None else POLL_SECONDS))
                 try:
-                    cancelled = False
+                    pending = list(active) + ([maintenance] if maintenance is not None else [])
+                    await asyncio.wait([notification, *pending], return_when=asyncio.FIRST_COMPLETED)
+                    signaled = await notification if notification.done() else False
+                finally:
+                    if not notification.done(): notification.cancel()
+                    with suppress(asyncio.CancelledError): await notification
+                    # CancelledError from our child and cancellation of this
+                    # scheduler can race at the same await. Preserve the latter.
+                    if asyncio.current_task().cancelling(): raise asyncio.CancelledError
+                maintenance_requested = maintenance_requested or signaled
+    finally:
+        pending = list(active) + ([maintenance] if maintenance is not None else [])
+        for job in pending:
+            if not job.done(): job.cancel()
+        if pending: await asyncio.gather(*pending, return_exceptions=True)
+
+
+@dataclass(frozen=True)
+class _ClaimedTask:
+    id: str
+    tenant_id: str
+    attempt: int
+    conversation_id: str
+    bot_ids: tuple[str, ...]
+
+
+async def _claim_next_task(busy_rooms, busy_bots):
+    from app.models.conversation import ConversationParticipant
+    async with AsyncSessionLocal() as db:
+        # Project metadata only: audio/video bytes are loaded once, by the job.
+        query = select(Task.id, Task.tenant_id, Task.conversation_id, Task.bot_id, Task.created_at, Task.started_at).outerjoin(
+            TaskExecution, TaskExecution.task_id == Task.id,
+        ).where(Task.status == 'pending',
+                (TaskExecution.next_attempt_at.is_(None)) | (TaskExecution.next_attempt_at <= datetime.utcnow()))
+        if busy_rooms:
+            query = query.where(Task.conversation_id.not_in(busy_rooms))
+        if busy_bots:
+            shared_rooms = select(ConversationParticipant.conversation_id).where(ConversationParticipant.bot_id.in_(busy_bots))
+            query = query.where(Task.bot_id.not_in(busy_bots), Task.conversation_id.not_in(shared_rooms))
+        row = (await db.execute(query.order_by(Task.created_at, Task.id).limit(1).with_for_update(of=Task, skip_locked=True))).first()
+        if row is None:
+            await db.commit()
+            return None
+        tenant = current_tenant_id.set(row.tenant_id)
+        try:
+            state = await db.get(TaskExecution, row.id)
+            if state is None:
+                state = TaskExecution(task_id=row.id, attempts=0, recoveries=0)
+                db.add(state)
+            state.attempts += 1
+            state.next_attempt_at = None
+            state.updated_at = datetime.utcnow()
+            now = datetime.utcnow()
+            await db.execute(update(Task).where(Task.id == row.id).values(status='running', started_at=row.started_at or now))
+            members = list((await db.execute(select(ConversationParticipant.bot_id).where(ConversationParticipant.conversation_id == row.conversation_id))).scalars())
+            # Keep the queued primary responder first; a set would randomize
+            # the first bot for one-to-one and media responses.
+            bot_ids = (row.bot_id, *(bot_id for bot_id in members if bot_id != row.bot_id))
+            await db.commit()
+            logger.info('Task admitted task_id=%s queue_wait_seconds=%.3f', row.id, max(0, (now-row.created_at).total_seconds()))
+            return _ClaimedTask(row.id, row.tenant_id, state.attempts, row.conversation_id, bot_ids)
+        finally:
+            current_tenant_id.reset(tenant)
+
+
+async def _maintenance_pass():
+    # The scheduler continues heartbeats while this bounded single lane waits
+    # for research, OAuth checks or delivery. Never share its lock connection.
+    async def scheduler_owns_pulse(): pass
+    from app.services.computer import tick_commands
+    from app.services.prospecting import tick as tick_prospecting
+    from app.services.investor_funnel import tick as tick_investor_funnel, tick_founder_archive
+    await tick_commands(AsyncSessionLocal)
+    prospecting_work = await tick_prospecting(AsyncSessionLocal)
+    investor_work = await tick_investor_funnel(AsyncSessionLocal, scheduler_owns_pulse)
+    archive_work = await tick_founder_archive(AsyncSessionLocal, scheduler_owns_pulse)
+    async with AsyncSessionLocal() as db:
+        check = await db.get(RuntimeCheck, 'check_request')
+        requested = check is not None and check.status == 'pending'
+        if requested:
+            check.status = 'running'
+            await db.commit()
+    from app.services.model_connections import run_requested_check
+    if requested:
+        from app.services.verification import verify_cloud, save_check, safe_error
+        try:
+            await verify_cloud(force=True)
+            await save_check('check_request', 'completed', {})
+        except Exception as error:
+            await save_check('check_request', 'failed', safe_error(error))
+        return True
+    if await run_requested_check(AsyncSessionLocal, scheduler_owns_pulse): return True
+    from app.services.automation import tick_goals, tick_deliveries
+    from app.services.workspace import tick_routines
+    await tick_goals(AsyncSessionLocal)
+    await tick_deliveries(AsyncSessionLocal)
+    await tick_routines(AsyncSessionLocal)
+    return bool(prospecting_work or investor_work or archive_work)
+
+
+async def _run_claimed_task(claim):
+    tenant_token = current_tenant_id.set(claim.tenant_id)
+    try:
+        async with AsyncSessionLocal() as db:
+            task = await db.get(Task, claim.id)
+            if task is None: return
+            request = (task.result or {}).get('request', {})
+            execution = asyncio.create_task(AgentOrchestrator().process_message(task.conversation_id, task.description, attachments=request.get('attachments', []), options=request.get('options', {}), goal_id=request.get('goal_id'), task_id=task.id, incoming_message_id=request.get('incoming_message_id'), execution_attempt=claim.attempt, participant_bot_ids=list(claim.bot_ids)))
+            try:
+                cancelled = False
+                try:
                     while not execution.done():
                         await asyncio.wait({execution}, timeout=2)
                         if execution.done(): break
-                        await pulse()
-                        await tick_commands(AsyncSessionLocal)
                         async with AsyncSessionLocal() as monitor:
                             current = await monitor.get(Task, task.id)
-                            if current and current.status == "cancel_requested":
+                            if current and current.status == 'cancel_requested':
                                 execution.cancel()
                                 with suppress(asyncio.CancelledError): await execution
                                 cancelled = True
                                 break
                     if cancelled:
-                        task.status = "cancelled"
-                        task.result = {**(task.result or {}), "note": "Stopped future steps. An in-flight external action may already have completed."}
+                        task.status = 'cancelled'
+                        task.result = {**(task.result or {}), 'note': 'Stopped future steps. An in-flight external action may already have completed.'}
                     else:
                         responses = await execution
                         task.status = response_status(responses)
-                        task.result = {**(task.result or {}), "responses": responses}
+                        task.result = {**(task.result or {}), 'responses': responses}
                 finally:
                     if not execution.done():
                         execution.cancel()
                         with suppress(asyncio.CancelledError): await execution
-            except asyncio.CancelledError:
-                raise
-            except ExecutionSuperseded:
+            except (asyncio.CancelledError, ExecutionSuperseded):
                 raise
             except Exception:
-                logger.exception("Job failed: %s", task.id)
+                logger.exception('Job failed: %s', task.id)
                 await db.rollback()
                 await db.refresh(task)
                 await retry_or_interrupt(db, task)
-                if task.status in {'failed','interrupted'}:
+                if task.status in {'failed', 'interrupted'}:
                     from app.services.workspace import notify_finished
-                    await notify_finished(db,task)
+                    await notify_finished(db, task)
                 await db.commit()
-                current_tenant_id.reset(tenant_token)
-                continue
+                return
             with db.no_autoflush:
-                owner=(await db.execute(select(TaskExecution.attempts).where(TaskExecution.task_id==task.id).with_for_update())).scalar_one()
-                if owner!=claimed_attempt:raise ExecutionSuperseded('A replacement owns the task result.')
+                owner = (await db.execute(select(TaskExecution.attempts).where(TaskExecution.task_id == task.id).with_for_update())).scalar_one()
+                if owner != claim.attempt: raise ExecutionSuperseded('A replacement owns the task result.')
             task.completed_at = datetime.utcnow()
             if request.get('goal_id'):
                 from app.models.automation import Goal
-                goal=await db.get(Goal,request['goal_id'])
+                goal = await db.get(Goal, request['goal_id'])
                 if goal and not goal.completion_requested:
-                    public=[r for r in (task.result or {}).get('responses',[]) if not (r.get('metadata') or {}).get('internal') and r.get('sender_type')=='bot']
-                    if public:goal.last_summary=public[-1].get('content','')[:2000]
+                    public = [r for r in (task.result or {}).get('responses', []) if not (r.get('metadata') or {}).get('internal') and r.get('sender_type') == 'bot']
+                    if public: goal.last_summary = public[-1].get('content', '')[:2000]
             from app.services.automation import enqueue_delivery
-            await enqueue_delivery(task.id, request.get("channel_id"),AsyncSessionLocal,db)
+            await enqueue_delivery(task.id, request.get('channel_id'), AsyncSessionLocal, db)
             from app.services.workspace import notify_finished
-            await notify_finished(db,task)
+            await notify_finished(db, task)
             await db.commit()
-            current_tenant_id.reset(tenant_token)
+    finally:
+        current_tenant_id.reset(tenant_token)
 
 
 def response_status(responses):
