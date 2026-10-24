@@ -1,0 +1,205 @@
+{
+  "lead_id": "co:0002038064",
+  "rank": 2,
+  "screening_score": 0.6668,
+  "generated": "2026-10-24",
+  "summary": "Charles Crawford is the person named on the Form D for Loom Security, Inc., a Lawrence, KS company incorporated in 2024. Loom sells CINQUE, a security posture observability platform launched in 2026 that correlates identity, device, network, application and data signals for human, non-human and AI-agent identities, and it is raising a $4.6M round with $3.4M sold. The 'observed evidence for the examiner' positioning for financial services, insurance and healthcare touches the fund's auditability thesis, but CINQUE is a horizontal cybersecurity product also aimed at manufacturing, energy, oil & gas, rail and retail, and the evidence says almost nothing about Crawford himself, so it is a modest fit worth one exploratory call.",
+  "person": {
+    "name": "Charles Crawford",
+    "role": "Named person on Loom Security, Inc.'s Form D; specific title not stated in the evidence",
+    "location": "Lawrence, KS",
+    "links": [
+      "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0002038064",
+      "https://www.loomsecurity.io/"
+    ]
+  },
+  "co_founders": [],
+  "company": {
+    "name": "Loom Security, Inc.",
+    "what_they_build": "CINQUE, a 'Unified Security Posture Observability' layer. It sits above existing identity and security tools, builds behavioral baselines for human, non-human and AI-agent identities, and correlates signals across identity, device, network, application and data. It outputs findings with recommended fixes. Features include Persona Risk, Activity Map and Anomaly Detection, and the company claims first visibility in about 90 minutes without replacing existing tools.",
+    "customers": "Targets financial services, insurance, healthcare, manufacturing, energy & utilities, oil & gas, rail & transportation and retail. Sales are channel-first through the Fusion Partner Program. The resources page refers to 'what one customer got out of it', but no customer is named. Paying customers are otherwise unknown.",
+    "stage": "seed",
+    "raised": "Form D filed 2026-08-20 (Other Technology): $4,600,000 offered, $3,399,999 sold, 4 investors, first sale 2026-08-05. This is the only filing, and no named backers appear in the evidence.",
+    "website": "https://www.loomsecurity.io/ (guessed from the company name; its Lawrence, KS headquarters matches the Form D location)"
+  },
+  "background": [
+    {
+      "fact": "Loom Security, Inc. is a corporation incorporated in 2024 and located in Lawrence, KS.",
+      "source": "S1",
+      "url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0002038064",
+      "source_label": "Shortlist record"
+    },
+    {
+      "fact": "Loom opened in 2024 doing identity and security program work inside customer environments, and in 2025 its delivery team was stitching together cross-tool posture views by hand for each engagement.",
+      "source": "S7",
+      "url": "https://www.loomsecurity.io/about/index.html",
+      "source_label": "Company web page (guessed from the company name; check it is the same company)"
+    },
+    {
+      "fact": "The About page says the people who built CINQUE 'spent their careers inside enterprise security organizations: running identity programs, leading response, sitting in the CISO chair'. Crawford is not named individually.",
+      "source": "S7",
+      "url": "https://www.loomsecurity.io/about/index.html",
+      "source_label": "Company web page (guessed from the company name; check it is the same company)"
+    },
+    {
+      "fact": "A Charles Crawford is listed as an officer, alongside Wes Crawford, of Integrative Life Network, Inc. (Nashville, TN; Other Health Care). That company filed Form Ds on 2025-03-12 ($1.5M offered, $950K sold, 2 investors) and 2026-01-16 ($3.7M offered, $1.1M sold, 3 investors). This may be a different person.",
+      "source": "S3",
+      "url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0002060079",
+      "source_label": "Form D name match (same name and state, may still be a different person): Charles Crawford is an officer of Integrative Life Network, Inc."
+    },
+    {
+      "fact": "The shortlist record flags Charles Crawford as a repeat founder, but no prior company is confirmed.",
+      "source": "S1",
+      "url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0002038064",
+      "source_label": "Shortlist record"
+    }
+  ],
+  "founder_signals": [
+    {
+      "fact": "CINQUE launched in 2026 after evolving from internal tooling built during services engagements.",
+      "source": "S7",
+      "url": "https://www.loomsecurity.io/about/index.html",
+      "source_label": "Company web page (guessed from the company name; check it is the same company)"
+    },
+    {
+      "fact": "The company runs a Fusion Partner Program with a partner portal, a guide, collateral and deal registration, and describes its go-to-market as channel-first.",
+      "source": "S5",
+      "url": "https://www.loomsecurity.io/",
+      "source_label": "Company web page (guessed from the company name; check it is the same company)"
+    },
+    {
+      "fact": "The company publishes ungated industry datasheets mapped to specific regimes: NYDFS Part 500, DORA, CRI Profile and PCI DSS v4.x for financial services, and NYDFS Part 500 and NAIC #668 for insurance.",
+      "source": "S6",
+      "url": "https://www.loomsecurity.io/resources/index.html",
+      "source_label": "Company web page (guessed from the company name; check it is the same company)"
+    },
+    {
+      "fact": "The company raised $3,399,999 of a $4.6M round from 4 investors, with first sale on 2026-08-05.",
+      "source": "S4",
+      "url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0002038064",
+      "source_label": "Form D filings for Loom Security, Inc."
+    },
+    {
+      "fact": "The homepage demos an AI-agent scenario: 'close-agent' borrows a service-account token and moves a Q3 general ledger to a public link. The site labels this an illustrative scenario, not a customer case.",
+      "source": "S5",
+      "url": "https://www.loomsecurity.io/",
+      "source_label": "Company web page (guessed from the company name; check it is the same company)"
+    }
+  ],
+  "thesis_fit": [
+    {
+      "belief": "Compliance and auditability are the moat in regulated AI, not the model",
+      "verdict": "supports",
+      "evidence": "CINQUE is pitched as 'observed evidence for the examiner', with datasheets mapped to NYDFS Part 500, DORA, PCI DSS v4.x and NAIC #668. However, it is a security observability tool rather than AI-native workflow software for regulated operators.",
+      "source": "S6",
+      "url": "https://www.loomsecurity.io/resources/index.html"
+    },
+    {
+      "belief": "Founders from inside the industry beat generalists who discover it later",
+      "verdict": "unknown",
+      "evidence": "The team claims enterprise security and CISO backgrounds (S7), but nothing shows Crawford worked inside healthcare, insurance or financial services. A possible healthcare link via Integrative Life Network (S3) is an unconfirmed name match.",
+      "source": ""
+    },
+    {
+      "belief": "Open-source or public traction is the best early signal for technical founders",
+      "verdict": "unknown",
+      "evidence": "The evidence contains no GitHub repositories, named customers, usage metrics or community traction.",
+      "source": ""
+    },
+    {
+      "belief": "Small teams shipping weekly beat large early rounds",
+      "verdict": "neutral",
+      "evidence": "The $4.6M round is a fairly sizable seed. Team size and shipping cadence are not in the evidence.",
+      "source": "S4",
+      "url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0002038064"
+    }
+  ],
+  "fit_score": 2,
+  "strengths": [
+    "The product directly targets audit and examiner evidence in regulated verticals, with regime-specific datasheets (NYDFS Part 500, DORA, NAIC #668, PCI DSS v4.x) (S6).",
+    "The product grew out of repeated paid services work, which suggests real customer pull for the problem before it was productized (S7).",
+    "Behavioral baselines for AI agents and non-human identities are a timely angle on shadow AI governance (S5).",
+    "A shipped product, a partner program and $3.4M already committed show execution beyond the idea stage (S4, S5)."
+  ],
+  "risks": [
+    "The product is horizontal cybersecurity: regulated finance, insurance and healthcare are three of eight target verticals, alongside manufacturing, energy, oil & gas, rail and retail (S5, S8).",
+    "Founder identity is unclear. The Integrative Life Network match (S3) is in Nashville, TN, while Loom is in Lawrence, KS, so it may be a different Charles Crawford. The 'repeat founder' flag (S1) may rest on that unverified match.",
+    "If S3 is the same person, he may be splitting time with a separate active healthcare company that raised money as recently as 2026-01-16.",
+    "The website was guessed from the company name. The Lawrence, KS headquarters matches the Form D, but the link should still be confirmed.",
+    "There is no evidence of named or paying customers, revenue, or usage metrics, and the one customer story on the site is unnamed (S6).",
+    "A channel-first go-to-market and a services-company origin could mean a long sales cycle and services-heavy revenue (S7).",
+    "The $4.6M raise is fairly large for this fund's small-team belief, and no lead investor is identified (S1, S4).",
+    "Whether CINQUE is genuinely AI-native, rather than a correlation and analytics layer with an AI-agent use case, is unclear."
+  ],
+  "open_questions": [
+    "What is your title at Loom, and what did you do before founding it in 2024? Which earlier company is behind the 'repeat founder' flag?",
+    "Are you the Charles Crawford who is an officer of Integrative Life Network in Nashville with Wes Crawford, and if so, what is your involvement there today?",
+    "Who is the customer referenced on your resources page, what industry is it in, and what did CINQUE find for them?",
+    "How many paying CINQUE customers do you have, and how is revenue split between financial services, insurance and healthcare versus manufacturing, energy, rail and retail?",
+    "Has any examiner or auditor (for example under NYDFS Part 500 or DORA) actually accepted CINQUE output as evidence?",
+    "How much revenue still comes from the identity and security services engagements you started with in 2024, and do you plan to wind that down?",
+    "How many people are on the team, how often do you ship to customers, and what will the $4.6M round fund?",
+    "Who are the 4 investors in the current round, is there a lead, and how many Fusion partners have registered deals?",
+    "Where does AI sit in the product: in building behavioral baselines and findings, or mainly as a natural-language interface ('Ask CINQUE')?"
+  ],
+  "conversation_openers": [
+    "Your homepage scenario, where close-agent borrows the svc-erp-batch token and pushes the Q3 ledger to a public link, is one of the clearest framings of AI-agent risk we've seen. I'd love to hear which financial services teams are asking you that question for real.",
+    "I noticed your insurance datasheet maps CINQUE to NYDFS Part 500 and NAIC #668. We back software that a regulator and an auditor would both sign off on, and I'm curious how carriers are using the 'entitled versus observed' reconciliation in actual exams.",
+    "The story of rebuilding the posture picture by hand in every 2025 engagement before productizing it in 2026 is compelling. I'd like to understand what those engagements taught you about where regulated customers feel the most audit pain."
+  ],
+  "unknowns": [
+    "Charles Crawford's role, career history, education and prior companies.",
+    "Whether the Integrative Life Network officer (S3) is the same person.",
+    "Co-founders or other officers of Loom Security.",
+    "Named customers, revenue, contract sizes and the share coming from regulated industries.",
+    "Team size, engineering cadence and any open-source or public code.",
+    "Identities of the 4 investors and any round lead.",
+    "Whether the loomsecurity.io site is definitively the Form D company.",
+    "How much of the product relies on AI versus rules or correlation analytics."
+  ],
+  "confidence": "low",
+  "sources": [
+    {
+      "id": "S1",
+      "label": "Shortlist record",
+      "url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0002038064"
+    },
+    {
+      "id": "S2",
+      "label": "Earlier screening judgment (Claude)",
+      "url": ""
+    },
+    {
+      "id": "S3",
+      "label": "Form D name match (same name and state, may still be a different person): Charles Crawford is an officer of Integrative Life Network, Inc.",
+      "url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0002060079"
+    },
+    {
+      "id": "S4",
+      "label": "Form D filings for Loom Security, Inc.",
+      "url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0002038064"
+    },
+    {
+      "id": "S5",
+      "label": "Company web page (guessed from the company name; check it is the same company)",
+      "url": "https://www.loomsecurity.io/"
+    },
+    {
+      "id": "S6",
+      "label": "Company web page (guessed from the company name; check it is the same company)",
+      "url": "https://www.loomsecurity.io/resources/index.html"
+    },
+    {
+      "id": "S7",
+      "label": "Company web page (guessed from the company name; check it is the same company)",
+      "url": "https://www.loomsecurity.io/about/index.html"
+    },
+    {
+      "id": "S8",
+      "label": "Company web page (guessed from the company name; check it is the same company)",
+      "url": "https://www.loomsecurity.io/solutions/energy-utilities/index.html"
+    }
+  ],
+  "dropped_unsourced_facts": 0,
+  "provider": "nicrron:anthropic/claude-opus-5-5"
+}

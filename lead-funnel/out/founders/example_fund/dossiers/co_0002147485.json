@@ -1,0 +1,218 @@
+{
+  "lead_id": "co:0002147485",
+  "rank": 6,
+  "screening_score": 0.6372,
+  "generated": "2026-10-24",
+  "summary": "Anders Brown is CEO of i2 Health Advisors Inc., a Seattle company incorporated in 2026 that builds and operates AI-powered workflows for health plans (utilization management, claims, risk adjustment, HEDIS, appeals) on top of Salesforce, Snowflake, UiPath and Anthropic. It filed a Form D for a $3.5M round with $2,449,998 sold to 12 investors (first sale 2026-07-14). The team presents as payer-industry insiders, which fits the fund's thesis, but the company explicitly says it 'didn't build a proprietary platform' and sells advisory and integration services, not AI-native software. A meeting is worth it only if there is a path to productization, and the round may already be largely subscribed.",
+  "person": {
+    "name": "Anders Brown",
+    "role": "Chief Executive Officer, i2 Health Advisors Inc.",
+    "location": "Seattle, WA",
+    "links": [
+      "https://www.i2health.com/",
+      "https://www.i2health.com/about-us",
+      "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0002147485"
+    ]
+  },
+  "co_founders": [
+    "Brian Anderson: Chief Technology Officer (S7, S8); listed on the Form D (S1)",
+    "Pete Biagioni: Chief Growth Officer (S7, S8); listed as 'Peter Biagioni' on the Form D (S1)",
+    "Mike Penich: Chief Operating Officer (S7)",
+    "Stephanie Ngo: Vice President, Service Delivery (S7, S8)",
+    "Andrea Gregorka: Director, delivery organization (S8 only)"
+  ],
+  "company": {
+    "name": "i2 Health Advisors Inc.",
+    "what_they_build": "AI-enabled advisory, system integration and managed AI-powered workflows for health plans. They extend existing platforms (Salesforce, Snowflake, UiPath, Anthropic, core admin platforms such as Facets and QNXT) across utilization management, claims, risk adjustment, HEDIS, care management, appeals and grievances, payment integrity and enrollment. They also sell an AI Readiness Assessment. They explicitly do not sell a proprietary software platform (S5, S7).",
+    "customers": "Health plans / payers, as the target market (S5, S7). No named customers appear in the evidence.",
+    "stage": "seed (raising; first Form D, incorporated 2026)",
+    "raised": "Form D filed 2026-07-28: $3,500,000 offered, $2,449,998 sold, 12 investors, first sale 2026-07-14 (S1, S4). No named investors (S1).",
+    "website": "https://www.i2health.com/"
+  },
+  "background": [
+    {
+      "fact": "Anders Brown is Chief Executive Officer of i2 Health Advisors and its most senior executive, directing the payer-focused advisory, integration and AI-readiness services.",
+      "source": "S8",
+      "url": "akta.pro (https://www.i2health.com/)",
+      "source_label": "akta.pro management profile"
+    },
+    {
+      "fact": "The company says its leadership comes 'from the payer industry, not a generalist consulting bench' and knows Facets, QNXT, Snowflake and the CMS-0057-F deadline.",
+      "source": "S7",
+      "url": "https://www.i2health.com/about-us",
+      "source_label": "Company web page (from akta.pro company search)"
+    },
+    {
+      "fact": "i2 Health Advisors Inc. is a corporation incorporated in 2026, located in Seattle, WA, with industry tagged as Healthcare Payer Consulting & Integration Services.",
+      "source": "S1",
+      "url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0002147485",
+      "source_label": "Shortlist record"
+    },
+    {
+      "fact": "The Form D record flags co-founder Brian Anderson as a repeat founder.",
+      "source": "S1",
+      "url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0002147485",
+      "source_label": "Shortlist record"
+    },
+    {
+      "fact": "A Brian Anderson is the sole officer of Relief Nutraceuticals, LLC (Maitland, FL, incorporated 2025), which filed a $500,000 Form D with $0 sold. This is a name match only and may be a different person.",
+      "source": "S3",
+      "url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0002112923",
+      "source_label": "Form D name match (same name and state, may still be a different person): Brian Anderson is an officer of Relief Nutraceuticals, LLC"
+    }
+  ],
+  "founder_signals": [
+    {
+      "fact": "Raised $2,449,998 of a $3.5M round from 12 investors within about two weeks of first sale (first sale 2026-07-14, filing 2026-07-28).",
+      "source": "S4",
+      "url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0002147485",
+      "source_label": "Form D filings for i2 Health Advisors Inc."
+    },
+    {
+      "fact": "The company published six blog posts between Sep 1 and Oct 16, 2026, including 'Stop Asking What AI Can Do. Ask What It Should Never Touch, and What Doesn't Even Need It.' and several posts on the Epic Payer Platform.",
+      "source": "S6",
+      "url": "https://www.i2health.com/blog",
+      "source_label": "Company web page (from akta.pro company search)"
+    },
+    {
+      "fact": "The company reports outcome metrics such as prior authorization cycle times, manual touch rates and hours returned to clinical work.",
+      "source": "S7",
+      "url": "https://www.i2health.com/about-us",
+      "source_label": "Company web page (from akta.pro company search)"
+    },
+    {
+      "fact": "The leadership team spans CEO, CTO, CGO, COO and VP Service Delivery, plus at least one Director.",
+      "source": "S7",
+      "url": "https://www.i2health.com/about-us",
+      "source_label": "Company web page (from akta.pro company search)"
+    },
+    {
+      "fact": "Human-in-the-loop design is positioned as 'a design principle, not a disclaimer'. Systems route judgment to people.",
+      "source": "S7",
+      "url": "https://www.i2health.com/about-us",
+      "source_label": "Company web page (from akta.pro company search)"
+    },
+    {
+      "fact": "The company offers AI governance and data cleanup 'before you scale, not after' as part of AI Readiness services.",
+      "source": "S5",
+      "url": "https://www.i2health.com/",
+      "source_label": "Company web page (from akta.pro company search)"
+    }
+  ],
+  "thesis_fit": [
+    {
+      "belief": "Compliance and auditability are the moat in regulated AI, not the model",
+      "verdict": "neutral",
+      "evidence": "They emphasize governance, human-in-the-loop and regulatory deadlines, and an earlier screen notes RADV and appeals that 'hold up under audit'. But any moat lives in services know-how, not in a software product.",
+      "source": "S7",
+      "url": "https://www.i2health.com/about-us"
+    },
+    {
+      "belief": "Founders from inside the industry beat generalists who discover it later",
+      "verdict": "supports",
+      "evidence": "The team states it comes from the payer industry and has 'run what you're running', citing Facets, QNXT and CMS-0057-F. Individual career histories are not in the evidence.",
+      "source": "S7",
+      "url": "https://www.i2health.com/about-us"
+    },
+    {
+      "belief": "Open-source or public traction is the best early signal for technical founders",
+      "verdict": "unknown",
+      "evidence": "The evidence contains no GitHub, open-source or public product traction. The only public output is marketing blog content.",
+      "source": ""
+    },
+    {
+      "belief": "Small teams shipping weekly beat large early rounds",
+      "verdict": "neutral",
+      "evidence": "A $3.5M first round and a five-plus person leadership team for a services firm is neither tiny nor large. Blog cadence is roughly weekly, but there is no evidence of product shipping.",
+      "source": "S4",
+      "url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0002147485"
+    }
+  ],
+  "fit_score": 2,
+  "strengths": [
+    "Clear payer-industry domain focus: names Facets, QNXT, CMS-0057-F and specific workflows (prior auth, risk adjustment, HEDIS, appeals) (S5, S7).",
+    "Fast fundraising: about $2.45M of a $3.5M round committed by 12 investors within roughly two weeks of first sale (S4).",
+    "Human-in-the-loop and governance-first positioning maps well to auditor and regulator concerns (S5, S7).",
+    "A full C-suite (CEO, CTO, CGO, COO) is in place from day one (S7).",
+    "Consistent public thought leadership on the Epic Payer Platform and AI operational readiness (S6)."
+  ],
+  "risks": [
+    "Business model mismatch: they state 'We didn't build a proprietary platform and aren't trying to sell you a new software widget' and reject 'license revenue', which conflicts with an AI-native software thesis (S7).",
+    "Services and integration margins and scalability may not support venture returns (S2, S5).",
+    "The repeat-founder claim for Brian Anderson is unverified. The only matched entity is Relief Nutraceuticals, LLC in Maitland, FL (S3), while S3's header says 'same name and state' and i2 Health is in Seattle, WA (S1). This is likely a different person or a weak match, and the S1 flag may rest on it.",
+    "Name and roster inconsistencies: 'Peter Biagioni' (S1) vs 'Pete Biagioni' (S7). Mike Penich (COO) appears on the site (S7) but not in the akta.pro profiles (S8), while Andrea Gregorka appears only in S8.",
+    "The round is already about 70% sold ($2,449,998 of $3.5M), so allocation may be limited (S4).",
+    "The S2 references to RADV and 'hold up under audit' are not visible in the provided web text and should be verified.",
+    "No public technical artifacts (GitHub, papers, products) to assess engineering depth (S2)."
+  ],
+  "open_questions": [
+    "You say you 'didn't build a proprietary platform.' Is there any plan to turn repeated workflows (e.g., prior auth under CMS-0057-F, risk adjustment) into licensable software? On what timeline?",
+    "Which health plans are live today, and what prior authorization cycle-time and manual-touch-rate improvements have you measured?",
+    "Anders, what roles did you and Brian Anderson hold inside payer organizations before i2 Health, and on which core admin platforms (Facets, QNXT)?",
+    "Is Brian Anderson the same person as the officer of Relief Nutraceuticals, LLC in Maitland, FL? What did he found previously?",
+    "How is revenue split between advisory, system integration and ongoing managed AI workflows, and what are gross margins on each?",
+    "How do you produce audit trails for AI-assisted decisions in appeals and risk adjustment, and is that tooling reusable IP?",
+    "Who are the 12 investors in the $3.5M round, and how much allocation remains?",
+    "How does the Epic Payer Platform shift your strategy, given how much you have written about it?"
+  ],
+  "conversation_openers": [
+    "Your post 'Stop Asking What AI Can Do. Ask What It Should Never Touch' matches how we think about regulated AI. I'd love to hear where you draw that line in utilization management and appeals.",
+    "Your about page says health plans have 'an integration shortage, not a technology shortage.' We back AI-native software in payer ops and are curious whether repeated integrations across Facets and QNXT clients are starting to look like a product.",
+    "With the CMS-0057-F prior authorization deadline approaching, I'd like to hear what you're seeing on prior auth cycle times at the plans you work with, and how you keep human-in-the-loop decisions auditable."
+  ],
+  "unknowns": [
+    "Anders Brown's prior career, education and specific payer-industry experience.",
+    "Named customers, revenue, contract sizes and number of active engagements.",
+    "Whether any proprietary software or reusable IP exists or is planned.",
+    "Identities of the 12 investors and whether any institutional fund is involved.",
+    "Whether Brian Anderson is genuinely a repeat founder, and of what.",
+    "Total headcount and engineering team size.",
+    "Where audit trails and data controls sit (in i2 tooling vs client platforms).",
+    "Exact founding team composition (who are founders vs hired executives)."
+  ],
+  "confidence": "medium",
+  "sources": [
+    {
+      "id": "S1",
+      "label": "Shortlist record",
+      "url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0002147485"
+    },
+    {
+      "id": "S2",
+      "label": "Earlier screening judgment (Claude)",
+      "url": ""
+    },
+    {
+      "id": "S3",
+      "label": "Form D name match (same name and state, may still be a different person): Brian Anderson is an officer of Relief Nutraceuticals, LLC",
+      "url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0002112923"
+    },
+    {
+      "id": "S4",
+      "label": "Form D filings for i2 Health Advisors Inc.",
+      "url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0002147485"
+    },
+    {
+      "id": "S5",
+      "label": "Company web page (from akta.pro company search)",
+      "url": "https://www.i2health.com/"
+    },
+    {
+      "id": "S6",
+      "label": "Company web page (from akta.pro company search)",
+      "url": "https://www.i2health.com/blog"
+    },
+    {
+      "id": "S7",
+      "label": "Company web page (from akta.pro company search)",
+      "url": "https://www.i2health.com/about-us"
+    },
+    {
+      "id": "S8",
+      "label": "akta.pro management profile",
+      "url": "akta.pro (https://www.i2health.com/)"
+    }
+  ],
+  "dropped_unsourced_facts": 0,
+  "provider": "nicrron:anthropic/claude-opus-5-5"
+}

@@ -1,0 +1,16 @@
+rank,lead_id,person,company,kind,source,stage,location,website,contact,score,stage_fit,recency,geo,relevance,traction,founder,text_sim,warm,claude
+1,co:0002130106,Jason Griffith,Undeniable Health AI Inc.,startup,Form D,raising,"White Plains, NY",https://www.undeniablehealth.ai/,,0.714,1.0,0.8,1.0,0.3,0.866,0.45,0.975,0.0,0.75
+2,co:0002038064,Charles Crawford,"Loom Security, Inc.",startup,Form D,raising,"Lawrence, KS",https://www.loomsecurity.io/,,0.6668,1.0,1.0,0.4,0.3,0.684,1.0,0.995,0.0,0.5
+3,co:0001962104,Andrew Howard,Lockchain Corp.,startup,Form D,raising,"Athens, GA",https://lockchain.ai,,0.6632,1.0,1.0,0.4,0.3,0.743,0.75,0.925,0.0,0.575
+4,co:0002140890,Benjamin Finch,"WithAI Research, Inc.",startup,Form D,raising,"New York, NY",https://www.multiplier.ai/,,0.6544,1.0,0.8,1.0,0.3,1.0,0.45,0.734,0.0,0.575
+5,co:0001997962,Craig Parker,"Navidence, Inc.",startup,Form D,raising,"Aurora, CO",https://navidence.com,,0.6507,1.0,0.6,0.4,0.3,0.878,1.0,0.794,0.0,0.575
+6,co:0002147485,Anders Brown,i2 Health Advisors Inc.,startup,Form D,raising,"Seattle, WA",https://www.i2health.com/,,0.6372,1.0,1.0,0.4,0.3,0.852,1.0,0.95,0.0,0.325
+7,co:0002129999,Matthew Broccolo,"ShredPay, Inc.",startup,Form D,raising,"San Francisco, CA",https://www.shredpay.com/,,0.6302,1.0,0.8,1.0,0.3,0.968,0.45,0.93,0.0,0.4
+8,co:0002134925,Richard Saffir,"Kavia AI, Inc.",startup,Form D,raising,"San Francisco, CA",https://www.kavia.ai/,,0.6297,1.0,1.0,1.0,0.3,0.806,0.45,0.955,0.0,0.4
+9,co:0002152778,Anton Shumskikh,Neo Agent Inc.,startup,Form D,raising,"London, X0",https://www.neoagent.io/,,0.608,1.0,1.0,0.4,0.3,0.866,0.75,0.879,0.0,0.325
+10,co:0002152940,Peymon Ghazi,"Malcova, Inc",startup,Form D,raising,"Newark, CA",https://www.malcova.com,,0.6043,1.0,1.0,1.0,0.3,0.852,0.45,0.714,0.0,0.4
+11,co:0002072119,Herbert Barrack,"Limber Prosthetics, Inc.",startup,Form D,raising,"San Diego, CA",https://limberprosthetics.com,,0.5857,0.95,1.0,1.0,0.3,1.0,0.45,0.457,0.0,0.4
+12,co:0002133227,Karim Pourak,"ProcessMiner, Inc.",startup,Form D,raising,"Atlanta, CA",https://processminer.com,,0.5761,1.0,0.8,1.0,0.3,0.522,1.0,0.945,0.0,0.225
+13,co:0002027716,Adolfo Velazquez,ROSE DIAGNOSTICS INC.,startup,Form D,raising,"Carlsbad, CA",https://www.rose-dx.com/,,0.5739,1.0,1.0,1.0,0.3,0.919,0.45,0.764,0.0,0.225
+14,co:0002153764,Derek Harn,"COUNT Financial, Inc.",startup,Form D,raising,"Lake Stevens, WA",https://www.count.au/,,0.5738,1.0,1.0,0.4,0.3,0.823,1.0,0.643,0.0,0.25
+15,co:0001955339,Shara Cohen,"Carallel, Inc.",startup,Form D,raising,"Chicago, IL",https://carallel.com,,0.571,1.0,1.0,0.4,0.3,0.823,0.75,0.638,0.0,0.325

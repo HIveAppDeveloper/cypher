@@ -1,0 +1,200 @@
+{
+  "lead_id": "co:0002134925",
+  "rank": 8,
+  "screening_score": 0.6297,
+  "generated": "2026-10-24",
+  "summary": "Richard Saffir is Co-Founder and Chief Legal Officer of Kavia AI, Inc., a San Francisco company founded and led by CEO Labeeb Ismail that builds an enterprise software-engineering platform for complex codebases (S1, S5). Saffir is a business attorney with 37 years of experience in M&A, tax strategy and technology licensing, not a technical builder (S5, S6). Kavia sells horizontal developer tooling, mostly through IT and engineering-services partners such as Tata Elxsi, with no evidence of a healthcare, insurance or financial-services focus, so it looks off-thesis despite a strong senior team.",
+  "person": {
+    "name": "Richard Saffir",
+    "role": "Co-Founder and Chief Legal Officer (S5); listed as Chief Legal Officer in S6",
+    "location": "San Francisco Bay Area (S5, S6); company in San Francisco, CA (S1)",
+    "links": [
+      "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0002134925",
+      "https://www.kavia.ai/about",
+      "https://www.kavia.ai/"
+    ]
+  },
+  "co_founders": [
+    "Labeeb Ismail: Founder and CEO (S5, S6)",
+    "Anita Ganti: Co-Founder and COO (S5, S6)"
+  ],
+  "company": {
+    "name": "Kavia AI, Inc. (KAVIA AI)",
+    "what_they_build": "An enterprise software-engineering platform for complex codebases. It covers code understanding, workflow automation, artifact generation, reviewable code and validation across repositories and environments. Listed use cases are onboarding onto a new codebase, mapping cross-repo dependencies, analyzing upgrade impact and generating unit tests. It ships with a VS Code extension and a free tier of 50,000 credits (S4, S5).",
+    "customers": "Enterprises, per the site's positioning. Named partners and endorsers are IT and engineering-services firms: Tata Elxsi, GCS Tech Talent, DigitalT3, Gadgeon Systems (industrial IoT and connected devices) and ioet (S4). No named end customers in healthcare, insurance or financial services.",
+    "stage": "unknown",
+    "raised": "Form D filed 2026-05-27: $2,500,000 offered, $2,000,000 sold, 9 investors. Form D filed 2026-09-28: $3,050,003 offered and sold, 10 investors. Both list a first sale of 2026-05-13, which suggests an amended or upsized single round (S3). Incorporated 2025 (S1). Tata Elxsi made an investment through its STEP.UP program (S4).",
+    "website": "https://www.kavia.ai/"
+  },
+  "background": [
+    {
+      "fact": "Veteran business attorney with 37 years of experience advising closely held companies on M&A, tax strategy and technology licensing.",
+      "source": "S5",
+      "url": "https://www.kavia.ai/about",
+      "source_label": "Company web page (from akta.pro company search)"
+    },
+    {
+      "fact": "Based in the San Francisco Bay Area.",
+      "source": "S6",
+      "url": "akta.pro (https://www.kavia.ai/)",
+      "source_label": "akta.pro management profile"
+    },
+    {
+      "fact": "Named as Co-Founder and Chief Legal Officer of KAVIA AI on the company's About page.",
+      "source": "S5",
+      "url": "https://www.kavia.ai/about",
+      "source_label": "Company web page (from akta.pro company search)"
+    },
+    {
+      "fact": "Listed as the shortlist person and as a related person on Kavia AI, Inc.'s SEC Form D record, alongside Labeeb Ismail.",
+      "source": "S1",
+      "url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0002134925",
+      "source_label": "Shortlist record"
+    }
+  ],
+  "founder_signals": [
+    {
+      "fact": "Kavia AI sold $3,050,003 to 10 investors per the 2026-09-28 Form D filing, up from $2,000,000 sold to 9 investors in the 2026-05-27 filing.",
+      "source": "S3",
+      "url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0002134925",
+      "source_label": "Form D filings for Kavia AI, Inc."
+    },
+    {
+      "fact": "Tata Elxsi's CEO Manoj Raghavan describes an investment in KAVIA AI through STEP.UP, Tata Elxsi's startup engagement program for deep tech companies.",
+      "source": "S4",
+      "url": "https://www.kavia.ai/",
+      "source_label": "Company web page (from akta.pro company search)"
+    },
+    {
+      "fact": "DigitalT3's CEO says KAVIA lets them automate the entire SDLC (planning, architecture, code generation, testing, deployment) for their clients.",
+      "source": "S4",
+      "url": "https://www.kavia.ai/",
+      "source_label": "Company web page (from akta.pro company search)"
+    },
+    {
+      "fact": "Gadgeon Systems' CEO says KAVIA generates architecture documentation, code insights and design validation for hardware/firmware/cloud systems in industrial IoT.",
+      "source": "S4",
+      "url": "https://www.kavia.ai/",
+      "source_label": "Company web page (from akta.pro company search)"
+    },
+    {
+      "fact": "CEO Labeeb Ismail was an SVP at Comcast/Sky, led 2,000+ engineers, co-created the RDK video stack deployed on 150M+ devices, and holds 30+ software and AI patents.",
+      "source": "S5",
+      "url": "https://www.kavia.ai/about",
+      "source_label": "Company web page (from akta.pro company search)"
+    },
+    {
+      "fact": "COO Anita Ganti was SVP of Product Engineering Services at Wipro (2015-2019, $600M+ annual revenue). She sits on the Power Integrations board and audit committee and has chaired its Cybersecurity Committee since 2025.",
+      "source": "S5",
+      "url": "https://www.kavia.ai/about",
+      "source_label": "Company web page (from akta.pro company search)"
+    },
+    {
+      "fact": "The product is publicly available with self-serve sign-up, a VS Code extension and 50,000 free credits.",
+      "source": "S4",
+      "url": "https://www.kavia.ai/",
+      "source_label": "Company web page (from akta.pro company search)"
+    }
+  ],
+  "thesis_fit": [
+    {
+      "belief": "Compliance and auditability are the moat in regulated AI, not the model",
+      "verdict": "neutral",
+      "evidence": "The site stresses 'reviewable code' and validation, and the COO has audit-committee and cybersecurity-committee experience. Nothing ties this to regulated-industry compliance. The audit logs, SOC 2 and self-hosting cited in the earlier screen do not appear in the provided web excerpts.",
+      "source": "S4",
+      "url": "https://www.kavia.ai/"
+    },
+    {
+      "belief": "Founders from inside the industry beat generalists who discover it later",
+      "verdict": "contradicts",
+      "evidence": "The founders come from telecom/media engineering (Comcast/Sky), engineering services and semiconductors (Wipro, Flex, TI), and general business law. None come from healthcare, insurance or financial services.",
+      "source": "S5",
+      "url": "https://www.kavia.ai/about"
+    },
+    {
+      "belief": "Open-source or public traction is the best early signal for technical founders",
+      "verdict": "unknown",
+      "evidence": "No GitHub, Hacker News or open-source evidence was provided. Saffir himself is a non-technical legal officer.",
+      "source": ""
+    },
+    {
+      "belief": "Small teams shipping weekly beat large early rounds",
+      "verdict": "neutral",
+      "evidence": "The round is moderate (about $3.05M sold), but the team is senior and executive-heavy: 7 management profiles, including a CLO and COO. There is no evidence of shipping cadence.",
+      "source": "S6",
+      "url": "akta.pro (https://www.kavia.ai/)"
+    }
+  ],
+  "fit_score": 1,
+  "strengths": [
+    "Highly experienced leadership: the CEO led 2,000+ engineers and co-created the RDK stack on 150M+ devices (S5).",
+    "Strategic investment and partnership from Tata Elxsi, plus several services-firm partners endorsing the platform (S4).",
+    "Round grew from $2.0M to about $3.05M sold within months, per the Form D filings (S3).",
+    "Governance depth: the COO chairs public-company board committees, and the CLO has 37 years in tech licensing and M&A (S5)."
+  ],
+  "risks": [
+    "Off-thesis: horizontal enterprise dev tooling with no stated healthcare, insurance or financial-services focus (S4, S5).",
+    "The dossier subject, Richard Saffir, is the Chief Legal Officer, not the technical lead. The fund's relationship would really run through CEO Labeeb Ismail (S5).",
+    "Funding records disagree. S1's headline says a $2.5M round with 9 investors filed 2026-09-28, but S3 attributes those figures to the 2026-05-27 filing and shows $3,050,003 sold to 10 investors on 2026-09-28.",
+    "The S2 screening note asserts audit logs, SOC 2, self-hosting and a marketing head. None of these are verified in the provided primary excerpts.",
+    "Named 'customers' are mostly IT and engineering-services partners (Tata Elxsi, DigitalT3, ioet, Gadgeon, GCS). End-customer adoption and revenue are unclear (S4).",
+    "S5 and S6 are truncated, so the full team list and Saffir's full bio are not visible.",
+    "S6 (akta.pro) cites kavia.ai/about as its source and its names match S5, so the website likely belongs to the same Kavia AI, Inc. in the SEC filing. That link is inferred from matching names, not confirmed by the filing itself."
+  ],
+  "open_questions": [
+    "The 2026-05-27 Form D shows $2.0M of $2.5M sold and the 2026-09-28 filing shows $3,050,003 fully sold. Is that one upsized round? Who led it, and what was Tata Elxsi's share via STEP.UP?",
+    "Do any of Kavia's deployments through partners like DigitalT3 or Tata Elxsi serve banks, insurers or healthcare clients? What compliance requirements (audit trails, data residency) did those clients impose?",
+    "As CLO, how is Kavia structuring technology licensing and IP indemnity for AI-generated code delivered to enterprise clients?",
+    "How many of the 7 listed leaders are full-time, and how many engineers ship the product? What is the release cadence?",
+    "How much of revenue comes through services partners versus direct enterprise contracts? Can you name an end customer?",
+    "Is there a self-hosted or SOC 2-certified offering today, and is any regulated-industry vertical on the roadmap?"
+  ],
+  "conversation_openers": [
+    "Rich, with 37 years in technology licensing, you're in an unusual seat at an AI code-generation company. I'd love to hear how Kavia handles IP and licensing for code its platform writes for enterprise clients.",
+    "Congratulations on closing the round. The September Form D shows about $3.05M sold to 10 investors, up from the May filing. I'm curious how the Tata Elxsi STEP.UP investment shaped the partner-led go-to-market.",
+    "Partners like Gadgeon describe Kavia generating architecture documentation and design validation in minutes. Have any clients in banking, insurance or healthcare used that for audit or compliance documentation?"
+  ],
+  "unknowns": [
+    "Saffir's full bio (S5 and S6 are truncated): prior firms, education, whether he is full-time.",
+    "Revenue, paying customer count and end customers beyond services partners.",
+    "Round lead investors and valuation. The only named investor is Tata Elxsi.",
+    "Any GitHub, open-source or Hacker News activity.",
+    "Headcount and shipping cadence.",
+    "Whether Kavia has any regulated-industry customers or compliance certifications (SOC 2 is claimed only in the S2 screen)."
+  ],
+  "confidence": "medium",
+  "sources": [
+    {
+      "id": "S1",
+      "label": "Shortlist record",
+      "url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0002134925"
+    },
+    {
+      "id": "S2",
+      "label": "Earlier screening judgment (Claude)",
+      "url": ""
+    },
+    {
+      "id": "S3",
+      "label": "Form D filings for Kavia AI, Inc.",
+      "url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0002134925"
+    },
+    {
+      "id": "S4",
+      "label": "Company web page (from akta.pro company search)",
+      "url": "https://www.kavia.ai/"
+    },
+    {
+      "id": "S5",
+      "label": "Company web page (from akta.pro company search)",
+      "url": "https://www.kavia.ai/about"
+    },
+    {
+      "id": "S6",
+      "label": "akta.pro management profile",
+      "url": "akta.pro (https://www.kavia.ai/)"
+    }
+  ],
+  "dropped_unsourced_facts": 0,
+  "provider": "nicrron:anthropic/claude-opus-5-5"
+}

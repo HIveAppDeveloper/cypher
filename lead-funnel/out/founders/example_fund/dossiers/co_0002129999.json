@@ -1,0 +1,198 @@
+{
+  "lead_id": "co:0002129999",
+  "rank": 7,
+  "screening_score": 0.6302,
+  "generated": "2026-10-24",
+  "summary": "Matthew Broccolo is listed among the people on the Form D filings for ShredPay, Inc., a San Francisco company incorporated in 2025. His role is not stated, and he does not appear on the company's About page. ShredPay (per a website guessed from the company name) builds a non-custodial stablecoin and crypto app plus embedded onchain infrastructure for institutions, with KYC/AML and audit trails, and has reported $1.805M sold of a $2.5M offering. Compliance is clearly central and the named co-founders are financial-services insiders, but there is no visible AI component and Broccolo's own background is undocumented, so fit with an AI-native regulated-software thesis is weak.",
+  "person": {
+    "name": "Matthew Broccolo",
+    "role": "unknown; listed as a related person on ShredPay's Form D (S1) but not named on the company About page (S5)",
+    "location": "unknown (company located in San Francisco, CA per S1)",
+    "links": [
+      "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0002129999"
+    ]
+  },
+  "co_founders": [
+    "Melissa Muehlfeld (Co-Founder, CEO, per S5)",
+    "Mauricio Beugelmans (Co-Founder, President, per S5)",
+    "Peter Chang (Co-Founder, CTO & Head of Product, per S5)",
+    "Katelin Foss (listed on Form D, role unknown, per S1)"
+  ],
+  "company": {
+    "name": "ShredPay, Inc.",
+    "what_they_build": "Non-custodial stablecoin and crypto app for individuals plus embedded onchain infrastructure for institutions. Features cover USD-to-USDC on/off ramp via Bridge (Stripe), risk-rated DeFi yield vaults with a proprietary rating system, DEX-aggregated swaps, 2-of-2 co-signature wallets, USDC payments, and BSA compliance (KYC/AML, transaction monitoring, sanctions screening, audit trails). The product description comes from a guessed website, S4.",
+    "customers": "Individuals and institutions per the website (S4); no named customers or usage numbers",
+    "stage": "seed",
+    "raised": "Form D filed 2026-06-08: $2.5M offered, $1.805M sold, 29 investors, first sale 2025-09-10. Earlier Form D filed 2026-04-16: $1.535M offered, $1.355M sold, 24 investors (S3).",
+    "website": "https://www.shredpay.com/ (guessed from company name; unconfirmed)"
+  },
+  "background": [
+    {
+      "fact": "Matthew Broccolo is listed first among the people on ShredPay, Inc.'s SEC Form D record.",
+      "source": "S1",
+      "url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0002129999",
+      "source_label": "Shortlist record"
+    },
+    {
+      "fact": "ShredPay, Inc. is a corporation incorporated in 2025, located in San Francisco, CA, with industry listed as 'Other Technology'.",
+      "source": "S1",
+      "url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0002129999",
+      "source_label": "Shortlist record"
+    },
+    {
+      "fact": "The S1 record lists no repeat founders and no named backers.",
+      "source": "S1",
+      "url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0002129999",
+      "source_label": "Shortlist record"
+    },
+    {
+      "fact": "Co-founder and CEO Melissa Muehlfeld was Global General Counsel and Head of Licensing at OKX, an Executive Director at Morgan Stanley, and worked at Wilson Sonsini and Sidley.",
+      "source": "S5",
+      "url": "https://www.shredpay.com/about",
+      "source_label": "Company web page (guessed from the company name; check it is the same company)"
+    },
+    {
+      "fact": "Co-founder and President Mauricio Beugelmans was Chief Legal Officer and Head of Legal and Compliance at OKX and an in-house attorney at Charles Schwab and Morgan Stanley.",
+      "source": "S5",
+      "url": "https://www.shredpay.com/about",
+      "source_label": "Company web page (guessed from the company name; check it is the same company)"
+    },
+    {
+      "fact": "Co-founder and CTO Peter Chang was VP of Product at OKX and held product leadership roles at Lime, Square, Facebook and Microsoft.",
+      "source": "S5",
+      "url": "https://www.shredpay.com/about",
+      "source_label": "Company web page (guessed from the company name; check it is the same company)"
+    }
+  ],
+  "founder_signals": [
+    {
+      "fact": "ShredPay raised its Form D offering from $1.535M (filed 2026-04-16) to $2.5M (filed 2026-06-08), with sales growing from $1.355M to $1.805M and investors from 24 to 29.",
+      "source": "S3",
+      "url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0002129999",
+      "source_label": "Form D filings for ShredPay, Inc."
+    },
+    {
+      "fact": "The website advertises a live app ('Download App') and institutional embedded infrastructure, including a Developers section.",
+      "source": "S4",
+      "url": "https://www.shredpay.com/",
+      "source_label": "Company web page (guessed from the company name; check it is the same company)"
+    },
+    {
+      "fact": "The website states BSA compliance with KYC/AML at onboarding, real-time transaction monitoring, sanctions screening and full audit trails.",
+      "source": "S4",
+      "url": "https://www.shredpay.com/",
+      "source_label": "Company web page (guessed from the company name; check it is the same company)"
+    },
+    {
+      "fact": "US money transmission is provided by Bridge Building Inc (NMLS #2450917), not by ShredPay itself.",
+      "source": "S4",
+      "url": "https://www.shredpay.com/",
+      "source_label": "Company web page (guessed from the company name; check it is the same company)"
+    }
+  ],
+  "thesis_fit": [
+    {
+      "belief": "Compliance and auditability are the moat in regulated AI, not the model",
+      "verdict": "neutral",
+      "evidence": "ShredPay puts compliance, risk ratings and audit trails at the center of its pitch. However, there is no AI or model component, and licensed money transmission is outsourced to Bridge.",
+      "source": "S4",
+      "url": "https://www.shredpay.com/"
+    },
+    {
+      "belief": "Founders from inside the industry beat generalists who discover it later",
+      "verdict": "supports",
+      "evidence": "The named co-founders led legal, compliance and product at OKX, with Morgan Stanley, Schwab and Square backgrounds. Matthew Broccolo's own background is unknown.",
+      "source": "S5",
+      "url": "https://www.shredpay.com/about"
+    },
+    {
+      "belief": "Open-source or public traction is the best early signal for technical founders",
+      "verdict": "unknown",
+      "evidence": "No GitHub, open-source, app download or usage metrics appear in the evidence.",
+      "source": ""
+    },
+    {
+      "belief": "Small teams shipping weekly beat large early rounds",
+      "verdict": "unknown",
+      "evidence": "The round is modest at $1.805M sold across 29 investors, but team size and shipping cadence are not documented.",
+      "source": "S3",
+      "url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0002129999"
+    }
+  ],
+  "fit_score": 2,
+  "strengths": [
+    "Founding team has senior legal, compliance and licensing experience at OKX, Morgan Stanley and Schwab, which suits a regulated product (S5).",
+    "Compliance is built in from the start: KYC/AML, transaction monitoring, sanctions screening and audit trails (S4).",
+    "Momentum in fundraising: the offering was upsized from $1.535M to $2.5M, with $1.805M sold across 29 investors (S3).",
+    "Serves both consumer and institutional markets via embedded infrastructure (S4)."
+  ],
+  "risks": [
+    "No evidence of AI or LLM use; ShredPay is crypto/DeFi infrastructure, outside the fund's AI-native core.",
+    "Matthew Broccolo is on the Form D but not on the website's founder list. His role and background are unknown, and he may be an investor, director or officer rather than an operating founder.",
+    "The website was guessed from the company name. Three co-founders named there (Muehlfeld, Beugelmans, Chang) also appear on the Form D list in S1, which suggests but does not prove it is the same company.",
+    "Source discrepancy: S1's headline describes a '$1.5M round, 24 investors, filed 2026-06-08', but S3 attributes those numbers to the 2026-04-16 filing and shows $2.5M offered, $1.805M sold and 29 investors on 2026-06-08.",
+    "Core money transmission is outsourced to Bridge (Stripe), so a key compliance rail is not proprietary (S4).",
+    "DeFi yield and crypto carry regulatory, liquidity and volatility risk; the site's disclaimers list fraud, hack and regulatory risks (S4).",
+    "Two of three named co-founders are attorneys and the CTO's listed experience is product leadership; hands-on engineering depth is unverified (S5).",
+    "The management data provider returned no profile (S6)."
+  ],
+  "open_questions": [
+    "Matthew, what is your role at ShredPay? You appear on the Form D but not on the About page. Are you an officer, director or investor?",
+    "What drove upsizing the Form D from $1.535M to $2.5M between April and June 2026, and who leads the round?",
+    "How does the proprietary DeFi risk-rating system work? Is any of it model-driven or ML-based, or is it a manual or rules-based methodology?",
+    "How much of the BSA stack (KYC/AML, transaction monitoring, sanctions screening) is built in-house versus provided by Bridge or other vendors?",
+    "Who builds the product? What is the engineering team size and release cadence, given the CTO's product-leadership background?",
+    "How many institutional customers use the embedded infrastructure today, and what are app users, AUM in yield vaults and USDC payment volume?",
+    "Is there any plan to apply AI to compliance workflows, such as transaction monitoring, risk ratings or audit reporting?"
+  ],
+  "conversation_openers": [
+    "We noticed ShredPay's proprietary risk ratings for DeFi vaults ('see the risk before you invest'). We'd love to understand the methodology and whether it could extend into automated compliance tooling for institutions.",
+    "Your team brings OKX's former legal, compliance and product leadership into a product with KYC/AML and full audit trails built in. We back founders building auditable software for regulated finance and would like to hear how you think about compliance as a moat.",
+    "Congrats on growing the round to $1.805M across 29 investors. We'd like to learn how the embedded onchain infrastructure for institutions is landing with early customers."
+  ],
+  "unknowns": [
+    "Matthew Broccolo's role, background, education and location",
+    "Katelin Foss's role",
+    "Whether shredpay.com is definitively the same ShredPay, Inc. on the Form D",
+    "Any AI or ML component in the product",
+    "Customer names, user counts, AUM, payment volume or revenue",
+    "Team size, engineering capacity and shipping cadence",
+    "Lead investor and round terms",
+    "Any GitHub or open-source activity"
+  ],
+  "confidence": "low",
+  "sources": [
+    {
+      "id": "S1",
+      "label": "Shortlist record",
+      "url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0002129999"
+    },
+    {
+      "id": "S2",
+      "label": "Earlier screening judgment (Claude)",
+      "url": ""
+    },
+    {
+      "id": "S3",
+      "label": "Form D filings for ShredPay, Inc.",
+      "url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0002129999"
+    },
+    {
+      "id": "S4",
+      "label": "Company web page (guessed from the company name; check it is the same company)",
+      "url": "https://www.shredpay.com/"
+    },
+    {
+      "id": "S5",
+      "label": "Company web page (guessed from the company name; check it is the same company)",
+      "url": "https://www.shredpay.com/about"
+    },
+    {
+      "id": "S6",
+      "label": "akta.pro management profile (not available)",
+      "url": ""
+    }
+  ],
+  "dropped_unsourced_facts": 0,
+  "provider": "nicrron:anthropic/claude-opus-5-5"
+}

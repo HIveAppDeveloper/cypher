@@ -1,0 +1,229 @@
+{
+  "lead_id": "co:0001997962",
+  "rank": 5,
+  "screening_score": 0.6507,
+  "generated": "2026-10-24",
+  "summary": "Craig Parker is CTO and co-founder of Navidence, Inc. (Aurora, CO), a seed-stage company that builds a platform and expert-curated library of Computable Operational Definitions (CODefs: code lists and phenotype algorithms). Life-sciences research teams use it to design real-world evidence studies and assess data fitness against FDA and ICH expectations. Navidence fits the fund's compliance and industry-insider beliefs well, since Parker brings 20+ years of medical informatics at Parexel, Intermountain and GE Healthcare and is an HL7 Fellow, but the AI-native angle is thin, there is no public or open-source technical signal, and a $4.5M round is already about two-thirds sold.",
+  "person": {
+    "name": "Craig Parker",
+    "role": "Chief Technology Officer (CTO) & Co-founder, Navidence, Inc.",
+    "location": "Aurora, CO (company location per Form D shortlist record)",
+    "links": [
+      "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0001997962",
+      "https://navidence.com",
+      "https://navidence.com/team"
+    ]
+  },
+  "co_founders": [
+    "Aaron Kamauu: CEO & Co-founder (S6, S9); named on the Form D shortlist record (S1)",
+    "Matt Veatch: COO & Co-founder (S9; COO per S6)",
+    "Michael Buck: Chief Solutions Officer, appointed 2026-03-10 (S6, S7)",
+    "Andrew Ecob: Chief Commercial Officer, appointed 2026-01-21 (S6, S7)"
+  ],
+  "company": {
+    "name": "Navidence, Inc.",
+    "what_they_build": "The Navidence Platform and a library of expert-curated Computable Operational Definitions (CODefs), meaning code lists and phenotype algorithms contextualized with scientific literature and algorithm validation metrics. Research teams use it to search, compare and export definitions, build study designs and run fit-for-purpose real-world data assessment. Navidence launched the product 'Navigate: Code Lists' in May 2026.",
+    "customers": "Life-sciences / real-world evidence research teams (S5, S8). No named paying customers appear in the evidence. Named partners are Datavant (licensing CODef libraries), Komodo Health, Panalgo, RTI International, Trio Health and Nested Knowledge (S7).",
+    "stage": "seed",
+    "raised": "Form D filed 2025-12-29: $4,517,500 offered, $3,017,500 sold, 14 investors, first sale 2025-12-15 (S4). Seed funding from Nina Capital and Grand Ventures announced 2026-01-27 (S7).",
+    "website": "https://navidence.com"
+  },
+  "background": [
+    {
+      "fact": "Craig Parker has 20+ years as a leader in medical informatics.",
+      "source": "S6",
+      "url": "https://navidence.com/team",
+      "source_label": "Company web page (guessed from the company name; check it is the same company)"
+    },
+    {
+      "fact": "Parker was formerly VP Scientific Data Technology at Parexel.",
+      "source": "S6",
+      "url": "https://navidence.com/team",
+      "source_label": "Company web page (guessed from the company name; check it is the same company)"
+    },
+    {
+      "fact": "Parker was formerly Sr Medical Informaticist at Intermountain Healthcare and at GE Healthcare.",
+      "source": "S6",
+      "url": "https://navidence.com/team",
+      "source_label": "Company web page (guessed from the company name; check it is the same company)"
+    },
+    {
+      "fact": "Parker is MnM & CDS Co-chair and a Fellow of HL7.",
+      "source": "S6",
+      "url": "https://navidence.com/team",
+      "source_label": "Company web page (guessed from the company name; check it is the same company)"
+    },
+    {
+      "fact": "Co-founder and CEO Aaron Kamauu was Head of Healthcare Data Strategy at Roche/Genentech, Founder & CEO of Anolinx, and VP Real-World Data Services at Parexel.",
+      "source": "S6",
+      "url": "https://navidence.com/team",
+      "source_label": "Company web page (guessed from the company name; check it is the same company)"
+    },
+    {
+      "fact": "Navidence was incorporated in 2022 as a corporation.",
+      "source": "S1",
+      "url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0001997962",
+      "source_label": "Shortlist record"
+    }
+  ],
+  "founder_signals": [
+    {
+      "fact": "Navidence launched 'Navigate: Code Lists' on 2026-05-11.",
+      "source": "S7",
+      "url": "https://navidence.com/newsroom",
+      "source_label": "Company web page (guessed from the company name; check it is the same company)"
+    },
+    {
+      "fact": "Navidence signed a partnership with Datavant to license Computable Operational Definition libraries for in-study design (2026-03-04).",
+      "source": "S7",
+      "url": "https://navidence.com/newsroom",
+      "source_label": "Company web page (guessed from the company name; check it is the same company)"
+    },
+    {
+      "fact": "Navidence announced partnerships with Trio Health (2026-04-08), Panalgo (2026-04-29), RTI International (2026-05-05) and Komodo Health on 'AI-Powered Healthcare Intelligence' (2026-08-11).",
+      "source": "S7",
+      "url": "https://navidence.com/newsroom",
+      "source_label": "Company web page (guessed from the company name; check it is the same company)"
+    },
+    {
+      "fact": "An earlier partnership with Nested Knowledge to standardize RWE CODefs was announced 2024-04-26.",
+      "source": "S7",
+      "url": "https://navidence.com/newsroom",
+      "source_label": "Company web page (guessed from the company name; check it is the same company)"
+    },
+    {
+      "fact": "The company raised $3,017,500 of a $4,517,500 round from 14 investors.",
+      "source": "S4",
+      "url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0001997962",
+      "source_label": "Form D filings for Navidence, Inc."
+    },
+    {
+      "fact": "The shortlist record flags Craig Parker as a repeat founder. This may rest on a Form D name match to Surrozen, Inc., which may be a different person.",
+      "source": "S1",
+      "url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0001997962",
+      "source_label": "Shortlist record"
+    }
+  ],
+  "thesis_fit": [
+    {
+      "belief": "Compliance and auditability are the moat in regulated AI, not the model",
+      "verdict": "supports",
+      "evidence": "The product is positioned around FDA guidances (2021, 2023, 2024) and ICH M4 (2025), which expect standardized, mapped data definitions and phenotype algorithms for each study design, and it promises trust via validation metrics and literature context.",
+      "source": "S5",
+      "url": "https://navidence.com"
+    },
+    {
+      "belief": "Founders from inside the industry beat generalists who discover it later",
+      "verdict": "supports",
+      "evidence": "Parker has 20+ years in medical informatics at Parexel, Intermountain and GE Healthcare and is an HL7 Fellow. CEO Kamauu led healthcare data strategy at Roche/Genentech and founded Anolinx.",
+      "source": "S6",
+      "url": "https://navidence.com/team"
+    },
+    {
+      "belief": "Open-source or public traction is the best early signal for technical founders",
+      "verdict": "unknown",
+      "evidence": "The evidence contains no GitHub, open-source, paper or Hacker News signal. Public traction is limited to partnership press releases.",
+      "source": ""
+    },
+    {
+      "belief": "Small teams shipping weekly beat large early rounds",
+      "verdict": "neutral",
+      "evidence": "The team page lists a five-person C-suite of veteran CRO and consulting executives, and the round is $4.5M. The company did ship a product launch and multiple partnerships in H1 2026, but there is no evidence of weekly shipping cadence or engineering team size.",
+      "source": "S6",
+      "url": "https://navidence.com/team"
+    }
+  ],
+  "fit_score": 3,
+  "strengths": [
+    "Regulatory pull: the product is tied directly to FDA RWE guidances and ICH M4 expectations for computable study definitions (S5, S8).",
+    "The CTO is a standards insider (HL7 Fellow, MnM & CDS Co-chair) with Parexel, Intermountain and GE Healthcare informatics experience (S6).",
+    "Deep RWD/RWE domain team, including a CEO from Roche/Genentech and Parexel who previously founded Anolinx (S6).",
+    "Distribution partnerships with major RWD players, including Datavant (licensing), Komodo Health, Panalgo, RTI International and Trio Health (S7).",
+    "A shipped product, Navigate: Code Lists, launched May 2026 (S7)."
+  ],
+  "risks": [
+    "The AI-native angle is thin. The only AI reference is the Komodo Health partnership headline (S7), and the core offering reads as an expert-curated content library maintained by a Knowledge Engineering Team (S8).",
+    "There is no open-source or public technical signal for Parker or the company in the evidence.",
+    "The 'repeat founder' flag in S1 may come from the Surrozen, Inc. Form D match (S3). Surrozen is a South San Francisco biotech that raised $76.4M, and the source warns it may be a different Craig Parker, so do not treat Parker as a repeat founder without confirmation.",
+    "The website was guessed from the company name (S5\u2013S8). It does list Craig Parker and Aaron Kamauu, the names on the Form D (S1, S6), and announces a seed raise in Jan 2026 (S7), consistent with the Dec 2025 Form D (S4), so it likely is the same company, but this needs verification.",
+    "Round allocation: $3.0M of $4.5M is already sold to 14 investors, with Nina Capital and Grand Ventures announced (S4, S7), so the remaining allocation may be limited.",
+    "The team is heavy on senior executives from CROs and consulting (IQVIA, Parexel, Syneos) rather than a lean engineering team, which cuts against the small-team belief (S6).",
+    "Partners are not necessarily paying customers. No revenue or named customers appear in the evidence.",
+    "The newsroom lists a press release dated 2026-08-11 (S7). Confirm press release dates when verifying the site."
+  ],
+  "open_questions": [
+    "How much of the Navidence Platform is software (versus curated content), and where, if at all, do you use ML or LLMs, for example in drafting phenotype algorithms or mapping code lists?",
+    "What does the Komodo Health partnership's 'AI-Powered Healthcare Intelligence' actually involve technically?",
+    "How are CODefs versioned and audited so a regulator or HTA body can trace a definition used in a study submission back to its validation metrics and literature?",
+    "How does your HL7 work (MnM & CDS) shape the CODef data model? Do you align with FHIR or other open standards, and would you open-source the definition format?",
+    "What are the economics of the Datavant licensing deal, and are any of the partners (Datavant, Panalgo, RTI, Trio Health, Komodo) paying customers today?",
+    "How large is the engineering team versus the Knowledge Engineering curation team, and how often do you ship?",
+    "How much of the $4.5M round remains, and on what terms?",
+    "Are you the same Craig Parker listed as an officer of Surrozen, Inc., and have you founded companies before?"
+  ],
+  "conversation_openers": [
+    "Craig, your HL7 CDS co-chair background shows in how Navidence frames CODefs as computable, mappable definitions. I'd love to hear how you're designing them to satisfy the ICH M4 and FDA RWE expectations your site cites.",
+    "Congrats on launching Navigate: Code Lists and the Datavant licensing deal. We back regulated-industry software where auditability is the moat, and definition provenance for RWE studies looks like exactly that.",
+    "Having moved from Intermountain and GE Healthcare informatics to Parexel's scientific data technology, you've seen study definitions break from both the provider and CRO side. I'm curious what convinced you a curated, validated CODef library was the right wedge."
+  ],
+  "unknowns": [
+    "Revenue, pricing and named paying customers",
+    "Engineering team size and shipping cadence",
+    "Whether and how AI/ML is used in the product",
+    "Any GitHub, open-source, publications or other public technical work by Craig Parker",
+    "Whether Craig Parker is a repeat founder (the Surrozen match is unconfirmed)",
+    "Parker's education",
+    "Terms of the round and the remaining allocation",
+    "Founding history between the 2022 incorporation and the 2024 Nested Knowledge partnership"
+  ],
+  "confidence": "medium",
+  "sources": [
+    {
+      "id": "S1",
+      "label": "Shortlist record",
+      "url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0001997962"
+    },
+    {
+      "id": "S2",
+      "label": "Earlier screening judgment (Claude)",
+      "url": ""
+    },
+    {
+      "id": "S3",
+      "label": "Form D name match (same name and state, may still be a different person): Craig Parker is an officer of Surrozen, Inc./DE",
+      "url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0001824893"
+    },
+    {
+      "id": "S4",
+      "label": "Form D filings for Navidence, Inc.",
+      "url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0001997962"
+    },
+    {
+      "id": "S5",
+      "label": "Company web page (guessed from the company name; check it is the same company)",
+      "url": "https://navidence.com"
+    },
+    {
+      "id": "S6",
+      "label": "Company web page (guessed from the company name; check it is the same company)",
+      "url": "https://navidence.com/team"
+    },
+    {
+      "id": "S7",
+      "label": "Company web page (guessed from the company name; check it is the same company)",
+      "url": "https://navidence.com/newsroom"
+    },
+    {
+      "id": "S8",
+      "label": "Company web page (guessed from the company name; check it is the same company)",
+      "url": "https://navidence.com/-platform"
+    },
+    {
+      "id": "S9",
+      "label": "akta.pro management profile",
+      "url": "akta.pro (https://navidence.com)"
+    }
+  ],
+  "dropped_unsourced_facts": 0,
+  "provider": "nicrron:anthropic/claude-opus-5-5"
+}

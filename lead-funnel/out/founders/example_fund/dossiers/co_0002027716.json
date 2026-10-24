@@ -1,0 +1,217 @@
+{
+  "lead_id": "co:0002027716",
+  "rank": 13,
+  "screening_score": 0.5739,
+  "generated": "2026-10-24",
+  "summary": "Adolfo Velazquez is CTO and co-founder of ROSE Diagnostics (Carlsbad, CA, incorporated 2023). The company is building the verifi LUNG Test, a 5-minute point-of-care cartridge-and-reader device that tells clinicians during a lung biopsy whether the specimen is sufficient for analysis. He is a genuine diagnostics insider who led Quidel SOFIA rapid tests, but this is an in-vitro diagnostic hardware company with no evidence of AI or software, so it falls outside Example Seed Fund's AI-native software thesis.",
+  "person": {
+    "name": "Adolfo Velazquez",
+    "role": "CTO & Founder",
+    "location": "Carlsbad, CA (company location per Form D record)",
+    "links": [
+      "https://www.rose-dx.com/about-us",
+      "https://www.rose-dx.com/",
+      "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0002027716"
+    ]
+  },
+  "co_founders": [
+    "Andrew Morris (CEO & Founder)",
+    "Eric Brouwer, PhD (CSO & Founder)",
+    "Donna Padavan, PhD (VP Clinical & Regulatory Affairs, Founder)"
+  ],
+  "company": {
+    "name": "ROSE DIAGNOSTICS INC. (ROSE Diagnostics)",
+    "what_they_build": "verifi LUNG Test: a portable, roughly 5-minute rapid test (collection vial, test cartridge and small reader) that confirms during a lung biopsy whether the collected specimen is sufficient for analysis. The site states products are not FDA cleared or approved in any jurisdiction (S4).",
+    "customers": "Intended for clinicians and clinics performing lung biopsies (S4). No paying customers are evidenced; the product is pre-clearance with a clinical study that enrolled its first patient Dec 2024 (S4).",
+    "stage": "seed",
+    "raised": "Site news: $1M seed Reg D (June 27, 2024), $2.3M Reg D (May 14, 2025), $2.7M round (July 17, 2026) (S4). Form D filings: 2025-05-13, $3.0M offered, $2,344,375 sold, 18 investors; 2026-09-15, $3.0M offered, $2,208,750 sold, 18 investors, first sale 2026-07-10 (S3).",
+    "website": "https://www.rose-dx.com/"
+  },
+  "background": [
+    {
+      "fact": "At Quidel Corp., led development of SOFIA point-of-care products: Influenza A+B, RSV FIA, Strep A, Quantitative Vitamin D and C. difficile.",
+      "source": "S5",
+      "url": "https://www.rose-dx.com/about-us",
+      "source_label": "Company web page (guessed from the company name; check it is the same company)"
+    },
+    {
+      "fact": "Has led development of multiple approved rapid point-of-care tests from concept to commercialization and has deep experience developing point-of-care sensors.",
+      "source": "S5",
+      "url": "https://www.rose-dx.com/about-us",
+      "source_label": "Company web page (guessed from the company name; check it is the same company)"
+    },
+    {
+      "fact": "Co-founded ROSE Diagnostics, created in California in 2023, as CTO.",
+      "source": "S5",
+      "url": "https://www.rose-dx.com/about-us",
+      "source_label": "Company web page (guessed from the company name; check it is the same company)"
+    },
+    {
+      "fact": "Co-founder Eric Brouwer was R&D lead on i-STAT's CHEM8+ cartridge portfolio (80% of cartridge sales); i-STAT was acquired by Abbott for $392M.",
+      "source": "S5",
+      "url": "https://www.rose-dx.com/about-us",
+      "source_label": "Company web page (guessed from the company name; check it is the same company)"
+    },
+    {
+      "fact": "Co-founder Donna Padavan has 20+ years in medical devices, including managing FDA pre-submissions and Health Canada approvals.",
+      "source": "S5",
+      "url": "https://www.rose-dx.com/about-us",
+      "source_label": "Company web page (guessed from the company name; check it is the same company)"
+    }
+  ],
+  "founder_signals": [
+    {
+      "fact": "Described as the technical lead behind the company's 5-minute test prototype (announced Feb 12, 2024).",
+      "source": "S9",
+      "url": "akta.pro (https://www.rose-dx.com/)",
+      "source_label": "akta.pro management profile"
+    },
+    {
+      "fact": "First patient enrolled in clinical study, announced Dec 5, 2024.",
+      "source": "S4",
+      "url": "https://www.rose-dx.com/",
+      "source_label": "Company web page (guessed from the company name; check it is the same company)"
+    },
+    {
+      "fact": "verifi LUNG development milestone announced Aug 30, 2025.",
+      "source": "S4",
+      "url": "https://www.rose-dx.com/",
+      "source_label": "Company web page (guessed from the company name; check it is the same company)"
+    },
+    {
+      "fact": "Three announced financings (2024 to 2026) totaling about $6.0M per the site.",
+      "source": "S4",
+      "url": "https://www.rose-dx.com/",
+      "source_label": "Company web page (guessed from the company name; check it is the same company)"
+    },
+    {
+      "fact": "Most recent Form D (filed 2026-09-15) shows $2,208,750 sold of a $3.0M offering from 18 investors.",
+      "source": "S3",
+      "url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0002027716",
+      "source_label": "Form D filings for ROSE DIAGNOSTICS INC."
+    },
+    {
+      "fact": "Added board member Paul Gold (June 2024) and medical advisor Dr. Samir Makani of Scripps Health (March 2024).",
+      "source": "S4",
+      "url": "https://www.rose-dx.com/",
+      "source_label": "Company web page (guessed from the company name; check it is the same company)"
+    }
+  ],
+  "thesis_fit": [
+    {
+      "belief": "Compliance and auditability are the moat in regulated AI, not the model",
+      "verdict": "neutral",
+      "evidence": "There is no AI product. The defensibility appears to come from FDA device clearance and, per a data-provider profile, proprietary engineered antibodies and a biomarker panel, not from software audit trails.",
+      "source": "S9",
+      "url": "akta.pro (https://www.rose-dx.com/)"
+    },
+    {
+      "belief": "Founders from inside the industry beat generalists who discover it later",
+      "verdict": "supports",
+      "evidence": "Velazquez led multiple Quidel SOFIA point-of-care tests to commercialization, and co-founders come from i-STAT and medical-device regulatory roles. Their expertise is in diagnostics hardware, though, not regulated software.",
+      "source": "S5",
+      "url": "https://www.rose-dx.com/about-us"
+    },
+    {
+      "belief": "Open-source or public traction is the best early signal for technical founders",
+      "verdict": "unknown",
+      "evidence": "No GitHub, Hacker News, papers or other public technical output appear in the evidence.",
+      "source": ""
+    },
+    {
+      "belief": "Small teams shipping weekly beat large early rounds",
+      "verdict": "neutral",
+      "evidence": "Individual rounds are modest ($1M to $2.7M). However, the company is a hardware device in clinical study awaiting FDA clearance, with no sign of weekly software shipping.",
+      "source": "S4",
+      "url": "https://www.rose-dx.com/"
+    }
+  ],
+  "fit_score": 1,
+  "strengths": [
+    "Deep, specific point-of-care diagnostics track record: led five Quidel SOFIA tests to market (S5).",
+    "Experienced founding team with a prior exit-linked product (i-STAT CHEM8+, Abbott $392M acquisition) and in-house FDA and Health Canada regulatory expertise (S5).",
+    "Clear clinical problem: the site says up to 40% of lung biopsy samples are returned as insufficient (S4).",
+    "Steady progress: prototype (2024), first clinical study patient (Dec 2024), development milestone (Aug 2025) (S4).",
+    "Repeat investor base of 18 in each Form D filing (S3)."
+  ],
+  "risks": [
+    "Off-thesis: this is an in-vitro diagnostic hardware device (cartridge and reader), not AI-native software. No AI or software component is evidenced (S4, S2).",
+    "Not FDA cleared or approved in any jurisdiction, so there is a long and capital-intensive regulatory path ahead (S4).",
+    "Sources disagree on amounts: the shortlist record (S1) attaches $2,344,375 sold to the 2026-09-15 filing, but the Form D list (S3) shows that figure on the 2025-05-13 filing and $2,208,750 on the 2026 filing.",
+    "Site amounts do not match filings exactly: the July 2026 news cites $2.7M raised, but the 2026 Form D shows $2,208,750 sold. The $1M 2024 seed has no matching Form D among the 2 filings (S1, S3, S4).",
+    "The website was guessed from the company name. Founder names on the About page match the Form D people list, so it is very likely the same company, but this should be confirmed (S1, S5).",
+    "Several news pages returned no content (S6, S7, S8), so milestone details are unverified."
+  ],
+  "open_questions": [
+    "Does the verifi LUNG reader include any software, data capture or algorithmic interpretation, or is the readout purely assay-based?",
+    "What FDA pathway (510(k), De Novo, PMA) are you pursuing for verifi LUNG, and what is the timeline to submission?",
+    "What has the clinical study that enrolled its first patient in Dec 2024 shown so far on sensitivity and specificity for specimen sufficiency?",
+    "How does the verifi LUNG platform build on what you learned shipping the Quidel SOFIA tests, and is it designed to extend to other biopsy types?",
+    "Can you reconcile the $2.7M announced in July 2026 with the $2.21M sold on the 2026 Form D, and what is total capital needed to clearance?",
+    "Who is the economic buyer: interventional pulmonology, the hospital lab, or the procedure suite?"
+  ],
+  "conversation_openers": [
+    "Your work taking Quidel's SOFIA tests from concept to market looks directly relevant to verifi LUNG. I'd love to hear how a 5-minute in-procedure sufficiency check changes the lung biopsy workflow.",
+    "The stat that up to 40% of lung biopsy samples come back insufficient caught my eye. How are you thinking about data and reporting around the verifi LUNG result once it's in the procedure room?",
+    "Congrats on the 2026 round and the clinical study progress since your first patient in Dec 2024. Curious whether there's a software or analytics layer on the roadmap."
+  ],
+  "unknowns": [
+    "Whether any AI, software or data product exists or is planned.",
+    "Clinical study size, endpoints and results.",
+    "FDA regulatory pathway and expected clearance date.",
+    "Total team size and burn.",
+    "Lead investors and terms of the rounds; S1 lists no backers.",
+    "Velazquez's education, his years at Quidel, and any public technical output.",
+    "Revenue model (cartridge pricing, reader placement) and any reimbursement strategy."
+  ],
+  "confidence": "medium",
+  "sources": [
+    {
+      "id": "S1",
+      "label": "Shortlist record",
+      "url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0002027716"
+    },
+    {
+      "id": "S2",
+      "label": "Earlier screening judgment (Claude)",
+      "url": ""
+    },
+    {
+      "id": "S3",
+      "label": "Form D filings for ROSE DIAGNOSTICS INC.",
+      "url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0002027716"
+    },
+    {
+      "id": "S4",
+      "label": "Company web page (guessed from the company name; check it is the same company)",
+      "url": "https://www.rose-dx.com/"
+    },
+    {
+      "id": "S5",
+      "label": "Company web page (guessed from the company name; check it is the same company)",
+      "url": "https://www.rose-dx.com/about-us"
+    },
+    {
+      "id": "S6",
+      "label": "Company web page (guessed from the company name; check it is the same company)",
+      "url": "https://www.rose-dx.com/news/rose-diagnostics-secures-27m-in-latest-funding-round-to-advance-verifi-lung-test-toward-fda-approval"
+    },
+    {
+      "id": "S7",
+      "label": "Company web page (guessed from the company name; check it is the same company)",
+      "url": "https://www.rose-dx.com/news/rose-diagnostics-achieves-key-milestone-with-first-patient-enrolled-in-clinical-study-kmbhr-bag5t"
+    },
+    {
+      "id": "S8",
+      "label": "Company web page (guessed from the company name; check it is the same company)",
+      "url": "https://www.rose-dx.com/news/rose-diagnostics-achieves-key-milestone-with-first-patient-enrolled-in-clinical-study-kmbhr"
+    },
+    {
+      "id": "S9",
+      "label": "akta.pro management profile",
+      "url": "akta.pro (https://www.rose-dx.com/)"
+    }
+  ],
+  "dropped_unsourced_facts": 0,
+  "provider": "nicrron:anthropic/claude-opus-5-5"
+}

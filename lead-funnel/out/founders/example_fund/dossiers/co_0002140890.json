@@ -1,0 +1,217 @@
+{
+  "lead_id": "co:0002140890",
+  "rank": 4,
+  "screening_score": 0.6544,
+  "generated": "2026-10-24",
+  "summary": "Benjamin (Ben) Finch is Co-founder, CTO and President of WithAI Research, Inc. (New York), which appears to sell Multiplier, an AI agent platform that connects asset managers' market data, research and portfolio systems into one command center. He was previously founding researcher at AI lab Sentient, working on prompt security and multi-agent coordination, and his CEO co-founder Ian McInnis built LLM investment systems at Bridgewater. Financial services is in the fund's scope, but the pitch is research productivity rather than compliance or auditability, and a $3.98M Form D plus an announced $6M seed suggest the round may be closed, so fit is partial.",
+  "person": {
+    "name": "Benjamin (Ben) Finch",
+    "role": "Co-founder, CTO, President",
+    "location": "New York, NY",
+    "links": [
+      "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0002140890",
+      "https://www.multiplier.ai/",
+      "https://www.multiplier.ai/team",
+      "https://www.linkedin.com/in/ben-finch-3a82471b5/",
+      "https://withai.co/team"
+    ]
+  },
+  "co_founders": [
+    "Ian McInnis (Co-founder, CEO)",
+    "Ryan Winkler (Co-founder, COO)"
+  ],
+  "company": {
+    "name": "WithAI Research, Inc. (product/site: Multiplier)",
+    "what_they_build": "Multiplier, an AI agent platform for asset managers. It is a single 'command center' that connects channel checks, expert calls, sellside research, company financials, portfolio risk and trade history. It lists connectors such as FactSet, Bloomberg Terminal, Aladdin, Enfusion, AlphaSense and Snowflake, offers swappable frontier models, and runs automated research agents. It is sold with 'security, infrastructure, and white-glove service' (S4).",
+    "customers": "Asset managers / investment firms (S4). Testimonials come from Scott Hobart (Chief Investment Officer) and Michael Siliciano (Co-founder), but their firms are not named (S4).",
+    "stage": "seed",
+    "raised": "Form D filed 2026-07-06: $3,978,000 offered and fully sold to 57 investors, first sale 2026-03-17 (S3). A blog post dated 2026-08-10 announces a '$6M seed' (S6). Named backers include Greg Jensen and Karen Karniol-Tambour (Bridgewater co-CIOs), Y Combinator, Pete Briger Jr. (Fortress), Jasjeet Sekhon (Google DeepMind), General Advance, Sandeep Nailwal (Polygon) and Kaz Nejatian (Opendoor) (S4).",
+    "website": "https://www.multiplier.ai/ (guessed; footer reads WithAI Research, Inc.; data provider also cites withai.co)"
+  },
+  "background": [
+    {
+      "fact": "Founding researcher at AI lab Sentient, described as an AI unicorn, where he oversaw prompt security and multi-agent coordination work.",
+      "source": "S5",
+      "url": "https://www.multiplier.ai/team",
+      "source_label": "Company web page (guessed from the company name; check it is the same company)"
+    },
+    {
+      "fact": "Data provider says he was also chief of staff at Sentient and built a community of approximately one million users.",
+      "source": "S7",
+      "url": "akta.pro (https://www.multiplier.ai/)",
+      "source_label": "akta.pro management profile"
+    },
+    {
+      "fact": "At Princeton he earned the top thesis award in Electrical and Computer Engineering for work on solar power investment and novel blockchain design.",
+      "source": "S5",
+      "url": "https://www.multiplier.ai/team",
+      "source_label": "Company web page (guessed from the company name; check it is the same company)"
+    },
+    {
+      "fact": "Holds Princeton Bachelor's and Master's degrees in Electrical and Computer Engineering, Magna Cum Laude.",
+      "source": "S7",
+      "url": "akta.pro (https://www.multiplier.ai/)",
+      "source_label": "akta.pro management profile"
+    },
+    {
+      "fact": "Raised in Mongolia, Kenya, Indonesia and America.",
+      "source": "S5",
+      "url": "https://www.multiplier.ai/team",
+      "source_label": "Company web page (guessed from the company name; check it is the same company)"
+    },
+    {
+      "fact": "WithAI Research, Inc. was incorporated in 2025 as a corporation and lists New York, NY as its location.",
+      "source": "S1",
+      "url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0002140890",
+      "source_label": "Shortlist record"
+    }
+  ],
+  "founder_signals": [
+    {
+      "fact": "Raised $3,978,000 from 57 investors in a round with first sale on 2026-03-17.",
+      "source": "S3",
+      "url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0002140890",
+      "source_label": "Form D filings for WithAI Research, Inc."
+    },
+    {
+      "fact": "The company blog announces a $6M seed 'betting on human stockpickers' (2026-08-10).",
+      "source": "S6",
+      "url": "https://www.multiplier.ai/blog",
+      "source_label": "Company web page (guessed from the company name; check it is the same company)"
+    },
+    {
+      "fact": "The backer list includes both Bridgewater co-CIOs, Y Combinator and the Fortress Executive Chairman.",
+      "source": "S4",
+      "url": "https://www.multiplier.ai/",
+      "source_label": "Company web page (guessed from the company name; check it is the same company)"
+    },
+    {
+      "fact": "A customer CIO testimonial says: 'We used to spend 80% of our time gathering information and 20% acting on it. Multiplier has flipped those percentages.'",
+      "source": "S4",
+      "url": "https://www.multiplier.ai/",
+      "source_label": "Company web page (guessed from the company name; check it is the same company)"
+    },
+    {
+      "fact": "The team page lists three co-founders and two members of technical staff (Edison Zhu, Skyler Chan).",
+      "source": "S5",
+      "url": "https://www.multiplier.ai/team",
+      "source_label": "Company web page (guessed from the company name; check it is the same company)"
+    },
+    {
+      "fact": "CEO Ian McInnis published blog posts in Sep\u2013Oct 2026, including 'On the coming cybercrime surge'.",
+      "source": "S6",
+      "url": "https://www.multiplier.ai/blog",
+      "source_label": "Company web page (guessed from the company name; check it is the same company)"
+    }
+  ],
+  "thesis_fit": [
+    {
+      "belief": "Compliance and auditability are the moat in regulated AI, not the model",
+      "verdict": "neutral",
+      "evidence": "The site leads with security and infrastructure and offers models 'swapped on the fly', so the model is not positioned as the moat. However, the value proposition is research productivity and edge, not audit trails or regulatory sign-off.",
+      "source": "S4",
+      "url": "https://www.multiplier.ai/"
+    },
+    {
+      "belief": "Founders from inside the industry beat generalists who discover it later",
+      "verdict": "supports",
+      "evidence": "The CEO was an investor who built LLM investment systems at Bridgewater, and the COO allocated capital at StepStone. Finch himself comes from AI research (Sentient) rather than finance.",
+      "source": "S5",
+      "url": "https://www.multiplier.ai/team"
+    },
+    {
+      "belief": "Open-source or public traction is the best early signal for technical founders",
+      "verdict": "unknown",
+      "evidence": "The evidence includes no GitHub, open-source or launch activity. The only public signal is a reported ~1M-user community at Sentient, which is not this company.",
+      "source": ""
+    },
+    {
+      "belief": "Small teams shipping weekly beat large early rounds",
+      "verdict": "neutral",
+      "evidence": "The team is small (five people listed), but the round is a sizeable $4\u20136M seed and shipping cadence is not evidenced.",
+      "source": "S5",
+      "url": "https://www.multiplier.ai/team"
+    }
+  ],
+  "fit_score": 2,
+  "strengths": [
+    "Strong domain-insider team for asset management: Bridgewater LLM systems (CEO) and StepStone investing (COO) (S5).",
+    "Technical co-founder with direct multi-agent and prompt-security experience at Sentient (S5).",
+    "High-signal backers, including both Bridgewater co-CIOs and Y Combinator (S4).",
+    "Deep integration surface with institutional data and OMS/PMS systems such as Aladdin, Enfusion, Bloomberg and FactSet (S4).",
+    "Named customer testimonials with a quantified productivity claim (S4)."
+  ],
+  "risks": [
+    "Website identity: multiplier.ai was guessed from the company name. Its footer reads 'WithAI Research, Inc.' and the team matches the Form D names (S1, S5), but the data provider cites withai.co (S7), so domain/brand naming should be confirmed.",
+    "Funding discrepancy: the Form D shows $3.98M sold to 57 investors (S3), while the blog announces a $6M seed (S6). The round may be closed or have a second tranche, and may be past the fund's entry point.",
+    "The pitch is analyst productivity, not compliance or auditability, so it is weakly aligned with the fund's core moat belief (S4).",
+    "Asset management research is less paperwork- and regulator-driven than the healthcare, insurance and banking workflows the thesis emphasizes.",
+    "The 'white-glove service' and consultation-led sales model may be services-heavy and limit scalability (S4).",
+    "There is no public or open-source technical traction in the evidence.",
+    "Some background details (chief of staff role, ~1M-user community, Master's degree) come only from data-provider commentary (S7), not company or primary sources.",
+    "Name variants exist across sources (Benjamin/Ben Finch; Mcinnis/McInnis) (S1, S5)."
+  ],
+  "open_questions": [
+    "Is the $6M seed announced in August 2026 the same round as the $3.98M Form D, and is there any allocation left?",
+    "How much of Multiplier deployment is custom connector and agent-building work ('where connectors are flaky or nonexistent, we build our own') versus repeatable product?",
+    "How does your Sentient prompt-security work translate into controls for agents that touch portfolio and trade data? Is there an audit log of agent actions that a compliance officer could review?",
+    "Can customers run Multiplier fully in their own cloud, and what data-retention guarantees apply when using 'our' model accounts versus BYO?",
+    "How many asset managers are paying today, at what contract size, and which firms do Scott Hobart and Michael Siliciano represent?",
+    "Is there a path into more regulated workflows (e.g. compliance surveillance, regulatory reporting, investor disclosures) beyond research automation?",
+    "How often does the five-person team ship, and how is engineering split between you and the two technical staff?"
+  ],
+  "conversation_openers": [
+    "Your multi-agent coordination and prompt-security work at Sentient seems directly relevant to letting agents loose on a fund's Aladdin and trade-history data. I'd love to hear how you're handling agent permissions and logging at Multiplier.",
+    "Ian's post 'On the coming cybercrime surge' caught my eye. I'm curious how that security thinking shows up in Multiplier's architecture for asset managers.",
+    "The connector list (Enfusion, Arcesium, Bloomberg, Tegus, and more) is impressive for a five-person team. I'd like to understand how you build and maintain connectors 'where they're flaky or nonexistent'."
+  ],
+  "unknowns": [
+    "Revenue, number of paying customers and contract sizes.",
+    "Whether the seed round is fully closed and the final amount ($3.98M vs $6M).",
+    "Whether audit trails, compliance review or regulatory features exist in the product.",
+    "Any GitHub, open-source or public product launches.",
+    "Shipping cadence and current headcount beyond the five people listed.",
+    "Which domain (multiplier.ai vs withai.co) is canonical, and the relationship between the WithAI and Multiplier brands.",
+    "Finch's dates and tenure at Sentient."
+  ],
+  "confidence": "medium",
+  "sources": [
+    {
+      "id": "S1",
+      "label": "Shortlist record",
+      "url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0002140890"
+    },
+    {
+      "id": "S2",
+      "label": "Earlier screening judgment (Claude)",
+      "url": ""
+    },
+    {
+      "id": "S3",
+      "label": "Form D filings for WithAI Research, Inc.",
+      "url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0002140890"
+    },
+    {
+      "id": "S4",
+      "label": "Company web page (guessed from the company name; check it is the same company)",
+      "url": "https://www.multiplier.ai/"
+    },
+    {
+      "id": "S5",
+      "label": "Company web page (guessed from the company name; check it is the same company)",
+      "url": "https://www.multiplier.ai/team"
+    },
+    {
+      "id": "S6",
+      "label": "Company web page (guessed from the company name; check it is the same company)",
+      "url": "https://www.multiplier.ai/blog"
+    },
+    {
+      "id": "S7",
+      "label": "akta.pro management profile",
+      "url": "akta.pro (https://www.multiplier.ai/)"
+    }
+  ],
+  "dropped_unsourced_facts": 0,
+  "provider": "nicrron:anthropic/claude-opus-5-5"
+}

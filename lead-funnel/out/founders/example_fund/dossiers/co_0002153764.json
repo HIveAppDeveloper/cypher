@@ -1,0 +1,173 @@
+{
+  "lead_id": "co:0002153764",
+  "rank": 14,
+  "screening_score": 0.5738,
+  "generated": "2026-10-24",
+  "summary": "Derek Harn is named, with Christopher Smith, on a Form D for COUNT Financial, Inc., a Lake Stevens, WA corporation incorporated in 2024 and classed as 'Other Technology'. It raised $4,074,999 of a $4,075,000 offering from 10 investors, with the first sale on 2026-08-27 (S5). Nothing in the evidence describes the product, the customers, an AI angle or compliance work, and the only website found belongs to an unrelated Australian company, so fit with the fund is unproven and this is at most a low-priority exploratory intro.",
+  "person": {
+    "name": "Derek Harn",
+    "role": "unknown (named on the COUNT Financial, Inc. Form D record; title not stated)",
+    "location": "Lake Stevens, WA (company location per Form D)",
+    "links": [
+      "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0002153764"
+    ]
+  },
+  "co_founders": [
+    "Christopher Smith (named on the COUNT Financial, Inc. Form D record; flagged as repeat founder, unverified)"
+  ],
+  "company": {
+    "name": "COUNT Financial, Inc.",
+    "what_they_build": "unknown. Form D industry is 'Other Technology', and no product description is available.",
+    "customers": "unknown",
+    "stage": "unknown. A Form D shows about $4.08M sold in a 2026 offering, but the round label is not stated.",
+    "raised": "Form D filed 2026-09-14: $4,000,000 offered, $3,949,999 sold, 10 investors. Amended Form D filed 2026-09-17: $4,075,000 offered, $4,074,999 sold, 10 investors. First sale 2026-08-27. The company has 2 filings in total.",
+    "website": "unknown. The guessed count.au belongs to Count Limited (Australia), a different company."
+  },
+  "background": [
+    {
+      "fact": "COUNT Financial, Inc. is a corporation incorporated in 2024, located in Lake Stevens, WA, with industry listed as 'Other Technology'.",
+      "source": "S1",
+      "url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0002153764",
+      "source_label": "Shortlist record"
+    },
+    {
+      "fact": "A Christopher Smith is listed as an officer of Evrim, Inc. (Norfolk, VA, incorporated 2024). It is unconfirmed whether this is the same person.",
+      "source": "S3",
+      "url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0002044457",
+      "source_label": "Form D name match (same name and state, may still be a different person): Christopher Smith is an officer of Evrim, Inc."
+    },
+    {
+      "fact": "A Christopher Smith is listed among officers of American General Life Insurance Co (Houston, TX). This is a name match only and may be a different person.",
+      "source": "S4",
+      "url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0000005108",
+      "source_label": "Form D name match (same name and state, may still be a different person): Christopher Smith is an officer of AMERICAN GENERAL LIFE INSURANCE CO"
+    }
+  ],
+  "founder_signals": [
+    {
+      "fact": "COUNT Financial, Inc. sold $4,074,999 of a $4,075,000 offering to 10 investors, with the first sale on 2026-08-27.",
+      "source": "S5",
+      "url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0002153764",
+      "source_label": "Form D filings for COUNT Financial, Inc."
+    },
+    {
+      "fact": "Christopher Smith is flagged as a repeat founder in the shortlist record.",
+      "source": "S1",
+      "url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0002153764",
+      "source_label": "Shortlist record"
+    },
+    {
+      "fact": "Evrim, Inc., which has an officer named Christopher Smith, filed a Form D on 2024-11-13 showing $175,000 sold of a $250,000 offering to 5 investors.",
+      "source": "S3",
+      "url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0002044457",
+      "source_label": "Form D name match (same name and state, may still be a different person): Christopher Smith is an officer of Evrim, Inc."
+    }
+  ],
+  "thesis_fit": [
+    {
+      "belief": "Compliance and auditability are the moat in regulated AI, not the model",
+      "verdict": "unknown",
+      "evidence": "No evidence describes the product, an AI component or any compliance or audit features.",
+      "source": ""
+    },
+    {
+      "belief": "Founders from inside the industry beat generalists who discover it later",
+      "verdict": "unknown",
+      "evidence": "The 'Financial' company name hints at financial services. The only industry link is an unverified name match of a Christopher Smith to an insurance company officer list (S4). Derek Harn's background is absent.",
+      "source": ""
+    },
+    {
+      "belief": "Open-source or public traction is the best early signal for technical founders",
+      "verdict": "unknown",
+      "evidence": "No GitHub, Hacker News, papers or website for COUNT Financial, Inc. was found.",
+      "source": ""
+    },
+    {
+      "belief": "Small teams shipping weekly beat large early rounds",
+      "verdict": "unknown",
+      "evidence": "Team size and shipping cadence are unknown. The company raised about $4.08M from 10 investors, which is a sizeable early round, but this alone says nothing about cadence.",
+      "source": ""
+    }
+  ],
+  "fit_score": 2,
+  "strengths": [
+    "Closed about $4.08M from 10 investors within weeks of first sale (2026-08-27), per Form D filings (S5).",
+    "The co-founder may be a repeat founder (S1), possibly linked to Evrim, Inc. (S3), though this is unverified.",
+    "The company name suggests financial services, which is within the fund's target industries, though unconfirmed."
+  ],
+  "risks": [
+    "The website count.au (S6, S7) and the akta.pro management profiles (S8) belong to Count Limited, an ASX-listed Australian accounting and wealth network operating since 1980. It is not the 2024 Washington-incorporated COUNT Financial, Inc. All facts from S6\u2013S8 should be disregarded for this founder.",
+    "Christopher Smith is a common name. The Evrim, Inc. (S3) and American General Life Insurance Co (S4) matches are flagged as possibly different people, so the 'repeat founder' signal in S1 may rest on a mistaken match.",
+    "The Form D amounts differ: $4.0M offered / $3,949,999 sold (2026-09-14, used in S1) versus $4,075,000 offered / $4,074,999 sold (2026-09-17 amendment, S5). This is likely an amendment, but it should be confirmed.",
+    "There is no evidence of an AI-native product, a regulated-industry workflow or a compliance and audit focus. The 'Other Technology' classification is generic.",
+    "A round of about $4M may sit at the top of, or above, the fund's seed check range, and the round may already be closed.",
+    "Derek Harn's role, background and technical credentials are entirely absent from the evidence."
+  ],
+  "open_questions": [
+    "What does COUNT Financial, Inc. actually build, and who is the buyer: banks, insurers, advisors, or consumers?",
+    "Derek, what is your role and what did you do before COUNT Financial? Have you worked inside financial services or another regulated industry?",
+    "Christopher, are you the same Christopher Smith who is an officer of Evrim, Inc. in Norfolk, VA? If so, what happened with that company?",
+    "The Form D was amended from $4.0M to $4.075M within three days. Is the round closed, and who led it?",
+    "Is there an AI component, and how do you handle audit trails and data controls for regulated customers?",
+    "How large is the team today and how often do you ship to customers?",
+    "Do you have a website or public repo? We could only find the unrelated Australian Count Limited."
+  ],
+  "conversation_openers": [
+    "Saw COUNT Financial closed just over $4M from 10 investors starting late August 2026. Congrats. We back regulated-industry software at pre-seed and seed and would love to understand what you're building out of Lake Stevens.",
+    "We focus on AI-native software for financial services and insurance. Given the COUNT Financial name, we're curious which workflow you're tackling and whether compliance or auditability is part of the product."
+  ],
+  "unknowns": [
+    "Product, customers, revenue and whether there is any AI component",
+    "Derek Harn's title, background, education and location",
+    "Whether Christopher Smith is the same person as the Evrim, Inc. or American General Life Insurance officer",
+    "Company website, GitHub or any public traction",
+    "Lead investor, round type (seed or other), valuation, and whether the round is still open",
+    "Team size and shipping cadence",
+    "Whether the company targets regulated industries or compliance use cases"
+  ],
+  "confidence": "low",
+  "sources": [
+    {
+      "id": "S1",
+      "label": "Shortlist record",
+      "url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0002153764"
+    },
+    {
+      "id": "S2",
+      "label": "Earlier screening judgment (Claude)",
+      "url": ""
+    },
+    {
+      "id": "S3",
+      "label": "Form D name match (same name and state, may still be a different person): Christopher Smith is an officer of Evrim, Inc.",
+      "url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0002044457"
+    },
+    {
+      "id": "S4",
+      "label": "Form D name match (same name and state, may still be a different person): Christopher Smith is an officer of AMERICAN GENERAL LIFE INSURANCE CO",
+      "url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0000005108"
+    },
+    {
+      "id": "S5",
+      "label": "Form D filings for COUNT Financial, Inc.",
+      "url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0002153764"
+    },
+    {
+      "id": "S6",
+      "label": "Company web page (guessed from the company name; check it is the same company)",
+      "url": "https://www.count.au/"
+    },
+    {
+      "id": "S7",
+      "label": "Company web page (guessed from the company name; check it is the same company)",
+      "url": "https://www.count.au/about-count"
+    },
+    {
+      "id": "S8",
+      "label": "akta.pro management profile",
+      "url": "akta.pro (https://www.count.au/)"
+    }
+  ],
+  "dropped_unsourced_facts": 0,
+  "provider": "nicrron:anthropic/claude-opus-5-5"
+}

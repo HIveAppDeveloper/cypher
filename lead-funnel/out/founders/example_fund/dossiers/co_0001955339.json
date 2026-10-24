@@ -1,0 +1,223 @@
+{
+  "lead_id": "co:0001955339",
+  "rank": 15,
+  "screening_score": 0.571,
+  "generated": "2026-10-24",
+  "summary": "Shara Cohen is President & CEO of Carallel, Inc., a Chicago healthcare company that identifies family caregivers among health plan members, patients and employees and supports them through trained Care Advocates and the Carallel Companion app. She has 20+ years in patient engagement, including Emmi Solutions through its 2016 acquisition by Wolters Kluwer Health, and Carallel has raised about $2.6M across two Form D filings, with BlueCross BlueShield Venture Partners V named as a backer. She is a strong healthcare insider, but the product is described as 'human-led and tech-enabled' with no visible AI, compliance or audit angle and no technical founder, so it is a weak fit for an AI-native, compliance-as-moat thesis.",
+  "person": {
+    "name": "Shara Cohen",
+    "role": "President & CEO",
+    "location": "Chicago, IL",
+    "links": [
+      "https://carallel.com/our-team/",
+      "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0001955339"
+    ]
+  },
+  "co_founders": [
+    "Hillary Ebach, JD \u2013 Co-Founder; listed as General Counsel (S5) and as COO in a 2020 webinar page (S7)",
+    "Pam Walton \u2013 COO (S6)"
+  ],
+  "company": {
+    "name": "Carallel, Inc.",
+    "what_they_build": "Caregiver identification and support programs. Trained Care Advocates (H.E.A.R.T. model) give support by phone, email and chat. The Carallel Companion app offers personalized guidance, training, Circle of Care task coordination and a peer community. Customers also get insights on caregivers.",
+    "customers": "Health plans, providers and employers. Medicare Advantage, Dual Eligible Special Needs and Long-Term Services and Supports plans use Carallel for dementia caregiver programs (S6). Carallel serves as the national help desk for Caregiver Action Network (S4).",
+    "stage": "unknown. Form D sales total about $2.6M and the company has operated since at least 2020, so it is likely seed or later.",
+    "raised": "Form D filed 2025-01-28: $3.0M offered, $1,999,998 sold, 10 investors, first sale 2025-01-17. Form D filed 2026-07-29: $645,000 offered, $600,000 sold, 8 investors, first sale 2026-07-24 (S3). BlueCross BlueShield Venture Partners V is named as a backer (S1).",
+    "website": "https://carallel.com"
+  },
+  "background": [
+    {
+      "fact": "Has spent more than 20 years helping healthcare organizations involve and empower people in their care and health.",
+      "source": "S5",
+      "url": "https://carallel.com/our-team/",
+      "source_label": "Company web page (guessed from the company name; check it is the same company)"
+    },
+    {
+      "fact": "Was SVP of client experience at Emmi Solutions for six years.",
+      "source": "S5",
+      "url": "https://carallel.com/our-team/",
+      "source_label": "Company web page (guessed from the company name; check it is the same company)"
+    },
+    {
+      "fact": "Became VP of customer experience at Wolters Kluwer Health after it acquired Emmi Solutions in 2016.",
+      "source": "S5",
+      "url": "https://carallel.com/our-team/",
+      "source_label": "Company web page (guessed from the company name; check it is the same company)"
+    },
+    {
+      "fact": "Holds a JD from Fordham University School of Law and a bachelor's degree from UC Berkeley.",
+      "source": "S5",
+      "url": "https://carallel.com/our-team/",
+      "source_label": "Company web page (guessed from the company name; check it is the same company)"
+    },
+    {
+      "fact": "Was named a Crain's Chicago Business Notable Leader in Healthcare 2023 and one of Fierce Healthcare's Women of Influence 2024.",
+      "source": "S5",
+      "url": "https://carallel.com/our-team/",
+      "source_label": "Company web page (guessed from the company name; check it is the same company)"
+    },
+    {
+      "fact": "Serves on the board of Chicago Training Center, a youth rowing and mentorship organization.",
+      "source": "S5",
+      "url": "https://carallel.com/our-team/",
+      "source_label": "Company web page (guessed from the company name; check it is the same company)"
+    },
+    {
+      "fact": "Co-founder Hillary Ebach was general counsel of Journal Media Group and earlier a partner at Seyfarth Shaw. She holds a JD from Northwestern and an MBA from Chicago Booth.",
+      "source": "S5",
+      "url": "https://carallel.com/our-team/",
+      "source_label": "Company web page (guessed from the company name; check it is the same company)"
+    }
+  ],
+  "founder_signals": [
+    {
+      "fact": "Carallel's two Form D filings report $1,999,998 sold to 10 investors (2025) and $600,000 sold to 8 investors (2026).",
+      "source": "S3",
+      "url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0001955339",
+      "source_label": "Form D filings for Carallel, Inc."
+    },
+    {
+      "fact": "BlueCross BlueShield Venture Partners V is listed as a backer.",
+      "source": "S1",
+      "url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0001955339",
+      "source_label": "Shortlist record"
+    },
+    {
+      "fact": "Carallel's Caregiver Insight Study, funded by Guidewell and fielded with Caregiver Action Network, found that 90% of caregivers reported reduced stress, 87% reported better decisions and 98% rated Carallel valuable.",
+      "source": "S4",
+      "url": "https://carallel.com",
+      "source_label": "Company web page (guessed from the company name; check it is the same company)"
+    },
+    {
+      "fact": "Medicare Advantage, D-SNP and LTSS plans are running dementia caregiver engagement programs with Carallel.",
+      "source": "S6",
+      "url": "https://carallel.com/resources/",
+      "source_label": "Company web page (guessed from the company name; check it is the same company)"
+    },
+    {
+      "fact": "Cohen has spoken at HLTH and MEDICARIANS (April 2025) and appeared on the Hart and Hustle and Advancing Healthcare Innovation podcasts (July 2025).",
+      "source": "S5",
+      "url": "https://carallel.com/our-team/",
+      "source_label": "Company web page (guessed from the company name; check it is the same company)"
+    },
+    {
+      "fact": "Carallel hosted a July 15, 2026 webinar on caregiver engagement impact for complex Medicare populations.",
+      "source": "S6",
+      "url": "https://carallel.com/resources/",
+      "source_label": "Company web page (guessed from the company name; check it is the same company)"
+    }
+  ],
+  "thesis_fit": [
+    {
+      "belief": "Compliance and auditability are the moat in regulated AI, not the model",
+      "verdict": "unknown",
+      "evidence": "The sources describe no AI product and no compliance, audit-trail or regulatory feature. The offering is 'human-led and tech-enabled' caregiver support.",
+      "source": ""
+    },
+    {
+      "belief": "Founders from inside the industry beat generalists who discover it later",
+      "verdict": "supports",
+      "evidence": "Cohen spent 20+ years in healthcare patient engagement, including Emmi Solutions and Wolters Kluwer Health, and sells to Medicare Advantage and D-SNP plans.",
+      "source": "S5",
+      "url": "https://carallel.com/our-team/"
+    },
+    {
+      "belief": "Open-source or public traction is the best early signal for technical founders",
+      "verdict": "unknown",
+      "evidence": "There is no GitHub, open-source or technical publication evidence, and the named leaders have legal and customer-experience backgrounds. Public traction is limited to an outcomes study and conference talks.",
+      "source": ""
+    },
+    {
+      "belief": "Small teams shipping weekly beat large early rounds",
+      "verdict": "neutral",
+      "evidence": "Rounds are modest (about $2.6M sold in total), but delivery relies on Care Advocates, which suggests a services-heavy model. Shipping cadence is not visible.",
+      "source": "S3",
+      "url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0001955339"
+    }
+  ],
+  "fit_score": 2,
+  "strengths": [
+    "Deep healthcare insider: 20+ years in patient engagement and an executive through the Emmi to Wolters Kluwer Health exit in 2016 (S5).",
+    "Strategic payer validation: BlueCross BlueShield Venture Partners V is a backer (S1), and MA, D-SNP and LTSS plans are running programs (S6).",
+    "Has published outcomes data from a Guidewell-funded study with Caregiver Action Network (S4, S7).",
+    "Distribution partnership: Carallel is the national help desk for Caregiver Action Network (S4).",
+    "Recognized industry voice, with HLTH talks and Crain's and Fierce Healthcare honors (S5)."
+  ],
+  "risks": [
+    "No AI, LLM or automation is visible. The site says 'Human-led and tech-enabled solutions' (S4), which is off-thesis for AI-native software.",
+    "Services-heavy model: trained Care Advocates deliver the support (S4), which may mean lower margins and slower scaling than software.",
+    "No technical founder is evident. Cohen (JD) and Ebach (JD/MBA) come from legal, media and customer-experience backgrounds (S5).",
+    "The sources disagree on the round. S1 headlines a '$3.0M round, 10 investors, filed 2026-07-29', but S3 shows the 2026-07-29 filing is $645K offered, $600K sold, 8 investors. The $3.0M / 10-investor figures belong to the 2025-01-28 filing.",
+    "Timeline inconsistency: S1 lists incorporation in 2022, but S7 shows Cohen presenting as Carallel CEO in a webinar dated 11/19/20. There may have been a predecessor entity or re-incorporation.",
+    "Title inconsistency: Ebach is General Counsel on the team page (S5) but COO on the 2020 webinar page (S7). Pam Walton is now COO (S6).",
+    "S5 says Cohen joined Carallel ('Before joining Carallel'), so she may not be an original founder. Only Ebach is explicitly called a co-founder.",
+    "The website was guessed from the company name. The CEO name and healthcare focus match the Form D, but this should be confirmed.",
+    "The earlier screening (S2) mentions a CIO with a media and enterprise IT background and a BCBS board seat. Neither claim appears in the supplied sources, so both are unverified.",
+    "Company has operated since at least 2020 with two filings, so it may be later-stage than the fund's pre-seed/seed focus."
+  ],
+  "open_questions": [
+    "Is AI being used, or planned, for caregiver identification from plan claims data (as in your 'You already have the data' post), and who builds it?",
+    "What share of revenue comes from Care Advocate services versus the Companion app and data or insights products, and what are gross margins?",
+    "How do you handle PHI from health plan data feeds, and what HIPAA or audit controls would a payer's compliance team see?",
+    "What was the 2025 $3.0M round, why was only about $2.0M sold, and what is the 2026 $645K raise for?",
+    "What is BlueCross BlueShield Venture Partners' role (board seat, commercial relationship)?",
+    "Which MA, D-SNP and LTSS plans are live, how many members are covered, and is pricing PMPM or per engaged caregiver?",
+    "How did Carallel operate in 2020 if it was incorporated in 2022? Was there a predecessor entity?",
+    "Who leads engineering and product, how large is the tech team, and how often do you ship?"
+  ],
+  "conversation_openers": [
+    "Your July 2026 post on family caregivers as the 'load-bearing wall' of home-based care, and the dementia programs with MA and D-SNP plans, caught our eye. We'd love to hear how you find those caregivers in plan data.",
+    "The Caregiver Insight Study with Caregiver Action Network (90% reporting less stress, 98% rating Carallel valuable) is rare outcomes evidence in caregiving. We're curious how you turn that into payer ROI.",
+    "Having taken Emmi Solutions through its Wolters Kluwer acquisition, you've seen patient engagement scale. We'd like to hear how you think about software and automation versus Care Advocates at Carallel."
+  ],
+  "unknowns": [
+    "Whether Carallel uses or plans to use any AI or ML.",
+    "Revenue, customer count, members covered and pricing model.",
+    "Team size and the engineering or technical leadership.",
+    "Data security, HIPAA posture or any audit and compliance capabilities.",
+    "The exact founding date and whether Cohen is a founder or a later-hired CEO.",
+    "Full investor list beyond BCBS Venture Partners V, and board composition.",
+    "Total funding raised before the Form D filings.",
+    "Confirmation that carallel.com is the same entity as the Form D filer."
+  ],
+  "confidence": "medium",
+  "sources": [
+    {
+      "id": "S1",
+      "label": "Shortlist record",
+      "url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0001955339"
+    },
+    {
+      "id": "S2",
+      "label": "Earlier screening judgment (Claude)",
+      "url": ""
+    },
+    {
+      "id": "S3",
+      "label": "Form D filings for Carallel, Inc.",
+      "url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0001955339"
+    },
+    {
+      "id": "S4",
+      "label": "Company web page (guessed from the company name; check it is the same company)",
+      "url": "https://carallel.com"
+    },
+    {
+      "id": "S5",
+      "label": "Company web page (guessed from the company name; check it is the same company)",
+      "url": "https://carallel.com/our-team/"
+    },
+    {
+      "id": "S6",
+      "label": "Company web page (guessed from the company name; check it is the same company)",
+      "url": "https://carallel.com/resources/"
+    },
+    {
+      "id": "S7",
+      "label": "Company web page (guessed from the company name; check it is the same company)",
+      "url": "https://carallel.com/article/webinar/caregiver-insight-study-how-to-address-caregiver-needs/"
+    }
+  ],
+  "dropped_unsourced_facts": 0,
+  "provider": "nicrron:anthropic/claude-opus-5-5"
+}

@@ -1,0 +1,228 @@
+{
+  "lead_id": "co:0002072119",
+  "rank": 11,
+  "screening_score": 0.5857,
+  "generated": "2026-10-24",
+  "summary": "Herbert (Herb) Barrack is Chief Clinical Officer and co-founder of Limber Prosthetics, a San Diego medical device company that sells fully 3D-printed, monolithic transtibial prostheses (Px1) to O&P clinics through a scan-design-fabricate workflow and iOS app (S5, S4, S6). The company has been commercial since fall 2024 and sold $3.77M of a $5.26M Form D offering to 40 investors in 2025, then opened a new $1.875M offering in August 2026 with $135K sold (S5, S3). It is healthcare but hardware-first, with no visible AI, audit-trail or compliance software product, so it sits well outside this fund's AI-native regulated-software thesis.",
+  "person": {
+    "name": "Herbert Barrack",
+    "role": "Chief Clinical Officer, Co-founder (listed as 'Herb Barrack')",
+    "location": "San Diego, CA",
+    "links": [
+      "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0002072119",
+      "https://limberprosthetics.com",
+      "https://limberprosthetics.com/about/"
+    ]
+  },
+  "co_founders": [
+    "Joshua Pelz: Chief Executive Officer, Co-founder (S5, S8)",
+    "Luca De Vivo Nicoloso: Co-founder, Board Advisor (S5); listed as 'Luca Nicoloso' on the Form D record (S1)",
+    "Walker White: Chief Operating Officer, named on the Form D record (S1, S5)"
+  ],
+  "company": {
+    "name": "Limber Prosthetics, Inc.",
+    "what_they_build": "Fully 3D-printed, monolithic transtibial prostheses. These are the Px1 (the 'Limber Leg') and its previous version, the UniLeg, plus the LF1 foot. They are produced through a digital scan-design-fabricate workflow in which clinics scan via an iOS app that also captures the clinical decisions behind reimbursement codes, such as foot code L-5981 (S4, S5, S6).",
+    "customers": "Orthotics and prosthetics clinics, for example NextStep Charlotte, Gainesville Prosthetics, Paliku Prosthetics (Hawai'i) and Robard Bionics (Del Mar, CA), serving amputee patients (S4, S6, S7)",
+    "stage": "unknown",
+    "raised": "Form D filed 2025-06-23: $5,262,215 offered, $3,769,717 sold, 40 investors, first sale 2025-06-13. Form D filed 2026-08-18: $1,875,000 offered, $135,343 sold, 4 investors, first sale 2026-08-07 (S3). Named investors are unknown.",
+    "website": "https://limberprosthetics.com"
+  },
+  "background": [
+    {
+      "fact": "Herb Barrack is listed as Chief Clinical Officer and Co-founder of Limber Prosthetics",
+      "source": "S5",
+      "url": "https://limberprosthetics.com/about/",
+      "source_label": "Company web page (guessed from the company name; check it is the same company)"
+    },
+    {
+      "fact": "Herbert Barrack is one of four people named on Limber Prosthetics' Form D record, alongside Luca Nicoloso, Joshua Pelz and Walker White",
+      "source": "S1",
+      "url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0002072119",
+      "source_label": "Shortlist record"
+    },
+    {
+      "fact": "The company says it started in 2020, founded by 'engineers with PhDs and plenty of experience in tech and 3D printing'",
+      "source": "S5",
+      "url": "https://limberprosthetics.com/about/",
+      "source_label": "Company web page (guessed from the company name; check it is the same company)"
+    },
+    {
+      "fact": "The Form D record gives the year of incorporation as 2022, as a corporation in the 'Other Health Care' industry",
+      "source": "S1",
+      "url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0002072119",
+      "source_label": "Shortlist record"
+    },
+    {
+      "fact": "Co-founder and CEO Joshua Pelz holds a B.S. in Metallurgical and Materials Engineering from Colorado School of Mines and a PhD in Materials Science and Engineering from UC San Diego",
+      "source": "S8",
+      "url": "akta.pro (https://limberprosthetics.com)",
+      "source_label": "akta.pro management profile"
+    }
+  ],
+  "founder_signals": [
+    {
+      "fact": "Limber went commercial in fall 2024 with the Px1, whose previous version was the UniLeg",
+      "source": "S5",
+      "url": "https://limberprosthetics.com/about/",
+      "source_label": "Company web page (guessed from the company name; check it is the same company)"
+    },
+    {
+      "fact": "Sold $3,769,717 of a $5,262,215 offering to 40 investors (first sale 2025-06-13)",
+      "source": "S3",
+      "url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0002072119",
+      "source_label": "Form D filings for Limber Prosthetics, Inc."
+    },
+    {
+      "fact": "Opened a second offering of $1,875,000 in August 2026, with $135,343 sold to 4 investors",
+      "source": "S3",
+      "url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0002072119",
+      "source_label": "Form D filings for Limber Prosthetics, Inc."
+    },
+    {
+      "fact": "The iOS app captures the clinical decisions that drive billing codes (established foot code L-5981 plus base code and additions) during scan and spec",
+      "source": "S6",
+      "url": "https://limberprosthetics.com/products/px1/",
+      "source_label": "Company web page (guessed from the company name; check it is the same company)"
+    },
+    {
+      "fact": "Clinic partners are featured publicly, including Paliku Prosthetics (Todd Nakano, CPO) and Robard Bionics (Del Mar, CA)",
+      "source": "S7",
+      "url": "https://limberprosthetics.com/blog/",
+      "source_label": "Company web page (guessed from the company name; check it is the same company)"
+    },
+    {
+      "fact": "The company holds quarterly partner update meetings, and its Q3 2026 update focused on material and design innovations",
+      "source": "S7",
+      "url": "https://limberprosthetics.com/blog/",
+      "source_label": "Company web page (guessed from the company name; check it is the same company)"
+    },
+    {
+      "fact": "The team includes a Head of Software (Logan Rooper), a Product Manager, Head of Partnerships, Head of Production and multiple manufacturing staff",
+      "source": "S5",
+      "url": "https://limberprosthetics.com/about/",
+      "source_label": "Company web page (guessed from the company name; check it is the same company)"
+    },
+    {
+      "fact": "The company blog published roughly weekly from August through October 2026",
+      "source": "S7",
+      "url": "https://limberprosthetics.com/blog/",
+      "source_label": "Company web page (guessed from the company name; check it is the same company)"
+    }
+  ],
+  "thesis_fit": [
+    {
+      "belief": "Compliance and auditability are the moat in regulated AI, not the model",
+      "verdict": "neutral",
+      "evidence": "Limber's claimed differentiation is monolithic device design, proprietary filament and fabrication workflow. Reimbursement-code capture in the iOS app is a supporting feature, not an audit or compliance product.",
+      "source": "S6",
+      "url": "https://limberprosthetics.com/products/px1/"
+    },
+    {
+      "belief": "Founders from inside the industry beat generalists who discover it later",
+      "verdict": "supports",
+      "evidence": "Barrack holds the Chief Clinical Officer co-founder role, which suggests clinical domain grounding, though his actual credentials are not stated. CEO Pelz first explored prosthetics through a UCSD class rather than industry experience.",
+      "source": "S5",
+      "url": "https://limberprosthetics.com/about/"
+    },
+    {
+      "belief": "Open-source or public traction is the best early signal for technical founders",
+      "verdict": "neutral",
+      "evidence": "There is no GitHub or open-source presence in the evidence. The public traction is commercial: named clinic partners, patient stories and a commercial launch in fall 2024.",
+      "source": "S7",
+      "url": "https://limberprosthetics.com/blog/"
+    },
+    {
+      "belief": "Small teams shipping weekly beat large early rounds",
+      "verdict": "contradicts",
+      "evidence": "The company runs a manufacturing-heavy operation with production leads and technicians and has raised about $3.9M across two Form D offerings. That is a capital-intensive hardware model rather than a small software team shipping weekly.",
+      "source": "S3",
+      "url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0002072119"
+    }
+  ],
+  "fit_score": 1,
+  "strengths": [
+    "Commercial-stage product (Px1) on the market since fall 2024, with named clinic customers across several states (S5, S7)",
+    "Broad investor base: 40 investors in the 2025 offering (S3)",
+    "Clinical co-founder (Barrack, CCO) paired with a PhD materials-engineer CEO (S5, S8)",
+    "Reimbursement-aware workflow: the app captures coding decisions such as L-5981 at scan time, which shows the team understands payer constraints (S6)"
+  ],
+  "risks": [
+    "Off-thesis: this is a 3D-printed prosthetic hardware company with no visible AI, LLM, audit-trail or compliance software product (S4, S6).",
+    "The shortlist headline (S1) attributes the $5.3M round to a 2026-08-18 filing, but S3 shows the $5.26M offering was filed 2025-06-23. The 2026-08-18 filing is a separate $1.875M offering with only $135K sold to 4 investors.",
+    "Founding date conflict: the About page says the company started in 2020 (S5), while the Form D record lists 2022 incorporation (S1).",
+    "The website was guessed from the company name. The San Diego address and team names (Pelz, Barrack, White, Nicoloso) match the Form D, so it is very likely the same company, but this should be confirmed.",
+    "The earlier screening (S2) claims 'many hundreds of patients' on the Px1, but no provided web page contains that figure, so treat it as unverified.",
+    "Herb Barrack's personal background (credentials, prior clinics or companies) is not documented in any source, and the akta.pro profile (S8) is truncated.",
+    "Slow uptake of the 2026 offering ($135K of $1.875M) may signal fundraising difficulty, or simply an early-stage close; this is unclear.",
+    "Regulatory (FDA) status of the Px1 and dependence on payer reimbursement are not described."
+  ],
+  "open_questions": [
+    "What is your clinical background before Limber, and how did you come to co-found the company with Joshua Pelz?",
+    "How many patients are wearing a Px1 today, and how many clinics actively order versus have trialed it?",
+    "What is the 2026 $1.875M offering for, and how does it relate to the 2025 round of $3.77M sold?",
+    "Beyond capturing L-5981 and base codes, does the iOS app do any documentation, medical-necessity or audit support for payers, and is there a plan to expand that software layer?",
+    "What has been your experience with reimbursement denials or audits for the Px1, and how do clinics document medical necessity?",
+    "What does Logan Rooper's software team own today, and does any AI or automation sit in the scan-to-design pipeline?",
+    "Was the company started in 2020 or incorporated in 2022, and what happened in between?"
+  ],
+  "conversation_openers": [
+    "Your Px1 coding approach, which uses an established foot code (L-5981) instead of a miscellaneous code with the clinical decisions captured in the iOS app at scan time, is an unusually reimbursement-first design choice. I'd love to hear how that came out of your clinical side.",
+    "I read the Clinic Spotlight on Paliku Prosthetics bringing fully 3D-printed care to Hawai'i. I'm curious how you as Chief Clinical Officer onboard independent clinics like that onto the scan-design-fabricate workflow.",
+    "The 'More Than A Spare' piece on secondary prostheses and medical necessity caught my eye. How much of your work is fighting payer documentation versus the device itself?"
+  ],
+  "unknowns": [
+    "Herb Barrack's education, clinical credentials and prior employers or companies",
+    "Patient count, clinic count and revenue",
+    "Identity of investors and lead in either Form D offering",
+    "FDA or regulatory clearance status of the Px1, UniLeg and LF1",
+    "Total headcount and burn",
+    "Whether any AI or audit-trail software exists or is planned",
+    "Ownership split among co-founders",
+    "Full content of the akta.pro profiles (S8 is truncated)"
+  ],
+  "confidence": "medium",
+  "sources": [
+    {
+      "id": "S1",
+      "label": "Shortlist record",
+      "url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0002072119"
+    },
+    {
+      "id": "S2",
+      "label": "Earlier screening judgment (Claude)",
+      "url": ""
+    },
+    {
+      "id": "S3",
+      "label": "Form D filings for Limber Prosthetics, Inc.",
+      "url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0002072119"
+    },
+    {
+      "id": "S4",
+      "label": "Company web page (guessed from the company name; check it is the same company)",
+      "url": "https://limberprosthetics.com"
+    },
+    {
+      "id": "S5",
+      "label": "Company web page (guessed from the company name; check it is the same company)",
+      "url": "https://limberprosthetics.com/about/"
+    },
+    {
+      "id": "S6",
+      "label": "Company web page (guessed from the company name; check it is the same company)",
+      "url": "https://limberprosthetics.com/products/px1/"
+    },
+    {
+      "id": "S7",
+      "label": "Company web page (guessed from the company name; check it is the same company)",
+      "url": "https://limberprosthetics.com/blog/"
+    },
+    {
+      "id": "S8",
+      "label": "akta.pro management profile",
+      "url": "akta.pro (https://limberprosthetics.com)"
+    }
+  ],
+  "dropped_unsourced_facts": 0,
+  "provider": "nicrron:anthropic/claude-opus-5-5"
+}
