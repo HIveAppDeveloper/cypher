@@ -32,6 +32,12 @@ async function readBoundedText(request: Request, limit: number) {
   catch { return ''; }
 }
 
+const DEFAULT_ELEVENLABS_VOICE_ID = '21m00Tcm4TlvDq8ikWAM';
+
+function getElevenLabsApiKey() {
+  return process.env.ELEVENLABS_API_KEY?.trim() || process.env.ELEVEN_LABS_API_KEY?.trim() || '';
+}
+
 function hasAppSession() {
   try { return !!readSignedPayload<AppSession>(cookies().get('grokbot_session')?.value); }
   catch { return false; }
@@ -39,7 +45,7 @@ function hasAppSession() {
 
 export async function GET() {
   return NextResponse.json(
-    { configured: !!(process.env.ELEVENLABS_API_KEY && process.env.ELEVENLABS_VOICE_ID) },
+    { configured: !!getElevenLabsApiKey() },
     { headers: { 'Cache-Control': 'private, no-store' } },
   );
 }
@@ -49,9 +55,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ detail: 'Sign in to use Cypher voice.' }, { status: 401, headers: { 'Cache-Control': 'no-store' } });
   }
 
-  const apiKey = process.env.ELEVENLABS_API_KEY;
-  const voiceId = process.env.ELEVENLABS_VOICE_ID;
-  if (!apiKey || !voiceId) {
+  const apiKey = getElevenLabsApiKey();
+  const voiceId = process.env.ELEVENLABS_VOICE_ID?.trim() || DEFAULT_ELEVENLABS_VOICE_ID;
+  if (!apiKey) {
     return NextResponse.json({ detail: 'ElevenLabs voice needs server-side setup.' }, { status: 503, headers: { 'Cache-Control': 'no-store' } });
   }
 
