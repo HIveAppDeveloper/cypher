@@ -64,6 +64,31 @@ body :is(.app-layout,.login-page,dialog) a {color:var(--cx-label);text-decoratio
 .connectors-dialog .connector-tabs button[aria-pressed="true"]::after {background:var(--cx-label)}
 .connectors-dialog .connector-entry,.connectors-dialog .connector-filters button {background:var(--cx-card);color:var(--cx-label);border-color:var(--cx-sep)}
 .connectors-dialog .connector-entry:hover {border-color:var(--cx-label-3)}
+.connectors-dialog .mcp-directory-panel {margin:28px 0;padding:24px 0 4px;border-top:1px solid var(--cx-sep)}
+.connectors-dialog .mcp-directory-search {display:block;margin:14px 0 6px;color:var(--cx-label-2);font-size:12px;font-weight:600}
+.connectors-dialog .mcp-directory-panel>input {width:100%;min-height:44px;padding:10px 12px;border:1px solid var(--cx-sep);border-radius:10px;background:var(--cx-card);color:var(--cx-label);font:inherit}
+.connectors-dialog .mcp-directory-panel>input:focus-visible {outline:2px solid var(--cx-label);outline-offset:2px}
+.connectors-dialog .mcp-directory-toolbar {display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin:14px 0}
+.connectors-dialog .mcp-directory-toolbar label {color:var(--cx-label-2);font-size:12px;font-weight:600}
+.connectors-dialog .mcp-directory-toolbar select {min-height:36px;max-width:220px;padding:0 30px 0 11px;border:1px solid var(--cx-sep);border-radius:9px;background:var(--cx-card);color:var(--cx-label);font:inherit}
+.connectors-dialog .mcp-directory-toolbar select:focus-visible {outline:2px solid var(--cx-label);outline-offset:2px}
+.connectors-dialog .mcp-directory-permissions {margin:14px 0;padding:12px 14px;border:1px solid var(--cx-sep);border-radius:10px;background:var(--cx-fill-2);color:var(--cx-label-2);font-size:12px;line-height:1.55}
+.connectors-dialog .mcp-directory-status {display:inline-flex;align-items:center;min-height:22px;padding:2px 8px;border:1px solid var(--cx-sep);border-radius:999px;color:var(--cx-label-2);font-size:10px;font-weight:650;letter-spacing:.015em}
+.connectors-dialog .mcp-directory-status[data-status="protocol_verified"] {color:var(--cx-label);border-color:var(--cx-label-3)}
+.connectors-dialog .connector-entry-description {display:-webkit-box;overflow:hidden;-webkit-box-orient:vertical;-webkit-line-clamp:3;line-height:1.5}
+.connectors-dialog .connector-tool-preview {margin-top:10px}
+.connectors-dialog .connector-preview-toggle {padding:4px 0;border:0;background:transparent;color:var(--cx-label);font:inherit;font-size:12px;font-weight:600;text-align:left;text-underline-offset:3px;cursor:pointer}
+.connectors-dialog .connector-preview-toggle:hover {text-decoration:underline}
+.connectors-dialog .connector-preview-toggle:focus-visible {outline:2px solid var(--cx-label);outline-offset:3px;border-radius:3px}
+.connectors-dialog .connector-tool-preview-content {margin-top:8px;padding:10px 12px;border:1px solid var(--cx-sep);border-radius:10px;background:var(--cx-fill-2);color:var(--cx-label-2);font-size:12px;line-height:1.45}
+.connectors-dialog .connector-tool-preview-heading {display:flex;justify-content:space-between;gap:12px;color:var(--cx-label)}
+.connectors-dialog .connector-tool-preview-content ul {display:grid;gap:8px;margin:8px 0 0;padding:0;list-style:none}
+.connectors-dialog .connector-tool-preview-content li {display:grid;gap:2px;padding-top:8px;border-top:1px solid var(--cx-sep)}
+.connectors-dialog .connector-tool-preview-content li strong {overflow-wrap:anywhere;color:var(--cx-label);font-size:11px}
+.connectors-dialog .connector-tool-preview-content li span {display:-webkit-box;overflow:hidden;-webkit-box-orient:vertical;-webkit-line-clamp:2}
+.connectors-dialog .connector-tool-preview-content p {margin:0}
+.connectors-dialog .connector-tool-preview-content small {display:block;margin-top:8px}
+@media(max-width:600px){.connectors-dialog .mcp-directory-toolbar {display:grid;grid-template-columns:auto 1fr}.connectors-dialog .mcp-directory-toolbar select {width:100%;max-width:none}}
 .connectors-dialog .connector-categories button {color:var(--cx-label-2)}
 .connectors-dialog .connector-categories button[aria-pressed="true"] {color:var(--cx-label);background:var(--system-selected)}
 .connectors-dialog .connector-filters button[aria-pressed="true"] {background:var(--brand-action);color:var(--brand-on-action)}
@@ -95,8 +120,6 @@ body :is(.app-layout,.login-page,dialog) a {color:var(--cx-label);text-decoratio
 .quickstart .quickstart-submit {display:flex;align-items:center;justify-content:center;gap:12px;width:100%;height:50px;min-height:50px;margin:0;padding:12px 20px;border:0;border-radius:999px;background:var(--cx-label);color:var(--cx-inverse);font-size:15px;font-weight:550}
 .quickstart-submit svg {width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.6}
 .quickstart .quickstart-submit:disabled {background:var(--cx-label);color:var(--cx-inverse);opacity:.45;cursor:default}
-.quickstart .task-composer-footer .btn-primary svg,.quickstart .task-composer[aria-busy="true"] .btn-primary::after {animation:none}
-.quickstart .task-composer[aria-busy="true"] .btn-primary::after {display:none}
 .quickstart .starter-prompts button {color:var(--cx-label-2);animation:none}
 .quickstart .starter-prompts button:hover:not(:disabled) {color:var(--cx-label);transform:none}
 .quickstart .quickstart-status:not(.visually-hidden) {display:flex;align-items:center;justify-content:center;gap:10px;color:var(--cx-label-2)}
@@ -110,10 +133,10 @@ body :is(.app-layout,.login-page,dialog) a {color:var(--cx-label);text-decoratio
 /* Sign-in belongs to the same quiet monochrome workspace. */
 .login-page {display:flex;flex-direction:column;min-height:100dvh;padding:24px 32px;background:var(--cx-bg);color:var(--cx-label)}
 .login-page::before,.login-page::after,.login-orb {display:none}
-.login-brandbar {position:relative;inset:auto;width:100%;max-width:1320px;margin:0 auto;padding:0;animation:none}
+.login-brandbar {position:relative;inset:auto;width:100%;max-width:1320px;margin:0 auto;padding:0}
 .login-brand {display:inline-flex;align-items:center;gap:10px;color:var(--cx-label);font-size:17px;font-weight:600;letter-spacing:-.02em}
 .login-layout {display:flex;flex:1;align-items:center;justify-content:center;width:100%;max-width:none;margin:0;padding:48px 0 72px;gap:0}
-.login-card {display:block;position:relative;width:min(420px,100%);max-width:420px;margin:0;padding:32px;background:var(--cx-card);color:var(--cx-label);border:1px solid var(--cx-sep);border-radius:16px;box-shadow:none;animation:none}
+.login-card {display:block;position:relative;width:min(420px,100%);max-width:420px;margin:0;padding:32px;background:var(--cx-card);color:var(--cx-label);border:1px solid var(--cx-sep);border-radius:16px;box-shadow:none}
 .login-card::before,.login-card::after {display:none}
 .login-hero-mark {width:180px;max-width:80%;margin:0 auto 24px}
 .login-card h1 {margin:0 0 10px;text-align:center;font-size:27px;font-weight:500;letter-spacing:-.03em;color:var(--cx-label);line-height:1.2}

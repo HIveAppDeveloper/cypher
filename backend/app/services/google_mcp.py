@@ -26,7 +26,9 @@ async def call_tool(name,arguments):
   message=getattr(error,'detail','Google did not complete this operation.')
   return CallToolResult(content=[TextContent(type='text',text=str(message))],isError=True)
 
-manager=StreamableHTTPSessionManager(app=server,stateless=True,json_response=True)
+def create_manager():
+ return StreamableHTTPSessionManager(app=server,stateless=True,json_response=True)
+manager=create_manager()
 class Transport:
  async def __call__(self,scope,receive,send):await manager.handle_request(scope,receive,send)
 app=Starlette(routes=[Route('/',endpoint=Transport(),methods=['GET','POST','DELETE'])])

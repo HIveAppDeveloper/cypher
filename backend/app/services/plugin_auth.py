@@ -87,7 +87,26 @@ class BrowserOAuthProvider(OAuthClientProvider):
             'redirect_uri':str(self.context.client_metadata.redirect_uris[0]),
             'state':state,'code_challenge':pkce.code_challenge,'code_challenge_method':'S256',
         }
-        if self.context.client_metadata.scope: params['scope']=self.context.client_metadata.scope
+        requested_scope = (self.context.client_metadata.scope or '').strip()
+        if requested_scope:
+            # A manually registered client can choose an explicit scope set.
+            params['scope'] = requested_scope
+        else:
+            # Default to the provider's full advertised scope set so a user
+            # does not accidentally connect an MCP with a partial grant.
+            # The provider still decides what it will actually authorize.
+            available_scopes = []
+            for source in (metadata, self.context.protected_resource_metadata):
+                scopes = getattr(source, 'scopes_supported', None)
+                for scope in (scopes if isinstance(scopes, (list, tuple)) else []):
+                    if isinstance(scope, str) and scope and not any(char.isspace() for char in scope):
+                        if scope not in available_scopes:
+                            available_scopes.append(scope)
+            if available_scopes:
+                scope_value = ' '.join(available_scopes)
+                if len(scope_value) > 4096 or len(available_scopes) > 200:
+                    raise ValueError('The provider advertises too many permission scopes for a secure sign-in request.')
+                params['scope'] = scope_value
         if self.context.should_include_resource_param(self.context.protocol_version): params['resource']=self.context.get_resource_url()
         await storage.update(
             verifier=pkce.code_verifier,

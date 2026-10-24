@@ -1,5 +1,26 @@
 /* Cypher motion: the lens owns the signature; controls explain state changes. */
 :root {--cypher-ease:cubic-bezier(.16,1,.3,1)}
+.quickstart-panel[data-motion-entered="true"] > :is(.quickstart-mark,h1,.quickstart-intro,.task-composer,.starter-prompts),
+.quickstart-panel[data-motion-entered="true"] > section[aria-labelledby="recent-work-heading"] {
+ animation:cypher-view-in .32s var(--cypher-ease) both;
+}
+.quickstart-panel[data-motion-entered="true"] > h1 {animation-delay:40ms}
+.quickstart-panel[data-motion-entered="true"] > .quickstart-intro {animation-delay:80ms}
+.quickstart-panel[data-motion-entered="true"] > .task-composer {animation-delay:120ms}
+.quickstart-panel[data-motion-entered="true"] > .starter-prompts {animation-delay:160ms}
+.quickstart-panel[data-motion-entered="true"] > section[aria-labelledby="recent-work-heading"] {animation-delay:200ms}
+.quickstart .quickstart-submit {position:relative}
+.quickstart .quickstart-submit:hover:not(:disabled)>svg {transform:translateX(3px)}
+.quickstart .task-composer[aria-busy="true"] .quickstart-submit>svg {visibility:hidden}
+.quickstart .task-composer[aria-busy="true"][data-motion-active="true"] .btn-primary::after {
+ position:absolute;right:20px;top:calc(50% - 8px);width:16px;height:16px;border:1.5px solid currentColor;border-top-color:transparent;border-radius:50%;content:"";animation:cypher-send-spin .75s linear infinite
+}
+.quickstart .starter-prompts button {transition:color .18s ease,transform .2s var(--cypher-ease)}
+.quickstart .starter-prompts button:hover:not(:disabled) {transform:translateY(-1px)}
+.quickstart .task-composer-footer .btn-primary:active:not(:disabled) {transform:scale(.96)}
+.quickstart-error {animation:cypher-view-in .2s var(--cypher-ease)}
+.login-brandbar {animation:cypher-view-in .28s var(--cypher-ease)}
+.login-card {animation:cypher-view-in .32s var(--cypher-ease) 50ms both}
 .connectors-dialog {width:min(850px,calc(100vw - 32px));border-radius:16px;box-shadow:0 20px 70px rgba(0,0,0,.16)}
 .connectors-dialog[open],.mobile-navigation[open],.bot-dialog[open],.command-dialog[open] {animation:cypher-panel-open .26s var(--cypher-ease)}
 .work-drawer[open] {animation:cypher-drawer-open .3s var(--cypher-ease)}
@@ -107,6 +128,10 @@
 @media(prefers-reduced-motion:reduce) {
  .connectors-dialog,.connectors-body,.connector-entry,.mobile-navigation,.plugin-registration,.connector-notice,.connector-error,.lovable-connect-progress,.connector-authorization,.bot-dialog,.command-dialog,.work-drawer {animation:none!important}
  .plugin-tab-marker,.connector-connect,.connector-close,.connected-service button,.plugin-registration button,.connector-connect svg,.task-composer .btn-primary svg,.composer .send-button svg {transition:none!important;transform:none!important}
+ .quickstart-panel > *, .quickstart-error, .login-brandbar, .login-card {animation:none!important}
+ .quickstart .task-composer,.quickstart .starter-prompts button,.quickstart .task-composer-footer .btn-primary {transition:none!important;transform:none!important}
+ .quickstart .starter-prompts button:hover:not(:disabled),.quickstart .task-composer-footer .btn-primary:hover:not(:disabled),.quickstart .task-composer-footer .btn-primary:active:not(:disabled) {transform:none!important}
+ .quickstart .task-composer-footer .btn-primary > svg,.quickstart .task-composer[aria-busy="true"] .btn-primary::after {animation:none!important}
 }
 html[data-motion=false] :is(.connectors-dialog,.connectors-body,.connector-entry,.mobile-navigation,.plugin-registration,.connector-notice,.connector-error,.lovable-connect-progress,.connector-authorization,.bot-dialog,.command-dialog,.work-drawer) {animation:none!important}
 html[data-motion=false] :is(.plugin-tab-marker,.connector-connect,.connector-close,.connected-service button,.plugin-registration button,.connector-connect svg,.task-composer .btn-primary svg,.composer .send-button svg) {transition:none!important;transform:none!important}

@@ -50,8 +50,9 @@ async def lifespan(app: FastAPI):
     from app.services.atlas_admission import run_admission_janitor
     admission_janitor = asyncio.create_task(run_admission_janitor()) if settings.GROKBOT_ATLAS_ENGINE_ENABLED and settings.GROKBOT_ATLAS_ENGINE_ADMISSION == "postgres" else None
     try:
-        from app.services.google_mcp import manager as google_mcp_manager
-        async with google_mcp_manager.run():
+        from app.services import google_mcp
+        google_mcp.manager = google_mcp.create_manager()
+        async with google_mcp.manager.run():
             yield
     finally:
         if admission_janitor:

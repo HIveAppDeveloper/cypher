@@ -89,7 +89,7 @@ class LLMGateway:
         def add_route(candidate):
             try:
                 selected = model_selection(candidate[1], candidate[0])
-            except (TypeError, IndexError):
+            except (TypeError, IndexError, ModelConfigurationError):
                 return
             if included_routing() and selected not in included_backups:
                 return
@@ -105,7 +105,7 @@ class LLMGateway:
             # Gemini and Grok are reciprocal backups when one account runs out
             # of API quota. Task-specific backups follow those first choices.
             if provider == 'gemini' and not included_routing():
-                add_route(('xai', 'grok-4.7'))
+                add_route(('xai', 'grok-4.5'))
             elif provider == 'xai' and not included_routing():
                 add_route(('gemini', 'gemini-3.8-flash'))
             for candidate in declared:
@@ -113,7 +113,7 @@ class LLMGateway:
         if allow_fallback and settings.LLM_FALLBACK_MODEL is not None:
             add_route((settings.LLM_FALLBACK_PROVIDER or provider, settings.LLM_FALLBACK_MODEL))
         if allow_fallback and not included_routing():
-            for candidate in (('gemini', 'gemini-3.8-flash'), ('xai', 'grok-4.7')):
+            for candidate in (('gemini', 'gemini-3.8-flash'), ('xai', 'grok-4.5')):
                 add_route(candidate)
         last_error = None
         for index, (route_provider, route_model) in enumerate(routes):
