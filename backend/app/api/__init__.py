@@ -47,3 +47,5 @@ router.include_router(local_device_router,prefix='/local-device',tags=['local-de
 
 from .prospecting import router as prospecting_router
 router.include_router(prospecting_router, prefix='/prospecting', tags=['prospecting'])
+from .investor_funnel import router as investor_funnel_router
+router.include_router(investor_funnel_router, prefix='/prospecting/investors', tags=['investor-matching'])
