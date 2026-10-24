@@ -15,3 +15,4 @@ from .workspace import Knowledge,Routine,WorkspaceSetting,UsageEvent,Notificatio
 from app.db.session import Base
 
 from .prospecting import ProspectingRun
+from .investor_funnel import InvestorMatchRun, InvestorUniverseSnapshot, InvestorMatchLabel, FounderLead
