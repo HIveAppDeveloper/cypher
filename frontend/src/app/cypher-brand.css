@@ -1,12 +1,12 @@
 /* Cypher's original monochrome identity. Imported last so older workspace
    palettes cannot recolor the brand or its controls. Status colors retain meaning. */
 :root {
-  --cx-bg:#f6f5ef; --cx-card:#fff; --cx-label:#000; --cx-label-2:#62625d;
-  --cx-label-3:#74746e; --cx-fill:rgba(0,0,0,.07); --cx-fill-2:rgba(0,0,0,.04);
-  --cx-sep:#e2e0d8; --cx-inverse:#fff; --cx-material:rgba(246,245,239,.94);
+  --cx-bg:#f2ead8; --cx-card:#fffcf4; --cx-label:#090806; --cx-label-2:#5b554b;
+  --cx-label-3:#6b6254; --cx-fill:rgba(29,22,12,.07); --cx-fill-2:rgba(29,22,12,.04);
+  --cx-sep:#e5dcc9; --cx-inverse:#fffdf8; --cx-material:rgba(246,240,227,.94);
   --bg-main:var(--cx-bg); --bg-panel:var(--cx-card); --bg-surface:var(--cx-card);
-  --bg-card:#eeede7; --bg-card-hover:#e8e7df; --system-sidebar:#f0efe9;
-  --system-subtle:#e9e8e1; --system-hover:rgba(0,0,0,.045); --system-selected:rgba(0,0,0,.075);
+  --bg-card:#ece3d2; --bg-card-hover:#e4dac7; --system-sidebar:#ece3d2;
+  --system-subtle:#f0eadf; --system-hover:rgba(29,22,12,.045); --system-selected:rgba(29,22,12,.075);
   --system-separator:var(--cx-sep); --border-light:var(--cx-sep);
   --text-primary:var(--cx-label); --text-secondary:var(--cx-label-2); --text-muted:var(--cx-label-2);
   --brand-action:var(--cx-label); --brand-on-action:var(--cx-inverse);
@@ -35,13 +35,9 @@ input,textarea,select,button,progress {accent-color:var(--brand-action);caret-co
 :is(button,a,input,textarea,select,summary,[tabindex]):focus-visible {outline-color:var(--cx-label)}
 ::-webkit-scrollbar-thumb {background:var(--cx-sep)}
 body :is(.app-layout,.login-page,dialog) a {color:var(--cx-label);text-decoration-color:currentColor}
-.cypher-mark {display:block;width:100%;height:auto;aspect-ratio:1624/630;overflow:hidden;flex-shrink:0}
-@media(prefers-color-scheme:dark) {:root:not([data-theme="light"]) .cypher-mark {filter:invert(1)}}
-:root[data-theme="dark"] .cypher-mark {filter:invert(1)}
-.sidebar-brand .brand-symbol,.mobile-nav-header .brand-symbol,.login-brand .brand-symbol {width:52px;height:auto;aspect-ratio:1624/630;border:0;border-radius:0;background:none;filter:contrast(1.3);transform-origin:center;transition:opacity .2s ease,transform .08s linear,filter .2s ease}
+.cypher-mark {display:block;width:100%;height:auto;aspect-ratio:1600/632;overflow:visible;flex-shrink:0;color:var(--cx-label)}
+.sidebar-brand .brand-symbol,.mobile-nav-header .brand-symbol,.login-brand .brand-symbol {width:46px;height:auto;aspect-ratio:1600/632;border:0;border-radius:0;background:none;filter:none;transform:none;transition:opacity .2s ease}
 .sidebar-brand:hover .brand-symbol {filter:none;transform:none;opacity:.65}
-@media(prefers-color-scheme:dark) {:root:not([data-theme="light"]) :is(.sidebar-brand,.mobile-nav-header,.login-brand) .brand-symbol {filter:invert(1) contrast(1.2)}}
-:root[data-theme="dark"] :is(.sidebar-brand,.mobile-nav-header,.login-brand) .brand-symbol {filter:invert(1) contrast(1.2)}
 .sidebar-shell .new-task-button,.btn-primary,.login-email-button,.connector-connect,.composer .send-button,.quickstart .task-composer-footer .btn-primary {background:var(--brand-action);color:var(--brand-on-action);box-shadow:none}
 .sidebar-shell .new-task-button:hover,.btn-primary:hover:not(:disabled),.connector-connect:hover {background:var(--brand-action);opacity:.84}
 .sidebar-shell .bot-row.selected,.sidebar-shell .roster-filters button[aria-pressed="true"],.glass-select-option[data-highlighted],.connector-tabs button[aria-pressed="true"] {background:var(--system-selected);color:var(--cx-label)}
@@ -50,7 +46,6 @@ body :is(.app-layout,.login-page,dialog) a {color:var(--cx-label);text-decoratio
 .message.outgoing .message-content a {color:inherit}
 .message-markdown a,.model-connection-link,.sidebar-shell .roster-filters button[aria-pressed="true"] {color:var(--cx-label)}
 .bot-avatar.agent-initials {background:var(--system-subtle)!important;color:var(--cx-label)!important}
-.connector-logo img,.google-login {filter:grayscale(1)}
 .glass-select-content,.bot-dialog,.connectors-dialog,.work-panel,.command-dialog {background:var(--cx-card);color:var(--cx-label);border-color:var(--cx-sep)}
 .connector-authorization {background:var(--cx-bg);border-color:var(--cx-sep)}
 .connector-authorization h3 {font-weight:500}
@@ -96,17 +91,43 @@ body :is(.app-layout,.login-page,dialog) a {color:var(--cx-label);text-decoratio
 .connectors-dialog .website-search input {background:var(--cx-card);color:var(--cx-label);border-color:var(--cx-sep)}
 .connectors-dialog .website-search input::placeholder {color:var(--cx-label-2)}
 .connectors-dialog .website-search input:focus {border-color:var(--cx-label);box-shadow:0 0 0 2px var(--cx-fill)}
+.connectors-dialog .google-connect-entry {display:grid;grid-template-columns:34px minmax(0,1fr) auto;align-items:center;gap:13px;margin:0 0 12px;padding:13px 15px;border:1px solid var(--cx-sep);border-radius:14px;background:var(--cx-card);color:var(--cx-label)}
+.google-brand-mark {display:block;width:25px;height:25px}
+.connectors-dialog .google-connect-entry h3 {margin:0;font-size:14px;font-weight:600;letter-spacing:-.01em}
+.connectors-dialog .google-connect-entry p {margin:3px 0 0;color:var(--cx-label-2);font-size:12px;line-height:1.45}
+.connectors-dialog .google-connect-entry>a {display:flex;align-items:center;justify-content:center;gap:8px;min-height:40px;padding:8px 12px;border:1px solid var(--cx-sep);border-radius:10px;background:var(--cx-card);font-size:12px;font-weight:550;text-decoration:none;transition:background .18s ease,transform .18s ease,border-color .18s ease}
+.connectors-dialog .google-connect-entry>a:hover {background:var(--system-subtle);border-color:var(--cx-label-3);transform:translateY(-1px)}
+.connectors-dialog .google-connect-entry>a svg,.connector-browse-all svg {width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.connector-featured {margin:6px 0 16px;padding-top:12px;border-top:1px solid var(--cx-sep)}
+.connector-featured-heading {display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin:0 0 12px}
+.connector-featured-heading h3 {margin:0;color:var(--cx-label);font-size:16px;font-weight:600;letter-spacing:-.02em}
+.connector-featured-heading p {margin:4px 0 0;color:var(--cx-label-2);font-size:11px;line-height:1.45}
+.connector-featured-heading>span {flex:none;color:var(--cx-label-2);font-size:11px;font-variant-numeric:tabular-nums}
+.connectors-dialog .connector-featured-grid {grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.connectors-dialog .connector-featured-grid .connector-entry {padding:12px;border-radius:13px;background:#fffdf8;transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease}
+.connectors-dialog .connector-featured-grid .connector-entry:hover {transform:translateY(-2px);border-color:#cbbd9f;box-shadow:0 6px 18px rgba(38,30,15,.06)}
+.connectors-dialog .connector-featured-grid .connector-entry>p {min-height:34px;margin:9px 0 10px;font-size:11px;line-height:1.5}
+.connectors-dialog .connector-featured-grid .connector-entry-footer>a {display:none}
+.connectors-dialog .connector-featured-grid .connector-connect {min-height:36px;padding:7px 10px;border-radius:9px;background:var(--cx-label);color:var(--cx-inverse);font-size:11px;transition:transform .16s ease,opacity .16s ease}
+.connectors-dialog .connector-featured-grid .connector-connect:hover:not(:disabled) {transform:translateY(-1px);opacity:.83}
+.connectors-dialog .connector-browse-all {display:flex;align-items:center;justify-content:center;gap:9px;width:100%;min-height:42px;margin-top:10px;padding:9px 14px;border:1px solid var(--cx-sep);border-radius:11px;background:transparent;color:var(--cx-label);font-size:12px;font-weight:550;transition:background .18s ease,border-color .18s ease,transform .18s ease}
+.connectors-dialog .connector-browse-all span {padding:2px 7px;border-radius:999px;background:var(--system-subtle);color:var(--cx-label-2);font-size:10px;font-variant-numeric:tabular-nums}
+.connectors-dialog .connector-browse-all:hover:not(:disabled) {transform:translateY(-1px);border-color:var(--cx-label-3);background:var(--cx-fill-2)}
+.connectors-dialog .connector-browse-all:disabled {opacity:.48}
+.connectors-dialog .connector-entry .connector-connect {background:var(--cx-label);color:var(--cx-inverse)}
+.connectors-dialog .connector-connect:not(:disabled) {transition:transform .16s ease,opacity .16s ease,background .16s ease}
+.connectors-dialog .connector-connect:hover:not(:disabled) {transform:translateY(-1px);opacity:.84}
 .sidebar-shell .command-launcher {background:var(--cx-card);color:var(--cx-label-2);border-color:var(--cx-sep)}
 .sidebar-shell .command-launcher:hover {background:var(--system-subtle);color:var(--cx-label)}
 .sidebar-shell :is(.roster-toolbar .section-label,.rooms-label,.rooms-label button,.sidebar-more>summary,.sidebar-more>summary::after,.sidebar-layout-tools>button,.sidebar-layout-menu>summary) {color:var(--cx-label-2)}
 
 /* The original animated binary lens and one wordmark, as in the reference. */
-.quickstart {background:var(--cx-bg);justify-content:flex-start;padding-block:clamp(32px,7vh,72px) 40px}
-.quickstart-panel {width:min(620px,100%);padding-block:0}
-.quickstart .quickstart-mark {display:block;position:relative;width:min(560px,100%);height:auto;aspect-ratio:560/210;margin:0 auto 20px;padding:0;background:none;border:0;border-radius:0;box-shadow:none;animation:none}
+.quickstart {background:var(--cx-bg);justify-content:center;padding-block:clamp(22px,5vh,48px) 32px}
+.quickstart-panel {width:min(700px,100%);padding-block:0}
+.quickstart .quickstart-mark {display:block;position:relative;width:min(320px,82%);height:auto;aspect-ratio:41/21;margin:0 auto 12px;padding:0;background:none;border:0;border-radius:0;box-shadow:none;animation:none}
 .quickstart-mark::before,.quickstart-mark::after {display:none}
 .quickstart .quickstart-real-lens {display:block;width:100%;height:100%;color:var(--cx-label)}
-.quickstart h1 {margin:0 0 12px;font-size:clamp(48px,6vw,72px);line-height:1.05;font-weight:500;letter-spacing:-.04em;color:var(--cx-label);animation:none}
+.quickstart h1 {max-width:none;margin:0 0 16px;font-size:clamp(34px,4vw,44px);line-height:1.12;font-weight:500;letter-spacing:-.035em;color:var(--cx-label);animation:none}
 .quickstart-intro {margin:0 0 28px;max-width:46ch;font-size:14px;color:var(--cx-label-2);animation:none}
 .quickstart .task-composer {display:flex;flex-direction:column;gap:14px;height:auto;padding:0;border:0;border-radius:0;background:transparent;box-shadow:none;animation:none;transform:none}
 .quickstart .task-composer:hover,.quickstart .task-composer:focus-within {border:0;box-shadow:none;transform:none}
@@ -156,8 +177,9 @@ body :is(.app-layout,.login-page,dialog) a {color:var(--cx-label);text-decoratio
 .login-skip,.login-page .login-card a {color:var(--cx-label)}
 .login-email-sent {background:var(--cx-bg);border-color:var(--cx-sep)}
 @media(max-width:760px) {
-  .quickstart .quickstart-mark {width:100%;margin-bottom:20px}
-  .quickstart h1 {font-size:52px}
+  .connectors-dialog .connector-featured-grid {grid-template-columns:repeat(2,minmax(0,1fr))}
+  .quickstart .quickstart-mark {width:min(260px,78vw);margin-bottom:12px}
+  .quickstart h1 {font-size:clamp(30px,8vw,38px)}
   .quickstart-intro {margin-bottom:24px;font-size:14px}
   .quickstart .task-composer {height:auto}
   .quickstart .task-composer-footer .btn-primary {width:44px;height:44px;min-height:44px}
@@ -166,4 +188,10 @@ body :is(.app-layout,.login-page,dialog) a {color:var(--cx-label);text-decoratio
   .login-layout {padding:32px 0}
   .login-card {padding:28px 22px}
 }
-@media(prefers-reduced-motion:reduce) {*,*::before,*::after {scroll-behavior:auto!important}}
+@media(max-width:600px) {
+  .connectors-dialog .google-connect-entry {grid-template-columns:28px minmax(0,1fr);gap:10px;padding:12px}
+  .connectors-dialog .google-connect-entry>a {grid-column:1/-1;width:100%}
+  .connectors-dialog .connector-featured-grid {grid-template-columns:1fr}
+  .connectors-dialog .connector-featured-grid .connector-entry>p {min-height:0}
+}
+@media(prefers-reduced-motion:reduce) {*,*::before,*::after {scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}

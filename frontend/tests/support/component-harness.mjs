@@ -114,6 +114,7 @@ function load(path, imports = {}, globals = {}) {
   runInNewContext(compiled, { exports, Error, Map, ...globals,
     require: name => {
       if (name === '../lib/canonical-app') return { CANONICAL_APP_ORIGIN: 'https://app.example', isOffCanonicalHost: () => false };
+      if (name === '../lib/speech') return { createSpeechRecognition: () => null, describeSpeechError: () => 'Speech input unavailable.', hasSpeechRecognition: () => false };
       if (!(name in imports)) throw new Error('Unexpected import: ' + name);
       return imports[name];
     } });

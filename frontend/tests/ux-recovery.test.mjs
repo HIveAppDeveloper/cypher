@@ -139,6 +139,7 @@ function quickStart(env, onStart, initialScope = 'local') {
     './cipher/BinaryLens': { __esModule: true, default: 'binary-lens' },
     './cipher/CypherMark': { __esModule: true, default: 'cypher-mark' },
     './cipher/RecentWork': { RecentWork: 'recent-work' },
+    '../lib/speech': { createSpeechRecognition: () => null, describeSpeechError: () => 'Speech input unavailable.' },
   }, { ...env.globals, React: view.react.default });
   view.mount(() => QuickStart({ draftScope, options: { routing: 'auto', provider: 'openai', model: 'gpt-6.1-sol' },
     onStart, onOptions() {}, onCreateBot() {}, onCreateRoom() {}, onOpenLounge: async () => {} }));
@@ -156,7 +157,7 @@ function chat(env, api) {
     './BotAvatar': { BotAvatar: 'bot-avatar' }, './MessageBubble': { MessageBubble: 'message-bubble' },
     './cipher/CypherMark': { __esModule: true, default: 'cypher-mark' },
     './QuickStart': { QuickStart: 'quick-start' }, './RunControls': { RunControls: 'run-controls', DEFAULT_OPTIONS: {} },
-    '../lib/modelPolicy': { modelPolicy: value => value }, '../lib/attachments': { readAttachment: async () => ({ name: 'fixture.txt', mime: 'text/plain', data: 'eA==' }) } };
+    '../lib/modelPolicy': { modelPolicy: value => value }, '../lib/speech': { createSpeechRecognition: () => null, describeSpeechError: () => 'Speech input unavailable.' }, '../lib/attachments': { readAttachment: async () => ({ name: 'fixture.txt', mime: 'text/plain', data: 'eA==' }) } };
   const { ChatPanel } = load('../src/components/ChatPanel.tsx', { react: view.react, ...stubs }, env.globals);
   view.mount(() => ChatPanel({ bot, room: null, bots: [bot], onCreateBot() {}, onCreateRoom() {},
     onQuickStart: async () => {}, onOpenLounge: async () => {} }));

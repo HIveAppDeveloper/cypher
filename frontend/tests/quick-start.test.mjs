@@ -54,6 +54,7 @@ function quickStart(onStart, initialOptions = { routing: 'auto', provider: 'open
     './cipher/BinaryLens': { __esModule: true, default: 'binary-lens' },
     './cipher/CypherMark': { __esModule: true, default: 'cypher-mark' },
     './cipher/RecentWork': { RecentWork: 'recent-work' },
+    '../lib/speech': { createSpeechRecognition: () => null, describeSpeechError: () => 'Speech input unavailable.' },
   }, { React: runtime.react, localStorage: { setItem() {} } });
   return () => runtime.render(() => QuickStart({
     options, onOptions: next => { options = next; }, onStart,

@@ -4,8 +4,8 @@ import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { request } from '../lib/api';
 import { CYPHER_VOICE_INTRO } from '../lib/cypher-voice';
 import BinaryLens from './cipher/BinaryLens';
-import CipherIntro from './cipher/CipherIntro';
 import CypherMark from './cipher/CypherMark';
+import CipherIntro from './cipher/CipherIntro';
 import './prospecting-workspace.css';
 
 type Draft = { subject: string; body: string; status: 'local_draft'; recipient: null; review_required: boolean; source_urls: string[] };
@@ -387,6 +387,5 @@ export default function ProspectingWorkspace() {
         <div className="cx-history"><div className="cx-log-head"><h2 className="cx-label">Recent research</h2></div>{runs.length === 0 ? <p>No saved runs yet.</p> : runs.slice(0, 6).map(item => <button key={item.id} type="button" className={item.id === runId ? 'is-selected' : ''} disabled={!!pending} onClick={() => selectRun(item)} aria-pressed={item.id === runId}><strong>{item.market}</strong><span>{statusLabel(item.status)} · {item.results.length} candidates</span></button>)}</div>
       </aside>
     </section>
-    <footer className="cx-footer"><span>Research runs through Open GrokBot’s authenticated backend.</span><a href="/workspace">Open full workspace</a></footer>
   </main>;
 }
