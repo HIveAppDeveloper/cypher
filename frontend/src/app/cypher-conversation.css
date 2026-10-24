@@ -38,11 +38,16 @@
 .message.incoming.message-group-end .message-content {border-bottom-left-radius:5px}
 .message.outgoing.message-group-end .message-content {border-bottom-right-radius:5px}
 .message.outgoing .message-content a {color:inherit}
-.message-sender {margin:0 0 5px 14px;color:var(--cx-label-2);font-size:11px;font-weight:500}
+.message-sender {margin:0;color:var(--cx-label-2);font-size:11px;font-weight:500}
 .message>time {margin:5px 3px 0;color:var(--cx-label-2);font-size:11px}
 .message>small {margin:0 0 5px 14px;color:var(--cx-label-2);font-size:11px}
 .message-grouped {margin-top:4px}
-.message-grouped .message-sender {display:none}
+.message-sender-row {display:flex;align-items:center;gap:6px;margin:0 0 5px 6px}
+.message-sender-row .bot-avatar {width:18px;height:18px;font-size:8px}
+.message-grouped .message-sender-row {display:none}
+.thread-member-stack {display:inline-flex;margin-right:8px;vertical-align:middle}
+.thread-member-stack .bot-avatar {width:22px;height:22px;margin-left:-5px;border:2px solid var(--cx-card);font-size:9px}
+.thread-member-stack .bot-avatar:first-child {margin-left:0}
 .message-actions {position:absolute;top:0;right:0;align-self:auto;margin:0;color:var(--cx-label-2);opacity:0;transition:opacity .16s ease}
 .message.outgoing .message-actions {left:0;right:auto;align-self:auto}
 .message:hover>.message-actions,.message:focus-within>.message-actions,.message-actions[open] {opacity:1}
@@ -58,7 +63,7 @@
 .message-stream>.message:last-child .message-actions>div {top:auto;bottom:40px}
 @media(hover:none){.message-actions {opacity:1}}
 
-.message-markdown { line-height: 1.65; }
+.message-markdown { line-height: 1.5; }
 .message-markdown p { margin: 0 0 11px; }
 .message-markdown > :last-child { margin-bottom: 0; }
 .message-markdown :is(ul, ol) { margin: 0 0 12px; padding-left: 22px; }

@@ -238,7 +238,7 @@ export default function ProspectingWorkspace() {
 
     <section className="cx-hero cx-prospect-hero">
       <BinaryLens className="cx-lens" active={pending === 'profile' || active || voiceState === 'loading' || voiceState === 'playing'} label="Cypher lens"/>
-      <h1>Cypher</h1>
+      <h1>Find your next customers</h1>
       <p>Start with your website. Refine who you want to reach. Research real companies with public evidence.</p>
       <div className="cx-voice-control">
         <button type="button" className={`cx-voice-button is-${voiceState}`} onClick={() => void playVoice()} disabled={voiceState === 'checking' || voiceState === 'setup' || voiceState === 'loading'} aria-pressed={voiceState === 'playing'}>
@@ -252,8 +252,8 @@ export default function ProspectingWorkspace() {
       <form className="cx-command" onSubmit={understand}>
         <div className="cx-group">
           <label className="cx-field" htmlFor="prospecting-url"><span>Company site</span><input id="prospecting-url" type="url" required maxLength={2048} placeholder="https://yourcompany.com" value={url} onChange={event => { setUrl(event.target.value); setProfile(null); setConfirmed(false); }} disabled={!!pending}/></label>
+          <button type="submit" className="cx-run" disabled={!!pending}>{pending === 'profile' ? <><span className="cx-spinner" aria-hidden="true"/>Reading site…</> : <>Read company site<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></>}</button>
         </div>
-        <button type="submit" className="cx-run" disabled={!!pending}>{pending === 'profile' ? <><span className="cx-spinner" aria-hidden="true"/>Reading site…</> : 'Go'}</button>
         <small className="cx-helper">Reads public HTTPS pages that allow automated access. Your extracted offer stays editable before research.</small>
       </form>
       {error && <div role="alert" className="cx-error">{error}{/sign in|session/i.test(error) ? <> <a href="/login">Sign in</a></> : null}</div>}
