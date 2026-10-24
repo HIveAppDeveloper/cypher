@@ -136,6 +136,11 @@ async def make_provider(db, row, callback_url=None):
     if urlsplit(row.url).hostname == 'mcp.lovable.dev':
         metadata_url = None
         client_id = os.getenv('LOVABLE_OAUTH_CLIENT_ID', '').strip()
+        # Lovable's official MCP instructions require this public client ID for
+        # clients outside its first-party integrations. Keep it scoped to the
+        # stable Cypher callback; self-hosted/custom domains can configure theirs.
+        if not client_id and callback.hostname == 'cypher-agent.vercel.app':
+            client_id = '6d465f583e1e4ce5801b1616f735670c'
         if client_id and not saved.get('client_info'):
             client_secret = os.getenv('LOVABLE_OAUTH_CLIENT_SECRET', '').strip() or None
             client = OAuthClientInformationFull(

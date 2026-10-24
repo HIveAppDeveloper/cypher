@@ -24,7 +24,7 @@ export default function WorkspaceApp({ accountEmail, accountId }: { accountEmail
   const { bots, selectedBot, setSelectedBot, createBot, error, refreshBots, loading: botsLoading } = useBots();
   const [creator, setCreator] = useState<'bot' | 'room' | 'setup' | 'plugins' | 'preferences' | 'goals' | 'channels' | 'hub' | 'computer' | null>(null);
   const createFromComputer = useRef(false);
-  useEffect(()=>{restoreAppearance();if(new URLSearchParams(window.location.search).has('plugins'))setCreator('plugins');},[]);
+  useEffect(()=>{restoreAppearance();const params=new URLSearchParams(window.location.search);if(params.has('plugins')||params.has('connect'))setCreator('plugins');},[]);
   const [rooms, setRooms] = useState<Conversation[]>([]);
   const [selectedRoom, setSelectedRoom] = useState<Conversation | null>(null);
   const [voiceMode, setVoiceMode] = useState(false);
