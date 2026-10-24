@@ -1,5 +1,41 @@
 /* Cypher motion: the lens owns the signature; controls explain state changes. */
 :root {--cypher-ease:cubic-bezier(.16,1,.3,1)}
+@media(prefers-reduced-motion:no-preference) {
+ .cx-prospecting .cx-toolbar {animation:cx-micro-enter .42s var(--cypher-ease) both}
+ .cx-prospect-hero > :is(.cx-lens,h1,p,.cx-voice-control,.cx-command) {animation:cx-micro-enter .48s var(--cypher-ease) both}
+ .cx-prospect-hero > h1 {animation-delay:55ms}
+ .cx-prospect-hero > p {animation-delay:105ms}
+ .cx-prospect-hero > .cx-voice-control {animation-delay:155ms}
+ .cx-prospect-hero > .cx-command {animation-delay:205ms}
+ .cx-prospect-hero > .cx-lens {animation:cx-micro-enter .48s var(--cypher-ease) both,cx-lens-glow 6.4s ease-in-out 1.2s infinite}
+ .cx-prospect-flow {animation:cx-micro-enter .45s var(--cypher-ease) 120ms both}
+ .cx-step > span {position:relative;transition:transform .28s var(--cypher-ease),background-color .2s ease,color .2s ease}
+ .cx-step.is-current > span {transform:scale(1.06)}
+ .cx-step.is-current > span::after {content:"";position:absolute;inset:-3px;border:1px solid currentColor;border-radius:50%;opacity:0;animation:cx-step-ring 2.2s ease-out infinite}
+ .cx-result-row:nth-child(-n+8) {animation:cx-row-in .26s var(--cypher-ease) both}
+ .cx-result-row:nth-child(2) {animation-delay:25ms}
+ .cx-result-row:nth-child(3) {animation-delay:50ms}
+ .cx-result-row:nth-child(4) {animation-delay:75ms}
+ .cx-result-row:nth-child(5) {animation-delay:100ms}
+ .cx-result-row:nth-child(6) {animation-delay:125ms}
+ .cx-prospecting .cx-run:not(:disabled),.cx-prospecting .cx-secondary:not(:disabled) {transition:transform .2s var(--cypher-ease),background-color .2s ease,box-shadow .2s ease}
+ .cx-prospecting .cx-run:hover:not(:disabled),.cx-prospecting .cx-secondary:hover:not(:disabled) {transform:translateY(-1px)}
+ .cx-prospecting .cx-run:active:not(:disabled),.cx-prospecting .cx-secondary:active:not(:disabled) {transform:scale(.975)}
+ .cx-prospecting .cx-voice-button:active:not(:disabled) {transform:scale(.96)}
+ .cx-prospecting .cx-nav a {transition:background-color .18s ease,transform .18s var(--cypher-ease)}
+ .cx-prospecting .cx-nav a:hover {transform:translateY(-1px)}
+ .cx-prospecting .cx-field {transition:background-color .2s ease}
+ .cx-prospecting .cx-group {transition:box-shadow .22s ease}
+ .cx-prospecting .cx-group:focus-within {box-shadow:0 0 0 3px color-mix(in srgb,var(--cx-label) 10%,transparent),var(--cx-shadow)}
+ .cx-prospecting .cx-result-row:focus-visible {z-index:1;box-shadow:inset 0 0 0 2px color-mix(in srgb,var(--cx-label) 42%,transparent)}
+ .cx-prospecting .cx-word:hover .cx-brand-image {filter:contrast(1.55)}
+ .login-brand:hover .brand-symbol,.sidebar-brand:hover .brand-symbol {transform:scale(1.06)}
+ .login-card .login-email-button:active:not(:disabled) {transform:scale(.98)}
+}
+@keyframes cx-micro-enter {from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes cx-lens-glow {0%,100%{filter:brightness(.96)}50%{filter:brightness(1.08)}}
+@keyframes cx-step-ring {0%{transform:scale(.86);opacity:.4}80%,100%{transform:scale(1.28);opacity:0}}
+@keyframes cx-row-in {from{opacity:.45;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
 .quickstart-panel[data-motion-entered="true"] > :is(.quickstart-mark,h1,.quickstart-intro,.task-composer,.starter-prompts),
 .quickstart-panel[data-motion-entered="true"] > section[aria-labelledby="recent-work-heading"] {
  animation:cypher-view-in .32s var(--cypher-ease) both;
@@ -137,6 +173,9 @@
  .quickstart .task-composer,.quickstart .starter-prompts button,.quickstart .task-composer-footer .btn-primary {transition:none!important;transform:none!important}
  .quickstart .starter-prompts button:hover:not(:disabled),.quickstart .task-composer-footer .btn-primary:hover:not(:disabled),.quickstart .task-composer-footer .btn-primary:active:not(:disabled) {transform:none!important}
  .quickstart .task-composer-footer .btn-primary > svg,.quickstart .task-composer[aria-busy="true"] .btn-primary::after {animation:none!important}
+ .cx-prospecting *, .cx-prospecting *::before, .cx-prospecting *::after {animation:none!important;transition:none!important;scroll-behavior:auto!important}
+ .login-brand .brand-symbol,.sidebar-brand .brand-symbol {transform:none!important}
 }
 html[data-motion=false] :is(.connectors-dialog,.connectors-body,.connector-entry,.mobile-navigation,.plugin-registration,.connector-notice,.connector-error,.lovable-connect-progress,.connector-authorization,.bot-dialog,.command-dialog,.work-drawer) {animation:none!important}
 html[data-motion=false] :is(.plugin-tab-marker,.connector-connect,.connector-close,.connected-service button,.plugin-registration button,.connector-connect svg,.task-composer .btn-primary svg,.composer .send-button svg) {transition:none!important;transform:none!important}
+html[data-motion=false] :is(.cx-prospecting,.cx-prospecting *, .cx-prospecting *::before,.cx-prospecting *::after) {animation:none!important;transition:none!important;transform:none!important}

@@ -1,0 +1,98 @@
+/* App Store-style discovery, using Cypher's warm neutral surfaces. */
+.connectors-dialog.app-store-dialog {
+  width: min(1020px, calc(100vw - 32px));
+  height: min(880px, calc(100dvh - 40px));
+  max-height: none;
+  border-radius: 22px;
+  background: var(--cx-bg);
+}
+.app-store-dialog .connectors-header { min-height: 82px; padding: 22px 28px 17px; border-bottom: 1px solid var(--cx-sep); background: var(--cx-card); }
+.app-store-dialog .connectors-header h2 { font-size: 23px; font-weight: 600; letter-spacing: -.03em; }
+.app-store-dialog .connectors-header p { margin-top: 5px; font-size: 13px; }
+.app-store-dialog .connector-tabs { padding: 0 28px; background: var(--cx-card); }
+.app-store-dialog .connectors-body { flex: 1; min-height: 0; overflow: auto; padding: 23px 28px 28px; background: var(--cx-bg); }
+.app-store-dialog .connector-close { width: 42px; height: 42px; border-radius: 50%; background: var(--cx-fill-2); color: var(--cx-label); }
+.app-store-dialog .store-search { padding: 0 0 22px; border-bottom: 1px solid var(--cx-sep); }
+.app-store-dialog .store-section-heading h3,
+.app-store-dialog .store-browse-heading h3 { margin: 0; color: var(--cx-label); font-size: 19px; font-weight: 600; letter-spacing: -.025em; }
+.app-store-dialog .store-section-heading p,
+.app-store-dialog .store-browse-heading p { margin: 5px 0 0; color: var(--cx-label-2); font-size: 12px; line-height: 1.5; }
+.app-store-dialog .website-connect { margin: 14px 0 0; }
+.app-store-dialog .website-connect .website-search input { min-height: 52px; border-color: var(--cx-sep); border-radius: 14px; background: var(--cx-card); color: var(--cx-label); font-size: 15px; }
+.app-store-dialog .website-search input:focus { border-color: var(--cx-label); box-shadow: 0 0 0 3px rgba(0, 0, 0, .08); }
+.app-store-dialog .website-search input::placeholder { color: var(--cx-label-2); opacity: 1; }
+.app-store-dialog .website-connect > p { margin: 8px 0 0; color: var(--cx-label-2); font-size: 11px; }
+.app-store-dialog .store-featured-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 20px 0 26px; }
+.app-store-dialog .store-featured-card { display: grid; grid-template-columns: 50px minmax(0, 1fr) auto; align-items: center; gap: 13px; min-width: 0; padding: 17px; border: 1px solid var(--cx-sep); border-radius: 16px; background: var(--cx-card); }
+.app-store-dialog .store-featured-icon { display: grid; width: 50px; height: 50px; place-items: center; border-radius: 14px; background: var(--cx-label); color: var(--cx-inverse); font-size: 21px; font-weight: 600; }
+.app-store-dialog .store-featured-copy { min-width: 0; }
+.app-store-dialog .store-featured-copy h3 { margin: 0; color: var(--cx-label); font-size: 14px; font-weight: 600; }
+.app-store-dialog .store-featured-copy p { margin: 4px 0 0; color: var(--cx-label-2); font-size: 11px; line-height: 1.45; }
+.app-store-dialog .store-featured-copy > a { display: inline-block; margin-top: 7px; color: var(--cx-label-2); font-size: 10px; text-underline-offset: 3px; }
+.app-store-dialog .connector-connect { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 38px; padding: 8px 13px; border: 1px solid var(--cx-label); border-radius: 999px; background: var(--cx-label); color: var(--cx-inverse); font-size: 12px; font-weight: 550; white-space: nowrap; }
+.app-store-dialog .connector-connect:hover:not(:disabled) { background: var(--cx-label); color: var(--cx-inverse); opacity: .82; }
+.app-store-dialog .connector-connect:disabled { opacity: .48; cursor: not-allowed; }
+.app-store-dialog .connector-connect svg { width: 14px; height: 14px; flex: 0 0 auto; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.app-store-dialog .store-available { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 16px 0; border-bottom: 1px solid var(--cx-sep); }
+.app-store-dialog .store-available h3 { margin: 0; color: var(--cx-label); font-size: 14px; font-weight: 600; }
+.app-store-dialog .store-available p { margin: 4px 0 0; color: var(--cx-label-2); font-size: 11px; }
+.app-store-dialog .store-available .connected-service-actions { justify-content: flex-end; flex-wrap: wrap; gap: 7px; }
+.app-store-dialog .store-available .connected-service-actions button { min-height: 36px; padding: 7px 11px; border: 1px solid var(--cx-sep); border-radius: 999px; background: var(--cx-card); color: var(--cx-label); font-size: 11px; }
+.app-store-dialog .store-browse { padding-top: 22px; }
+.app-store-dialog .store-browse-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.app-store-dialog .store-browse-heading h3 span { display: inline-grid; min-width: 22px; height: 22px; place-items: center; margin-left: 5px; padding: 0 5px; border-radius: 999px; background: var(--cx-fill-2); color: var(--cx-label-2); font-size: 11px; font-weight: 500; vertical-align: 2px; }
+.app-store-dialog .catalog-toolbar { flex: 0 0 auto; margin: 0; color: var(--cx-label-2); }
+.app-store-dialog .catalog-toolbar select { min-height: 38px; border-color: var(--cx-sep); border-radius: 10px; background: var(--cx-card); color: var(--cx-label); }
+.app-store-dialog .store-categories { display: flex; gap: 7px; overflow-x: auto; margin: 15px 0 8px; padding: 2px 1px 9px; scrollbar-width: thin; }
+.app-store-dialog .store-categories button { min-height: 34px; flex: 0 0 auto; padding: 7px 13px; border: 1px solid var(--cx-sep); border-radius: 999px; background: var(--cx-card); color: var(--cx-label-2); font-size: 11px; white-space: nowrap; }
+.app-store-dialog .store-categories button[aria-pressed="true"] { border-color: var(--cx-label); background: var(--cx-label); color: var(--cx-inverse); }
+.app-store-dialog .catalog-results { margin: 4px 0 11px; color: var(--cx-label-2); font-size: 11px; }
+.app-store-dialog .connector-catalog { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.app-store-dialog .connector-entry { display: flex; min-width: 0; min-height: 186px; flex-direction: column; gap: 0; padding: 16px; border: 1px solid var(--cx-sep); border-radius: 16px; background: var(--cx-card); transition: border-color .16s ease, transform .16s ease; }
+.app-store-dialog .connector-entry:hover { border-color: var(--cx-label-3); transform: translateY(-1px); }
+.app-store-dialog .connector-entry-title { align-self: stretch; gap: 11px; }
+.app-store-dialog .connector-entry .connector-logo { width: 46px; height: 46px; border-radius: 13px; background: var(--cx-fill-2); color: var(--cx-label); font-size: 12px; }
+.app-store-dialog .connector-entry .connector-logo img { width: 34px; height: 34px; }
+.app-store-dialog .connector-entry h4 { color: var(--cx-label); font-size: 14px; font-weight: 600; letter-spacing: -.01em; }
+.app-store-dialog .connector-entry-title > div > span { margin-top: 3px; color: var(--cx-label-2); font-size: 10px; }
+.app-store-dialog .connector-state { margin-left: auto; border: 1px solid var(--cx-sep); background: var(--cx-bg); color: var(--cx-label-2); font-size: 10px; }
+.app-store-dialog .connector-entry > p { display: block; min-height: 0; margin: 12px 0 0; color: var(--cx-label-2); font-size: 12px; line-height: 1.5; -webkit-line-clamp: unset; }
+.app-store-dialog .connector-entry > .connector-access-hint { margin-top: 7px; color: var(--cx-label-3); font-size: 10px; }
+.app-store-dialog .connector-entry > p.connector-detail { margin-top: 8px; color: var(--cx-label-2); font-size: 11px; }
+.app-store-dialog .connector-entry-footer { display: flex; grid-column: auto; grid-row: auto; align-self: stretch; justify-content: space-between; gap: 9px; margin-top: auto; padding-top: 14px; }
+.app-store-dialog .connector-entry-footer > a { display: flex; min-height: 36px; align-items: center; color: var(--cx-label-2); font-size: 10px; text-decoration: underline; text-underline-offset: 3px; }
+.app-store-dialog .connector-entry-footer .connector-connect { min-height: 36px; background: var(--cx-label); color: var(--cx-inverse); }
+.app-store-dialog .connector-entry-footer .connector-connect:hover:not(:disabled) { background: var(--cx-label); opacity: .82; }
+.app-store-dialog .connector-empty { padding: 28px 12px; color: var(--cx-label-2); }
+.app-store-dialog .connector-empty h3 { color: var(--cx-label); }
+.app-store-dialog .mcp-registry-results { margin-top: 26px; padding-top: 20px; border-top: 1px solid var(--cx-sep); }
+.app-store-dialog .mcp-directory-disclosure { margin-top: 22px; }
+.app-store-dialog .catalog-note { margin-top: 14px; color: var(--cx-label-2); }
+.app-store-dialog :is(input, select, button, a):focus-visible { outline: 2px solid var(--cx-label); outline-offset: 3px; }
+.composer .composer-voice-mark { transition: transform 90ms linear; }
+@media (max-width: 760px) {
+  .app-store-dialog .connectors-body { padding: 19px 18px 23px; }
+  .app-store-dialog .connectors-header { padding: 18px 18px 15px; }
+  .app-store-dialog .connector-tabs { padding: 0 8px; }
+  .app-store-dialog .connector-tabs button { font-size: 11px; }
+  .app-store-dialog .store-featured-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 600px) {
+  .connectors-dialog.app-store-dialog { width: calc(100vw - 16px); height: calc(100dvh - 16px); border-radius: 20px; }
+  .app-store-dialog .connectors-header { min-height: 72px; padding: 16px 14px 12px; }
+  .app-store-dialog .connectors-header h2 { font-size: 21px; }
+  .app-store-dialog .connector-tabs button { padding-inline: 3px; font-size: 10px; }
+  .app-store-dialog .connectors-body { padding: 17px 14px 22px; }
+  .app-store-dialog .store-browse-heading { align-items: flex-start; flex-direction: column; gap: 12px; }
+  .app-store-dialog .catalog-toolbar { width: 100%; }
+  .app-store-dialog .catalog-toolbar select { flex: 1; }
+  .app-store-dialog .connector-catalog { grid-template-columns: 1fr; }
+  .app-store-dialog .connector-entry { min-height: 0; }
+  .app-store-dialog .store-featured-card { grid-template-columns: 44px minmax(0, 1fr); gap: 11px; padding: 14px; }
+  .app-store-dialog .store-featured-icon { width: 44px; height: 44px; border-radius: 12px; }
+  .app-store-dialog .store-featured-card > .connector-connect { grid-column: 2; justify-self: start; }
+  .app-store-dialog .store-available { align-items: flex-start; flex-direction: column; }
+}
+@media (prefers-reduced-motion: reduce) { .app-store-dialog .connector-entry, .composer .composer-voice-mark { transition: none; transform: none; } }
+html[data-motion="false"] .app-store-dialog .connector-entry,
+html[data-motion="false"] .composer .composer-voice-mark { transition: none; transform: none; }

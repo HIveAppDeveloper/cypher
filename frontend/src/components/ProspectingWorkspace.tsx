@@ -1,11 +1,11 @@
 'use client';
 
 import { useEffect, useRef, useState, type FormEvent } from 'react';
-import Image from 'next/image';
 import { request } from '../lib/api';
 import { CYPHER_VOICE_INTRO } from '../lib/cypher-voice';
 import BinaryLens from './cipher/BinaryLens';
 import CipherIntro from './cipher/CipherIntro';
+import CypherMark from './cipher/CypherMark';
 import './prospecting-workspace.css';
 
 type Draft = { subject: string; body: string; status: 'local_draft'; recipient: null; review_required: boolean; source_urls: string[] };
@@ -67,10 +67,14 @@ export default function ProspectingWorkspace() {
   const [notice, setNotice] = useState('');
   const [voiceState, setVoiceState] = useState<VoiceState>('checking');
   const [voiceError, setVoiceError] = useState('');
+  const [voiceLevel, setVoiceLevel] = useState(0);
   const inFlight = useRef(false);
   const operation = useRef<AbortController | null>(null);
   const voiceAudio = useRef<HTMLAudioElement | null>(null);
   const voiceObjectUrl = useRef('');
+  const voiceContext = useRef<AudioContext | null>(null);
+  const voiceMeter = useRef<AnalyserNode | null>(null);
+  const voiceFrame = useRef(0);
   const active = !!run && !terminal(run.status);
   const candidate = run?.results.find(item => item.id === selected) || run?.results[0];
   const runId = run?.id;
@@ -86,6 +90,8 @@ export default function ProspectingWorkspace() {
   useEffect(() => () => {
     voiceAudio.current?.pause();
     if (voiceObjectUrl.current) URL.revokeObjectURL(voiceObjectUrl.current);
+    if (voiceFrame.current) cancelAnimationFrame(voiceFrame.current);
+    if (voiceContext.current && voiceContext.current.state !== 'closed') void voiceContext.current.close();
   }, []);
 
   useEffect(() => {
@@ -179,11 +185,22 @@ export default function ProspectingWorkspace() {
     });
   }
 
+  function clearVoiceMeter() {
+    if (voiceFrame.current) cancelAnimationFrame(voiceFrame.current);
+    voiceFrame.current = 0;
+    voiceMeter.current = null;
+    const context = voiceContext.current;
+    voiceContext.current = null;
+    if (context && context.state !== 'closed') void context.close();
+    setVoiceLevel(0);
+  }
+
   function stopVoice() {
     voiceAudio.current?.pause();
     voiceAudio.current = null;
     if (voiceObjectUrl.current) URL.revokeObjectURL(voiceObjectUrl.current);
     voiceObjectUrl.current = '';
+    clearVoiceMeter();
     setVoiceState('ready');
   }
 
@@ -202,14 +219,49 @@ export default function ProspectingWorkspace() {
       voiceObjectUrl.current = audioUrl;
       const audio = new Audio(audioUrl);
       voiceAudio.current = audio;
+      if (typeof AudioContext !== 'undefined') {
+        try {
+          const context = new AudioContext();
+          const meter = context.createAnalyser();
+          meter.fftSize = 256;
+          const source = context.createMediaElementSource(audio);
+          source.connect(meter);
+          meter.connect(context.destination);
+          voiceContext.current = context;
+          voiceMeter.current = meter;
+          await context.resume();
+          const samples = new Uint8Array(meter.fftSize);
+          let lastUiUpdate = 0;
+          const animateFromAudio = (now: number) => {
+            if (voiceAudio.current !== audio || voiceMeter.current !== meter) return;
+            meter.getByteTimeDomainData(samples);
+            let squareSum = 0;
+            for (let index = 0; index < samples.length; index++) {
+              const value = (samples[index] - 128) / 128;
+              squareSum += value * value;
+            }
+            const level = Math.min(1, Math.sqrt(squareSum / samples.length) * 4.5);
+            if (now - lastUiUpdate > 60) { setVoiceLevel(level); lastUiUpdate = now; }
+            voiceFrame.current = requestAnimationFrame(animateFromAudio);
+          };
+          voiceFrame.current = requestAnimationFrame(animateFromAudio);
+        } catch {
+          const context = voiceContext.current;
+          voiceContext.current = null;
+          voiceMeter.current = null;
+          if (context && context.state !== 'closed') void context.close();
+        }
+      }
       audio.onended = () => {
         if (voiceAudio.current !== audio) return;
         voiceAudio.current = null; URL.revokeObjectURL(audioUrl); voiceObjectUrl.current = '';
+        clearVoiceMeter();
         setVoiceState('ready');
       };
       audio.onerror = () => {
         if (voiceAudio.current !== audio) return;
         voiceAudio.current = null; URL.revokeObjectURL(audioUrl); voiceObjectUrl.current = '';
+        clearVoiceMeter();
         setVoiceError('The audio could not play. Try again.'); setVoiceState('error');
       };
       setVoiceState('playing');
@@ -218,6 +270,7 @@ export default function ProspectingWorkspace() {
       voiceAudio.current?.pause(); voiceAudio.current = null;
       if (voiceObjectUrl.current) URL.revokeObjectURL(voiceObjectUrl.current);
       voiceObjectUrl.current = '';
+      clearVoiceMeter();
       setVoiceError(errorText(failure)); setVoiceState('error');
     }
   }
@@ -229,7 +282,7 @@ export default function ProspectingWorkspace() {
   return <main className="cipher cx-prospecting">
     <CipherIntro />
     <header className="cx-toolbar">
-      <a href="/" className="cx-word"><img className="cx-brand-image" src="/cipher-logo.png" alt=""/><span>Cypher</span></a>
+      <a href="/" className="cx-word"><CypherMark className="cx-brand-image" decorative level={voiceLevel}/><span>Cypher</span></a>
       <nav className="cx-nav" aria-label="Main navigation">
         <a href="/workspace?plugins=1">Plugins</a>
         <a href="/workspace">Workspace</a>
@@ -237,14 +290,14 @@ export default function ProspectingWorkspace() {
     </header>
 
     <section className="cx-hero cx-prospect-hero">
-      <BinaryLens className="cx-lens" active={pending === 'profile' || active || voiceState === 'loading' || voiceState === 'playing'} label="Cypher lens"/>
+      <BinaryLens className="cx-lens" active={pending === 'profile' || active || voiceState === 'loading' || voiceState === 'playing'} level={voiceLevel} label="Cypher lens"/>
       <h1>Find your next customers</h1>
       <p>Start with your website. Refine who you want to reach. Research real companies with public evidence.</p>
       <div className="cx-voice-control">
         <button type="button" className={`cx-voice-button is-${voiceState}`} onClick={() => void playVoice()} disabled={voiceState === 'checking' || voiceState === 'setup' || voiceState === 'loading'} aria-pressed={voiceState === 'playing'}>
-          <Image className="cx-voice-mark" src="/cipher-logo.png" alt="" aria-hidden="true" width={20} height={20} unoptimized/>
+          <CypherMark className="cx-voice-mark" decorative level={voiceLevel}/>
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 9v6h3.7l4.8 4V5l-4.8 4H4.5z"/><path d="M16 9a4 4 0 010 6M18.5 6.5a7.5 7.5 0 010 11"/></svg>
-          {voiceState === 'checking' ? 'Checking voice…' : voiceState === 'setup' ? 'Voice setup needed' : voiceState === 'loading' ? 'Preparing voice…' : voiceState === 'playing' ? 'Stop voice' : voiceState === 'error' ? 'Try voice again' : 'Listen to Cypher'}
+          {voiceState === 'checking' ? 'Checking voice…' : voiceState === 'setup' ? 'Voice setup needed' : voiceState === 'loading' ? 'Preparing voice…' : voiceState === 'playing' ? 'Stop voice' : voiceState === 'error' ? 'Try voice again' : 'Listen to the welcome'}
         </button>
         {voiceState === 'setup' ? <span className="cx-voice-note" role="status">Add your ElevenLabs API key in Vercel to enable this.</span> : null}
         {voiceError ? <span className="cx-voice-note" role="status">{voiceError}</span> : null}
@@ -320,6 +373,6 @@ export default function ProspectingWorkspace() {
         <div className="cx-history"><div className="cx-log-head"><h2 className="cx-label">Recent research</h2></div>{runs.length === 0 ? <p>No saved runs yet.</p> : runs.slice(0, 6).map(item => <button key={item.id} type="button" className={item.id === runId ? 'is-selected' : ''} disabled={!!pending} onClick={() => selectRun(item)} aria-pressed={item.id === runId}><strong>{item.market}</strong><span>{statusLabel(item.status)} · {item.results.length} candidates</span></button>)}</div>
       </aside>
     </section>
-    <footer className="cx-footer"><span>Cypher</span><span>Research runs through Open GrokBot’s authenticated backend.</span><a href="/workspace">Open full workspace</a></footer>
+    <footer className="cx-footer"><span>Research runs through Open GrokBot’s authenticated backend.</span><a href="/workspace">Open full workspace</a></footer>
   </main>;
 }

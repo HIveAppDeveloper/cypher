@@ -1,12 +1,12 @@
 /* Cypher's original monochrome identity. Imported last so older workspace
    palettes cannot recolor the brand or its controls. Status colors retain meaning. */
 :root {
-  --cx-bg:#f2f2f7; --cx-card:#fff; --cx-label:#000; --cx-label-2:#626267;
-  --cx-label-3:#737373; --cx-fill:rgba(0,0,0,.07); --cx-fill-2:rgba(0,0,0,.04);
-  --cx-sep:#dedee4; --cx-inverse:#fff; --cx-material:rgba(242,242,247,.94);
+  --cx-bg:#f6f5ef; --cx-card:#fff; --cx-label:#000; --cx-label-2:#62625d;
+  --cx-label-3:#74746e; --cx-fill:rgba(0,0,0,.07); --cx-fill-2:rgba(0,0,0,.04);
+  --cx-sep:#e2e0d8; --cx-inverse:#fff; --cx-material:rgba(246,245,239,.94);
   --bg-main:var(--cx-bg); --bg-panel:var(--cx-card); --bg-surface:var(--cx-card);
-  --bg-card:#ebebeb; --bg-card-hover:#e5e5e5; --system-sidebar:#eee;
-  --system-subtle:#e8e8e8; --system-hover:rgba(0,0,0,.045); --system-selected:rgba(0,0,0,.075);
+  --bg-card:#eeede7; --bg-card-hover:#e8e7df; --system-sidebar:#f0efe9;
+  --system-subtle:#e9e8e1; --system-hover:rgba(0,0,0,.045); --system-selected:rgba(0,0,0,.075);
   --system-separator:var(--cx-sep); --border-light:var(--cx-sep);
   --text-primary:var(--cx-label); --text-secondary:var(--cx-label-2); --text-muted:var(--cx-label-2);
   --brand-action:var(--cx-label); --brand-on-action:var(--cx-inverse);
@@ -35,13 +35,13 @@ input,textarea,select,button,progress {accent-color:var(--brand-action);caret-co
 :is(button,a,input,textarea,select,summary,[tabindex]):focus-visible {outline-color:var(--cx-label)}
 ::-webkit-scrollbar-thumb {background:var(--cx-sep)}
 body :is(.app-layout,.login-page,dialog) a {color:var(--cx-label);text-decoration-color:currentColor}
-.cypher-mark {display:block;width:100%;height:auto;aspect-ratio:1624/806;overflow:visible;flex-shrink:0}
+.cypher-mark {display:block;width:100%;height:auto;aspect-ratio:1624/630;overflow:hidden;flex-shrink:0}
 @media(prefers-color-scheme:dark) {:root:not([data-theme="light"]) .cypher-mark {filter:invert(1)}}
 :root[data-theme="dark"] .cypher-mark {filter:invert(1)}
-.sidebar-brand .brand-symbol,.mobile-nav-header .brand-symbol,.login-brand .brand-symbol {width:40px;height:20px;border:0;border-radius:0;background:none;filter:none;transform:none;transition:opacity .2s ease}
+.sidebar-brand .brand-symbol,.mobile-nav-header .brand-symbol,.login-brand .brand-symbol {width:52px;height:auto;aspect-ratio:1624/630;border:0;border-radius:0;background:none;filter:contrast(1.3);transform-origin:center;transition:opacity .2s ease,transform .08s linear,filter .2s ease}
 .sidebar-brand:hover .brand-symbol {filter:none;transform:none;opacity:.65}
-@media(prefers-color-scheme:dark) {:root:not([data-theme="light"]) :is(.sidebar-brand,.mobile-nav-header,.login-brand) .brand-symbol {filter:invert(1)}}
-:root[data-theme="dark"] :is(.sidebar-brand,.mobile-nav-header,.login-brand) .brand-symbol {filter:invert(1)}
+@media(prefers-color-scheme:dark) {:root:not([data-theme="light"]) :is(.sidebar-brand,.mobile-nav-header,.login-brand) .brand-symbol {filter:invert(1) contrast(1.2)}}
+:root[data-theme="dark"] :is(.sidebar-brand,.mobile-nav-header,.login-brand) .brand-symbol {filter:invert(1) contrast(1.2)}
 .sidebar-shell .new-task-button,.btn-primary,.login-email-button,.connector-connect,.composer .send-button,.quickstart .task-composer-footer .btn-primary {background:var(--brand-action);color:var(--brand-on-action);box-shadow:none}
 .sidebar-shell .new-task-button:hover,.btn-primary:hover:not(:disabled),.connector-connect:hover {background:var(--brand-action);opacity:.84}
 .sidebar-shell .bot-row.selected,.sidebar-shell .roster-filters button[aria-pressed="true"],.glass-select-option[data-highlighted],.connector-tabs button[aria-pressed="true"] {background:var(--system-selected);color:var(--cx-label)}
@@ -120,6 +120,11 @@ body :is(.app-layout,.login-page,dialog) a {color:var(--cx-label);text-decoratio
 .quickstart .quickstart-submit {display:flex;align-items:center;justify-content:center;gap:12px;width:100%;height:50px;min-height:50px;margin:0;padding:12px 20px;border:0;border-radius:999px;background:var(--cx-label);color:var(--cx-inverse);font-size:15px;font-weight:550}
 .quickstart-submit svg {width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.6}
 .quickstart .quickstart-submit:disabled {background:var(--cx-label);color:var(--cx-inverse);opacity:.45;cursor:default}
+.quickstart-voice {display:flex;align-items:center;justify-content:center;gap:10px;width:100%;height:48px;min-height:48px;margin:10px 0 0;padding:10px 18px;border:1px solid var(--cx-sep);border-radius:999px;background:var(--cx-card);color:var(--cx-label);font:inherit;font-size:14px;font-weight:550;cursor:pointer}
+.quickstart-voice:hover:not(:disabled) {background:var(--cx-fill-2)}
+.quickstart-voice:disabled {opacity:.58;cursor:wait}
+.quickstart-voice:focus-visible {outline:2px solid var(--cx-label);outline-offset:3px}
+.quickstart-voice-note {margin:7px 0 0;text-align:center;color:var(--cx-label-2);font-size:11px;line-height:1.4}
 .quickstart .starter-prompts button {color:var(--cx-label-2);animation:none}
 .quickstart .starter-prompts button:hover:not(:disabled) {color:var(--cx-label);transform:none}
 .quickstart .quickstart-status:not(.visually-hidden) {display:flex;align-items:center;justify-content:center;gap:10px;color:var(--cx-label-2)}

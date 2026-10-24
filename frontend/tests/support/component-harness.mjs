@@ -112,7 +112,11 @@ function load(path, imports = {}, globals = {}) {
     module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.React, esModuleInterop: true } }).outputText;
   const exports = {};
   runInNewContext(compiled, { exports, Error, Map, ...globals,
-    require: name => { if (!(name in imports)) throw new Error('Unexpected import: ' + name); return imports[name]; } });
+    require: name => {
+      if (name === '../lib/canonical-app') return { CANONICAL_APP_ORIGIN: 'https://app.example', isOffCanonicalHost: () => false };
+      if (!(name in imports)) throw new Error('Unexpected import: ' + name);
+      return imports[name];
+    } });
   return exports;
 }
 function find(node, predicate) {

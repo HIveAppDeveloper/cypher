@@ -17,7 +17,7 @@ function load(relative, env = BASE, fetch = async () => { throw new Error('Unexp
   const compiled = ts.transpileModule(source, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.CommonJS, esModuleInterop: true } }).outputText;
   const exports = {};
   runInNewContext(compiled, { exports, Buffer, URL, Date, FormData, AbortSignal, Request, Response, process: { env }, fetch,
-    require: name => name === 'node:crypto' ? crypto : name === 'next/server' ? next : name.endsWith('/lib/auth-server') ? load('../src/lib/auth-server.ts', env) : (() => { throw new Error('Unexpected import ' + name); })(),
+    require: name => name === 'node:crypto' ? crypto : name === 'next/server' ? next : name.endsWith('/lib/auth-server') ? load('../src/lib/auth-server.ts', env) : name.endsWith('/lib/canonical-app') ? load('../src/lib/canonical-app.ts', env) : (() => { throw new Error('Unexpected import ' + name); })(),
   });
   return exports;
 }
