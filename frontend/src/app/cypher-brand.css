@@ -146,7 +146,7 @@ body :is(.app-layout,.login-page,dialog) a {color:var(--cx-label);text-decoratio
 
 /* Existing Cypher intro; it is a brief signature, never a simulated progress bar. */
 .cx-intro {color:var(--cx-label)}
-.cx-intro canvas {opacity:.24}
+.cx-intro canvas {opacity:1}
 .cx-intro-skip {background:var(--cx-card);color:var(--cx-label);border-color:var(--cx-sep);backdrop-filter:none}
 
 /* Sign-in belongs to the same quiet monochrome workspace. */
