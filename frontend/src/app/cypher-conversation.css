@@ -265,6 +265,59 @@
   color: var(--cx-label);
 }
 
+.voice-toolbar-button { gap: 7px; }
+.voice-toolbar-button svg,
+.quickstart-voice svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.voice-console {
+  --voice-level: 0;
+  --voice-scale: 1;
+  --voice-glow: .08;
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  width: min(820px, calc(100% - 48px));
+  min-height: 90px;
+  box-sizing: border-box;
+  margin: 14px auto 4px;
+  padding: 12px 16px;
+  overflow: hidden;
+  border: 1px solid var(--cx-sep);
+  border-radius: 15px;
+  background: var(--cx-card);
+}
+.voice-console::before {
+  position: absolute;
+  z-index: 0;
+  inset: -30px auto -30px 3%;
+  width: 190px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(0,0,0,var(--voice-glow)) 0%, transparent 72%);
+  content: "";
+  pointer-events: none;
+}
+.voice-console-mark,
+.voice-console-copy,
+.voice-stop-button { position: relative; z-index: 1; }
+.voice-console-mark { display: grid; width: 128px; flex: 0 0 128px; place-items: center; color: var(--cx-label); transform: scale(var(--voice-scale)); transform-origin: center; transition: transform 90ms linear; }
+.voice-console-mark .cypher-mark { display: block; width: 100%; height: auto; overflow: visible; }
+.voice-console-copy { min-width: 0; flex: 1; }
+.voice-console-copy strong { color: var(--cx-label); font-size: 13px; font-weight: 600; }
+.voice-console-copy p { margin: 3px 0 0; color: var(--cx-label-2); font-size: 12px; line-height: 1.45; }
+.voice-console-copy span { display: block; margin-top: 5px; color: var(--cx-label-2); font-size: 11px; line-height: 1.4; }
+.voice-stop-button { min-height: 40px; padding: 0 13px; border: 1px solid var(--cx-sep); border-radius: 9px; background: var(--cx-card); color: var(--cx-label); font: inherit; font-size: 12px; cursor: pointer; }
+.voice-stop-button:hover { background: var(--cx-fill-2); }
+.voice-audio { display: none; }
+.voice-inline-error { width: min(820px, calc(100% - 48px)); margin: 8px auto; color: var(--cx-label-2); font-size: 12px; }
+.voice-recording .voice-console-mark { filter: drop-shadow(0 0 12px rgba(0,0,0,.16)); }
+.voice-speaking .voice-console-mark { filter: drop-shadow(0 0 15px rgba(0,0,0,.2)); }
+.voice-error .voice-console-copy strong { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .voice-console-mark { transform: none; transition: none; }
+}
+html[data-motion="false"] .voice-console-mark { transform: none; transition: none; }
+
 @keyframes cypher-message-arrive {
   from { opacity: 0; transform: translateY(4px); }
   to { opacity: 1; transform: translateY(0); }
@@ -292,7 +345,9 @@
   .message.outgoing .message-content { max-width: min(100%, 86vw); font-size: 14px; }
   .message-actions > summary { min-height: 36px; }
   .composer,
-  .active-work { width: calc(100% - 24px); }
+  .active-work,
+  .voice-console,
+  .voice-inline-error { width: calc(100% - 24px); }
   .composer { margin: 7px 12px 4px; padding: 9px 9px 7px; }
   .composer textarea { font-size: 16px; }
   .composer .attach-button,
@@ -302,6 +357,10 @@
   .composer-options { gap: 2px; }
   .composer-model { max-width: 34%; }
   .input-note { padding-inline: 10px; }
+  .voice-console { gap: 11px; min-height: 82px; padding: 10px 11px; }
+  .voice-console-mark { width: 82px; flex-basis: 82px; }
+  .voice-console-copy p { font-size: 11px; }
+  .voice-stop-button { min-height: 44px; padding-inline: 10px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
