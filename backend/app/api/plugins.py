@@ -183,15 +183,30 @@ async def test_connection(id:UUID,db:AsyncSession=Depends(get_db)):
     }
     names={t['name'] for t in plugin.tools if t.get('enabled',True)}
     example=next(((name,args) for name,args in (google_tests or examples.get(host,[])) if name in names),None)
+    started=time.monotonic()
+    async def finish(status, message, **detail):
+        result={'message':message,'latency_ms':round((time.monotonic()-started)*1000),**detail}
+        await save_check('plugin:'+plugin.id,status,result)
+        return {'status':status,**result}
+    if not google_tests and urlsplit(plugin.url).scheme != 'https':
+        message=('Connect Gmail through Google apps to use its authorized tools.' if host=='gmail.com' else
+                 'This saved website is not a hosted MCP connection. Reconnect it using a supported provider or HTTPS server link.')
+        return await finish('failed',message,code='unsupported_endpoint')
     if not example:
         # Protocol discovery alone is explicitly labelled, not a tool-call pass.
         from app.services.plugins import connection_auth
         try:
-            token,auth=await connection_auth(db,plugin)
-            tools=await discover(plugin.url,token,auth)
-        except Exception:raise HTTPException(502,'The connection did not respond. Reconnect and check provider access.')
-        return {'status':'discovered','tool_count':len(tools),'message':'Connection responded. No known read-only smoke operation is available; execution is not verified.'}
-    started=time.monotonic()
+            async with asyncio.timeout(45):
+                token,auth=await connection_auth(db,plugin)
+                tools=await discover(plugin.url,token,auth)
+        except Exception as error:
+            from app.services.plugins import authentication_failure
+            if authentication_failure(error):
+                return await finish('failed','Sign in again to restore this connection.',code='sign_in_required')
+            return await finish('failed','The connection did not respond. Retry or reconnect to check provider access.',code='unavailable')
+        if not tools:
+            return await finish('failed','This server did not return any tools. Refresh or reconnect it before using it.',code='no_tools',tool_count=0)
+        return await finish('discovered','Tools discovered. Execution has not been tested for this service.',tool_count=len(tools))
     code=None
     try:
         async with asyncio.timeout(45):
@@ -203,7 +218,6 @@ async def test_connection(id:UUID,db:AsyncSession=Depends(get_db)):
     message='A read-only tool returned successfully.' if passed else 'The read-only test failed. Reconnect or check the service permissions.'
     if code=='invalid_provider_output':message='The provider returned output that does not match its published tool schema.'
     elif code=='sign_in_required':message='This saved connection needs sign-in again. Reconnect it in Plugins.'
-    detail={'tool':example[0],'latency_ms':round((time.monotonic()-started)*1000),'message':message}
+    detail={'tool':example[0]}
     if code in {'invalid_provider_output','sign_in_required'}:detail['code']=code
-    await save_check('plugin:'+plugin.id,'passed' if passed else 'failed',detail)
-    return {'status':'passed' if passed else 'failed',**detail}
+    return await finish('passed' if passed else 'failed',message,**detail)
