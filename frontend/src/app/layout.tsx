@@ -8,6 +8,7 @@ import './cipher/cipher.css';
 import './cypher-brand.css';
 import './cypher-conversation.css';
 import './cypher-motion.css';
+import './cypher-voice-ui.css';
 import './google-permissions.css';
 import './cypher-store.css';
 import type { Metadata } from 'next';

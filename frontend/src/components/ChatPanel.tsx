@@ -12,6 +12,7 @@ import { RunControls, DEFAULT_OPTIONS } from './RunControls';
 import { modelPolicy } from '../lib/modelPolicy';
 import { readAttachment } from '../lib/attachments';
 import CypherMark from './cipher/CypherMark';
+import { createSpeechRecognition, describeSpeechError, type SpeechRecognitionLike } from '../lib/speech';
 const POLL_MS = 1500;
 const MAX_BYTES = 3 * 1024 * 1024;
 export function messageTime(value: string) {
@@ -46,6 +47,15 @@ export function ChatPanel({ bot, room, bots, onCreateBot, onCreateRoom, onQuickS
   const [messages, setMessages] = useState<Message[]>([]);
   const [jobs, setJobs] = useState<Job[]>([]);
   const [input, setInput] = useState('');
+  const [dictating, setDictating] = useState(false);
+  const [dictationStatus, setDictationStatus] = useState('');
+  const [dictationError, setDictationError] = useState('');
+  const speechRecognitionRef = useRef<SpeechRecognitionLike | null>(null);
+  const dictationBaseRef = useRef('');
+  const speechFinalRef = useRef('');
+  const speechInterimRef = useRef('');
+  const speechFailedRef = useRef(false);
+  useEffect(() => () => speechRecognitionRef.current?.stop(), []);
   const [replyTo,setReplyTo]=useState<Message|null>(null);
   const [draftReady, setDraftReady] = useState(false);
   const [loading, setLoading] = useState(!!bot || !!room);
@@ -220,6 +230,51 @@ export function ChatPanel({ bot, room, bots, onCreateBot, onCreateRoom, onQuickS
     const transcriptPrompt = 'Voice message attached. Please respond directly to what I said in the recording.';
     await send({ text: transcriptPrompt, files: [file], voiceTurn: true });
   };
+  function toggleDictation() {
+    if (speechRecognitionRef.current) { speechRecognitionRef.current.stop(); return; }
+    const recognition = createSpeechRecognition();
+    if (!recognition) { setDictationError('Speech input is not available in this browser. Type your message instead.'); return; }
+    dictationBaseRef.current = input.trim();
+    speechFinalRef.current = '';
+    speechInterimRef.current = '';
+    speechFailedRef.current = false;
+    setDictationError('');
+    setDictationStatus('Listening. Speech recognition is handled by your browser.');
+    setDictating(true);
+    recognition.lang = navigator.language || 'en-US';
+    recognition.continuous = false;
+    recognition.interimResults = true;
+    recognition.onresult = event => {
+      const finalParts: string[] = [];
+      const interimParts: string[] = [];
+      for (let index = 0; index < event.results.length; index++) {
+        const result = event.results[index];
+        const transcript = result[0]?.transcript.trim();
+        if (!transcript) continue;
+        (result.isFinal ? finalParts : interimParts).push(transcript);
+      }
+      speechFinalRef.current = finalParts.join(' ');
+      speechInterimRef.current = interimParts.join(' ');
+      setInput([dictationBaseRef.current, speechFinalRef.current, speechInterimRef.current].filter(Boolean).join(' '));
+    };
+    recognition.onerror = event => {
+      speechFailedRef.current = true;
+      setDictationError(describeSpeechError(event.error));
+    };
+    recognition.onend = () => {
+      speechRecognitionRef.current = null;
+      setDictating(false);
+      if (speechFailedRef.current) return;
+      setDictationStatus(speechFinalRef.current.trim() ? 'Dictation added. Review or edit it before sending.' : 'No speech detected. Try again.');
+    };
+    speechRecognitionRef.current = recognition;
+    try { recognition.start(); }
+    catch {
+      speechRecognitionRef.current = null;
+      setDictating(false);
+      setDictationError('Could not start speech recognition. Check your browser microphone permissions.');
+    }
+  }
   async function toggleVoice() {
     if (voiceMode) { onVoiceStop(); return; }
     if (!navigator.mediaDevices?.getUserMedia || !window.MediaRecorder) { setVoiceError('Voice chat needs a browser that supports microphone recording.'); return; }
@@ -388,6 +443,7 @@ export function ChatPanel({ bot, room, bots, onCreateBot, onCreateRoom, onQuickS
 </div></details></div></header>
     {searchOpen?<div className="conversation-search"><input autoFocus type="search" aria-label="Search loaded messages" placeholder="Search loaded messages…" value={messageQuery} onChange={event=>setMessageQuery(event.target.value)} onKeyDown={event=>{if(event.key==='Escape')closeSearch();}}/><span role="status">{visibleMessages.length} results</span><button onClick={closeSearch}>Close</button></div>:null}
     {voiceMode?<section ref={voicePanel} className={`voice-console voice-${voiceStatus}`} aria-label="Cypher voice chat"><div className="voice-console-mark"><CypherMark decorative/></div><div className="voice-console-copy"><strong role="status" aria-live="polite">{VOICE_STATUS_LABEL[voiceStatus]}</strong><p>{voiceStatus==='listening'?'Say what you need. I’ll listen and take care of it.':voiceStatus==='recording'?'Listening to your request…':voiceStatus==='thinking'?'Working on your request now.':voiceStatus==='speaking'?'Here’s the answer.':voiceStatus==='error'?'Check the message below and try again.':'Voice chat is ready.'}</p>{voiceError?<span role="alert">{voiceError}</span>:null}</div><button type="button" className="voice-stop-button" onClick={onVoiceStop}>Stop talking</button><audio ref={voiceAudio} className="voice-audio" preload="none"/></section>:null}
+    {dictationError ? <p className="voice-status" data-state="error" role="alert">{dictationError}</p> : dictationStatus ? <p className="speech-status" role="status">{dictationStatus}</p> : null}
     {!voiceMode && voiceError ? <p className="voice-inline-error" role="alert">{voiceError}</p> : null}
     {conversationId?<WorkPanel open={workOpen} onClose={()=>setWorkOpen(false)} conversationId={conversationId} jobs={jobs} options={options} onChange={setOptions} onRefresh={async()=>setJobs(await api.getJobs(conversationId))}/>:null}
     {!bot && !room ? <QuickStart key={draftScope || 'local'} draftScope={draftScope} options={options} onOptions={setOptions} onStart={onQuickStart} onOpenRecent={onOpenRecent} onVoiceStart={onVoiceStart}/> : <>
@@ -400,7 +456,7 @@ export function ChatPanel({ bot, room, bots, onCreateBot, onCreateRoom, onQuickS
     {activeJobs.length ? <div className="active-work" role="status"><span>{activeJobs.some(job => job.status === 'running') ? 'Working on your request' : activeJobs.some(job => job.status === 'cancel_requested') ? 'Stopping…' : 'Request queued'}{activeJobs.length > 1 ? ` · ${activeJobs.length} tasks` : ''}</span><button disabled={stopping || activeJobs.every(job => job.status === 'cancel_requested')} onClick={async () => { setStopping(true); const cancellable=activeJobs.filter(job => job.status !== 'cancel_requested'); const results=await Promise.allSettled(cancellable.map(job => api.cancelJob(conversationId,job.id))); if(results.some(result => result.status === 'rejected')) setError('Some work could not be stopped. Try again.'); setJobs(await api.getJobs(conversationId).catch(() => jobs)); setStopping(false); }}>Stop</button></div> : null}
     {attachments.length ? <div className="attachment-tray">{attachments.map((a,i) => <span key={`${a.name}-${i}`}>{a.mime.startsWith('image/') ? <img src={`data:${a.mime};base64,${a.data}`} alt=""/> : null}{a.name}<button aria-label={`Remove ${a.name}`} onClick={() => setAttachments(prev => prev.filter((_,index) => index !== i))}>Remove</button></span>)}</div> : null}
     {replyTo?<div className="reply-preview"><span>Replying in an isolated thread: {replyTo.content.slice(0,110)}</span><button onClick={()=>setReplyTo(null)}>Cancel reply</button></div>:null}
-    <div className="composer"><input className="visually-hidden" ref={fileInput} type="file" multiple accept=".png,.jpg,.jpeg,.webp,.pdf,.txt,.md,.csv,.json,.mp3,.wav,.m4a,.ogg,.flac,.mp4,.webm,.mov" onChange={e => void addFiles(e.target.files)}/><label className="visually-hidden" htmlFor="message">Message {title}</label><textarea id="message" rows={1} maxLength={20000} value={input} placeholder={`Message ${title}`} onChange={e => { setInput(e.target.value); e.currentTarget.style.height="auto"; e.currentTarget.style.height=Math.min(e.currentTarget.scrollHeight,150)+"px"; }} onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); void send(); } }}/><div className="composer-footer"><button className="attach-button" aria-label="Attach files" disabled={readingFiles || !conversationId} onClick={() => fileInput.current?.click()}><svg viewBox="0 0 24 24"><path d="M12 4v16M4 12h16"/></svg></button><div className="composer-options"><span>Response</span><GlassSelect aria-label="Response format" value={options.output||'text'} onChange={event=>setOptions(current=>({...current,output:event.target.value as 'text'|'image',aspect_ratio:'16:9'}))}><option value="text">Text</option><option value="image">Image</option></GlassSelect><button className="tools-toggle" aria-pressed={options.allow_tools!==false} onClick={()=>setOptions(current=>({...current,allow_tools:current.allow_tools===false}))}>{options.allow_tools===false?'Tools off':'Tools on'}</button><span className="composer-model">{options.routing==='manual'?(options.model || bot?.llmModel):'Auto · task specialists'}</span><button ref={voiceButton} type="button" className={`composer-voice-button${voiceMode?' is-active':''}`} aria-label={voiceMode?'Stop voice chat':'Start voice chat with Cypher'} aria-pressed={voiceMode} title={voiceMode?'Stop voice chat':'Talk to Cypher'} disabled={!conversationId&&!voiceMode} onClick={()=>void toggleVoice()}><CypherMark className="composer-voice-mark" decorative/><span className="composer-voice-label">{voiceMode?voiceStatus==='speaking'?'Speaking':voiceStatus==='thinking'?'Working':voiceStatus==='error'?'Voice issue':'Listening':'Voice'}</span></button></div><button className="send-button" aria-label="Send message" disabled={!conversationId || sending || readingFiles || (!input.trim() && !attachments.length)} onClick={()=>void send()}><svg viewBox="0 0 24 24"><path d="M12 19V5m-6 6 6-6 6 6"/></svg></button></div></div>
+    <div className="composer"><input className="visually-hidden" ref={fileInput} type="file" multiple accept=".png,.jpg,.jpeg,.webp,.pdf,.txt,.md,.csv,.json,.mp3,.wav,.m4a,.ogg,.flac,.mp4,.webm,.mov" onChange={e => void addFiles(e.target.files)}/><label className="visually-hidden" htmlFor="message">Message {title}</label><textarea id="message" rows={1} maxLength={20000} value={input} placeholder={options.output==='image'?'Describe an image…':`Message ${title}`} onChange={e => { setInput(e.target.value); setDictationStatus(''); setDictationError(''); e.currentTarget.style.height="auto"; e.currentTarget.style.height=Math.min(e.currentTarget.scrollHeight,150)+"px"; }} onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); void send(); } }}/><div className="composer-footer"><button className="attach-button" aria-label="Attach files" disabled={readingFiles || !conversationId} onClick={() => fileInput.current?.click()}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v16M4 12h16"/></svg></button><button type="button" className="chat-speech-button" aria-label={dictating ? 'Stop dictation' : 'Dictate message'} aria-pressed={dictating} disabled={!conversationId || sending || readingFiles || voiceMode} onClick={toggleDictation} title="Dictate using your browser speech service"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3m-4 0h8"/></svg><span>{dictating ? 'Listening…' : 'Dictate'}</span></button><div className="composer-options"><span>Response</span><GlassSelect aria-label="Response format" value={options.output||'text'} onChange={event=>setOptions(current=>({...current,output:event.target.value as 'text'|'image',aspect_ratio:'16:9'}))}><option value="text">Text</option><option value="image">Image</option></GlassSelect><button className="tools-toggle" aria-pressed={options.allow_tools!==false} onClick={()=>setOptions(current=>({...current,allow_tools:current.allow_tools===false}))}>{options.allow_tools===false?'Tools off':'Tools on'}</button><span className="composer-model">{options.routing==='manual'?(options.model || bot?.llmModel):'Auto · task specialists'}</span><button ref={voiceButton} type="button" className={`composer-voice-button${voiceMode?' is-active':''}`} aria-label={voiceMode?'Stop voice chat':'Start voice chat with Cypher'} aria-pressed={voiceMode} title={voiceMode?'Stop voice chat':'Talk to Cypher'} disabled={!conversationId&&!voiceMode} onClick={()=>void toggleVoice()}><CypherMark className="composer-voice-mark" decorative/><span className="composer-voice-label">{voiceMode?voiceStatus==='speaking'?'Speaking':voiceStatus==='thinking'?'Working':voiceStatus==='error'?'Voice issue':'Listening':'Voice'}</span></button></div><button className="send-button" aria-label="Send message" disabled={!conversationId || sending || readingFiles || (!input.trim() && !attachments.length)} onClick={()=>void send()}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5m-6 6 6-6 6 6"/></svg></button></div></div>
     {readingFiles?<p className="input-note" role="status">Reading files…</p>:null}
     <p className="input-note visually-hidden">{options.output && options.output !== 'text' ? 'Media mode uses your text prompt. Choose Text to discuss attached files.' : 'Enter to send · Shift + Enter for a new line · Text drafts saved in this tab'}</p>
     </>}
