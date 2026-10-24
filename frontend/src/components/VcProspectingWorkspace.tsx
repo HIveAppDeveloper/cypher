@@ -336,7 +336,7 @@ export default function VcProspectingWorkspace() {
 
       <aside className="vc-detail-panel" aria-label="Selected person details">
         {selectedFounder ? <>
-          <div className="vc-detail-top"><span className="vc-detail-symbol" aria-hidden="true">{selectedFounder.company_name.slice(0, 1).toUpperCase()}</span><button type="button" className="vc-detail-menu" aria-label="More options">···</button></div>
+          <div className="vc-detail-top"><span className="vc-detail-symbol" aria-hidden="true">{selectedFounder.company_name.slice(0, 1).toUpperCase()}</span><span className="vc-detail-menu" aria-hidden="true">···</span></div>
           <h2>{selectedFounder.company_name}</h2><p className="vc-detail-subtitle">{selectedFounder.industry || 'Company named in an SEC filing'}</p>
           <nav className="vc-detail-tabs" aria-label="Candidate details">{(['overview', 'evidence', 'outreach', 'notes'] as const).map(tab => <button type="button" key={tab} aria-current={detailTab === tab ? 'page' : undefined} onClick={() => setDetailTab(tab)}>{tab[0].toUpperCase() + tab.slice(1)}</button>)}</nav>
           {detailTab === 'overview' ? <div className="vc-detail-content">

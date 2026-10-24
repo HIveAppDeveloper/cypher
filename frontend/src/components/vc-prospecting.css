@@ -109,7 +109,7 @@
 .vc-detail-panel { position: sticky; top: 12px; overflow: hidden; padding: 16px 16px 0; }
 .vc-detail-top { display: flex; align-items: center; justify-content: space-between; }
 .vc-detail-symbol { display: grid; width: 31px; height: 31px; place-items: center; border: 1px solid var(--cx-sep, #e7e5df); border-radius: 9px; background: var(--cx-bg, #faf9f6); font-size: 13px; font-weight: 600; }
-.vc-detail-menu { width: 30px; height: 30px; border: 0; border-radius: 50%; background: transparent; color: var(--cx-label-2, #65645f); font-size: 16px; }
+.vc-detail-menu { display: grid; width: 30px; height: 30px; place-items: center; border-radius: 50%; color: var(--cx-label-2, #65645f); font-size: 16px; }
 .vc-detail-panel > h2 { overflow-wrap: anywhere; margin: 9px 0 2px; font: 600 16px/1.25 var(--cx-display, var(--cx-sans, Inter, sans-serif)); letter-spacing: -.02em; }
 .vc-detail-subtitle { margin: 0; color: var(--cx-label-2, #65645f); font-size: 10px; }
 .vc-detail-tabs { display: flex; gap: 14px; margin: 13px -2px 0; border-bottom: 1px solid var(--cx-sep, #e7e5df); }
