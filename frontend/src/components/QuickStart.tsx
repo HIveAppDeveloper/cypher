@@ -11,7 +11,7 @@ const STARTER_PROMPTS = [
   { text: 'Build', prompt: 'Help me plan and build ' },
 ];
 
-export function QuickStart({ onStart, onOpenRecent, options, onOptions, draftScope }: { draftScope?: string; options: RunOptions; onOptions: (options: RunOptions) => void; onStart: (prompt: string, options: Partial<RunOptions>) => Promise<void>; onOpenRecent: (conversationId: string) => void }) {
+export function QuickStart({ onStart, onOpenRecent, onVoiceStart, options, onOptions, draftScope }: { draftScope?: string; options: RunOptions; onOptions: (options: RunOptions) => void; onStart: (prompt: string, options: Partial<RunOptions>) => Promise<void>; onOpenRecent: (conversationId: string) => void; onVoiceStart: (stream: MediaStream) => Promise<void> }) {
   const manager = options.routing==='manual'?(options.model || 'gpt-6.1-sol'):'auto';
   const [prompt, setPrompt] = useState('');
   const logoRef = useRef<HTMLDivElement>(null);
@@ -50,6 +50,21 @@ export function QuickStart({ onStart, onOpenRecent, options, onOptions, draftSco
   const [busy, setBusy] = useState(false);
   const inFlight = useRef(false);
   const [error, setError] = useState('');
+  const [voiceBusy, setVoiceBusy] = useState(false);
+  const [voiceError, setVoiceError] = useState('');
+  async function startVoice() {
+    if (voiceBusy) return;
+    if (!navigator.mediaDevices?.getUserMedia || !window.MediaRecorder) { setVoiceError('Voice chat needs a browser that supports microphone recording.'); return; }
+    setVoiceBusy(true); setVoiceError('');
+    let stream: MediaStream | null = null;
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } });
+      await onVoiceStart(stream);
+    } catch (failure) {
+      stream?.getTracks().forEach(track => track.stop());
+      setVoiceError(failure instanceof Error ? failure.message : 'Microphone access was not available.');
+    } finally { setVoiceBusy(false); }
+  }
   async function start(e: React.FormEvent) { e.preventDefault(); if (!prompt.trim() || busy || inFlight.current) return; inFlight.current = true; setBusy(true); setError(''); try { await onStart(prompt, { ...options, output, provider: manager === 'auto' ? 'openai' : MODEL_CHOICES.find(choice => choice.model === manager)?.provider || options.provider || 'openai', model: manager === 'auto' ? 'gpt-6.1-sol' : manager, aspect_ratio: '16:9', duration: 4 }); if(mounted.current)setPrompt(''); try { if(sessionStorage.getItem(draftKey)===prompt)sessionStorage.removeItem(draftKey); } catch {} } catch (error) { const detail = error instanceof Error ? error.message : 'The task could not start. Try again.'; setError(detail + ' Your task is still here.'); } finally { inFlight.current = false; setBusy(false); } }
   return (
     <div className="quickstart">
@@ -108,6 +123,13 @@ export function QuickStart({ onStart, onOpenRecent, options, onOptions, draftSco
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6" /></svg>
           </button>
       </form>
+
+      <button type="button" className="quickstart-voice" onClick={() => void startVoice()} disabled={voiceBusy}>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3m-4 0h8"/></svg>
+        <span>{voiceBusy ? 'Connecting microphone…' : 'Talk to Cypher'}</span>
+      </button>
+      <p className="quickstart-voice-note">Speak naturally. Cypher will listen, work, and reply out loud.</p>
+      {voiceError ? <p className="quickstart-error" role="alert">{voiceError}</p> : null}
 
       {error ? <p className="quickstart-error" role="alert">{error}</p> : null}
 

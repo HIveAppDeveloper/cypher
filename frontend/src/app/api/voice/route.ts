@@ -1,7 +1,6 @@
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 import { AppSession, readSignedPayload } from '../../../lib/auth-server';
-import { CYPHER_VOICE_INTRO } from '../../../lib/cypher-voice';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 30;
@@ -32,7 +31,9 @@ async function readBoundedText(request: Request, limit: number) {
   catch { return ''; }
 }
 
-const DEFAULT_ELEVENLABS_VOICE_ID = '21m00Tcm4TlvDq8ikWAM';
+const DEFAULT_ELEVENLABS_VOICE_ID = 'pNInz6obpgDQGcFmaJgB';
+const MAX_VOICE_TEXT = 2000;
+const MAX_VOICE_BODY = 12 * 1024;
 
 function getElevenLabsApiKey() {
   return process.env.ELEVENLABS_API_KEY?.trim() || process.env.ELEVEN_LABS_API_KEY?.trim() || '';
@@ -62,25 +63,26 @@ export async function POST(request: Request) {
   }
 
   const declaredLength = Number(request.headers.get('content-length') || 0);
-  if (Number.isFinite(declaredLength) && declaredLength > 512) return NextResponse.json({ detail: 'Voice request is too large.' }, { status: 413, headers: { 'Cache-Control': 'no-store' } });
+  if (Number.isFinite(declaredLength) && declaredLength > MAX_VOICE_BODY) return NextResponse.json({ detail: 'Voice request is too large.' }, { status: 413, headers: { 'Cache-Control': 'no-store' } });
   if (!request.headers.get('content-type')?.toLowerCase().startsWith('application/json')) {
-    return NextResponse.json({ detail: 'Send the Cypher welcome line as JSON.' }, { status: 415, headers: { 'Cache-Control': 'no-store' } });
+    return NextResponse.json({ detail: 'Send the text for Cypher to speak as JSON.' }, { status: 415, headers: { 'Cache-Control': 'no-store' } });
   }
-  const rawBody = await readBoundedText(request, 512).catch(() => '');
+  const rawBody = await readBoundedText(request, MAX_VOICE_BODY).catch(() => '');
   if (rawBody === null) return NextResponse.json({ detail: 'Voice request is too large.' }, { status: 413, headers: { 'Cache-Control': 'no-store' } });
   let body: { text?: unknown } | null = null;
   try { body = JSON.parse(rawBody) as { text?: unknown }; } catch {}
-  if (body?.text !== CYPHER_VOICE_INTRO) {
-    return NextResponse.json({ detail: 'This voice control only reads the Cypher welcome line.' }, { status: 400, headers: { 'Cache-Control': 'no-store' } });
+  const text = typeof body?.text === 'string' ? body.text.trim() : '';
+  if (!text || text.length > MAX_VOICE_TEXT) {
+    return NextResponse.json({ detail: `Voice text must be between 1 and ${MAX_VOICE_TEXT} characters.` }, { status: 400, headers: { 'Cache-Control': 'no-store' } });
   }
 
-  const url = new URL(`https://api.elevenlabs.io/v1/text-to-speech/${encodeURIComponent(voiceId)}`);
+  const url = new URL(`https://api.elevenlabs.io/v1/text-to-speech/${encodeURIComponent(voiceId)}/stream`);
   url.searchParams.set('output_format', 'mp3_44100_128');
   try {
     const response = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Accept': 'audio/mpeg', 'xi-api-key': apiKey },
-      body: JSON.stringify({ text: CYPHER_VOICE_INTRO, model_id: 'eleven_flash_v2_5' }),
+      body: JSON.stringify({ text, model_id: 'eleven_flash_v2_5', voice_settings: { stability: 0.38, similarity_boost: 0.82, style: 0.55, use_speaker_boost: true, speed: 1.03 } }),
       cache: 'no-store',
       signal: AbortSignal.timeout(20_000),
     });
