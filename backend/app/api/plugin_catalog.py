@@ -8,8 +8,8 @@ from pathlib import Path
 from urllib.parse import urlsplit
 from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
-from pydantic import BaseModel, Field
-from sqlalchemy import select, delete
+from pydantic import BaseModel, Field, SecretStr
+from sqlalchemy import select, delete, func, or_, case, cast, Text
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.session import get_db
 from app.models.plugin import Plugin, PluginAuthorization
@@ -39,6 +39,71 @@ async def list_catalog():
             items.append({'id':'managed-'+c['id'],'name':c['name'].split(' · ')[0],'url':c['url'],'description':'Connect your account with managed sign-in. Existing authorized connections are reused.','category':'Development','domains':c['domains'],'auth':'auto','source':'https://vercel.com/docs/connect'})
             urls.add(c['url'].rstrip('/'))
     return items
+
+
+@router.get('/directory')
+async def list_mcp_directory(
+    q:str=Query(default='',max_length=120),
+    category:str|None=Query(default=None,max_length=48),
+    kind:str=Query(default='all',pattern='^(all|hosted|local|verified|auth)$'),
+    offset:int=Query(default=0,ge=0,le=10000),
+    limit:int=Query(default=24,ge=1,le=60),
+    db:AsyncSession=Depends(get_db),
+):
+    """Search the packaged 10,000-entry directory with tested status and safe paging."""
+    from app.models.mcp_directory import McpDirectoryEntry
+    from app.services.mcp_directory import directory_snapshot_info
+    query=select(McpDirectoryEntry)
+    term=q.strip()
+    if term:
+        pattern='%'+term.replace('%','\\%').replace('_','\\_')+'%'
+        query=query.where(or_(McpDirectoryEntry.title.ilike(pattern,escape='\\'),McpDirectoryEntry.registry_name.ilike(pattern,escape='\\'),McpDirectoryEntry.description.ilike(pattern,escape='\\'),McpDirectoryEntry.url.ilike(pattern,escape='\\'),cast(McpDirectoryEntry.domains,Text).ilike(pattern,escape='\\')))
+    if category:
+        query=query.where(McpDirectoryEntry.category==category)
+    if kind=='hosted':
+        query=query.where(McpDirectoryEntry.url!='')
+    elif kind=='local':
+        query=query.where(McpDirectoryEntry.url=='')
+    elif kind=='verified':
+        query=query.where(McpDirectoryEntry.test_status=='protocol_verified')
+    elif kind=='auth':
+        query=query.where(McpDirectoryEntry.test_status=='auth_required')
+    total=await db.scalar(select(func.count()).select_from(query.subquery()))
+    order=case(
+        (McpDirectoryEntry.test_status=='protocol_verified',0),
+        (McpDirectoryEntry.test_status=='auth_required',1),
+        (McpDirectoryEntry.test_status=='not_tested',2),
+        else_=3,
+    )
+    rows=(await db.execute(query.order_by(order,McpDirectoryEntry.title,McpDirectoryEntry.id).offset(offset).limit(limit))).scalars().all()
+    categories=(await db.execute(select(McpDirectoryEntry.category).distinct().order_by(McpDirectoryEntry.category))).scalars().all()
+    return {
+        **directory_snapshot_info(),
+        'items':[{
+            'id':'mcp:'+item.id,'registry_name':item.registry_name,'version':item.version,
+            'name':item.title,'url':item.url,'description':item.description,'category':item.category,
+            'icon':item.icon,'domains':item.domains or [],'source':item.source,'transport':item.transport,
+            'setup_note':item.setup_note,'test_status':item.test_status,
+            'test_message':item.test_message,'tool_count':item.tool_count,
+            'auth':'setup' if not item.url else 'auto',
+        } for item in rows],
+        'categories':categories,'offset':offset,'limit':limit,'total':total or 0,
+    }
+
+
+@router.get('/directory/{entry_id}/preview')
+async def preview_mcp_directory_entry(entry_id:str,db:AsyncSession=Depends(get_db)):
+    """Return a cached, read-only preview of up to five live MCP tools."""
+    import re
+    from app.models.mcp_directory import McpDirectoryEntry
+    from app.services.mcp_directory import preview_directory_tools
+    identifier=entry_id.removeprefix('mcp:')
+    if not re.fullmatch(r'[0-9a-f]{64}',identifier):
+        raise HTTPException(422,'Choose an MCP directory entry to preview.')
+    entry=await db.get(McpDirectoryEntry,identifier)
+    if not entry:
+        raise HTTPException(404,'This MCP directory entry is no longer available.')
+    return await preview_directory_tools(entry)
 
 @router.get('/registry/search')
 async def search_registry_catalog(q:str=Query(...,min_length=2,max_length=120),cursor:str|None=Query(default=None,max_length=2000)):
@@ -106,12 +171,18 @@ async def resolve(body:Website):
         pass
     raise HTTPException(404,'We could not find a published connector for this website. Search the catalog, or use Advanced to add a server URL supplied by the company.')
 
+class RegisteredClient(BaseModel):
+    client_id:str=Field(min_length=1,max_length=2000,pattern=r'\S')
+    client_secret:SecretStr|None=Field(default=None,max_length=4096)
+    scope:str=Field(default='',max_length=2000)
+
 class Begin(BaseModel):
     name:str=Field(min_length=1,max_length=80)
     url:str=Field(min_length=8,max_length=1000)
     approval_id:str|None=Field(default=None,max_length=36)
     reconnect:bool=False
     connection_id:str|None=Field(default=None,max_length=80)
+    oauth_client:RegisteredClient|None=None
 
 @router.post('/authorize')
 async def authorize(body:Begin,db:AsyncSession=Depends(get_db),request:Request=None):
@@ -134,6 +205,17 @@ async def authorize(body:Begin,db:AsyncSession=Depends(get_db),request:Request=N
     binding=secrets.token_urlsafe(32)
     row=PluginAuthorization(name=body.name.strip(),url=url,created_at=time.time(),binding_hash=hashlib.sha256(binding.encode()).hexdigest(),status='discovering',plugin_id=existing.id if existing else None)
     db.add(row);await db.commit();await db.refresh(row)
+    if body.oauth_client:
+        from app.services.plugin_auth import configure_client
+        client=body.oauth_client
+        await configure_client(DatabaseTokenStorage(db,row),callback_url,client.client_id.strip(),client.client_secret.get_secret_value() if client.client_secret else None,client.scope.strip())
+    elif existing:
+        previous=(await db.execute(select(PluginAuthorization).where(PluginAuthorization.plugin_id==existing.id,PluginAuthorization.status=='connected'))).scalars().first()
+        saved=DatabaseTokenStorage(db,previous).read() if previous else {}
+        if saved.get('custom_oauth_client') and saved.get('client_info'):
+            # Reconnect with the same user's client, but a fresh state and PKCE verifier.
+            metadata={**saved['client_metadata'],'redirect_uris':[callback_url]}
+            await DatabaseTokenStorage(db,row).update(client_metadata=metadata,client_info=saved['client_info'],custom_oauth_client=True)
     provider=await make_provider(db,row,callback_url)
     try:
         tools=await discover(url,auth=provider)
@@ -144,7 +226,7 @@ async def authorize(body:Begin,db:AsyncSession=Depends(get_db),request:Request=N
         def rejected_redirect(error):
             return 'invalid_redirect_uri' in str(error) or any(rejected_redirect(child) for child in getattr(error,'exceptions',[])) or bool(error.__cause__ and rejected_redirect(error.__cause__))
         if rejected_redirect(error):
-            raise HTTPException(422,'This provider requires approval for this app’s callback address before sign-in can work. Ask the provider to approve '+callback_url+'. The service has not been connected.')
+            raise HTTPException(422,{'code':'oauth_registration_required','message':row.name+' requires a registered OAuth client for this app.','provider':row.name,'callback_url':callback_url})
         raise HTTPException(422,'This service could not start automatic sign-in. It may require an API key, an administrator-installed app, or a different MCP endpoint. Your account has not been connected.')
     if not tools:
         row.status='failed';await db.commit();raise HTTPException(422,'The server connected but did not publish any tools.')

@@ -14,7 +14,7 @@ function panel({saved={},popupBlocked=false,api:overrides={}}={}){
   env.window.history={state:null,replaceState(){}};
   const api={getPluginCatalog:async()=>[item],getPlugins:async()=>[],deviceStatus:async()=>({enrolled:false}),getAvailableConnections:async()=>[],pluginSyncStatus:async()=>null,accountStatus:async()=>({}),authorizePlugin:async()=>({status:'awaiting_login',flow_id:id,authorization_url:pending.url,name:item.name}),pluginAuthStatus:async()=>({status:'awaiting_login',name:item.name}),cancelPluginAuth:async()=>({status:'cancelled'}),...overrides};
   const scopedAuth=load('../src/lib/pluginAuthorization.ts',{}, {URL,Date:env.globals.Date});
-  const {PluginPanel}=load('../src/components/PluginPanel.tsx',{react:view.react,'../lib/api':{api},'../lib/device':{approveConnection:async()=>undefined,enrollDevice:async()=>{}},'../lib/pluginAuthorization':scopedAuth},{...env.globals,URL,URLSearchParams,React:view.react.default,fetch:async()=>({json:async()=>({})})});
+  const {PluginPanel}=load('../src/components/PluginPanel.tsx',{react:view.react,'../lib/api':{api},'../lib/device':{approveConnection:async()=>undefined,enrollDevice:async()=>{}},'../lib/pluginAuthorization':scopedAuth,'./cipher/CypherMark':{__esModule:true,default:'cypher-mark'},'./cipher/BinaryLens':{__esModule:true,default:'binary-lens'}},{...env.globals,URL,URLSearchParams,React:view.react.default,fetch:async()=>({json:async()=>({})})});
   view.mount(()=>PluginPanel({onClose(){}}));
   return {env,view,api,session,popup,get opens(){return opens;},get closed(){return closed;}};
 }
@@ -27,6 +27,18 @@ test('blocked popup leaves a working provider link and the conversation in place
   assert.equal(p.opens,1);assert.ok(p.session.getItem(auth.PLUGIN_SIGN_IN_KEY));
   assert.match(textOf(p.view.tree),/Review the permissions and choose Allow or Authorize/);
   assert.ok(button(p.view.tree,'Check connection'));p.view.unmount();
+});
+test('Lovable opens its official MCP OAuth flow and waits for verified tools after Allow',async()=>{
+  let request,status='awaiting_login';
+  const p=panel({api:{authorizePlugin:async input=>{request=input;return {status:'awaiting_login',flow_id:id,authorization_url:'https://lovable.example/authorize?state=synthetic',name:'Lovable'};},pluginAuthStatus:async()=>({status,name:'Lovable'})}});
+  await p.view.flush();button(p.view.tree,'Connect Lovable').props.onClick();await p.view.flush();await p.view.flush();
+  assert.equal(request.url,'https://mcp.lovable.dev');assert.equal(request.name,'Lovable');
+  assert.match(textOf(p.view.tree),/review the permissions Lovable lists and press Allow/i);
+  assert.match(textOf(p.view.tree),/only the tools Lovable authorizes/i);
+  assert.ok(find(p.view.tree,n=>n.type==='a'&&textOf(n)==='Continue to Lovable'));
+  assert.ok(p.session.getItem(auth.PLUGIN_SIGN_IN_KEY));
+  status='connected';p.env.time.advance(4000);await p.view.flush();
+  assert.match(textOf(p.view.tree),/Lovable connected/);assert.equal(p.session.getItem(auth.PLUGIN_SIGN_IN_KEY),null);p.view.unmount();
 });
 test('a closed provider window can be reopened through the real link',async()=>{
   const p=panel();await connect(p);p.popup.closed=true;let prevented=false;
@@ -71,6 +83,43 @@ test('restoring the callback conversation does not dismiss its plugin result pan
   const imports=Object.fromEntries(components.map(name=>['../components/'+name,{[name]:name}]));imports['./CommandPalette']={CommandPalette:'CommandPalette'};imports['./WorkspaceHub']={WorkspaceHub:'WorkspaceHub'};imports['./ComputerPanel']={ComputerPanel:'ComputerPanel'};
   imports['../hooks/useBots']={useBots:()=>({bots:[],selectedBot:null,setSelectedBot(){},createBot(){},refreshBots(){}})};
   imports['../components/PreferencesPanel']={PreferencesPanel:'PreferencesPanel',restoreAppearance(){}};imports['../components/RunControls']={DEFAULT_OPTIONS:{}};imports['../lib/types']={};imports['../lib/api']={request:async()=>[],api:{getConversations:async()=>[{id:'123',title:'Fixture conversation',is_group:true}]}};
+  imports['./cipher/CypherEntrance']={__esModule:true,default:'CypherEntrance'};
   const {default:WorkspaceApp}=load('../src/components/WorkspaceApp.tsx',{react:view.react,...imports},{...env.globals,URLSearchParams,setInterval:()=>1,clearInterval(){}});
   view.mount(()=>WorkspaceApp({}));await view.flush();assert.ok(find(view.tree,n=>n.type==='PluginPanel'),'callback result remains visible after conversation restoration');view.unmount();
+});
+
+test('provider registration errors open an actionable OAuth form without claiming connection',async()=>{
+  let calls=0,input;
+  const p=panel({api:{authorizePlugin:async data=>{input=data;if(++calls===1)throw Object.assign(Error('Registered client required'),{details:{code:'oauth_registration_required',callback_url:'https://app.example/api/plugin-oauth/callback'}});return {status:'awaiting_login',flow_id:id,authorization_url:pending.url,name:'Lovable'};}}});
+  await p.view.flush();button(p.view.tree,'Connect Lovable').props.onClick();await p.view.flush();
+  assert.match(textOf(p.view.tree),/Finish Lovable setup/);
+  assert.equal(find(p.view.tree,n=>n.props?.role==='alert'),undefined);
+  const field=label=>find(find(p.view.tree,n=>n.type==='label'&&textOf(n).startsWith(label)),n=>n.type==='input');
+  field('Client ID').props.onChange({target:{value:'fixture-own-client'}});
+  field('Client secret').props.onChange({target:{value:'fixture-private-secret'}});
+  await p.view.flush();
+  const section=find(p.view.tree,n=>n.props?.className==='plugin-registration');
+  await find(section,n=>n.type==='form').props.onSubmit({preventDefault(){}});await p.view.flush();
+  assert.equal(input.oauth_client.client_id,'fixture-own-client');
+  assert.equal(input.oauth_client.client_secret,'fixture-private-secret');
+  assert.ok(find(p.view.tree,n=>n.type==='a'&&textOf(n)==='Continue to Lovable'));
+  assert.doesNotMatch(textOf(p.view.tree),/Lovable connected/);
+  p.view.unmount();
+});
+
+test('connected tool descriptions are searchable and public tools have a separate view',async()=>{
+  const connections=[{id:'account',name:'Account fixture',url:'https://account.example/mcp',authenticated:true,enabled:true,tools:[{name:'lookup',description:'Find invoices'}]},{id:'public',name:'Public fixture',url:'https://public.example/mcp',authenticated:false,enabled:true,tools:[{name:'public_read',description:'Public documentation'}]}];
+  const p=panel({api:{getPlugins:async()=>connections}});await p.view.flush();
+  button(p.view.tree,'Connected · 2').props.onClick();await p.view.flush();
+  assert.match(textOf(p.view.tree),/Account fixture/);assert.doesNotMatch(textOf(p.view.tree),/Public fixture/);
+  button(p.view.tree,'Public tools · 1').props.onClick();await p.view.flush();assert.match(textOf(p.view.tree),/Public fixture/);
+  find(p.view.tree,n=>n.props?.['aria-label']==='Search connected plugins').props.onChange({target:{value:'invoices'}});await p.view.flush();
+  assert.match(textOf(p.view.tree),/Account fixture/);assert.doesNotMatch(textOf(p.view.tree),/Public fixture/);
+  p.view.unmount();
+});
+
+test('structured registration responses retain recovery fields and readable errors',async()=>{
+  const fields={message:'Provider registration needed',code:'oauth_registration_required',callback_url:'https://app.example/api/plugin-oauth/callback'};
+  const {request}=load('../src/lib/api.ts',{'./conversations':{}},{process:{env:{}},AbortSignal,fetch:async()=>({ok:false,status:422,headers:{get:()=>null},json:async()=>({detail:fields})})});
+  await assert.rejects(()=>request('/plugins/authorize'),error=>error.message===fields.message&&error.code===fields.code&&error.details.callback_url===fields.callback_url);
 });

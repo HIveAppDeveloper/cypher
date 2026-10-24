@@ -3,7 +3,6 @@ import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { AppSession, readSignedPayload } from '../lib/auth-server';
 import WorkspaceApp from '../components/WorkspaceApp';
-import './cipher/cipher.css';
 
 export const dynamic = 'force-dynamic';
 
@@ -13,7 +12,7 @@ export const metadata: Metadata = {
   icons: { icon: '/cipher-logo.png', apple: '/cipher-logo.png' },
 };
 
-// The Cypher home page opens the authenticated agent workspace.
+// Keep the agent workspace as the default Cypher experience.
 export default function Page() {
   let session: AppSession | null = null;
   try { session = readSignedPayload<AppSession>(cookies().get('grokbot_session')?.value); } catch { session = null; }

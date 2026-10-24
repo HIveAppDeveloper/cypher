@@ -24,6 +24,39 @@
   .catalog-toolbar { margin: 0 0 8px; }
   .mcp-registry-results { margin-top: 20px; }
 }
+
+/* Keep plugin discovery on Cypher's same monochrome surface and contrast tokens. */
+.connectors-dialog {
+  color:var(--cx-label,#111); background:var(--cx-bg,#f2f2f7); border-color:var(--cx-sep,rgba(60,60,67,.18));
+  border-radius:16px; box-shadow:var(--cx-shadow,0 16px 48px rgba(0,0,0,.16)); font-family:var(--cx-sans,system-ui,sans-serif);
+}
+.connectors-dialog .connectors-header { background:var(--cx-bg,#f2f2f7); border-bottom-color:var(--cx-sep,rgba(60,60,67,.18)); }
+.connectors-dialog .connectors-header h2, .connectors-dialog .catalog-heading h3, .connectors-dialog .discovery-heading h3 { color:var(--cx-label,#111); }
+.connectors-dialog .connectors-header p, .connectors-dialog .catalog-heading p, .connectors-dialog .discovery-heading p,
+.connectors-dialog .catalog-note, .connectors-dialog .catalog-results { color:var(--cx-label-2,#555); }
+.connectors-dialog .connector-close { color:var(--cx-label-2,#555); }
+.connectors-dialog .connector-tabs { border-bottom-color:var(--cx-sep,rgba(60,60,67,.18)); }
+.connectors-dialog .connector-tabs button { color:var(--cx-label-2,#555); }
+.connectors-dialog .connector-tabs button[aria-pressed='true'] { color:var(--cx-label,#111); border-bottom-color:var(--cx-label,#111); }
+.connectors-dialog .connectors-body { background:var(--cx-bg,#f2f2f7); color:var(--cx-label,#111); }
+.connectors-dialog .connector-discovery, .connectors-dialog .connector-entry { background:var(--cx-card,#fff); border-color:var(--cx-sep,rgba(60,60,67,.18)); box-shadow:var(--cx-shadow,0 1px 3px rgba(0,0,0,.05)); }
+.connectors-dialog .connector-entry:hover { border-color:var(--cx-label-3,rgba(60,60,67,.32)); }
+.connectors-dialog .connector-logo { background:var(--cx-fill,rgba(118,118,128,.12)); color:var(--cx-label,#111); }
+.connectors-dialog .connector-entry h4, .connectors-dialog .connector-custom h3 { color:var(--cx-label,#111); }
+.connectors-dialog .connector-entry > p, .connectors-dialog .connector-entry-title > div > span,
+.connectors-dialog .connector-entry-footer > a, .connectors-dialog .connector-detail { color:var(--cx-label-2,#555); }
+.connectors-dialog .connector-connect, .connectors-dialog .btn-primary { background:var(--cx-label,#111); color:var(--cx-inverse,#fff); }
+.connectors-dialog .connector-connect:hover:not(:disabled), .connectors-dialog .btn-primary:hover { background:color-mix(in srgb,var(--cx-label,#111) 82%,var(--cx-label-2,#555)); }
+.connectors-dialog .connector-connect:focus-visible, .connectors-dialog .btn-primary:focus-visible,
+.connectors-dialog .btn-secondary:focus-visible, .connectors-dialog .connector-tabs button:focus-visible { outline:2px solid var(--cx-label-2,#555); outline-offset:3px; }
+.connectors-dialog .btn-secondary, .connectors-dialog .catalog-toolbar select,
+.connectors-dialog .website-connect input, .connectors-dialog .connector-custom input,
+.connectors-dialog .connector-custom textarea, .connectors-dialog .connector-custom select {
+  background:var(--cx-card,#fff); border-color:var(--cx-sep,rgba(60,60,67,.18)); color:var(--cx-label,#111);
+}
+.connectors-dialog .connector-filters button[aria-pressed='true'], .connectors-dialog .connector-categories button[aria-pressed='true'] { background:var(--cx-label,#111); color:var(--cx-inverse,#fff); }
+.connectors-dialog .connector-notice { background:var(--cx-fill-2,rgba(118,118,128,.08)); color:var(--cx-label,#111); }
+.connectors-dialog .connector-error { background:color-mix(in srgb,var(--cx-orange,#c93400) 10%,var(--cx-bg,#f2f2f7)); color:var(--cx-orange,#c93400); }
 html, body { background: var(--bg-main); }
 body { color: var(--text-primary); }
 .app-layout { padding: 0; gap: 0; background: var(--bg-main); }
@@ -32,6 +65,8 @@ body { color: var(--text-primary); }
 .sidebar-shell { width: clamp(220px,var(--sidebar-width,256px),min(480px,calc(100vw - 360px))); background: #f3f2ef; }
 .sidebar-layout-tools { height: 56px; min-height: 56px; padding: 8px 12px; gap: 2px; }
 .sidebar-brand { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0; font-size: 14px; font-weight: 550; letter-spacing: -.025em; white-space: nowrap; }
+.sidebar-shell a.sidebar-brand { color: inherit; text-decoration: none; }
+.mobile-nav-header strong a { display: inline-flex; align-items: center; gap: 7px; color: inherit; text-decoration: none; }
 .brand-symbol { display: grid; place-items: center; width: 26px; height: 26px; border: 1.5px solid currentColor; border-radius: 8px; font-size: 14px; font-weight: 600; }
 .sidebar-brand img.brand-symbol { padding: 2px; border: 0; object-fit: contain; }
 @media (prefers-color-scheme: dark) { :root:not([data-theme='light']) .sidebar-brand img.brand-symbol { filter: invert(1); } }

@@ -1,10 +1,10 @@
 import { Bot, BotStatus, Message, MessageType, Attachment, RunOptions, Conversation, Job } from './types';
 import { directConversation } from './conversations';
 const API_URL = (process.env.NEXT_PUBLIC_API_URL || '').replace(/\/$/, '');
-export class ApiError extends Error { constructor(message:string,public status:number,public code?:string,public retryAfter=0){super(message);} }
+export class ApiError extends Error { constructor(message:string,public status:number,public code?:string,public retryAfter=0,public details?:Record<string,unknown>){super(message);} }
 export async function request(path: string, init?: RequestInit, timeout=35000) {
   const response = await fetch(`${API_URL}/api${path}`, { ...init, signal: init?.signal ? AbortSignal.any([init.signal,AbortSignal.timeout(timeout)]) : AbortSignal.timeout(timeout), headers: { 'Content-Type': 'application/json', ...init?.headers } });
-  if (!response.ok) { const error = await response.json().catch(() => null); const detail = error?.detail; throw new ApiError(typeof detail === 'string' ? detail : Array.isArray(detail) ? detail.map((item: { msg?: string }) => item.msg || 'Invalid input').join('. ') : `Request failed (${response.status}). Try again.`,response.status,error?.code,Number(response.headers.get('Retry-After')||0)); }
+  if (!response.ok) { const error = await response.json().catch(() => null); const detail = error?.detail; const fields=detail && typeof detail==='object' && !Array.isArray(detail)?detail:undefined; throw new ApiError(typeof detail === 'string' ? detail : typeof fields?.message==='string'?fields.message:Array.isArray(detail) ? detail.map((item: { msg?: string }) => item.msg || 'Invalid input').join('. ') : `Request failed (${response.status}). Try again.`,response.status,error?.code||fields?.code,Number(response.headers.get('Retry-After')||0),fields); }
   return response.json();
 }
 interface BotResponse { id: string; name: string; role: string; description?: string; status: BotStatus; llm_provider: string; llm_model: string; tools_enabled: string[]; system_prompt: string; }
@@ -28,12 +28,14 @@ export const api = {
   getDeliveries: (id:string): Promise<{id:string;status:string;attempts:number;detail:string}[]> => request('/channels/'+id+'/deliveries'),
   defaultTeam: (): Promise<Conversation> => request('/teams/default', { method: 'POST' }),
   getPluginCatalog: (): Promise<import('../components/PluginPanel').CatalogEntry[]> => request('/plugins/catalog'),
+  getMcpDirectory: (params:{q?:string;category?:string;kind?:'all'|'hosted'|'local'|'verified'|'auth';offset?:number;limit?:number}={}): Promise<import('../components/McpDirectory').McpDirectoryPage> => {const query=new URLSearchParams();for(const [key,value] of Object.entries(params))if(value!==undefined&&value!=='')query.set(key,String(value));const encoded=query.toString();return request('/plugins/directory'+(encoded?'?'+encoded:''));},
+  getMcpDirectoryPreview: (id:string): Promise<import('../components/McpDirectory').McpToolPreview> => request('/plugins/directory/'+encodeURIComponent(id)+'/preview'),
   searchMcpRegistry: (query:string,cursor?:string): Promise<{items:import('../components/PluginPanel').CatalogEntry[];next_cursor:string|null}> => request('/plugins/registry/search?q='+encodeURIComponent(query)+(cursor?'&cursor='+encodeURIComponent(cursor):'')),
   getAvailableConnections: (): Promise<import('../components/PluginPanel').AvailableConnection[]> => request('/plugins/available-connections'),
   pluginSyncStatus: (): Promise<import('../components/PluginPanel').PluginSync|null> => request('/plugins/catalog/sync'),
   syncPlugins: (approval_id?:string): Promise<import('../components/PluginPanel').PluginSync> => request('/plugins/catalog/sync',{method:'POST',body:JSON.stringify({approval_id})}),
   resolvePlugin: (website:string): Promise<import('../components/PluginPanel').CatalogEntry> => request('/plugins/resolve',{method:'POST',body:JSON.stringify({website})}),
-  authorizePlugin: (data:{name:string;url:string;approval_id?:string;reconnect?:boolean;connection_id?:string}): Promise<{status:string;flow_id?:string;authorization_url?:string;name:string}> => request('/plugins/authorize',{method:'POST',body:JSON.stringify(data)},65000),
+  authorizePlugin: (data:{name:string;url:string;approval_id?:string;reconnect?:boolean;connection_id?:string;oauth_client?:{client_id:string;client_secret?:string;scope?:string}}): Promise<{status:string;flow_id?:string;authorization_url?:string;name:string}> => request('/plugins/authorize',{method:'POST',body:JSON.stringify(data)},65000),
   cancelPluginAuth: async (id:string) => { const response=await fetch('/api/plugin-oauth/callback?flow='+encodeURIComponent(id),{method:'DELETE'}); const data=await response.json(); if(!response.ok)throw new Error(data.detail||'Could not cancel sign-in.'); return data; },
   pluginAuthStatus: (id:string): Promise<{status:string;name:string}> => request('/plugins/oauth/status/'+id),
   getPlugins: (): Promise<import('../components/PluginPanel').PluginConnection[]> => request('/plugins'),

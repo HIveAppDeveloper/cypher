@@ -76,6 +76,13 @@ function renderer(env) {
       }];
     },
     useRef(initial) { return slot('ref', { value: { current: initial } }).value; },
+    useCallback(callback, deps) {
+      const current = slot('callback', {});
+      if (!current.deps || !deps || deps.length !== current.deps.length || deps.some((value, i) => !Object.is(value, current.deps[i]))) {
+        current.deps = deps; current.value = callback;
+      }
+      return current.value;
+    },
     useEffect(create, deps) {
       const current = slot('effect', {});
       if (!current.deps || !deps || deps.length !== current.deps.length || deps.some((value, i) => !Object.is(value, current.deps[i]))) {

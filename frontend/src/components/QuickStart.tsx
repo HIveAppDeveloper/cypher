@@ -1,6 +1,7 @@
 import { MODEL_CHOICES } from '../lib/presets';
 import { GlassSelect } from './GlassSelect';
-import Image from 'next/image';
+import BinaryLens from './cipher/BinaryLens';
+import { RecentWork } from './cipher/RecentWork';
 import { useEffect, useRef, useState } from 'react';
 import { RunOptions } from '../lib/types';
 
@@ -10,7 +11,7 @@ const STARTER_PROMPTS = [
   { text: 'Build', prompt: 'Help me plan and build ' },
 ];
 
-export function QuickStart({ onStart, options, onOptions, draftScope }: { draftScope?: string; options: RunOptions; onOptions: (options: RunOptions) => void; onStart: (prompt: string, options: Partial<RunOptions>) => Promise<void> }) {
+export function QuickStart({ onStart, onOpenRecent, options, onOptions, draftScope }: { draftScope?: string; options: RunOptions; onOptions: (options: RunOptions) => void; onStart: (prompt: string, options: Partial<RunOptions>) => Promise<void>; onOpenRecent: (conversationId: string) => void }) {
   const manager = options.routing==='manual'?(options.model || 'gpt-6.1-sol'):'auto';
   const [prompt, setPrompt] = useState('');
   const logoRef = useRef<HTMLDivElement>(null);
@@ -49,13 +50,10 @@ export function QuickStart({ onStart, options, onOptions, draftScope }: { draftS
     <div className="quickstart">
       <div className="quickstart-panel">
       <div className="quickstart-mark" ref={logoRef} data-motion-active={logoMotionActive}>
-        <svg className="quickstart-mark-orbit" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="28" /></svg>
-        <span className="quickstart-logo-window">
-          <Image src="/cipher-logo.png" alt="Cypher" className="quickstart-logo" width={220} height={220} priority unoptimized />
-        </span>
+        <BinaryLens className="quickstart-real-lens" active={logoMotionActive} label="Cypher binary lens" />
       </div>
-      <h1>What would you like to work on?</h1>
-      <p className="quickstart-intro">A clear space for your next idea.</p>
+      <h1>Cypher</h1>
+      <p className="quickstart-intro">What would you like to work on?</p>
 
       <form onSubmit={start} className="task-composer" aria-busy={busy} data-motion-active={logoMotionActive}>
         <label className="visually-hidden" htmlFor="first-task">Your task</label>
@@ -121,7 +119,9 @@ export function QuickStart({ onStart, options, onOptions, draftScope }: { draftS
           ))}
       </nav>
 
-      <span className={busy ? 'quickstart-status' : 'visually-hidden'} role="status">{busy ? 'Opening your conversation…' : ''}</span>
+      <RecentWork onOpen={onOpenRecent} />
+
+      <span className={busy ? 'quickstart-status' : 'visually-hidden'} role="status">{busy ? <><BinaryLens className="quickstart-busy-lens" active={logoMotionActive} label="Cypher working" />Opening your conversation…</> : ''}</span>
       </div>
     </div>
   );

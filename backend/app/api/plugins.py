@@ -161,6 +161,7 @@ async def test_connection(id:UUID,db:AsyncSession=Depends(get_db)):
         'docs.mcp.cloudflare.com': [('search_cloudflare_documentation',{'query':'Workers overview'})],
         'mcp.linear.app': [('list_teams',{}),('list_projects',{})],
         'mcp.vercel.com': [('list_teams',{})],
+        'mcp.lovable.dev': [('get_me',{}),('list_workspaces',{})],
         'api.githubcopilot.com': [('search_repositories',{'query':'repo:HIveAppDeveloper/open-grokbot','perPage':1})],
         'jobherder.com': [('get_pricing',{})],
         'mcp.windsor.ai': [('get_connectors',{'include_actions':False,'include_options':False})],
