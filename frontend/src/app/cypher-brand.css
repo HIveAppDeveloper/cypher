@@ -38,6 +38,10 @@ body :is(.app-layout,.login-page,dialog) a {color:var(--cx-label);text-decoratio
 .cypher-mark {display:block;width:100%;height:auto;aspect-ratio:1624/806;overflow:visible;flex-shrink:0}
 @media(prefers-color-scheme:dark) {:root:not([data-theme="light"]) .cypher-mark {filter:invert(1)}}
 :root[data-theme="dark"] .cypher-mark {filter:invert(1)}
+.cypher-wordmark {display:inline-flex;align-items:center;gap:8px;min-width:0;color:inherit;white-space:nowrap}
+.cypher-wordmark > span:last-child {flex:none;line-height:1}
+.cypher-wordmark-mark {display:block;width:40px;height:20px;flex:none;aspect-ratio:1624/806;transition:transform .26s cubic-bezier(.2,.8,.2,1),filter .26s ease,opacity .2s ease}
+:is(.cx-word,.sidebar-brand,.login-brand,.mobile-nav-header strong a):is(:hover,:focus-visible) .cypher-wordmark-mark {transform:translateY(-1px) scale(1.04);filter:drop-shadow(0 2px 4px rgba(8,8,6,.16))}
 .sidebar-brand .brand-symbol,.mobile-nav-header .brand-symbol,.login-brand .brand-symbol {width:40px;height:20px;border:0;border-radius:0;background:none;filter:none;transform:none;transition:opacity .2s ease}
 .sidebar-brand:hover .brand-symbol {filter:none;transform:none;opacity:.65}
 @media(prefers-color-scheme:dark) {:root:not([data-theme="light"]) :is(.sidebar-brand,.mobile-nav-header,.login-brand) .brand-symbol {filter:invert(1)}}
@@ -109,6 +113,7 @@ body :is(.app-layout,.login-page,dialog) a {color:var(--cx-label);text-decoratio
 .login-card {display:block;position:relative;width:min(420px,100%);max-width:420px;margin:0;padding:32px;background:var(--cx-card);color:var(--cx-label);border:1px solid var(--cx-sep);border-radius:16px;box-shadow:none}
 .login-card::before,.login-card::after {display:none}
 .login-hero-mark {width:180px;max-width:80%;margin:0 auto 24px}
+.login-brand .cypher-wordmark-mark {width:40px;height:20px}
 .login-card h1 {margin:0 0 10px;text-align:center;font-size:27px;font-weight:500;letter-spacing:-.03em;color:var(--cx-label);line-height:1.2}
 .login-copy {margin:0 0 24px;text-align:center;color:var(--cx-label-2)}
 .login-divider,.login-card .login-privacy,.email-login-form label {color:var(--cx-label-2)}
@@ -132,3 +137,4 @@ body :is(.app-layout,.login-page,dialog) a {color:var(--cx-label);text-decoratio
   .login-card {padding:28px 22px}
 }
 @media(prefers-reduced-motion:reduce) {*,*::before,*::after {scroll-behavior:auto!important}}
+@media(prefers-reduced-motion:reduce) {.cypher-wordmark-mark {transition:none!important}}

@@ -13,6 +13,7 @@ import type { Metadata } from 'next';
 export const metadata: Metadata = {
   title: 'Cypher',
   description: 'Your workspace for conversations, agents, and connected tools.',
+  icons: { icon: '/cipher-logo.png', shortcut: '/cipher-logo.png', apple: '/cipher-logo.png' },
 };
 
 export default function RootLayout({

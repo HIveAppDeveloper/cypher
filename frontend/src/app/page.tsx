@@ -10,7 +10,7 @@ export const dynamic = 'force-dynamic';
 export const metadata: Metadata = {
   title: 'Cypher',
   description: 'Research real companies from your website, with public evidence.',
-  icons: { icon: '/cipher-logo.png', apple: '/cipher-logo.png' },
+  icons: { icon: '/cipher-logo.png', shortcut: '/cipher-logo.png', apple: '/cipher-logo.png' },
 };
 
 // Keep the preferred website-first Cypher flow at the main entry point.
