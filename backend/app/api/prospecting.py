@@ -8,6 +8,7 @@ from app.db.session import get_db
 from app.db.tenancy import current_tenant_id
 from app.models.prospecting import ProspectingRun
 from app.services.prospecting import event, gmail_state, snapshot, TERMINAL
+from app.config import settings
 
 router = APIRouter()
 
@@ -23,6 +24,7 @@ class RunInput(BaseModel):
     market: str = Field(min_length=2,max_length=300)
     product: str = Field(min_length=2,max_length=2000)
     limit: int = Field(default=5,ge=1,le=20)
+    use_akta: bool = False
 
 
 class DraftInput(BaseModel):
@@ -36,12 +38,21 @@ async def owned(db,run_id,tenant):
     return row
 
 
+@router.get('/settings')
+async def prospecting_settings(tenant=Depends(authenticated)):
+    # Expose availability only; never return the server-side credential.
+    return {'akta_available':bool(settings.AKTA_API_KEY), 'akta_max_results':20,
+            'akta_max_credits_for_20':8}
+
+
 @router.post('/runs',status_code=202)
 async def create_run(body:RunInput, tenant=Depends(authenticated), db:AsyncSession=Depends(get_db)):
+    if body.use_akta and not settings.AKTA_API_KEY:
+        raise HTTPException(503,'Akta is not configured for this workspace.')
     active=(await db.execute(select(ProspectingRun.id).where(ProspectingRun.tenant_id==tenant,ProspectingRun.status.in_(['pending','running','cancel_requested'])).limit(3))).scalars().all()
     if len(active)>=3: raise HTTPException(429,'Finish or cancel an existing run before starting another.')
     row=ProspectingRun(market=body.market,product=body.product,limit=body.limit)
-    db.add(row); event(row,'queued',source='Wikipedia API'); await db.commit(); await db.refresh(row)
+    db.add(row); event(row,'queued',source='Akta' if body.use_akta else 'Wikipedia API',use_akta=body.use_akta); await db.commit(); await db.refresh(row)
     return snapshot(row,await gmail_state(db))
 
 

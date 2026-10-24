@@ -1,17 +1,20 @@
 """Bounded public encyclopedia research. No models, private scraping, or outreach."""
 import asyncio
+import hashlib
 import json
+import math
 import re
 from datetime import datetime, timezone
-from urllib.parse import quote
+from urllib.parse import quote, urlsplit
 import httpx
-from sqlalchemy import select, update, or_
+from sqlalchemy import select, or_
 from app.db.tenancy import current_tenant_id
 from app.models.prospecting import ProspectingRun
 from app.models.plugin import Plugin
 from app.services.plugins import validate_endpoint
 
 API = 'https://en.wikipedia.org/w/api.php'
+AKTA_API = 'https://api.akta.pro/api/v1/list/generate/companies/'
 MAX_BYTES = 524288
 TERMINAL = {'completed', 'partial', 'failed', 'cancelled'}
 STOP_WORDS = {'the','and','for','with','from','that','this','into','your','our','are','you','company','companies','platform','product'}
@@ -31,8 +34,8 @@ def event(run, kind, **detail):
 
 
 class SourceError(Exception):
-    def __init__(self, code, retry_after=None):
-        self.code, self.retry_after = code, retry_after
+    def __init__(self, code, retry_after=None, uncertain=False):
+        self.code, self.retry_after, self.uncertain = code, retry_after, uncertain
         super().__init__(code)
 
 
@@ -96,6 +99,86 @@ def candidate(page, run):
             'draft':None}
 
 
+def run_uses_akta(run):
+    return any(item.get('type') == 'queued' and item.get('use_akta') is True
+               for item in (run.events or []) if isinstance(item,dict))
+
+
+async def akta_list(run):
+    """Paid, single-call company-list generation. The endpoint and key stay server-side."""
+    from app.config import settings
+    if not settings.AKTA_API_KEY:
+        raise SourceError('source_not_configured')
+    query = ('Find companies in this target market or audience: ' + run.market.strip() +
+             '. The product being offered is: ' + run.product.strip())[:1200]
+    try:
+        await validate_endpoint(AKTA_API)
+        async with asyncio.timeout(40):
+            async with httpx.AsyncClient(timeout=32, follow_redirects=False, headers={
+                'User-Agent':'CypherProspecting/1.0', 'Accept':'application/json',
+                'Content-Type':'application/json', 'x-api-key':settings.AKTA_API_KEY,
+            }) as client:
+                async with client.stream('POST', AKTA_API, json={
+                    'query':query, 'limit':min(run.limit,20), 'offset':0,
+                }) as response:
+                    if response.status_code == 429:
+                        retry=response.headers.get('retry-after','')
+                        raise SourceError('rate_limited',int(retry) if retry.isdigit() else None)
+                    if response.status_code in (401,403): raise SourceError('source_auth_failed')
+                    if response.status_code == 402: raise SourceError('credits_unavailable')
+                    if response.status_code >= 500: raise SourceError('source_unavailable',uncertain=True)
+                    if response.status_code != 200: raise SourceError('source_http_'+str(response.status_code))
+                    data=bytearray()
+                    async for part in response.aiter_bytes():
+                        data.extend(part)
+                        if len(data)>MAX_BYTES: raise SourceError('response_too_large',uncertain=True)
+                    try: body=json.loads(data)
+                    except (ValueError,UnicodeDecodeError): raise SourceError('invalid_source_response',uncertain=True) from None
+                    if not isinstance(body,dict) or not isinstance(body.get('data'),list):
+                        raise SourceError('invalid_source_response',uncertain=True)
+                    consumed=body.get('credits_consumed')
+                    if isinstance(consumed,bool) or not isinstance(consumed,(int,float)) or not math.isfinite(consumed) or consumed<0:
+                        consumed=None
+                    return body['data'][:min(run.limit,20)],consumed
+    except SourceError:
+        raise
+    except (TimeoutError,httpx.TimeoutException):
+        raise SourceError('source_timeout',uncertain=True) from None
+    except (httpx.HTTPError,OSError):
+        raise SourceError('source_unavailable',uncertain=True) from None
+
+
+def akta_candidate(company, run, index):
+    if not isinstance(company,dict): return None
+    name=company.get('name') or company.get('company_name')
+    if not isinstance(name,str) or not name.strip(): return None
+    name=name.strip()[:300]
+    website=company.get('website')
+    source_url=''
+    if isinstance(website,str) and len(website)<=2048:
+        try:
+            parsed=urlsplit(website if '://' in website else 'https://'+website)
+            if parsed.scheme=='https' and parsed.hostname and not parsed.username and not parsed.password:
+                source_url='https://'+parsed.netloc+parsed.path+('?' + parsed.query if parsed.query else '')
+        except ValueError:
+            pass
+    details=[]
+    for key in ('description','company_description','business_description','short_description','product_category','industry','company_status'):
+        value=company.get(key)
+        if isinstance(value,str) and value.strip() and value.strip() not in details:
+            details.append(value.strip()[:500])
+    description=' · '.join(details)[:3000] or 'Akta supplied this company record without a public description.'
+    identity=company.get('uuid') or company.get('id')
+    item_id=('akta-'+str(identity)[:72]) if isinstance(identity,(str,int)) and str(identity).strip() else 'akta-'+hashlib.sha256(f'{name}|{source_url}|{index}'.encode()).hexdigest()[:32]
+    matching=sorted(terms(run.market+' '+run.product) & terms(name+' '+description))
+    return {'id':item_id,'name':name,'source_url':source_url,'retrieved_at':now(),
+            'observed':{'description':description,'source':'Akta','organization_status':'Company record returned by Akta; not independently verified'},
+            'inferred':{'fit_score':min(100,len(matching)*10),'matched_terms':matching,
+                'reason':'Akta generated this candidate list from the supplied market and product; text overlap only helps sort results. No buying intent is established.',
+                'contributions':[{'term':term,'points':10,'source_url':source_url} for term in matching[:10] if source_url]},
+            'contact':{'status':'needed','email':None,'source_url':None},'draft':None}
+
+
 async def gmail_state(db):
     # Metadata only. Never trust global environment Gmail grants for a user.
     # Do not reload every connector's large tool catalog or encrypted grant on
@@ -111,7 +194,11 @@ async def gmail_state(db):
 
 
 def snapshot(run, gmail=None):
+    use_akta=run_uses_akta(run)
+    saved=next((item for item in reversed(run.events or []) if isinstance(item,dict) and item.get('type')=='akta_results_saved'),None)
     return {'id':run.id,'market':run.market,'product':run.product,'limit':run.limit,
+            'source':'Akta' if use_akta else 'Wikipedia API',
+            'credits_consumed':saved.get('credits_consumed') if saved else None,
             'status':run.status,'created_at':run.created_at,'completed_at':run.completed_at,
             'results':run.results,'events':run.events,
             'gmail':gmail or {'status':'not_checked','verified':False},
@@ -122,9 +209,18 @@ def snapshot(run, gmail=None):
 
 
 async def recover(sessions):
-    # Research is read-only and replay-safe. Saved results/cursor survive restart.
+    # Paid calls cannot be blindly replayed. Preserve saved results and fail an
+    # interrupted Akta request if its billable outcome was not persisted.
     async with sessions() as db:
-        await db.execute(update(ProspectingRun).where(ProspectingRun.status=='running').values(status='pending'))
+        rows=(await db.execute(select(ProspectingRun).where(ProspectingRun.status=='running'))).scalars().all()
+        for row in rows:
+            attempted=any(item.get('type')=='akta_request_started' for item in row.events or [] if isinstance(item,dict))
+            saved=any(item.get('type')=='akta_results_saved' for item in row.events or [] if isinstance(item,dict))
+            if run_uses_akta(row) and attempted and not saved:
+                row.status='failed'; row.completed_at=database_now()
+                event(row,'source_error',code='source_outcome_unknown',source='Akta',credits_unknown=True)
+            else:
+                row.status='pending'
         await db.commit()
 
 
@@ -138,9 +234,33 @@ async def tick(sessions):
             if row.status == 'cancel_requested':
                 row.status='cancelled'; row.completed_at=database_now(); event(row,'cancelled'); await db.commit(); return True
             if row.status == 'pending':
-                row.status='running'; event(row,'started',source='Wikipedia API'); await db.commit()
+                source='Akta' if run_uses_akta(row) else 'Wikipedia API'
+                row.status='running'; event(row,'started',source=source); await db.commit()
             try:
-                if not row.candidates:
+                if run_uses_akta(row):
+                    if not any(item.get('type')=='akta_results_saved' for item in row.events or [] if isinstance(item,dict)):
+                        event(row,'akta_request_started',source='Akta')
+                        await db.commit()
+                        companies,credits=await akta_list(row)
+                        items=[]
+                        for index,company in enumerate(companies):
+                            item=akta_candidate(company,row,index)
+                            if item and item['id'] not in {candidate['id'] for candidate in items}:
+                                items.append(item)
+                        row.candidates=[{'id':item['id']} for item in items]
+                        row.results=sorted(items,key=lambda item:(-item['inferred']['fit_score'],item['name']))
+                        row.cursor=len(row.candidates)
+                        event(row,'akta_results_saved',count=len(row.results),source='Akta',
+                              source_url='https://docs.akta.pro/docs/list-generation/overview',
+                              credits_consumed=credits,retrieved_at=now())
+                        await db.commit()
+                    await db.refresh(row)
+                    if row.status == 'cancel_requested':
+                        row.status='cancelled'; row.completed_at=database_now(); event(row,'cancelled')
+                    else:
+                        row.status='completed'; row.completed_at=database_now(); event(row,'completed',count=len(row.results))
+                    await db.commit()
+                elif not row.candidates:
                     body = await wikipedia({'list':'search','srsearch':row.market+' company','srnamespace':'0','srlimit':str(row.limit)})
                     hits = body.get('query',{}).get('search')
                     if not isinstance(hits,list): raise SourceError('invalid_source_response')
@@ -174,7 +294,10 @@ async def tick(sessions):
                 await db.refresh(row)
                 row.status='cancelled' if row.status=='cancel_requested' else ('partial' if row.results else 'failed')
                 row.completed_at=database_now()
-                event(row,'source_error',code=error.code,retry_after=error.retry_after,source_url=API)
+                event(row,'source_error',code=error.code,retry_after=error.retry_after,
+                      source='Akta' if run_uses_akta(row) else 'Wikipedia API',
+                      credits_unknown=bool(getattr(error,'uncertain',False)),
+                      source_url=AKTA_API if run_uses_akta(row) else API)
                 await db.commit()
         finally:
             current_tenant_id.reset(owner)

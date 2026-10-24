@@ -7610,5 +7610,21 @@
     "auth": "oauth",
     "source": "https://developers.google.com/workspace/guides/configure-mcp-servers",
     "setup_note": "Google’s hosted MCP requires its Workspace developer preview. Use Connect Google above for Cypher’s supported Google tools."
+  },
+  {
+    "id": "c4bf5724e3e1e8e2",
+    "name": "Akta",
+    "url": "https://mcp.akta.pro/mcp",
+    "description": "Search company data, profiles, news, and market signals with your Akta account.",
+    "category": "Research",
+    "domains": [
+      "akta.pro",
+      "mcp.akta.pro"
+    ],
+    "source": "https://docs.akta.pro/docs/developer-tools/mcp/setup",
+    "iconSource": "https://akta.pro/favicon.ico",
+    "auth": "api_key",
+    "auth_header": "x-api-key",
+    "verification": "not_tested"
   }
 ]
