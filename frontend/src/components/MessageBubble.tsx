@@ -2,6 +2,7 @@ import { useRef, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Bot, Message } from '../lib/types';
+import { BotAvatar } from './BotAvatar';
 const markdownPlugins = [remarkGfm];
 const markdownComponents = {
   a: ({ children, href }: React.ComponentProps<'a'>) => <a href={href} target="_blank" rel="noopener noreferrer">{children}</a>,
@@ -20,7 +21,7 @@ export function MessageBubble({ message, bot, grouped = false, onReply }: { onRe
   function download() { const url=URL.createObjectURL(new Blob([message.content],{type:'text/plain'})); const link=document.createElement('a'); link.href=url; link.download='response.txt'; link.click(); setTimeout(()=>URL.revokeObjectURL(url),1000); }
   const tool = message.messageType === 'tool_call' || String(message.messageType) === 'tool_result';
   return <article className={`message ${message.senderType === 'user' ? 'outgoing' : 'incoming'} ${tool ? 'tool-message' : ''} ${grouped ? 'message-grouped' : ''}`}>
-    {bot && !grouped ? <div className="message-sender">{bot.name}</div> : null}
+    {bot && !grouped ? <div className="message-sender-row"><BotAvatar name={bot.name} small/><span className="message-sender">{bot.name}</span></div> : null}
     {message.threadRootId?<small>Reply thread</small>:null}<div className="message-content">{tool ? <details><summary>{message.messageType === 'tool_call' ? 'Tool activity' : 'Tool result'}</summary><pre>{message.content}</pre></details> : message.senderType === 'bot' ? <div className="message-markdown"><ReactMarkdown remarkPlugins={markdownPlugins} skipHtml components={markdownComponents}>{message.content}</ReactMarkdown></div> : message.content}
     {message.attachments?.map((a,i) => {
       const src = a.url || (a.data ? `data:${a.mime};base64,${a.data}` : '');

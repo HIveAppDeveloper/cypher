@@ -39,12 +39,37 @@
 
 .thread-members {
   flex-shrink: 0;
-  padding: 0 clamp(22px, 3vw, 44px) 8px;
+  padding: 0 clamp(22px, 3vw, 44px) 10px;
   border: 0;
   color: var(--cx-label-2);
   font-size: 11px;
 }
-.thread-members > summary { min-height: 28px; padding: 4px 0; }
+.thread-members > summary {
+  display: inline-flex;
+  min-height: 30px;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 10px 3px 5px;
+  border-radius: 999px;
+  cursor: pointer;
+  list-style: none;
+  transition: background-color .16s ease, color .16s ease;
+}
+.thread-members > summary::-webkit-details-marker { display: none; }
+.thread-members > summary:hover,
+.thread-members[open] > summary { background: var(--cx-fill-2); color: var(--cx-label); }
+.thread-member-stack { display: inline-flex; align-items: center; padding-left: 2px; }
+.thread-member-stack .small-avatar {
+  width: 23px;
+  height: 23px;
+  margin-left: -3px;
+  border: 2px solid var(--cx-bg);
+  border-radius: 50%;
+  font-size: 8px;
+}
+.team-members { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 4px 3px; }
+.team-members > span { display: inline-flex; align-items: center; gap: 6px; padding: 5px 9px 5px 5px; border: 1px solid var(--cx-sep); border-radius: 999px; background: var(--cx-card); color: var(--cx-label-2); font-size: 11px; }
+.team-members .small-avatar { width: 22px; height: 22px; border-radius: 50%; font-size: 8px; }
 
 .message-stream {
   box-sizing: border-box;
@@ -94,8 +119,10 @@
 }
 .message.outgoing .message-content a { color: inherit; }
 
+.message-sender-row { display: flex; align-items: center; gap: 7px; margin: 0 0 6px; }
+.message-sender-row .small-avatar { width: 23px; height: 23px; border-radius: 7px; font-size: 9px; }
 .message-sender {
-  margin: 0 0 6px;
+  margin: 0;
   color: var(--cx-label-2);
   font-size: 11px;
   font-weight: 600;
