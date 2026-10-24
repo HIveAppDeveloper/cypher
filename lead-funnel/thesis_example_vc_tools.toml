@@ -1,0 +1,44 @@
+# EXAMPLE THESIS: replace with your own. Every field steers the funnel.
+
+one_liner = "AI-native workflow software for venture investors and LPs"
+
+thesis = """
+Private-market investors run a ten-billion-dollar asset class on spreadsheets, PDFs and inboxes.
+GPs finally have CRMs, but sourcing, diligence, portfolio monitoring and LP reporting are still manual.
+We are building the system of record that reads fund documents, data rooms and public filings,
+and turns them into signals an investor can act on the same day.
+"""
+
+# What you believe that most investors don't. These matter most for matching how people think.
+beliefs = [
+  "Investors will pay for better signal and explanations, not more data",
+  "Funds' own portfolio data must stay in-house, so self-hosted models win",
+  "LPs are underserved compared with GPs and will buy tools every quarter",
+  "Public filings like Form D and Form ADV are an untapped source of private-market signal",
+]
+
+keywords = ["fintech", "private markets", "venture", "investor", "data", "analytics", "workflow", "ai",
+            "machine learning", "capital markets", "b2b", "saas", "fund administration", "due diligence"]
+
+# Form D industry groups that count as "your space" for board seats
+industries = ["Other Technology", "Computers", "Other Banking and Financial Services", "Investment Banking", "Business Services", "Commercial Banking"]
+
+# Backing one of these is a conflict (checked against portfolio and board-seat names)
+competitors = ["Affinity", "Harmonic", "PitchBook", "Carta", "Grata", "Tracxn", "Visible"]
+
+# Firms whose language is dominated by these are off-thesis
+exclusions = ["real estate", "biotech", "therapeutics", "oil", "crypto", "web3", "consumer brands", "restaurants"]
+
+stage = "seed"
+raise_usd = 2_000_000
+fund_size_usd = [15_000_000, 500_000_000]   # funds this size write checks your size
+geo_preferred = ["NY", "CA", "MA"]          # soft preference (US state codes from SEC filings)
+geo_required = []                           # hard filter; leave empty for anywhere
+max_months_since_fund = 36                  # drop firms whose latest fund filing is older than this
+
+[run]
+sourced = 1000        # stage 1 output
+screen = 200          # stage 2 output (homepages read)
+deep = 50             # stage 3 output (key pages read, akta.pro, warm paths)
+shortlist = 15        # final
+judge_effort = "high" # Claude effort for the final judge: low, medium, high

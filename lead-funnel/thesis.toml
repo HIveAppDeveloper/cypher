@@ -1,0 +1,46 @@
+# RANDOM EXAMPLE THESIS: AI back office for independent veterinary clinics.
+# The previous example (tools for VCs and LPs) is saved as thesis_example_vc_tools.toml.
+
+one_liner = "An AI back office for independent veterinary clinics"
+
+thesis = """
+About half of US veterinary clinics are still independently owned, and they compete with private-equity
+roll-ups that get centralized billing, scheduling and staffing for free. Independent clinics run on a
+practice-management system plus phones, paper and a burned-out front desk. We automate the work around
+that system: insurance and payment collection, appointment reminders and rebooking, inventory reorders
+and medical-record summaries, so a clinic gets roll-up efficiency without selling to a roll-up.
+"""
+
+# What you believe that most investors don't. These matter most for matching how people think.
+beliefs = [
+  "Independent vet clinics will outlast the roll-ups if they get the same back-office software",
+  "The vet staffing shortage makes removing admin work worth more than any growth tool",
+  "Practice-management systems are a commodity; the value is in automating the work around them",
+  "Pet owners pay for convenience, so payments and client messaging are the wedge into the clinic",
+]
+
+keywords = ["veterinary", "vet", "animal health", "pet", "clinic", "practice management", "healthcare",
+            "vertical saas", "smb", "small business", "ai", "workflow", "automation", "payments", "scheduling"]
+
+# Form D industry groups that count as "your space" for board seats
+industries = ["Other Health Care", "Other Technology", "Business Services", "Hospitals and Physicians", "Computers"]
+
+# Backing one of these is a conflict (checked against portfolio and board-seat names)
+competitors = ["Covetrus", "IDEXX", "ezyVet", "Digitail", "Vetspire", "PetDesk"]
+
+# Firms whose language is dominated by these are off-thesis
+exclusions = ["real estate", "oil", "crypto", "web3", "therapeutics", "drug discovery", "semiconductor", "defense"]
+
+stage = "seed"
+raise_usd = 3_000_000
+fund_size_usd = [20_000_000, 400_000_000]   # funds this size write checks your size
+geo_preferred = ["NY", "CA", "TX", "CO", "MA"]  # soft preference (US state codes from SEC filings)
+geo_required = []                           # hard filter; leave empty for anywhere
+max_months_since_fund = 36                  # drop firms whose latest fund filing is older than this
+
+[run]
+sourced = 1000        # stage 1 output
+screen = 200          # stage 2 output (homepages read)
+deep = 50             # stage 3 output (key pages read, akta.pro, warm paths)
+shortlist = 15        # final
+judge_effort = "high" # Claude effort for the final judge: low, medium, high

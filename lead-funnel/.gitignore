@@ -1,0 +1,21 @@
+# Keys and personal data
+.env
+.env.*
+!.env.example
+lead-funnel/connections.csv
+
+# Dependencies
+node_modules/
+.venv/
+__pycache__/
+*.pyc
+
+# Downloaded data, caches and results (SEC files, website cache, Akta and Claude caches, ledger)
+cache/
+lead-funnel/data/
+lead-funnel/out/
+lead-funnel/run_results*.txt
+
+# Editor and OS files
+.DS_Store
+.claude/settings.local.json
