@@ -9,6 +9,23 @@ from .test_workspace_workflows import workspace
 
 
 @pytest.mark.asyncio
+async def test_damaged_saved_credential_does_not_hide_all_other_connections(workspace):
+    client,sessions=workspace
+    tenant=current_tenant_id.set('credential-list-owner')
+    try:
+        async with sessions() as db:
+            for name,credential in [('Damaged','not-a-valid-encrypted-token'),('Healthy',plugins.seal('existing-test-token'))]:
+                db.add(Plugin(name=name,url='https://service.example/mcp',credential=credential,enabled=True,tools=[{'name':'read','description':'Read'}]))
+            await db.commit()
+    finally:current_tenant_id.reset(tenant)
+    response=await client.get('/api/plugins',headers={'x-grokbot-user-id':'credential-list-owner'})
+    assert response.status_code==200
+    saved={plugin['name']:plugin for plugin in response.json()}
+    assert len(saved)==2 and not saved['Damaged']['authenticated'] and saved['Healthy']['authenticated']
+    assert 'not-a-valid-encrypted-token' not in response.text
+
+
+@pytest.mark.asyncio
 @pytest.mark.parametrize('outcome,status,code',[
     ('network','failed','unavailable'),
     ('auth','failed','sign_in_required'),
