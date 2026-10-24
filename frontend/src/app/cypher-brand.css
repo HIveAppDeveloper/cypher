@@ -35,7 +35,7 @@ input,textarea,select,button,progress {accent-color:var(--brand-action);caret-co
 :is(button,a,input,textarea,select,summary,[tabindex]):focus-visible {outline-color:var(--cx-label)}
 ::-webkit-scrollbar-thumb {background:var(--cx-sep)}
 body :is(.app-layout,.login-page,dialog) a {color:var(--cx-label);text-decoration-color:currentColor}
-.cypher-mark {display:block;width:100%;height:auto;aspect-ratio:1624/630;overflow:hidden;flex-shrink:0}
+.cypher-mark {position:relative;display:block;width:100%;height:auto;aspect-ratio:1624/630;overflow:hidden;flex-shrink:0}
 @media(prefers-color-scheme:dark) {:root:not([data-theme="light"]) .cypher-mark {filter:invert(1)}}
 :root[data-theme="dark"] .cypher-mark {filter:invert(1)}
 .sidebar-brand .brand-symbol,.mobile-nav-header .brand-symbol,.login-brand .brand-symbol {width:52px;height:auto;aspect-ratio:1624/630;border:0;border-radius:0;background:none;filter:contrast(1.3);transform-origin:center;transition:opacity .2s ease,transform .08s linear,filter .2s ease}
@@ -181,3 +181,8 @@ body :is(.app-layout,.login-page,dialog) a {color:var(--cx-label);text-decoratio
   .login-card {padding:28px 22px}
 }
 @media(prefers-reduced-motion:reduce) {*,*::before,*::after {scroll-behavior:auto!important}}
+
+/* Canvas digits inherit the surface ink in both themes. */
+.cypher-mark {color:var(--cx-label);filter:none!important}
+.cypher-digit-mark {position:absolute;inset:0;display:block;width:100%;height:100%;color:inherit}
+.composer .composer-voice-mark {color:var(--cx-inverse)}

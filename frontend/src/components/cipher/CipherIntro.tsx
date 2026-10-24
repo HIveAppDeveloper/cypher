@@ -83,8 +83,7 @@ export default function CipherIntro() {
             ctx.globalAlpha = .22 + (p.alpha - .22) * k;
             if (k < 1 && Math.random() < .025) p.digit = p.digit === '0' ? '1' : '0';
             else if (k >= 1) p.digit = p.targetDigit;
-            if (size < 3) { ctx.beginPath(); ctx.arc(x, y, Math.max(.5, size * .35), 0, Math.PI * 2); ctx.fill(); }
-            else { ctx.font = font(size); ctx.fillText(p.digit, x, y); }
+            ctx.font = font(Math.max(5, size)); ctx.fillText(p.digit, x, y);
           }
           ctx.globalAlpha = 1;
           if (t < DONE_AT - 120 && !done) raf = requestAnimationFrame(tick);

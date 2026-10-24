@@ -569,3 +569,7 @@ The conversation is an Operate surface with a group-text composition: quiet titl
 
 ## Live voice motion
 The voice console renders BinaryLens with a live audio-level ref from the microphone or playback analyser. Activity changes start and stop the existing canvas loop without recreating the digit field. Offscreen, hidden, OS reduced-motion, and saved motion-off states pause the loop; text status remains visible. Stop cancels the pending speech request and audio playback. Browser WebM/MP4/Ogg recordings are normalized server-side before speech recognition; the original attachment remains intact.
+
+## Live binary and voice stage
+
+The user's animation direction takes precedence over the earlier static identity treatment: all Cypher symbol instances render real animated 0/1 digits, with the original uploaded asset retained as reference. Compact symbols adapt their grid to preserve readable digits. Voice opens a large, centered binary lens in the conversation region; the existing message list stays mounted and returns when voice stops. Keep the composer and Stop action reachable at mobile and short viewport sizes. Respect reduced motion and pause offscreen animation.
