@@ -57,6 +57,11 @@
 .lovable-connect-progress,.connector-authorization {border:0;border-radius:12px;background:var(--cx-fill-2);padding:18px;animation:cypher-view-in .2s var(--cypher-ease)}
 .connector-authorization>ol {font-size:13px;line-height:1.8}
 .connector-authorization>p {font-size:12px}
+.connector-custom-advanced,.mcp-directory-disclosure {border-top:1px solid var(--cx-sep);margin-top:14px}
+.connector-custom-advanced summary,.mcp-directory-disclosure>summary {cursor:pointer;min-height:42px;padding:13px 0;color:var(--cx-label-2);font-size:12px}
+.connector-custom-actions {display:flex;align-items:center;gap:10px;margin-top:18px}
+.connector-custom-actions button {min-height:40px}
+.mcp-directory-disclosure>p {margin:0 0 12px;color:var(--cx-label-2);font-size:12px;line-height:1.6}
 .connector-catalog {display:flex;flex-direction:column;gap:0}
 .connectors-dialog .connector-entry {display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 20px;padding:16px 0;border:0;border-bottom:1px solid var(--cx-sep);border-radius:0;min-height:0;background:transparent}
 .connector-entry-title {align-self:center}
