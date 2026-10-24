@@ -393,7 +393,9 @@ async def test_coordinator_delegates_and_synthesizes_shared_work(tmp_path, monke
     async def complete(**kwargs):
         seen.append(kwargs)
         system = kwargs['messages'][0]['content']
-        if 'Plan this task briefly' in system:
+        # A direct coordinator turn may choose a useful handoff without a
+        # separate model call whose only purpose is to ask for a plan.
+        if len(seen) == 1 or 'Plan this task briefly' in system:
             content='HANDOFF[Researcher: check the source]'
         elif 'The assigned specialist work has finished' in system:
             assert any('Verified source evidence' in str(m['content']) for m in kwargs['messages'])
