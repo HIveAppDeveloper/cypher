@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { request } from '../lib/api';
+import { dateFromApi } from '../lib/dates';
 import { companyWebsite } from '../lib/company-website';
 import { CYPHER_VOICE_INTRO } from '../lib/cypher-voice';
 import BinaryLens from './cipher/BinaryLens';
@@ -50,7 +51,8 @@ const EVENT_LABELS: Record<string, string> = {
 };
 const statusLabel = (status: string) => STATUS_LABELS[status] || status.replace(/_/g, ' ');
 const errorText = (error: unknown) => error instanceof Error ? error.message : 'Something went wrong. Please try again.';
-const localTime = (value: string) => new Date(value).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+const localTime = (value: string) => dateFromApi(value)?.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) || '—';
+const localDateTime = (value: string) => dateFromApi(value)?.toLocaleString() || '—';
 
 function ResearchLoading({ label, variant }: { label: string; variant: 'results' | 'history' }) {
   return <div className={`cx-research-skeleton cx-research-skeleton-${variant}`} role="status" aria-label={label} aria-busy="true">
@@ -341,7 +343,7 @@ export default function ProspectingWorkspace() {
 
     {(profile || manual) && <section className="cx-profile-panel" aria-labelledby="profile-heading">
       <div className="cx-section-heading"><div><h2 id="profile-heading">Your customer profile</h2></div>{profile && <a href={profile.url} target="_blank" rel="noopener noreferrer">View website source</a>}</div>
-      {profile && <div className="cx-source-note"><span className="cx-source-dot"/>Website copy read from <a href={profile.url} target="_blank" rel="noopener noreferrer">{profile.title || profile.url}</a><span>· {new Date(profile.retrieved_at).toLocaleString()}</span></div>}
+      {profile && <div className="cx-source-note"><span className="cx-source-dot"/>Website copy read from <a href={profile.url} target="_blank" rel="noopener noreferrer">{profile.title || profile.url}</a><span>· {localDateTime(profile.retrieved_at)}</span></div>}
       {profile?.assumptions.map((item, index) => <p className="cx-profile-assumption" key={index}>{item}</p>)}
       <form className="cx-profile-form" onSubmit={start}>
         <label><span>Customer market or audience</span><input value={market} maxLength={300} minLength={2} required placeholder="Who benefits from this offer? Include industry, size, or region." onChange={event => { setMarket(event.target.value); setConfirmed(false); }} disabled={!!pending}/></label>
@@ -376,7 +378,7 @@ export default function ProspectingWorkspace() {
           {candidate && <article className="cx-detail-card" aria-label={`${candidate.name} research detail`}>
             <div className="cx-detail-header"><h3>{candidate.name}</h3><span className="cx-contact-status">{candidate.contact.email ? 'Public contact listed' : 'No verified contact'}</span></div>
             <div className="cx-detail-grid"><div><h4>Why it appeared</h4><p>{candidate.inferred.reason}</p><div className="cx-match-terms">{candidate.inferred.matched_terms.map(term => <span key={term}>{term}</span>)}</div></div>
-              <div><h4>{candidate.observed.source === 'Akta' ? 'Akta company record' : 'Public evidence'}</h4><p className="cx-description">{candidate.observed.description || 'The source did not provide a readable company description.'}</p>{candidate.source_url ? <a className="cx-evidence-link" href={candidate.source_url} target="_blank" rel="noopener noreferrer">{candidate.observed.source === 'Akta' ? 'Visit listed company website' : `Read ${candidate.observed.source} source`}</a> : <small>Company details supplied by Akta · no public website was listed</small>}<small>Retrieved {new Date(candidate.retrieved_at).toLocaleString()}</small></div></div>
+              <div><h4>{candidate.observed.source === 'Akta' ? 'Akta company record' : 'Public evidence'}</h4><p className="cx-description">{candidate.observed.description || 'The source did not provide a readable company description.'}</p>{candidate.source_url ? <a className="cx-evidence-link" href={candidate.source_url} target="_blank" rel="noopener noreferrer">{candidate.observed.source === 'Akta' ? 'Visit listed company website' : `Read ${candidate.observed.source} source`}</a> : <small>Company details supplied by Akta · no public website was listed</small>}<small>Retrieved {localDateTime(candidate.retrieved_at)}</small></div></div>
             {candidate.contact.email && candidate.contact.source_url && <p className="cx-verified-contact">Public business contact: <a href={`mailto:${candidate.contact.email}`}>{candidate.contact.email}</a> · <a href={candidate.contact.source_url} target="_blank" rel="noopener noreferrer">evidence</a></p>}
             {candidate.draft ? <div className="cx-draft-box"><div className="cx-draft-label"><strong>App draft preview · review required</strong><span>No recipient · not in Gmail</span></div><label>Subject<input value={draft?.subject || candidate.draft.subject} onChange={event => setDraft(current => current ? { ...current, subject: event.target.value } : candidate.draft)} disabled={!draft}/></label><label>Message<textarea rows={7} value={draft?.body || candidate.draft.body} onChange={event => setDraft(current => current ? { ...current, body: event.target.value } : candidate.draft)} disabled={!draft}/></label><div className="cx-draft-actions"><button type="button" className="cx-secondary" onClick={async () => { try { await navigator.clipboard.writeText(`Subject: ${draft?.subject || candidate.draft!.subject}\n\n${draft?.body || candidate.draft!.body}`); setNotice('Draft copied. No email was created or sent.'); } catch { setNotice('Clipboard access was unavailable.'); } }}>Copy draft</button><a href={`https://mail.google.com/mail/?view=cm&fs=1&su=${encodeURIComponent(draft?.subject || candidate.draft.subject)}&body=${encodeURIComponent(draft?.body || candidate.draft.body)}`} target="_blank" rel="noopener noreferrer">Open Gmail compose</a></div><p>Edits stay on this screen. Gmail compose opens with the text filled in; it is not a saved Gmail draft.</p></div> : <div className="cx-draft-cta"><div><strong>Prepare a source-aware introduction</strong><small>Saved in the app for review. No recipient or Gmail draft is created.</small></div><button type="button" className="cx-secondary" disabled={!!pending || active} onClick={prepareDraft}>{pending === 'draft' ? 'Preparing…' : 'Create app draft'}</button></div>}
             {notice && <p className="cx-notice" role="status">{notice}</p>}

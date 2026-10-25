@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { ApiError, request } from '../lib/api';
+import { dateFromApi } from '../lib/dates';
 import WorkflowShell from './WorkflowShell';
 import './vc-prospecting.css';
 
@@ -40,7 +41,7 @@ const errorMessage = (error: unknown) => {
   }
   return 'That step didn’t finish. Please try again.';
 };
-const dateLabel = (value: string | null | undefined) => value ? new Date(value).toLocaleDateString() : 'Not refreshed yet';
+const dateLabel = (value: string | null | undefined) => dateFromApi(value)?.toLocaleDateString() || 'Not refreshed yet';
 
 function VcIcon({ kind }: { kind: 'back' | 'check' | 'chevron' | 'search' | 'external' }) {
   const paths = { back: 'm14 6-6 6 6 6M8 12h12', check: 'm5 12 4 4L19 6', chevron: 'm6 9 6 6 6-6', search: 'M16 16l5 5M18 10a8 8 0 1 1-16 0 8 8 0 0 1 16 0', external: 'M14 3h7v7m0-7L10 14M9 3H3v18h18v-6' };
