@@ -212,19 +212,23 @@ export default function CipherApp() {
 
   async function launch(targets: Lead[]) {
     if (!targets.length) return;
-    if (webhook.trim()) {
-      const payload = { source: 'cipher', persona, offering, leads: targets.map(l => ({ company: l.company.name, ticker: l.company.ticker, domain: l.company.domain, score: l.score, tier: l.tier, why: l.why, subject: l.email.subject, body: l.email.body, sequence: l.sequence })) };
-      let detail = 'Your sending tool could not be reached.';
-      try {
-        const res = await fetch('/api/cipher/dispatch', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ webhook: webhook.trim(), payload }) });
-        const data = await res.json().catch(() => ({})) as { ok?: boolean; detail?: string };
-        if (!res.ok || !data.ok) { detail = data.detail || detail; throw new Error(detail); }
-        log(`Sent ${targets.length} sequence${targets.length > 1 ? 's' : ''} to your sending tool`, 'good');
-      } catch {
-        log(`Not sent: ${detail} Check the webhook in Setup.`, 'warn');
-        setToast('Not sent. Check the webhook in Setup.'); return;
-      }
-    } else log(`Started ${targets.length} sequence${targets.length > 1 ? 's' : ''}. Add a webhook in Setup to send through your own tool.`, 'good');
+    if (!webhook.trim()) {
+      setSetupOpen(true);
+      setToast('Add a sending webhook in Setup to start a sequence.');
+      log('Not sent: add a sending webhook in Setup to start a sequence.', 'warn');
+      return;
+    }
+    const payload = { source: 'cipher', persona, offering, leads: targets.map(l => ({ company: l.company.name, ticker: l.company.ticker, domain: l.company.domain, score: l.score, tier: l.tier, why: l.why, subject: l.email.subject, body: l.email.body, sequence: l.sequence })) };
+    let detail = 'Your sending tool could not be reached.';
+    try {
+      const res = await fetch('/api/cipher/dispatch', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ webhook: webhook.trim(), payload }) });
+      const data = await res.json().catch(() => ({})) as { ok?: boolean; detail?: string };
+      if (!res.ok || !data.ok) { detail = data.detail || detail; throw new Error(detail); }
+      log(`Sent ${targets.length} sequence${targets.length > 1 ? 's' : ''} to your sending tool`, 'good');
+    } catch {
+      log(`Not sent: ${detail} Check the webhook in Setup.`, 'warn');
+      setToast('Not sent. Check the webhook in Setup.'); return;
+    }
     const now = new Date().toISOString();
     setLeads(ls => ls.map(l => (targets.some(t => t.id === l.id) ? { ...l, stage: 'sent', sentAt: now } : l)));
     setToast(`${targets.length} sequence${targets.length > 1 ? 's' : ''} started`);
@@ -317,7 +321,7 @@ export default function CipherApp() {
                     {aiProgress ? `Researching ${aiProgress.done}/${aiProgress.total}…` : 'Research with AI'}
                   </button>
                   <button type="button" className="cx-act" disabled={running || !readyHot.length} onClick={() => void launch(readyHot)}>
-                    {readyHot.length ? `Start ${readyHot.length} hot sequence${readyHot.length > 1 ? 's' : ''}` : count('Hot') ? 'Hot sequences started' : 'Start hot sequences'}
+                    {readyHot.length ? !webhook.trim() ? 'Connect sending tool' : `Start ${readyHot.length} hot sequence${readyHot.length > 1 ? 's' : ''}` : count('Hot') ? 'Hot sequences started' : 'Start hot sequences'}
                   </button>
                 </div>
               </div>
@@ -521,8 +525,9 @@ export default function CipherApp() {
 
             <footer>
               <button type="button" className="cx-btn" disabled={!!aiProgress} onClick={() => void research([lead])}>{aiBusy.includes(lead.id) ? 'Researching…' : lead.ai ? 'Research again' : 'Research with AI'}</button>
-              {lead.stage === 'drafted' ? <button type="button" className="cx-act" onClick={() => void launch([lead])}>Start sequence</button> : null}
-              {lead.stage === 'drafted' ? <a className="cx-btn" href={`https://mail.google.com/mail/?view=cm&fs=1&su=${encodeURIComponent(lead.email.subject)}&body=${encodeURIComponent(lead.email.body)}`} target="_blank" rel="noreferrer" onClick={() => move(lead, 'sent')}>Open in Gmail</a> : null}
+              {lead.stage === 'drafted' ? <button type="button" className="cx-act" onClick={() => webhook.trim() ? void launch([lead]) : (setSetupOpen(true), setToast('Add a sending webhook in Setup to start a sequence.'))}>{webhook.trim() ? 'Start sequence' : 'Connect sending tool'}</button> : null}
+              {lead.stage === 'drafted' ? <a className="cx-btn" href={`https://mail.google.com/mail/?view=cm&fs=1&su=${encodeURIComponent(lead.email.subject)}&body=${encodeURIComponent(lead.email.body)}`} target="_blank" rel="noreferrer" onClick={() => { setToast('Gmail draft opened. Mark it as sent after you send it.'); log(`${lead.company.name} email draft opened in Gmail; not marked sent`, 'info', lead.id); }}>Open draft in Gmail</a> : null}
+              {lead.stage === 'drafted' ? <button type="button" className="cx-btn" onClick={() => move(lead, 'sent')}>Mark as sent</button> : null}
               <button type="button" className="cx-btn" onClick={() => void copyEmail(lead)}>Copy email</button>
               {lead.stage === 'sent' ? <button type="button" className="cx-btn" onClick={() => move(lead, 'replied')}>Mark replied</button> : null}
               {lead.stage === 'sent' || lead.stage === 'replied' ? <button type="button" className="cx-act" onClick={() => move(lead, 'meeting')}>Meeting booked</button> : null}
