@@ -22,6 +22,9 @@ test('recent work lists the latest runs and opens the selected conversation', as
   view.mount(() => RecentWork({ onOpen: id => opened.push(id) }));
   await view.flush();
 
+  const viewAll = find(view.tree, node => node.type === 'a' && node.props.href === '?view=work');
+  assert.equal(textOf(viewAll), 'View all');
+
   const rows = [];
   const collect = node => {
     if (!node || typeof node !== 'object') return;
