@@ -5,9 +5,41 @@ from functools import wraps
 from inspect import signature
 from time import perf_counter
 import logging
+from uuid import UUID
 
 _current = ContextVar('voice_metrics', default=None)
+_gateway_jobs = ContextVar('voice_gateway_jobs', default=None)
+_continuation = ContextVar('voice_continuation', default=False)
 logger = logging.getLogger(__name__)
+
+@contextmanager
+def voice_continuation(enabled):
+    """Server scope entered only after a live voice turn has real speech."""
+    token = _continuation.set(bool(enabled))
+    try:
+        yield
+    finally:
+        _continuation.reset(token)
+
+def is_voice_continuation():
+    return _continuation.get()
+
+def remember_gateway_job(path, value):
+    jobs = _gateway_jobs.get()
+    if jobs is None or path not in {'/chat/completions', '/responses', '/audio/transcriptions'}:
+        return
+    try:
+        job_id = str(UUID(value))
+        if job_id != value.lower():
+            return
+    except (ValueError, TypeError, AttributeError):
+        return
+    entry = {'job_id': job_id, 'stage': 'speech' if path == '/audio/transcriptions' else 'model'}
+    if entry not in jobs and len(jobs) < 32:
+        jobs.append(entry)
+
+def gateway_jobs():
+    return [dict(job) for job in (_gateway_jobs.get() or [])]
 
 def note(name, value):
     metrics = _current.get()
@@ -46,6 +78,7 @@ def audio_task(function):
             return await function(*args, **kwargs)
         metrics = {}
         token = _current.set(metrics)
+        jobs_token = _gateway_jobs.set([])
         started = perf_counter()
         try:
             return await function(*args, **kwargs)
@@ -57,5 +90,6 @@ def audio_task(function):
                 # Never fail a task or log source audio/transcripts/provider bodies.
                 logger.warning('Voice timing persistence unavailable')
             finally:
+                _gateway_jobs.reset(jobs_token)
                 _current.reset(token)
     return run

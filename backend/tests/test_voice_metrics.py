@@ -62,3 +62,33 @@ async def test_metrics_failure_never_replaces_success_or_task_error():
     with pytest.raises(ValueError,match='original task failure'):
         await runner.run(attachments=[{'mime':'audio/mpeg'}],fail=True)
     assert voice_metrics._current.get() is None
+
+
+@pytest.mark.asyncio
+async def test_voice_continuation_and_opaque_job_correlations_are_scoped_without_changing_numeric_metrics():
+    from uuid import uuid4
+    one_id, two_id = str(uuid4()), str(uuid4())
+    class Runner:
+        @voice_metrics.audio_task
+        async def run(self, attachments=None, enabled=False, job_id=None):
+            with voice_metrics.voice_continuation(enabled):
+                await asyncio.sleep(0)
+                assert voice_metrics.is_voice_continuation() is enabled
+                voice_metrics.remember_gateway_job('/chat/completions', job_id)
+                voice_metrics.remember_gateway_job('/chat/completions', job_id)
+                for bad in ('private provider body', None, 'not-a-uuid', '{'+job_id+'}'):
+                    voice_metrics.remember_gateway_job('/chat/completions', bad)
+                voice_metrics.remember_gateway_job('/models', str(uuid4()))
+        async def _persist_voice_metrics(self, metrics):
+            assert all(isinstance(value,(int,float)) for value in metrics.values())
+            self.jobs = voice_metrics.gateway_jobs()
+    one,two=Runner(),Runner()
+    await asyncio.gather(one.run(attachments=[{'mime':'audio/webm'}],enabled=True,job_id=one_id),
+                         two.run(attachments=[{'mime':'audio/webm'}],enabled=False,job_id=two_id))
+    assert one.jobs == [{'job_id':one_id,'stage':'model'}]
+    assert two.jobs == [{'job_id':two_id,'stage':'model'}]
+    assert not voice_metrics.is_voice_continuation() and voice_metrics.gateway_jobs() == []
+    with pytest.raises(ValueError):
+        with voice_metrics.voice_continuation(True):
+            raise ValueError('original error')
+    assert not voice_metrics.is_voice_continuation()

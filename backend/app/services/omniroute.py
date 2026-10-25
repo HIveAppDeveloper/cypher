@@ -72,11 +72,14 @@ def cloud_project_matches():
         return False
 
 
-def headers():
+def headers(path=None):
     endpoint()  # Validate the destination before attaching either credential.
     result = {'Authorization': 'Bearer ' + settings.OMNIROUTE_API_KEY}
     if settings.OMNIROUTE_PROTECTION_BYPASS:
         result['x-vercel-protection-bypass'] = settings.OMNIROUTE_PROTECTION_BYPASS
+    from app.services.voice_metrics import is_voice_continuation
+    if path in {'/chat/completions', '/responses'} and is_voice_continuation():
+        result['x-omniroute-work-class'] = 'voice'
     return result
 
 
@@ -105,7 +108,9 @@ async def request(path, payload=None):
         raise ValueError('Unsupported OmniRoute inference endpoint.')
     try:
         async with httpx.AsyncClient(timeout=110, follow_redirects=False) as client:
-            response = await client.request('GET' if payload is None else 'POST', endpoint() + path, headers=headers(), json=payload)
+            response = await client.request('GET' if payload is None else 'POST', endpoint() + path, headers=headers(path), json=payload)
+            from app.services.voice_metrics import remember_gateway_job
+            remember_gateway_job(path, response.headers.get('x-omniroute-job-id'))
     except httpx.TimeoutException as error:
         raise OmniRouteError(504) from error
     except httpx.NetworkError as error:
@@ -196,7 +201,9 @@ async def stream(messages, tools, provider, model, generation=None):
     if tools:
         body['tools'] = tools
     async with httpx.AsyncClient(timeout=110, follow_redirects=False) as client:
-        async with client.stream('POST', endpoint() + '/chat/completions', headers=headers(), json=body) as response:
+        async with client.stream('POST', endpoint() + '/chat/completions', headers=headers('/chat/completions'), json=body) as response:
+            from app.services.voice_metrics import remember_gateway_job
+            remember_gateway_job('/chat/completions', response.headers.get('x-omniroute-job-id'))
             if not 200 <= response.status_code < 300:
                 raise OmniRouteError(response.status_code)
             async for line in response.aiter_lines():

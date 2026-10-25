@@ -35,10 +35,14 @@ async def test_real_voice_request_is_transcribed_once_keeps_tools_and_respects_m
     cid=await room(client,owner)
     prompt='Voice message attached. Please respond directly to what I said in the recording.'
     phrase='Repeat exactly: silver maple.'
+    gateway_job='a4d75eb9-c576-489a-ad9d-edfc799f1e8d'
     audio={'name':'fixture.webm','mime':'audio/webm','data':base64.b64encode(b'synthetic-audio').decode()}
     transcribed=[];calls=[]
     async def transcribe(file): transcribed.append(file['name']);return phrase
     async def complete(**kwargs):
+        from app.services.voice_metrics import is_voice_continuation,remember_gateway_job
+        assert is_voice_continuation()
+        remember_gateway_job('/chat/completions',gateway_job)
         calls.append(kwargs)
         assert kwargs['provider']==provider and kwargs['model']==model
         assert kwargs['options'].max_tokens==1024
@@ -61,6 +65,7 @@ async def test_real_voice_request_is_transcribed_once_keeps_tools_and_respects_m
             assert metrics['worker_total_ms']>=metrics['agent_loop_ms']>=0
             assert metrics['queue_to_context_ms']>=0
             assert all(isinstance(value,(int,float)) for value in metrics.values())
+            assert saved.metadata_json['voice_gateway_jobs']==[{'job_id':gateway_job,'stage':'model'}]
             assert saved.metadata_json['attachments']==[audio]
     finally:current_tenant_id.reset(tenant)
     assert replies[-1]['content']=='silver maple'
@@ -102,6 +107,8 @@ async def test_fast_voice_executes_real_enabled_tool_before_claiming_result(work
     counts={'stt':0,'model':0};receipts=[]
     async def transcribe(file): counts['stt']+=1;return phrase
     async def complete(**kwargs):
+        from app.services.voice_metrics import is_voice_continuation
+        assert is_voice_continuation()
         counts['model']+=1
         assert kwargs['provider']=='openai' and kwargs['model']=='gpt-6.1-sol'
         assert kwargs['tools'] and json.dumps(kwargs['messages']).count(phrase)==1
@@ -122,3 +129,20 @@ async def test_fast_voice_executes_real_enabled_tool_before_claiming_result(work
     finally:current_tenant_id.reset(tenant)
     assert counts=={'stt':1,'model':2} and receipts
     assert replies[-1]['content']=='There is no saved conversation context.'
+
+
+@pytest.mark.asyncio
+async def test_browser_voice_flag_without_transcribed_audio_does_not_get_voice_admission(workspace,monkeypatch):
+    from app.services.voice_metrics import is_voice_continuation
+    client,_=workspace;owner='voice-flag-text-owner';cid=await room(client,owner)
+    async def complete(**kwargs):
+        assert not is_voice_continuation()
+        return SimpleNamespace(choices=[SimpleNamespace(message=SimpleNamespace(content='Ordinary text.',tool_calls=None))])
+    monkeypatch.setattr(LLMGateway,'complete',complete)
+    accepted=(await client.post('/api/conversations/'+cid+'/messages',headers={'x-grokbot-user-id':owner,'x-omniroute-work-class':'voice'},
+        json={'sender_type':'user','content':'An ordinary typed message.','options':{'voice_mode':True}})).json()
+    tenant=current_tenant_id.set(owner)
+    try:
+        await AgentOrchestrator().process_message(cid,'An ordinary typed message.',options={'voice_mode':True},incoming_message_id=accepted['message_id'])
+    finally:current_tenant_id.reset(tenant)
+    assert not is_voice_continuation()

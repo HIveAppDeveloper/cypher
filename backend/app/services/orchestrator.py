@@ -29,7 +29,7 @@ from app.services.memory import MemoryManager
 from app.services.sandbox import SandboxManager
 from app.services.tools.registry import ToolRegistry
 from app.services.execution import ExecutionJournal, RecoveryReviewRequired, RetryTask, ExecutionSuperseded
-from app.services.voice_metrics import audio_task, note, timed, stage
+from app.services.voice_metrics import audio_task, note, timed, stage, voice_continuation, gateway_jobs
 from app.services.voice_policy import voice_options, speech_request, requests_teammates, VOICE_INSTRUCTIONS
 
 logger = logging.getLogger(__name__)
@@ -163,18 +163,20 @@ class AgentOrchestrator:
                 message = await self._save_message(db, conversation_id, "bot", responding_ids[0], "Your image is ready.", metadata={"attachments": files})
                 return [message]
 
-            # Determine responding bots
-            if conversation.is_group:
-                return await self._handle_group_chat(
-                    db, conversation, responding_ids,
-                    user_message_content, sender_type, sender_bot_id,
-                )
-            else:
-                # 1:1 chat — single bot responds
-                bot_id = responding_ids[0]
-                return await self._run_agent_loop(
-                    db, conversation_id, bot_id, user_message_content
-                )
+            # Only successfully transcribed live speech gets the bounded
+            # gateway continuation lane, including subsequent real tool turns.
+            with voice_continuation(self.options.voice_mode and bool(self.voice_request)):
+                if conversation.is_group:
+                    return await self._handle_group_chat(
+                        db, conversation, responding_ids,
+                        user_message_content, sender_type, sender_bot_id,
+                    )
+                else:
+                    # 1:1 chat — single bot responds
+                    bot_id = responding_ids[0]
+                    return await self._run_agent_loop(
+                        db, conversation_id, bot_id, user_message_content
+                    )
 
     async def _persist_voice_metrics(self, metrics):
         message_id = getattr(self, 'incoming_message_id', None)
@@ -183,7 +185,8 @@ class AgentOrchestrator:
         async with AsyncSessionLocal() as db:
             message = await db.get(Message, message_id, with_for_update=True)
             if message:
-                message.metadata_json = {**(message.metadata_json or {}), 'voice_timings': dict(metrics)}
+                message.metadata_json = {**(message.metadata_json or {}), 'voice_timings': dict(metrics),
+                    **({'voice_gateway_jobs': gateway_jobs()} if gateway_jobs() else {})}
                 await db.commit()
 
     async def _handle_group_chat(

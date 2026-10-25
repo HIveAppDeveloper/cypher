@@ -139,6 +139,67 @@ async def test_transport_timeout_uses_bounded_connected_fallback(router):
     assert len([r for r in seen if r.method=='POST']) == 2
 
 
+@pytest.mark.asyncio
+async def test_server_voice_marker_is_transport_only_and_model_tools_manual_options_are_unchanged(router):
+    from app.services.voice_metrics import voice_continuation
+    seen,install=router
+    messages=[{'role':'user','content':'Use the connected tool.'}]
+    tools=[{'type':'function','function':{'name':'list_context','parameters':{'type':'object','properties':{}}}}]
+    body={'model':'cx/gpt-6.1-sol','messages':messages,'tools':tools,'max_tokens':731,'reasoning_effort':'high'}
+    def respond(request):
+        assert request.headers['x-omniroute-work-class']=='voice'
+        assert json.loads(request.content)==body
+        return httpx.Response(200,json={'choices':[{'message':{'role':'assistant','content':'Verified tool result.'}}]})
+    install(respond)
+    with voice_continuation(True):
+        await omniroute.complete(messages,tools,'openai','gpt-6.1-sol',{'max_tokens':731,'reasoning_effort':'high'})
+        await omniroute.catalog()
+        assert all('x-omniroute-work-class' not in request.headers for request in seen if request.url.path=='/v1/models')
+    assert 'x-omniroute-work-class' not in omniroute.headers('/chat/completions')
+
+
+@pytest.mark.asyncio
+async def test_gateway_job_header_is_recorded_without_transcript_or_untrusted_header_content(router):
+    from uuid import uuid4
+    from app.services import voice_metrics
+    _,install=router;job_id=str(uuid4())
+    install(lambda request:httpx.Response(200,json={'text':'private transcript'},headers={'x-omniroute-job-id':job_id}))
+    class Runner:
+        @voice_metrics.audio_task
+        async def run(self,attachments=None):
+            return await omniroute.request('/audio/transcriptions',{'model':'omniroute/whisper-base-local','file':{'data':'private audio'}})
+        async def _persist_voice_metrics(self,metrics):self.jobs=voice_metrics.gateway_jobs()
+    runner=Runner();await runner.run(attachments=[{'mime':'audio/webm'}])
+    assert runner.jobs==[{'job_id':job_id,'stage':'speech'}]
+
+
+@pytest.mark.asyncio
+async def test_streaming_voice_continuation_preserves_generation_and_correlates_opaque_job(router):
+    from uuid import uuid4
+    from app.services import voice_metrics
+    _,install=router;job_id=str(uuid4())
+    messages=[{'role':'user','content':'Keep the same chosen model and effort.'}]
+    def respond(request):
+        assert request.headers['x-omniroute-work-class']=='voice'
+        assert json.loads(request.content)=={'model':'cx/gpt-6.1-sol','messages':messages,'stream':True,
+            'stream_options':{'include_usage':True},'max_tokens':731,'reasoning_effort':'high'}
+        chunk={'id':'stream-fixture','object':'chat.completion.chunk','created':1,'model':'cx/gpt-6.1-sol',
+            'choices':[{'index':0,'delta':{'content':'Verified.'},'finish_reason':None}]}
+        return httpx.Response(200,text='data: '+json.dumps(chunk)+'\n\ndata: [DONE]\n\n',
+            headers={'content-type':'text/event-stream','x-omniroute-job-id':job_id})
+    install(respond)
+    class Runner:
+        @voice_metrics.audio_task
+        async def run(self,attachments=None):
+            with voice_metrics.voice_continuation(True):
+                return [chunk async for chunk in omniroute.stream(messages,None,'openai','gpt-6.1-sol',{'max_tokens':731,'reasoning_effort':'high'})]
+        async def _persist_voice_metrics(self,metrics):self.jobs=voice_metrics.gateway_jobs()
+    runner=Runner();chunks=await runner.run(attachments=[{'mime':'audio/webm'}])
+    assert chunks[0].choices[0].delta.content=='Verified.'
+    assert runner.jobs==[{'job_id':job_id,'stage':'model'}]
+    assert not voice_metrics.is_voice_continuation()
+
+
 @pytest.mark.parametrize('url', ['http://public.example', 'https://user:pass@router.example', 'https://router.example/?key=secret', 'https://router.example/unexpected'])
 def test_invalid_router_destination_is_rejected_before_credentials_attach(router, monkeypatch, url):
     monkeypatch.setattr(settings, 'OMNIROUTE_URL', url)
