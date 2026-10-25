@@ -50,10 +50,11 @@ export function RecentWork({ onOpen }: { onOpen: (conversationId: string) => voi
   return (
     <section className={styles.recentWork} aria-labelledby="recent-work-heading" aria-busy={loading}>
       <div className={styles.headingRow}>
-        <h2 id="recent-work-heading">
-          Recent work
-          <svg viewBox="0 0 20 20" aria-hidden="true"><path d="m7 4 6 6-6 6" /></svg>
-        </h2>
+        <h2 id="recent-work-heading">Recent work</h2>
+        <a className={styles.viewAll} href="?view=work">
+          View all
+          <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10h11m-4-4 4 4-4 4" /></svg>
+        </a>
       </div>
       {loading ? <LoadingState label="Loading recent work…" variant="recent"/> : error ? (
         <div className={styles.errorRow} role="status">
