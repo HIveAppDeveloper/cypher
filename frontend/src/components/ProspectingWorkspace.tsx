@@ -93,6 +93,7 @@ export default function ProspectingWorkspace() {
   const active = !!run && !terminal(run.status);
   const candidate = run?.results.find(item => item.id === selected) || run?.results[0];
   const runId = run?.id;
+  const signInHref = `/login?returnTo=${encodeURIComponent('/prospecting')}`;
 
   useEffect(() => {
     let active = true;
@@ -328,7 +329,7 @@ export default function ProspectingWorkspace() {
         </div>
         <small className="cx-helper">Reads public HTTPS pages that allow automated access. Your extracted offer stays editable before research.</small>
       </form>
-      {error && <div id="company-site-error" role="alert" className="cx-error">{error}{/sign in|session/i.test(error) ? <> <a href="/login">Sign in</a></> : null}</div>}
+      {error && <div id="company-site-error" role="alert" className="cx-error">{error}{/sign in|session/i.test(error) ? <> <a href={signInHref}>Sign in</a></> : null}</div>}
     </section>
 
     <section className="cx-prospect-flow" aria-label="Prospecting workflow">
@@ -362,7 +363,7 @@ export default function ProspectingWorkspace() {
           })}>{pending === 'cancel' || run?.status === 'cancel_requested' ? 'Stopping…' : 'Stop research'}</button>}
         </div>
         {pollError && <div role="alert" className="cx-error cx-poll-error">{pollError}<button type="button" className="cx-inline-button" disabled={!!pending} onClick={() => setRetry(value => value + 1)}>Retry status check</button></div>}
-        {historyError && <div role="alert" className="cx-error cx-history-error"><span>{historyError}</span><div><button type="button" className="cx-inline-button" disabled={!!pending} onClick={() => setRetry(value => value + 1)}>Retry</button><a href={/sign in|session/i.test(historyError) ? '/login' : '/workspace'}>{/sign in|session/i.test(historyError) ? 'Sign in' : 'Workspace setup'}</a></div></div>}
+        {historyError && <div role="alert" className="cx-error cx-history-error"><span>{historyError}</span><div><button type="button" className="cx-inline-button" disabled={!!pending} onClick={() => setRetry(value => value + 1)}>Retry</button><a href={/sign in|session/i.test(historyError) ? signInHref : '/workspace'}>{/sign in|session/i.test(historyError) ? 'Sign in' : 'Workspace setup'}</a></div></div>}
         {run && <div className="cx-truth-note"><strong>Company candidates, not verified customers.</strong><span>Relevance uses text overlap. Demand, contacts, and competitor status need separate verification.</span></div>}
         {!run && historyLoading && <div className="cx-empty cx-empty-loading"><h3>Loading your saved research…</h3><ResearchLoading label="Loading your saved research" variant="results"/></div>}
         {!run && !historyLoading && !historyError && <div className="cx-empty"><BinaryLens className="cx-empty-lens" cols={21} rows={9} label="Cypher lens"/><h3>A better shortlist starts with context.</h3><p>Enter your company website above, then edit the customer profile before research.</p></div>}
