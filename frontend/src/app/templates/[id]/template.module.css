@@ -9,9 +9,11 @@
   --action: #171715;
   --action-text: #fff;
   min-height: 100svh;
+  height: 100svh;
   display: grid;
   place-items: center;
-  overflow-x: clip;
+  overflow-x: hidden;
+  overflow-y: auto;
   padding: 32px 20px;
   color: var(--text);
   background: var(--page);
