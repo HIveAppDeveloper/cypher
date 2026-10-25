@@ -1,4 +1,5 @@
 import { FormEvent, useState } from 'react';
+import { dateFromApi } from '../lib/dates';
 
 export type ModelConnection = {
   id: string; name: string; model: string; state: string; message: string;
@@ -57,10 +58,11 @@ export function ModelConnections({ items, canManage, workerReady, onQueued, omni
       {items.map(item => {
         const checking = item.state === 'checking' || busy === item.id;
         const verification = googleLink(item.verification_url);
+        const checkedAt = dateFromApi(item.checked_at);
         return <li key={item.id} className="model-connection-row">
           <div className="model-connection-title"><strong>{item.name}</strong><span className="model-connection-status" data-state={item.state}>{checking ? item.job_status === 'pending' ? 'Queued' : 'Checking…' : labels[item.state] || 'Not checked'}</span></div>
           <p className="field-help" role={checking ? 'status' : undefined}>{item.message}</p>
-          {item.checked_at ? <p className="model-connection-time">Last checked {new Date(item.checked_at).toLocaleString()}</p> : null}
+          {checkedAt ? <p className="model-connection-time">Last checked {checkedAt.toLocaleString()}</p> : null}
           <div className="model-connection-actions">
             {verification ? <a className="btn-primary" href={verification} target="_blank" rel="noopener noreferrer">Verify with Google</a> : null}
             {!item.requires_api_key || item.key_configured ? <button className="btn-secondary" disabled={checking || !!busy || !workerReady} onClick={() => void submit(item.id)}>{checking ? 'Checking…' : item.state === 'not_checked' ? 'Check access' : 'Check again'}</button> : <span className="field-help">Add an API key to connect</span>}
