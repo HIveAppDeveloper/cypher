@@ -6,6 +6,7 @@ import { GlassSelect } from './GlassSelect';
 import React, { useEffect, useState, useRef } from 'react';
 import { Bot, Message, MessageType, Attachment, Conversation, Job, RunOptions } from '../lib/types';
 import { api, ApiError } from '../lib/api';
+import { dateFromApi } from '../lib/dates';
 import { BotAvatar } from './BotAvatar';
 import { MessageBubble } from './MessageBubble';
 import { AgentConversationActivity, conversationMessages, isAgentActivityMessage } from './AgentConversationActivity';
@@ -20,7 +21,7 @@ import { VoiceSilenceTimer } from '../lib/voice-activity';
 const POLL_MS = 1500;
 const MAX_BYTES = 3 * 1024 * 1024;
 export function messageTime(value: string) {
-  return new Date(/[zZ]|[+-]\d\d:\d\d$/.test(value) ? value : value + 'Z');
+  return dateFromApi(value) ?? new Date(Number.NaN);
 }
 export function sameMessageGroup(previous: Message | undefined, current: Message | undefined) {
   if (!previous || !current || previous.senderType !== current.senderType || previous.senderBotId !== current.senderBotId) return false;

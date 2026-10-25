@@ -2,6 +2,7 @@ import { useRef, useState } from 'react';
 import { lazy, Suspense } from 'react';
 import { Bot, Message } from '../lib/types';
 import { BotAvatar } from './BotAvatar';
+import { dateFromApi } from '../lib/dates';
 const MarkdownContent = lazy(() => import('./MarkdownContent'));
 export function MessageBubble({ message, bot, grouped = false, groupEnd = true, showTimestamp = true, onReply }: { onReply?:(message:Message)=>void; message: Message; bot?: Bot; grouped?: boolean; groupEnd?: boolean; showTimestamp?: boolean }) {
   const [copyState, setCopyState] = useState('Copy');
@@ -20,8 +21,8 @@ export function MessageBubble({ message, bot, grouped = false, groupEnd = true, 
     && message.content === 'Voice message attached. Please respond directly to what I said in the recording.'
     && message.attachments?.some(attachment => attachment.mime.startsWith('audio/'))
     ? 'Voice message' : message.content;
-  const timestamp = new Date(/[zZ]|[+-]\d\d:\d\d$/.test(message.createdAt) ? message.createdAt : message.createdAt + 'Z');
-  const timeLabel = Number.isNaN(timestamp.getTime()) ? '' : timestamp.toLocaleTimeString([], {hour:'numeric',minute:'2-digit'});
+  const timestamp = dateFromApi(message.createdAt);
+  const timeLabel = timestamp?.toLocaleTimeString([], {hour:'numeric',minute:'2-digit'}) || '';
   return <article className={`message ${message.senderType === 'user' ? 'outgoing' : 'incoming'} ${tool ? 'tool-message' : ''} ${grouped ? 'message-grouped' : ''} ${groupEnd ? 'message-group-end' : ''}`}>
     {message.senderType === 'bot' && !grouped ? <div className="message-sender-row"><BotAvatar name={bot?.name || 'Cypher'} small/><span className="message-sender">{bot?.name || 'Cypher'}</span></div> : null}
     {message.threadRootId?<small>Reply thread</small>:null}<div className="message-content">{tool ? <details><summary>{message.messageType === 'tool_call' ? 'Tool activity' : 'Tool result'}</summary><pre>{message.content}</pre></details> : message.senderType === 'bot' ? <div className="message-markdown"><Suspense fallback={<div className="message-text-fallback">{message.content}</div>}><MarkdownContent>{message.content}</MarkdownContent></Suspense></div> : displayContent}

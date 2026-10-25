@@ -161,7 +161,7 @@ function chat(env, api) {
     './QuickStart': { QuickStart: 'quick-start' }, './RunControls': { RunControls: 'run-controls', DEFAULT_OPTIONS: {} },
     '../lib/modelPolicy': { modelPolicy: value => value }, '../lib/attachments': { readAttachment: async () => ({ name: 'fixture.txt', mime: 'text/plain', data: 'eA==' }) } };
   stubs['./AgentConversationActivity']={...load('../src/lib/agent-conversation.ts'),AgentConversationActivity:'agent-conversation-activity'};
-  const { ChatPanel } = load('../src/components/ChatPanel.tsx', { react: view.react, ...stubs }, env.globals);
+  const { ChatPanel } = load('../src/components/ChatPanel.tsx', { react: view.react, ...stubs, '../lib/dates': load('../src/lib/dates.ts') }, env.globals);
   view.mount(() => ChatPanel({ bot, room: null, bots: [bot], onCreateBot() {}, onCreateRoom() {},
     onQuickStart: async () => {}, onOpenLounge: async () => {} }));
   return view;

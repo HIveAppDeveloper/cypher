@@ -2,6 +2,7 @@ import type { Bot, Message } from '../lib/types';
 import { agentActivity } from '../lib/agent-conversation';
 import { BotAvatar } from './BotAvatar';
 import { MessageBubble } from './MessageBubble';
+import { dateFromApi } from '../lib/dates';
 import './agent-conversation-activity.css';
 
 export { conversationMessages, isAgentActivityMessage } from '../lib/agent-conversation';
@@ -9,8 +10,8 @@ export { conversationMessages, isAgentActivityMessage } from '../lib/agent-conve
 export function AgentConversationActivity({ message, bots }: { message: Message; bots: Bot[] }) {
   const activity = agentActivity(message, bots);
   if (!activity) return null;
-  const timestamp = new Date(/(?:Z|[+-]\d\d:\d\d)$/i.test(message.createdAt) ? message.createdAt : message.createdAt + 'Z');
-  const label = Number.isNaN(timestamp.getTime()) ? '' : timestamp.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+  const timestamp = dateFromApi(message.createdAt);
+  const label = timestamp?.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) || '';
   const senderName = activity.sender?.name || 'Agent';
   if (activity.kind === 'reply') return activity.sender
     ? <div className="agent-conversation-reply"><MessageBubble message={message} bot={activity.sender} showTimestamp /></div>
