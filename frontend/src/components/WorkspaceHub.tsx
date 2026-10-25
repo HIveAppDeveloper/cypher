@@ -13,8 +13,7 @@ interface Notice { id:string; title:string; detail:string; conversation_id:strin
 interface Usage { tokens:number; estimated_cost:number; weekly_token_limit:number|null; resets_at:string; models:{provider:string;model:string;input_tokens:number;output_tokens:number;estimated_cost:number}[] }
 type WorkspaceResource = 'knowledge' | 'routines' | 'runs' | 'notifications' | 'usage' | 'settings';
 const resources:WorkspaceResource[]=['knowledge','routines','runs','notifications','usage','settings'];
-const resourceLabels:Record<WorkspaceResource,string>={knowledge:'saved knowledge',routines:'routines',runs:'recent work',notifications:'notifications',usage:'usage',settings:'workspace preferences'};
-function loadFailureMessage(failed:WorkspaceResource[]){return failed.length?`Couldn’t load ${failed.map(resource=>resourceLabels[resource]).join(', ')}. Retry to check again.`:'';}
+function loadFailureMessage(failed:WorkspaceResource[]){return failed.length?'Some workspace information could not load. Retry to check again.':'';}
 export interface WorkspacePreferences { hidden_bots?:string[]; pinned_bots?:string[]; bot_sections?:Record<string,string[]>; notifications?:boolean; weekly_token_limit?:number|null; tool_approval?:'never'|'writes'|'always' }
 const tabs:Tab[]=['Agents','Memory','Skills','Routines','Activity','Usage'];
 function date(value?:string){return value?new Date(value.endsWith('Z')?value:value+'Z').toLocaleString():'—';}
