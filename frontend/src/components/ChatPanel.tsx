@@ -129,6 +129,10 @@ export function ChatPanel({ bot, room, bots, onCreateBot, onCreateRoom, onQuickS
   const title = room?.title === 'Agent lounge' ? 'Your team' : room?.title || bot?.name || 'Workspace';
   const signInReturnTo = conversationId ? `/?conversation=${encodeURIComponent(conversationId)}` : '/';
   const signInHref = `/login?returnTo=${encodeURIComponent(signInReturnTo)}`;
+  function showExpiredSession(message = 'Your session expired. Sign in again to reconnect.') {
+    setSessionExpired(true);
+    setSyncError(message);
+  }
   useEffect(() => { const el = stream.current; if (!el) return; if (prependOffset.current !== null) { el.scrollTop = el.scrollHeight - prependOffset.current; prependOffset.current = null; } else if (followLatest.current) el.scrollTop = el.scrollHeight; }, [messages.length, messages[messages.length - 1]?.id, voiceMode]);
   useEffect(()=>{followLatest.current=true;setConversationId('');setMessages([]);setJobs([]);setAttachments([]);setError('');setLoading(!!bot || !!room);setSyncError('');setSessionExpired(false);retryNotBefore.current=0;setRetryAt(0);firstPage.current=true;},[bot?.id,room?.id]);
   useEffect(() => {
@@ -162,7 +166,7 @@ export function ChatPanel({ bot, room, bots, onCreateBot, onCreateRoom, onQuickS
       if (stream.current) prependOffset.current = stream.current.scrollHeight - stream.current.scrollTop;
       followLatest.current = false;
       setMessages(previous => mergeMessages(previous, older)); setHasEarlier(older.length === 50);
-    } catch (e) { setError(String(e)); } finally { setLoadingEarlier(false); }
+    } catch (e) { if (e instanceof ApiError && e.status === 401) showExpiredSession(); else setError(String(e)); } finally { setLoadingEarlier(false); }
   }
   async function addFiles(files: FileList | null) {
     if (!files) return;
@@ -222,8 +226,10 @@ export function ChatPanel({ bot, room, bots, onCreateBot, onCreateRoom, onQuickS
     } catch (e) {
       if (!isVoiceTurn) unconfirmedDraft.current={id:messageId,text,files,reply:replyTo?.id};
       setMessages(previous=>previous.map(message=>message.id===messageId?{...message,delivery:'failed'}:message));
-      if (isVoiceTurn && voiceModeRef.current && session === voiceSession.current) { setVoiceError(`I couldn’t send that. ${String(e).replace(/^Error: /,'')}`); updateVoiceStatus('listening'); }
-      else if (!isVoiceTurn) { setInput(current=>current || text);setAttachments(current=>current.length?current:files); setError(`Message was not confirmed. ${String(e).replace(/^Error: /,'')} Your message is kept in this thread; resend from the composer to retry.`); }
+      const expired = e instanceof ApiError && e.status === 401;
+      if (expired) showExpiredSession(isVoiceTurn ? 'Your session expired. Sign in to continue voice chat.' : 'Your session expired. Sign in to reconnect; your message is kept in the composer.');
+      if (isVoiceTurn && voiceModeRef.current && session === voiceSession.current) { setVoiceError(expired ? 'Sign in again before sending another voice message.' : `I couldn’t send that. ${String(e).replace(/^Error: /,'')}`); updateVoiceStatus('listening'); }
+      else if (!isVoiceTurn) { setInput(current=>current || text);setAttachments(current=>current.length?current:files); if (!expired) setError(`Message was not confirmed. ${String(e).replace(/^Error: /,'')} Your message is kept in this thread; resend from the composer to retry.`); }
     } finally { sendingRef.current=false;setSending(false); }
   }
   voiceModeRef.current = voiceMode;
