@@ -1,10 +1,10 @@
-import { MODEL_CHOICES } from '../lib/presets';
 import { GlassSelect } from './GlassSelect';
 import BinaryLens from './cipher/BinaryLens';
 import { RecentWork } from './cipher/RecentWork';
 import { useEffect, useRef, useState } from 'react';
 import { RunOptions, Attachment } from '../lib/types';
 import { readTaskAttachments } from '../lib/attachments';
+import { useModelChoices } from '../hooks/useModelChoices';
 
 const STARTER_PROMPTS = [
   { text: 'Research companies', description: 'Build a company shortlist and review the sources.', prompt: 'Research companies for: ', icon: 'search' },
@@ -21,6 +21,7 @@ function StarterIcon({ name }: { name: string }) {
 }
 
 export function QuickStart({ onStart, onOpenRecent, onVoiceStart, options, onOptions, draftScope }: { draftScope?: string; options: RunOptions; onOptions: (options: RunOptions) => void; onStart: (prompt: string, options: Partial<RunOptions>, attachments?: Attachment[]) => Promise<void>; onOpenRecent: (conversationId: string) => void; onVoiceStart: (stream: MediaStream) => Promise<void> }) {
+  const { choices } = useModelChoices();
   const manager = options.routing==='manual'?(options.model || 'gpt-6.1-sol'):'auto';
   const [prompt, setPrompt] = useState('');
   const [attachments, setAttachments] = useState<Attachment[]>([]);
@@ -104,7 +105,7 @@ export function QuickStart({ onStart, onOpenRecent, onVoiceStart, options, onOpt
     try {
       await onStart(prompt || 'Review the attached files.', {
         ...options, output: attachments.length ? 'text' : output,
-        provider: manager === 'auto' ? 'openai' : MODEL_CHOICES.find(choice => choice.model === manager)?.provider || options.provider || 'openai',
+        provider: manager === 'auto' ? 'openai' : choices.find(choice => choice.model === manager)?.provider || options.provider || 'openai',
         model: manager === 'auto' ? 'gpt-6.1-sol' : manager, aspect_ratio: '16:9', duration: 4,
       }, attachments);
       if (mounted.current) { setPrompt(''); setAttachments([]); }
@@ -157,14 +158,15 @@ export function QuickStart({ onStart, onOpenRecent, onVoiceStart, options, onOpt
               onOptions({
                 ...options,
                 routing: selectedModel === 'auto' ? 'auto' : 'manual',
-                provider: MODEL_CHOICES.find(model => model.model === selectedModel)?.provider || 'openai',
+                provider: choices.find(model => model.model === selectedModel)?.provider || 'openai',
                 model: selectedModel === 'auto' ? 'gpt-6.1-sol' : selectedModel,
               });
               try { localStorage.setItem('grokbot-manager', selectedModel); } catch {}
             }}
           >
             <option value="auto">Auto</option>
-            {MODEL_CHOICES.map(model => <option key={model.id} value={model.model}>{model.label}</option>)}
+            {manager !== 'auto' && !choices.some(model => model.model === manager) ? <option value={manager}>{manager}</option> : null}
+            {choices.map(model => <option key={model.id} value={model.model}>{model.label}</option>)}
           </GlassSelect>
           <GlassSelect disabled={busy} aria-label="Task output" value={output} onChange={event => setOutput(event.target.value as 'text' | 'image')}>
             <option value="text">Text</option>

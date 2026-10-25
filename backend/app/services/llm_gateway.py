@@ -18,7 +18,12 @@ def model_selection(model=None, provider=None, *, specialist=False):
     provider, model = provider.strip(), model.strip()
     provider = 'xai' if provider == 'spacexai' else provider
     from app.services.model_profiles import ALLOWED_MODELS
-    if (provider, model) not in ALLOWED_MODELS:
+    if provider == 'nicrron':
+        from app.services import omniroute
+        from app.services.nicrron import valid_model_id
+        if not settings.NICRRON_API_KEY.strip() or not omniroute.enabled() or not valid_model_id(model):
+            raise ModelConfigurationError("Choose an available Nicrron chat model from the live OmniRoute catalog.")
+    elif (provider, model) not in ALLOWED_MODELS:
         raise ModelConfigurationError("Choose a configured task model in conversation settings. Model IDs are checked against the live catalog before use.")
     if provider == 'auto':
         from app.services import omniroute
@@ -29,6 +34,8 @@ def model_selection(model=None, provider=None, *, specialist=False):
 def completion_options(model=None, provider=None, *, specialist=False, direct=False, api_key_override=None):
     provider, model = model_selection(model, provider, specialist=specialist)
     from app.services import omniroute
+    if provider == 'nicrron' and direct:
+        raise ModelConfigurationError("Nicrron models must use the configured OmniRoute connection.")
     if provider == 'auto' and direct:
         raise ModelConfigurationError("OmniRoute cloud models cannot be used for a direct provider check. Select a direct provider model.")
     if omniroute.enabled() and not direct:
@@ -61,6 +68,15 @@ def completion_options(model=None, provider=None, *, specialist=False, direct=Fa
             "xai": "https://api.x.ai/v1",
         }[provider]
     return options
+
+async def _require_live_nicrron_model(provider, model):
+    if provider != 'nicrron':
+        return
+    from app.services.nicrron import NicrronError, require_chat_model
+    try:
+        await require_chat_model(model)
+    except NicrronError as error:
+        raise ModelConfigurationError("The selected Nicrron model is not currently available through OmniRoute. Refresh the model list and choose an available model.") from error
 
 def generation_options(options, provider, model):
     """Only forward settings supported by the selected provider/model."""
@@ -120,6 +136,7 @@ class LLMGateway:
         last_error = None
         for index, (route_provider, route_model) in enumerate(routes):
             try:
+                await _require_live_nicrron_model(route_provider, route_model)
                 managed_key = omniroute.managed_api_key(route_provider) if route_provider in {'gemini', 'xai'} else None
                 direct_managed = bool(managed_key)
                 connection = completion_options(route_model, route_provider, direct=direct_managed, api_key_override=managed_key)
@@ -184,6 +201,7 @@ class LLMGateway:
         provider, model = model_selection(model, provider)
         if not direct:
             await omniroute.refresh_model_routes()
+        await _require_live_nicrron_model(provider, model)
         managed_key = omniroute.managed_api_key(provider) if not direct and provider in {'gemini', 'xai'} else None
         direct_managed = bool(managed_key)
         if omniroute.enabled() and not direct and not direct_managed:

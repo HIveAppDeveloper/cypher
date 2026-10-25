@@ -5,6 +5,8 @@ import pytest
 
 from app.config import settings
 from app.services import nicrron, omniroute
+from app.services.llm_gateway import model_selection
+from app.services.model_routing import ModelConfigurationError
 
 
 def _reset_catalog(monkeypatch):
@@ -36,6 +38,24 @@ def _mock_provider(monkeypatch, handler):
 
 def _route_payload(ids):
     return {"data": [{"id": model_id} for model_id in ids]}
+
+
+def test_model_selection_accepts_catalog_shaped_nicrron_routes_only_with_omniroute(monkeypatch):
+    _configure(monkeypatch)
+    selected = model_selection('anthropic/claude-opus-5-5', 'nicrron')
+    assert selected == ('nicrron', 'anthropic/claude-opus-5-5')
+
+    with pytest.raises(ModelConfigurationError):
+        model_selection('../../not-a-model', 'nicrron')
+
+    monkeypatch.setattr(settings, 'NICRRON_API_KEY', '')
+    with pytest.raises(ModelConfigurationError):
+        model_selection('anthropic/claude-opus-5-5', 'nicrron')
+
+    monkeypatch.setattr(settings, 'NICRRON_API_KEY', 'nicrron-test-key-never-live')
+    monkeypatch.setattr(settings, 'OMNIROUTE_URL', '')
+    with pytest.raises(ModelConfigurationError):
+        model_selection('anthropic/claude-opus-5-5', 'nicrron')
 
 
 @pytest.mark.asyncio

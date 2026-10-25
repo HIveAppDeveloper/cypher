@@ -130,13 +130,28 @@ async def catalog():
     global _cache, _cache_key, _cache_at
     await refresh_model_routes()
     routes = configured_model_map()
+    from app.services.model_profiles import ALLOWED_MODELS, model_route_id
+    try:
+        from app.services.nicrron import NicrronError, model_catalog as nicrron_catalog
+        nicrron = await nicrron_catalog()
+        if nicrron.get('status') == 'ready':
+            for item in nicrron.get('models', []):
+                model = item.get('id') if isinstance(item, dict) else None
+                if not isinstance(model, str):
+                    continue
+                public_id = model_route_id('nicrron', model)
+                if not any(public_id in (row.detail or {}).get('blocked_models', []) for row in _managed_records):
+                    routes.setdefault(public_id, public_id)
+    except NicrronError:
+        # Nicrron remains an optional provider; its catalog outage must not
+        # hide the workspace's other verified OmniRoute models.
+        pass
     key = (endpoint(), hashlib.sha256(settings.OMNIROUTE_API_KEY.encode()).hexdigest(), json.dumps(routes, sort_keys=True))
     if key == _cache_key and _cache and time.monotonic() - _cache_at < 300:
         return _cache
     payload = await request('/models')
     raw = {m['id']: m for m in payload.get('data', []) if isinstance(m, dict) and isinstance(m.get('id'), str)}
     result = {}
-    from app.services.model_profiles import ALLOWED_MODELS, model_route_id
     # Exact provider/model IDs may be used without a second alias when the
     # authenticated OmniRoute catalog actually exposes them. Different native
     # IDs remain an explicit deployment mapping.

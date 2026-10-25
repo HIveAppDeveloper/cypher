@@ -1,5 +1,4 @@
 import { LoadingState } from './LoadingState';
-import { MODEL_CHOICES } from '../lib/presets';
 import { ContextPanel } from './ContextPanel';
 import { WorkPanel } from './WorkPanel';
 import { GlassSelect } from './GlassSelect';
@@ -18,6 +17,7 @@ import BinaryLens from './cipher/BinaryLens';
 import CypherMark from './cipher/CypherMark';
 import { playVoiceResponse, speakWithBrowser } from '../lib/voice-playback';
 import { VoiceSilenceTimer } from '../lib/voice-activity';
+import { useModelChoices } from '../hooks/useModelChoices';
 const POLL_MS = 1500;
 const MAX_BYTES = 3 * 1024 * 1024;
 export function messageTime(value: string) {
@@ -48,6 +48,7 @@ function speechText(content: string) {
   return clipped.slice(0, end) + ' Cypher has more detail on screen.';
 }
 export function ChatPanel({ bot, room, bots, onCreateBot, onCreateRoom, onQuickStart, onOpenLounge, onOpenSetup, onOpenRecent, onVoiceStart, voiceMode = false, voiceStream, onVoiceStream, onVoiceStop, draftScope }: { draftScope?: string; bot: Bot | null; room: Conversation | null; bots: Bot[]; onCreateBot: () => void; onCreateRoom: () => void; onQuickStart: (prompt: string, options: Partial<import('../lib/types').RunOptions>, attachments?: Attachment[]) => Promise<void>; onOpenLounge: () => Promise<Conversation>; onOpenSetup?: () => void; onOpenRecent: (conversationId: string) => void; onVoiceStart: (stream: MediaStream) => Promise<void>; voiceMode?: boolean; voiceStream: MediaStream | null; onVoiceStream: (stream: MediaStream) => void; onVoiceStop: () => void }) {
+  const { choices: MODEL_CHOICES } = useModelChoices();
   const [conversationId, setConversationId] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
   const [jobs, setJobs] = useState<Job[]>([]);

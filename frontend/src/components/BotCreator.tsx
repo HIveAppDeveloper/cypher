@@ -2,8 +2,10 @@ import { GlassSelect } from './GlassSelect';
 import React, { useState, useEffect, useRef } from 'react';
 import { Bot } from '../lib/types';
 import { ModelControls, ModelValue } from './ModelControls';
-import { AGENT_PRESETS, MODEL_CHOICES } from '../lib/presets';
+import { AGENT_PRESETS } from '../lib/presets';
+import { useModelChoices } from '../hooks/useModelChoices';
 export function BotCreator({ onClose, onCreate }: { onClose: () => void; onCreate: (bot: Partial<Bot>, clientRequestId: string) => Promise<Bot> }) {
+  const { choices } = useModelChoices();
   const dialog = useRef<HTMLDialogElement>(null);
   const requestId = useRef<string | undefined>(undefined);
   const customization = useRef<HTMLDetailsElement>(null);
@@ -37,7 +39,7 @@ export function BotCreator({ onClose, onCreate }: { onClose: () => void; onCreat
       <label htmlFor="agent-role">What should it do?</label>
       <GlassSelect autoFocus id="agent-role" value={preset.id} onChange={e => { const next = AGENT_PRESETS.find(p => p.id === e.target.value)!; setPreset(next); setInstructions(next.prompt); }}>{AGENT_PRESETS.map(p => <option key={p.id} value={p.id}>{p.name} — {p.description}</option>)}</GlassSelect>
       <label htmlFor="bot-name">Name <span className="optional-label">optional</span></label><input id="bot-name" placeholder={preset.name} maxLength={80} value={name} onChange={e => setName(e.target.value)}/>
-      <p className="agent-model-summary">Model: <strong>{MODEL_CHOICES.find(choice=>choice.model===modelValue.model)?.label || modelValue.model}</strong><span>Customize the model, instructions and tools below.</span></p>
+      <p className="agent-model-summary">Model: <strong>{choices.find(choice=>choice.model===modelValue.model)?.label || modelValue.model}</strong><span>Customize the model, instructions and tools below.</span></p>
       <details ref={customization} className="advanced-settings"><summary>Customize this agent</summary>
         <label htmlFor="bot-prompt">Instructions</label><textarea ref={instructionsField} aria-invalid={!!error && !instructions.trim()} aria-describedby={error && !instructions.trim() ? 'agent-instructions-error' : undefined} id="bot-prompt" rows={5} required maxLength={20000} value={instructions} onChange={e => setInstructions(e.target.value)}/>
         <ModelControls value={modelValue} onChange={setModelValue}/>

@@ -21,6 +21,7 @@ def router(monkeypatch):
     monkeypatch.setattr(settings, 'OMNIROUTE_URL', 'https://router.example')
     monkeypatch.setattr(settings, 'OMNIROUTE_API_KEY', 'private-inference-key')
     monkeypatch.setattr(settings, 'OMNIROUTE_PROTECTION_BYPASS', 'private-access-key')
+    monkeypatch.setattr(settings, 'NICRRON_API_KEY', '')
     monkeypatch.setattr(settings, 'LLM_FALLBACK_MODEL', None)
     monkeypatch.setattr(settings, 'OMNIROUTE_MODEL_MAP', {
         'openai/gpt-6.1-sol':'cx/gpt-6.1-sol',
@@ -29,7 +30,7 @@ def router(monkeypatch):
     monkeypatch.setattr(omniroute, '_cache_key', None)
     seen = []
     real_client = httpx.AsyncClient
-    def install(handler):
+    def install(handler, extra_models=()):
         def respond(request):
             assert request.url.host == 'router.example'
             assert request.headers['authorization'] == 'Bearer private-inference-key'
@@ -39,10 +40,51 @@ def router(monkeypatch):
                 return httpx.Response(200, json={'data':[
                     {'id':model, 'input_modalities':['text','image'], 'capabilities':{'tool_calling':True,'reasoning':True,'effort_tiers':['low','high']},'pricing':{'input':2,'output':10}}
                     for model in settings.OMNIROUTE_MODEL_MAP.values()
-                ]})
+                ] + list(extra_models)})
             return handler(request)
         monkeypatch.setattr(omniroute.httpx, 'AsyncClient', lambda **kw: real_client(transport=httpx.MockTransport(respond), **kw))
     return seen, install
+
+
+@pytest.mark.asyncio
+async def test_dynamic_nicrron_models_are_selectable_and_use_omniroute(router, monkeypatch):
+    seen, install = router
+    from app.services import nicrron
+    model = 'anthropic/claude-sonnet-5-5'
+    public_id = 'nicrron/' + model
+    monkeypatch.setattr(settings, 'NICRRON_API_KEY', 'nicrron-test-key-never-live')
+
+    async def catalog():
+        return {'provider':'nicrron','configured':True,'status':'ready','models':[{'id':model,'name':'Claude Sonnet 5.5'}]}
+
+    async def require_chat_model(value):
+        assert value == model
+        return {'id':value}
+
+    monkeypatch.setattr(nicrron, 'model_catalog', catalog)
+    monkeypatch.setattr(nicrron, 'require_chat_model', require_chat_model)
+
+    def respond(request):
+        body = json.loads(request.content)
+        assert body['model'] == public_id
+        return httpx.Response(200, json={'choices':[{'message':{'role':'assistant','content':'Nicrron route works'}}]})
+
+    install(respond, extra_models=[{
+        'id':public_id,
+        'input_modalities':['text'],
+        'capabilities':{'tool_calling':True},
+        'pricing':{'input':3,'output':15},
+    }])
+
+    catalog_result = await omniroute.catalog()
+    assert catalog_result[public_id]['transport_model'] == public_id
+    response = await llm_gateway.LLMGateway.complete(
+        [{'role':'user','content':'Say hello'}],
+        provider='nicrron', model=model, allow_fallback=False,
+    )
+    assert response.choices[0].message.content == 'Nicrron route works'
+    assert seen[-1].url.path == '/v1/chat/completions'
+    assert json.loads(seen[-1].content)['model'] == public_id
 
 
 @pytest.mark.asyncio

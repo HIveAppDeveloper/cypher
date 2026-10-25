@@ -186,7 +186,10 @@ class ImportTemplate(BaseModel):
 async def import_template(body:ImportTemplate,db:AsyncSession=Depends(get_db)):
     from app.api.bots import create_bot
     from app.services.model_profiles import ALLOWED_MODELS
-    if (body.bot.llm_provider,body.bot.llm_model) not in ALLOWED_MODELS:raise HTTPException(422,'Choose an available task model before importing.')
+    if (body.bot.llm_provider,body.bot.llm_model) not in ALLOWED_MODELS:
+        from app.services.nicrron import valid_model_id
+        if body.bot.llm_provider != 'nicrron' or not valid_model_id(body.bot.llm_model):
+            raise HTTPException(422,'Choose an available task model before importing.')
     if service.SECRET.search(body.bot.system_prompt):raise HTTPException(422,'Templates cannot contain credentials.')
     bot=await create_bot(body.bot,db)
     for item in body.memories:
