@@ -1,7 +1,18 @@
 'use client';
 
-import { Component, Suspense, useEffect, useRef, type ReactNode } from 'react';
+import { Component, Suspense, createContext, lazy, useContext, useEffect, useMemo, useRef, type ComponentType, type ReactNode } from 'react';
 import { LoadingState } from './LoadingState';
+
+const PanelRetryContext = createContext(0);
+
+export function RetryablePanel<P extends object>({ loader, componentProps }: {
+  loader: () => Promise<{ default: ComponentType<P> }>;
+  componentProps: P;
+}) {
+  const retryVersion = useContext(PanelRetryContext);
+  const LazyPanel = useMemo(() => lazy(loader), [loader, retryVersion]);
+  return <LazyPanel {...componentProps}/>;
+}
 
 function PanelNotice({ title, onClose, onRetry, failed = false }: { title: string; onClose: () => void; onRetry?: () => void; failed?: boolean }) {
   const dialog = useRef<HTMLDialogElement>(null);
@@ -24,13 +35,13 @@ export function InlinePanelNotice({ title, onClose, onRetry, failed = false }: {
   </section>;
 }
 
-export class PanelBoundary extends Component<{ title: string; onClose: () => void; children: ReactNode; inline?: boolean }, { failed: boolean }> {
-  state = { failed: false };
+export class PanelBoundary extends Component<{ title: string; onClose: () => void; children: ReactNode; inline?: boolean }, { failed: boolean; retryVersion: number }> {
+  state = { failed: false, retryVersion: 0 };
   static getDerivedStateFromError() { return { failed: true }; }
-  retry = () => { this.setState({ failed: false }); };
+  retry = () => { this.setState(state => ({ failed: false, retryVersion: state.retryVersion + 1 })); };
   render() {
     const Notice = this.props.inline ? InlinePanelNotice : PanelNotice;
     if (this.state.failed) return <Notice title={this.props.title} onClose={this.props.onClose} onRetry={this.retry} failed/>;
-    return <Suspense fallback={<Notice title={this.props.title} onClose={this.props.onClose}/>}>{this.props.children}</Suspense>;
+    return <PanelRetryContext.Provider value={this.state.retryVersion}><Suspense fallback={<Notice title={this.props.title} onClose={this.props.onClose}/>}>{this.props.children}</Suspense></PanelRetryContext.Provider>;
   }
 }
