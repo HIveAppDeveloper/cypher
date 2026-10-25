@@ -12,11 +12,11 @@ const SECRET = 'synthetic-auth-route-secret-000000000000000000';
 const TOKEN = 'synthetic-auth-backend-token-00000000000000000';
 const BASE = { AUTH_SESSION_SECRET: SECRET, NODE_ENV: 'production', BACKEND_INTERNAL_URL: 'http://127.0.0.1:1', GROKBOT_BACKEND_API_TOKEN: TOKEN, GROKBOT_PUBLIC_URL: 'https://grokbot.fixture' };
 
-function load(relative, env = BASE, fetch = async () => { throw new Error('Unexpected network request'); }) {
+function load(relative, env = BASE, fetch = async () => { throw new Error('Unexpected network request'); }, abortSignal = AbortSignal) {
   const source = readFileSync(new URL(relative, import.meta.url), 'utf8');
   const compiled = ts.transpileModule(source, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.CommonJS, esModuleInterop: true } }).outputText;
   const exports = {};
-  runInNewContext(compiled, { exports, Buffer, URL, Date, FormData, AbortSignal, Request, Response, process: { env }, fetch,
+  runInNewContext(compiled, { exports, Buffer, URL, Date, FormData, AbortSignal: abortSignal, Request, Response, process: { env }, fetch,
     require: name => name === 'node:crypto' ? crypto : name === 'next/server' ? next : name.endsWith('/lib/auth-server') ? load('../src/lib/auth-server.ts', env) : name.endsWith('/lib/canonical-app') ? load('../src/lib/canonical-app.ts', env) : (() => { throw new Error('Unexpected import ' + name); })(),
   });
   return exports;
@@ -170,4 +170,15 @@ test('readiness probes only backend health and never exposes its address or erro
     assert.equal(response.status, upstream === 200 ? 200 : 503);
     assert.deepEqual(await response.json(), { service: 'cypher', status: upstream === 200 ? 'ok' : 'unavailable' });
   }
+});
+
+test('readiness allows a cold backend start without exceeding its function window', async () => {
+  let timeout;
+  const route = load('../src/app/api/health/route.ts', BASE,
+    async () => new Response('ok', { status: 200 }),
+    { timeout: ms => { timeout = ms; return new AbortController().signal; } });
+  const response = await route.GET();
+  assert.equal(response.status, 200);
+  assert.equal(timeout, 8000);
+  assert.ok(timeout < route.maxDuration * 1000);
 });

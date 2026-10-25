@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 10;
+const BACKEND_HEALTH_TIMEOUT_MS = 8_000;
 
 // Public readiness probe. Never return internal addresses, tokens, or upstream errors.
 export async function GET() {
@@ -10,7 +11,7 @@ export async function GET() {
   if (!backend) return NextResponse.json({ service: 'cypher', status: 'unconfigured' }, { status: 503, headers });
   try {
     const response = await fetch(new URL('/health', backend), {
-      cache: 'no-store', signal: AbortSignal.timeout(5000),
+      cache: 'no-store', signal: AbortSignal.timeout(BACKEND_HEALTH_TIMEOUT_MS),
     });
     return NextResponse.json({ service: 'cypher', status: response.ok ? 'ok' : 'unavailable' }, { status: response.ok ? 200 : 503, headers });
   } catch {
