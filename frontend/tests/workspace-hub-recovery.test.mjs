@@ -28,7 +28,10 @@ test('partial Activity load failures stay visible until retry succeeds',async()=
   },{...env.globals,React:view.react.default,setInterval:()=>1,clearInterval(){}});
   view.mount(()=>WorkspaceHub({bots:[],rooms:[],ensureRoom:async()=>({id:'room-a'}),onRefresh:async()=>{},onOpenWorkspace(){},onClose(){},initialTab:'Activity'}));
   await view.flush();
-  assert.match(textOf(view.tree),/Couldn’t load .*recent work.*notifications/);
+  assert.match(textOf(view.tree),/Some workspace information could not load/);
+  assert.doesNotMatch(textOf(view.tree),/Couldn’t load .*recent work.*notifications/,'the global recovery notice stays concise');
+  assert.match(textOf(view.tree),/Recent work could not load/,'the active section explains its unavailable content');
+  assert.match(textOf(view.tree),/Notifications could not load/,'each failed section keeps its own status');
   assert.doesNotMatch(textOf(view.tree),/No unread notifications|No recent work yet/,'failed endpoints must not look like empty data');
   assert.ok(button(view.tree,'Retry'));
 
@@ -77,7 +80,7 @@ test('settings recovery hydrates the current sidebar section and an untouched de
   const bots=[{id:'bot-a',name:'Researcher',role:'Research assistant',description:'Synthetic agent',systemPrompt:'Synthetic instructions'}];
   view.mount(()=>WorkspaceHub({bots,rooms:[],ensureRoom:async()=>({id:'room-a'}),onRefresh:async()=>{},onOpenWorkspace(){},onClose(){},initialTab:'Agents'}));
   await view.flush();
-  assert.match(textOf(view.tree),/workspace preferences/);
+  assert.match(textOf(view.tree),/Some workspace information could not load/);
   const visibility=button(view.tree,'Sidebar visibility unavailable');
   assert.equal(visibility.props.disabled,true);
 
