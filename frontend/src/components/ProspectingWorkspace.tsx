@@ -376,9 +376,9 @@ export default function ProspectingWorkspace({ accountId }: { accountId?: string
         <button type="button" className={`cx-voice-button is-${voiceState}`} onClick={() => void playVoice()} disabled={voiceState === 'checking' || voiceState === 'setup' || voiceState === 'loading'} aria-pressed={voiceState === 'playing'}>
           <CypherMark className="cx-voice-mark" decorative level={voiceLevel}/>
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 9v6h3.7l4.8 4V5l-4.8 4H4.5z"/><path d="M16 9a4 4 0 010 6M18.5 6.5a7.5 7.5 0 010 11"/></svg>
-          {voiceState === 'checking' ? 'Checking voice…' : voiceState === 'setup' ? 'Voice setup needed' : voiceState === 'loading' ? 'Preparing voice…' : voiceState === 'playing' ? 'Stop voice' : voiceState === 'error' ? 'Try voice again' : 'Listen to the welcome'}
+          {voiceState === 'checking' ? 'Checking voice…' : voiceState === 'setup' ? 'Voice intro unavailable' : voiceState === 'loading' ? 'Preparing voice…' : voiceState === 'playing' ? 'Stop voice' : voiceState === 'error' ? 'Try voice again' : 'Listen to the welcome'}
         </button>
-        {voiceState === 'setup' ? <span className="cx-voice-note" role="status">Add your ElevenLabs API key in Vercel to enable this.</span> : null}
+        {voiceState === 'setup' ? <span className="cx-voice-note" role="status">Audio intro isn't available for this workspace yet. You can continue with the text workflow.</span> : null}
         {voiceError ? <span className="cx-voice-note" role="status">{voiceError}</span> : null}
       </div>
       <form className="cx-command" onSubmit={understand} noValidate>

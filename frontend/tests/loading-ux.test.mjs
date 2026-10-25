@@ -90,9 +90,9 @@ test('ghost shapes are hidden from assistive technology and have one descriptive
   assert.ok(find(node,item=>item.props?.['aria-hidden']==='true'));
 });
 
-function prospecting(request) {
+function prospecting(request, { voiceConfigured = true } = {}) {
   const env=environment(),view=renderer(env);
-  env.globals.fetch=async()=>({json:async()=>({configured:true})});
+  env.globals.fetch=async()=>({json:async()=>({configured:voiceConfigured})});
   const {default:Workspace}=load('../src/components/ProspectingWorkspace.tsx',{
     react:view.react,
     '../lib/api':{request},
@@ -106,6 +106,17 @@ function prospecting(request) {
   view.mount(()=>Workspace());
   return view;
 }
+
+test('unavailable voice intro explains the text fallback without exposing server setup',async()=>{
+  const view=prospecting(path=>path==='/prospecting/runs'?Promise.resolve([]):Promise.resolve({akta_available:false}),{voiceConfigured:false});
+  await view.flush();
+  const voice=find(view.tree,node=>node.type==='button'&&textOf(node).includes('Voice intro unavailable'));
+  assert.equal(voice?.props.disabled,true);
+  assert.match(textOf(view.tree),/Audio intro isn't available for this workspace yet\. You can continue with the text workflow\./);
+  assert.doesNotMatch(textOf(view.tree),/Vercel|API key/);
+  assert.notEqual(find(view.tree,node=>node.type==='input'&&node.props?.id==='prospecting-url')?.props.disabled,true);
+  view.unmount();
+});
 
 test('prospecting keeps the empty state hidden until saved research finishes loading',async()=>{
   const history=deferred();
