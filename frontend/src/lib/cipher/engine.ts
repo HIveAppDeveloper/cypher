@@ -4,7 +4,7 @@ export type SignalKind = 'hiring' | 'raising' | 'spending' | 'news';
 export type Source = 'live' | 'snapshot' | 'ai';
 export interface Evidence { label: string; url?: string; date?: string }
 export interface Signal { kind: SignalKind; strength: number; metric: string; headline: string; source: Source; evidence: Evidence[] }
-export type Stage = 'found' | 'researched' | 'drafted' | 'sent' | 'replied' | 'meeting';
+export type Stage = 'found' | 'researched' | 'drafted' | 'sent' | 'manual-sent' | 'replied' | 'meeting';
 export interface Touch { day: number; channel: 'Email' | 'LinkedIn' | 'Call'; action: string; due: string }
 export interface Lead {
   id: string; company: Company; signals: Signal[]; score: number; tier: 'Hot' | 'Warm' | 'Watch';

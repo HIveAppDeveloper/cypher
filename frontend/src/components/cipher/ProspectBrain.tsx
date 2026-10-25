@@ -4,7 +4,7 @@ import type { Lead, SignalKind } from '../../lib/cipher/engine';
 import { SIGNAL_MAX, accountIntel } from '../../lib/cipher/engine';
 
 const KIND_LABEL: Record<SignalKind, string> = { hiring: 'Hiring', raising: 'Raising', spending: 'Spending', news: 'Momentum' };
-const STAGE_LABEL: Record<Lead['stage'], string> = { found: 'Found', researched: 'Researched', drafted: 'Ready to send', sent: 'In sequence', replied: 'Replied', meeting: 'Meeting booked' };
+const STAGE_LABEL: Record<Lead['stage'], string> = { found: 'Found', researched: 'Researched', drafted: 'Ready to send', sent: 'In sequence', 'manual-sent': 'Sent manually', replied: 'Replied', meeting: 'Meeting booked' };
 
 // Prospect Brain: a rotating 3D scatter of every account in the territory.
 // X = hiring signal, Y = overall score, Z = capital and momentum (raising, spending, 8-K activity).
