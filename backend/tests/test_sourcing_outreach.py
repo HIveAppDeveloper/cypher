@@ -1,5 +1,6 @@
 """Authenticated Gmail-draft review flow with a synthetic provider boundary."""
 import base64
+import json
 from email import policy
 from email.parser import BytesParser
 from types import SimpleNamespace
@@ -16,8 +17,10 @@ from app.db.session import Base, get_db
 from app.db.tenancy import current_tenant_id
 from app.main import app
 from app.models.sourcing_outreach import SourcingOutreach
+from app.models.plugin import Plugin, PluginAuthorization
 from app.services import google_workspace as google
 from app.services import sourcing_outreach as service
+from app.services.plugins import reveal, seal
 
 
 @pytest_asyncio.fixture
@@ -167,3 +170,95 @@ async def test_recipient_change_after_review_invalidates_confirmation(stack, mon
     })
     assert response.status_code == 409, response.text
     assert calls == [], 'A recipient changed since review must never reach Gmail.'
+
+
+async def connected_gmail_grant(sessions, *, tenant_id='fixture-vc-owner', status='connected', plugin_enabled=True, scopes=None, subject='fixture-google-subject'):
+    import time
+    context = current_tenant_id.set(tenant_id)
+    try:
+        async with sessions() as db:
+            plugin = Plugin(
+                id=str(uuid4()), tenant_id=tenant_id, name='Google Workspace', url=google.plugin_url(),
+                credential=seal(google.REFERENCE), enabled=plugin_enabled,
+                tools=[{'name':'gmail_compose_draft','enabled':True}],
+            )
+            db.add(plugin)
+            await db.flush()
+            saved = {
+                'subject':subject, 'email':'investor@example.com', 'verified_at':time.time(),
+                'groups':['gmail'], 'scopes':scopes if scopes is not None else [google.PREFIX+'gmail.modify'],
+            }
+            grant = PluginAuthorization(
+                id=str(uuid4()), tenant_id=tenant_id, name='Google permissions', url=google.GRANT_URL,
+                payload=seal(json.dumps(saved)), status=status, created_at=time.time(), plugin_id=plugin.id,
+            )
+            db.add(grant)
+            await db.commit()
+            return grant.id
+    finally:
+        current_tenant_id.reset(context)
+
+
+def block_gmail_provider(monkeypatch):
+    calls=[]
+    async def access_token(*_args, **_kwargs):
+        calls.append('access_token')
+        raise AssertionError('Gmail access must not be requested in authorization tests.')
+    async def api_request(*_args, **_kwargs):
+        calls.append('api_request')
+        raise AssertionError('Gmail API must not be called in authorization tests.')
+    monkeypatch.setattr(google, 'access_token', access_token)
+    monkeypatch.setattr(google, 'api_request', api_request)
+    return calls
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(('case','tenant_id','status','plugin_enabled','scopes'), [
+    ('foreign tenant', 'another-vc-workspace', 'connected', True, [google.PREFIX+'gmail.modify']),
+    ('revoked grant', 'fixture-vc-owner', 'revoked', True, [google.PREFIX+'gmail.modify']),
+    ('disabled plugin', 'fixture-vc-owner', 'connected', False, [google.PREFIX+'gmail.modify']),
+    ('missing draft scope', 'fixture-vc-owner', 'connected', True, []),
+])
+async def test_real_account_rejects_unusable_grants_before_gmail(stack, monkeypatch, case, tenant_id, status, plugin_enabled, scopes):
+    client, _sessions = stack
+    calls=block_gmail_provider(monkeypatch)
+    grant_id=await connected_gmail_grant(
+        _sessions, tenant_id=tenant_id, status=status, plugin_enabled=plugin_enabled, scopes=scopes,
+    )
+    payload=proposal_payload()
+    payload['account_id']=grant_id
+
+    response=await client.post('/api/sourcing/outreach',json=payload)
+    assert response.status_code==409, f'{case}: {response.text}'
+    assert calls==[], f'{case} must fail before requesting Gmail credentials or calling Gmail.'
+
+
+@pytest.mark.asyncio
+async def test_real_account_binding_change_blocks_confirmed_draft_before_gmail(stack, monkeypatch):
+    client, sessions=stack
+    calls=block_gmail_provider(monkeypatch)
+    grant_id=await connected_gmail_grant(sessions)
+    payload=proposal_payload()
+    payload['account_id']=grant_id
+    proposal, reviewed=await prepare_and_review(client,payload)
+    assert calls==[]
+
+    context=current_tenant_id.set('fixture-vc-owner')
+    try:
+        async with sessions() as db:
+            grant=await db.get(PluginAuthorization,grant_id)
+            saved=json.loads(reveal(grant.payload))
+            saved['subject']='different-google-account-subject'
+            grant.payload=seal(json.dumps(saved))
+            await db.commit()
+    finally:
+        current_tenant_id.reset(context)
+
+    response=await client.post(f"/api/sourcing/outreach/{proposal['id']}/create-draft",json={
+        'digest':reviewed['digest'],
+        'review_token':reviewed['review_token'],
+        'confirmation':'create_gmail_draft_exact_message_and_account',
+    })
+    assert response.status_code==409, response.text
+    assert 'Gmail account changed' in response.text
+    assert calls==[], 'A changed Google binding must be rejected before Gmail is contacted.'
