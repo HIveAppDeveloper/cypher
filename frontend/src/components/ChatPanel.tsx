@@ -72,7 +72,16 @@ export function ChatPanel({ bot, room, bots, onCreateBot, onCreateRoom, onQuickS
   const settings = useRef<HTMLDetailsElement>(null);
   const draftKey = 'grokbot-draft-' + (room?.id || bot?.id || 'home');
   useEffect(() => { try { setInput(sessionStorage.getItem(draftKey) || ''); } catch {} setDraftReady(true); }, [draftKey]);
-  useEffect(() => { if(draftReady) try { if(input) sessionStorage.setItem(draftKey, input); else sessionStorage.removeItem(draftKey); } catch {} }, [draftKey, input, draftReady]);
+  useEffect(() => {
+    if (!draftReady) return;
+    try {
+      const keys = new Set([draftKey, ...(conversationId ? [`grokbot-draft-${conversationId}`] : [])]);
+      for (const key of keys) {
+        if (input) sessionStorage.setItem(key, input);
+        else sessionStorage.removeItem(key);
+      }
+    } catch {}
+  }, [draftKey, input, draftReady, conversationId]);
   useEffect(() => {
     function close(event: KeyboardEvent | globalThis.PointerEvent) {
       if (!settings.current?.open) return;
