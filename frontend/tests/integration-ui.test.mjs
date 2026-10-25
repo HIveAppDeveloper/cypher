@@ -4,19 +4,37 @@ import { environment, renderer, load, find, textOf, button } from './support/com
 
 test('inline Apps loading and error recovery stay in the workspace without a modal', () => {
   const env=environment(),view=renderer(env);let closed=0;
-  class Component { constructor(props){this.props=props;} }
-  const react={...view.react,Component,Suspense:'suspense'};
-  const {PanelBoundary,InlinePanelNotice}=load('../src/components/PanelBoundary.tsx',{react,'./LoadingState':{LoadingState:'loading-state'}},{...env.globals,React:view.react.default});
+  class Component {
+    constructor(props){this.props=props;}
+    setState(update){this.state={...this.state,...(typeof update==='function'?update(this.state,this.props):update)};}
+  }
+  const lazyTypes=[];let retryContext;
+  const react={...view.react,Component,Suspense:'suspense',createContext:value=>(retryContext={Provider:'context-provider',_currentValue:value}),useContext:context=>context._currentValue,lazy:loader=>{const type={loader};lazyTypes.push(type);return type;}};
+  const {PanelBoundary,InlinePanelNotice,RetryablePanel}=load('../src/components/PanelBoundary.tsx',{react,'./LoadingState':{LoadingState:'loading-state'}},{...env.globals,React:view.react.default});
   const boundary=new PanelBoundary({inline:true,title:'Apps',onClose:()=>closed++,children:'Loaded apps'});
-  let notice=boundary.render().props.fallback;
+  let rendered=boundary.render();retryContext._currentValue=rendered.props.value;
+  let notice=rendered.props.children[0].props.fallback;
   assert.equal(notice.type,InlinePanelNotice);
   view.mount(()=>notice.type(notice.props));
   assert.equal(view.tree.type,'section');
   assert.equal(find(view.tree,node=>node.type==='dialog'),undefined);
   assert.equal(find(view.tree,node=>node.type==='loading-state').props.label,'Opening apps…');
   button(view.tree,'Close').props.onClick();assert.equal(closed,1);
-  boundary.state={failed:true};notice=boundary.render();view.rerender();
+  boundary.state={failed:true,retryVersion:0};notice=boundary.render();view.rerender();
   assert.match(textOf(find(view.tree,node=>node.props?.role==='alert')),/couldn’t load/);
+  const loader=async()=>({default:'recovered-panel'});
+  const firstPanel=RetryablePanel({loader,componentProps:{}});
+  assert.equal(firstPanel.type.loader,loader);
+  const rerenderedPanel=RetryablePanel({loader,componentProps:{}});
+  assert.equal(rerenderedPanel.type,firstPanel.type,'initial suspension and parent rerenders reuse one lazy type');
+  button(view.tree,'Try again').props.onClick();
+  assert.equal(boundary.state.failed,false);
+  assert.equal(boundary.state.retryVersion,1);
+  rendered=boundary.render();retryContext._currentValue=rendered.props.value;
+  const retriedPanel=RetryablePanel({loader,componentProps:{}});
+  assert.notEqual(retriedPanel.type,firstPanel.type,'a retry gets a fresh React.lazy type');
+  assert.equal(retriedPanel.type.loader,loader);
+  assert.equal(lazyTypes.length,2,'the boundary creates one lazy type initially and one on retry');
   view.unmount();
 });
 
