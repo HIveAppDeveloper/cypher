@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { request } from '../../lib/api';
+import { dateFromApi } from '../../lib/dates';
 import { LoadingState } from '../LoadingState';
 import styles from './RecentWork.module.css';
 
@@ -14,9 +15,9 @@ interface RecentRun {
 }
 
 function relativeDate(value: string) {
-  const hasTimezone = /(?:z|[+-]\d{2}:?\d{2})$/i.test(value);
-  const timestamp = new Date(hasTimezone ? value : `${value}Z`).getTime();
-  if (!Number.isFinite(timestamp)) return '';
+  const parsed = dateFromApi(value);
+  if (!parsed) return '';
+  const timestamp = parsed.getTime();
   const minutes = Math.max(0, Math.floor((Date.now() - timestamp) / 60_000));
   if (minutes < 1) return 'Just now';
   if (minutes < 60) return `${minutes}m ago`;

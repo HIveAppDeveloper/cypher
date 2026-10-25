@@ -1,3 +1,5 @@
+import { dateFromApi } from './dates';
+
 export interface PluginEvidence {
   provider?: string;
   url: string;
@@ -23,7 +25,7 @@ export function pluginStatus(plugin: PluginEvidence, now = Date.now()) {
   };
   if (!plugin.tools.some(tool => tool.enabled !== false)) return { label: 'No tools enabled', tone: 'neutral', detail: 'Enable a tool in Manage to use this connection.' };
   if (check?.status === 'fallback') return { label: 'Website fallback', tone: 'neutral', detail: 'The public website responded. The MCP tool remains unavailable.' };
-  const checkedAt = Date.parse(check?.checked_at || '');
+  const checkedAt = dateFromApi(check?.checked_at)?.getTime() ?? Number.NaN;
   const fresh = Number.isFinite(checkedAt) && now >= checkedAt && now - checkedAt < 24 * 60 * 60 * 1000;
   if (check?.status === 'passed' && fresh) return { label: 'Test passed', tone: 'success', detail: 'A read-only tool call passed. This does not test every tool.' };
   if (check?.status === 'passed') return { label: 'Check again', tone: 'neutral', detail: 'A previous tool test passed. Run a fresh check for current access.' };

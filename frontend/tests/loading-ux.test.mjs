@@ -74,7 +74,7 @@ test('pending agents and rooms never announce empty data',()=>{
 
 test('recent work replaces skeletons with an error, retries, and then shows real content',async()=>{
   const env=environment(),view=renderer(env),pending=deferred();let calls=0;
-  const {RecentWork}=load('../src/components/cipher/RecentWork.tsx',{react:view.react,'../LoadingState':{LoadingState:'loading-state'},'./RecentWork.module.css':{},'../../lib/api':{request:()=>++calls===1?pending.promise:Promise.resolve([{id:'run',title:'Saved task',status:'completed',conversation_id:'room',created_at:'2026-10-24T12:00:00Z'}])}},{...env.globals,React:view.react.default});
+  const {RecentWork}=load('../src/components/cipher/RecentWork.tsx',{react:view.react,'../LoadingState':{LoadingState:'loading-state'},'./RecentWork.module.css':{},'../../lib/api':{request:()=>++calls===1?pending.promise:Promise.resolve([{id:'run',title:'Saved task',status:'completed',conversation_id:'room',created_at:'2026-10-24T12:00:00Z'}])},'../../lib/dates':load('../src/lib/dates.ts')},{...env.globals,React:view.react.default});
   view.mount(()=>RecentWork({onOpen(){}}));assert.ok(find(view.tree,node=>node.type==='loading-state'));
   pending.reject(Error('Offline'));await view.flush();assert.match(textOf(view.tree),/Recent work could not load/);
   button(view.tree,'Retry').props.onClick();await view.flush();

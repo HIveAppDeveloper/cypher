@@ -11,6 +11,7 @@ function component(row) {
   const Component = load('../src/components/AgentConversationActivity.tsx', {
     '../lib/agent-conversation': { agentActivity }, './BotAvatar': { BotAvatar: 'bot-avatar' },
     './MessageBubble': { MessageBubble: 'message-bubble' }, './agent-conversation-activity.css': {},
+    '../lib/dates': load('../src/lib/dates.ts'),
   }, { ...env.globals, React: view.react.default }).AgentConversationActivity;
   view.mount(() => Component({ message: row, bots }));
   return view;
