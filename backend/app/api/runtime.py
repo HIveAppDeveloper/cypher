@@ -88,7 +88,8 @@ async def runtime(db=Depends(get_db)):
                                for name, item in recorded_checks.items() if name in {'model_connection:gemini', 'model_connection:xai'})
     model_configured = bool(settings.OMNIROUTE_API_KEY) if settings.OMNIROUTE_URL else bool(settings.LLM_API_KEY) or managed_provider_key
     configured_services = {'model': model_configured, 'model_control': remote_control_available(), 'backend_auth': len(settings.BACKEND_API_TOKEN) >= 32, 'atlas_engine': bool(settings.GROKBOT_ATLAS_ENGINE_ENABLED and settings.ATLAS_ENGINE_SIGNING_KEY)}
-    return {'configured_services': configured_services, 'checks':details, **checks, **connections, 'database':True,'worker':worker_fresh and version_ready,'worker_last_seen_seconds':int(age) if age is not None else None,'worker_version_matches':version_matches,'deployment':deployment,'worker_deployment':worker_deployment,'model_transport':transport,'model_configured':model_configured,'configured_models':list(model_map(model_records)) if settings.OMNIROUTE_URL else [],'sandbox_backend':settings.SANDBOX_BACKEND}
+    from app.services.omniroute import cloud_project_matches
+    return {'configured_services': configured_services, 'checks':details, **checks, **connections, 'database':True,'worker':worker_fresh and version_ready,'worker_last_seen_seconds':int(age) if age is not None else None,'worker_version_matches':version_matches,'deployment':deployment,'worker_deployment':worker_deployment,'model_transport':transport,'model_gateway_project_matches':cloud_project_matches(),'model_configured':model_configured,'configured_models':list(model_map(model_records)) if settings.OMNIROUTE_URL else [],'sandbox_backend':settings.SANDBOX_BACKEND}
 
 @router.post('/checks', status_code=202)
 async def request_checks(db=Depends(get_db)):

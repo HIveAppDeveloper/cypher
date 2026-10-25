@@ -59,6 +59,19 @@ def endpoint():
     return value if url.path == '/v1' else value + '/v1'
 
 
+def cloud_project_matches():
+    """Return a routing diagnostic without exposing the configured URL or keys."""
+    from app.services.model_routing import ModelConfigurationError
+    try:
+        url = urlsplit(endpoint())
+        return url.port in (None, 443) and url.hostname in {
+            'omniroute-cloud-ten.vercel.app', 'omniroute-cloud-hiveapp.vercel.app',
+            'omniroute-cloud-p5iyakp1h-hiveapp.vercel.app',
+        }
+    except (ModelConfigurationError, ValueError):
+        return False
+
+
 def headers():
     endpoint()  # Validate the destination before attaching either credential.
     result = {'Authorization': 'Bearer ' + settings.OMNIROUTE_API_KEY}
