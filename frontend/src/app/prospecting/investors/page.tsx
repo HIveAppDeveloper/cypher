@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { AppSession, readSignedPayload } from '../../../lib/auth-server';
+import { internalPathWithSearch } from '../../../lib/canonical-app';
 import VcProspectingWorkspace from '../../../components/VcProspectingWorkspace';
 import '../../cipher/cipher.css';
 
@@ -13,9 +14,15 @@ export const metadata: Metadata = {
   icons: { icon: '/cipher-logo.png', apple: '/cipher-logo.png' },
 };
 
-export default async function VcProspectingPage() {
+export default async function VcProspectingPage(
+  props: { searchParams?: Promise<Record<string, string | string[] | undefined>> }
+) {
+  const searchParams = await props.searchParams;
   let session: AppSession | null = null;
   try { session = readSignedPayload<AppSession>((await cookies()).get('grokbot_session')?.value); } catch { session = null; }
-  if (process.env.REQUIRE_USER_AUTH === 'true' && !session) redirect('/login');
+  if (process.env.REQUIRE_USER_AUTH === 'true' && !session) {
+    const returnTo = internalPathWithSearch('/prospecting/investors', searchParams);
+    redirect(`/login?returnTo=${encodeURIComponent(returnTo)}`);
+  }
   return <VcProspectingWorkspace accountId={session?.sub} />;
 }

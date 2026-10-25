@@ -72,7 +72,20 @@ export function ChatPanel({ bot, room, bots, onCreateBot, onCreateRoom, onQuickS
   const settings = useRef<HTMLDetailsElement>(null);
   const draftKey = 'grokbot-draft-' + (room?.id || bot?.id || 'home');
   useEffect(() => { try { setInput(sessionStorage.getItem(draftKey) || ''); } catch {} setDraftReady(true); }, [draftKey]);
-  useEffect(() => { if(draftReady) try { if(input) sessionStorage.setItem(draftKey, input); else sessionStorage.removeItem(draftKey); } catch {} }, [draftKey, input, draftReady]);
+  useEffect(() => {
+    if (!draftReady) return;
+    try {
+      const keys = [draftKey];
+      if (conversationId) {
+        const conversationKey = `grokbot-draft-${conversationId}`;
+        if (keys.indexOf(conversationKey) === -1) keys.push(conversationKey);
+      }
+      for (const key of keys) {
+        if (input) sessionStorage.setItem(key, input);
+        else sessionStorage.removeItem(key);
+      }
+    } catch {}
+  }, [draftKey, input, draftReady, conversationId]);
   useEffect(() => {
     function close(event: KeyboardEvent | globalThis.PointerEvent) {
       if (!settings.current?.open) return;
@@ -127,6 +140,13 @@ export function ChatPanel({ bot, room, bots, onCreateBot, onCreateRoom, onQuickS
   const followLatest = useRef(true);
   const roomMembers = room?.is_group ? bots.filter(member=>room.bot_ids.includes(member.id)) : [];
   const title = room?.title === 'Agent lounge' ? 'Your team' : room?.title || bot?.name || 'Workspace';
+  const returnConversationId = conversationId || room?.id;
+  const signInReturnTo = returnConversationId ? `/?conversation=${encodeURIComponent(returnConversationId)}` : bot ? `/?bot=${encodeURIComponent(bot.id)}` : '/';
+  const signInHref = `/login?returnTo=${encodeURIComponent(signInReturnTo)}`;
+  function showExpiredSession(message = 'Your session expired. Sign in again to reconnect.') {
+    setSessionExpired(true);
+    setSyncError(message);
+  }
   useEffect(() => { const el = stream.current; if (!el) return; if (prependOffset.current !== null) { el.scrollTop = el.scrollHeight - prependOffset.current; prependOffset.current = null; } else if (followLatest.current) el.scrollTop = el.scrollHeight; }, [messages.length, messages[messages.length - 1]?.id, voiceMode]);
   useEffect(()=>{followLatest.current=true;setConversationId('');setMessages([]);setJobs([]);setAttachments([]);setError('');setLoading(!!bot || !!room);setSyncError('');setSessionExpired(false);retryNotBefore.current=0;setRetryAt(0);firstPage.current=true;},[bot?.id,room?.id]);
   useEffect(() => {
@@ -160,7 +180,7 @@ export function ChatPanel({ bot, room, bots, onCreateBot, onCreateRoom, onQuickS
       if (stream.current) prependOffset.current = stream.current.scrollHeight - stream.current.scrollTop;
       followLatest.current = false;
       setMessages(previous => mergeMessages(previous, older)); setHasEarlier(older.length === 50);
-    } catch (e) { setError(String(e)); } finally { setLoadingEarlier(false); }
+    } catch (e) { if (e instanceof ApiError && e.status === 401) showExpiredSession(); else setError(String(e)); } finally { setLoadingEarlier(false); }
   }
   async function addFiles(files: FileList | null) {
     if (!files) return;
@@ -220,8 +240,10 @@ export function ChatPanel({ bot, room, bots, onCreateBot, onCreateRoom, onQuickS
     } catch (e) {
       if (!isVoiceTurn) unconfirmedDraft.current={id:messageId,text,files,reply:replyTo?.id};
       setMessages(previous=>previous.map(message=>message.id===messageId?{...message,delivery:'failed'}:message));
-      if (isVoiceTurn && voiceModeRef.current && session === voiceSession.current) { setVoiceError(`I couldn’t send that. ${String(e).replace(/^Error: /,'')}`); updateVoiceStatus('listening'); }
-      else if (!isVoiceTurn) { setInput(current=>current || text);setAttachments(current=>current.length?current:files); setError(`Message was not confirmed. ${String(e).replace(/^Error: /,'')} Your message is kept in this thread; resend from the composer to retry.`); }
+      const expired = e instanceof ApiError && e.status === 401;
+      if (expired) showExpiredSession(isVoiceTurn ? 'Your session expired. Sign in to continue voice chat.' : 'Your session expired. Sign in to reconnect; your message is kept in the composer.');
+      if (isVoiceTurn && voiceModeRef.current && session === voiceSession.current) { setVoiceError(expired ? 'Sign in again before sending another voice message.' : `I couldn’t send that. ${String(e).replace(/^Error: /,'')}`); updateVoiceStatus('listening'); }
+      else if (!isVoiceTurn) { setInput(current=>current || text);setAttachments(current=>current.length?current:files); if (!expired) setError(`Message was not confirmed. ${String(e).replace(/^Error: /,'')} Your message is kept in this thread; resend from the composer to retry.`); }
     } finally { sendingRef.current=false;setSending(false); }
   }
   voiceModeRef.current = voiceMode;
@@ -409,7 +431,7 @@ export function ChatPanel({ bot, room, bots, onCreateBot, onCreateRoom, onQuickS
     {bot ? <div className="conversation-computer"><span>{computerBotId === bot.id ? 'Computer connected' : 'Computer tools'}</span><button disabled={computerBusy} onClick={() => void toggleComputer()}>{computerBusy ? 'Connecting…' : computerBotId === bot.id ? 'Stop computer' : 'Start computer'}</button></div> : null}
     {room?.is_group ? <details className="thread-members"><summary><span className="thread-member-stack" aria-hidden="true">{roomMembers.slice(0, 4).map(member => <BotAvatar key={member.id} name={member.name} small/>)}</span><span>{room.bot_ids.length} teammates</span></summary><div className="team-members">{roomMembers.map(member => <span key={member.id} title={`${member.llmProvider} · ${member.llmModel}`}><BotAvatar name={member.name} small/>{member.name}</span>)}</div></details> : null}
     {computerError ? <p role="alert">{computerError}</p> : null}
-    {error ? <div className="conversation-alert" role="alert"><span>{error.replace(/^Error: /, '')}</span><button aria-label="Dismiss error" onClick={() => setError('')}>Dismiss</button></div> : null}{syncError ? <div className="sync-status" role="status"><span>{syncError}</span>{sessionExpired?<a href="/login">Sign in</a>:<button disabled={refreshing || retryAt>Date.now()} onClick={()=>window.dispatchEvent(new Event('grokbot:refresh'))}>{refreshing?'Reconnecting…':retryAt>Date.now()?'Waiting to retry…':'Reconnect'}</button>}</div> : null}
+    {error ? <div className="conversation-alert" role="alert"><span>{error.replace(/^Error: /, '')}</span><button aria-label="Dismiss error" onClick={() => setError('')}>Dismiss</button></div> : null}{syncError ? <div className="sync-status" role="status"><span>{syncError}</span>{sessionExpired?<a href={signInHref}>Sign in</a>:<button disabled={refreshing || retryAt>Date.now()} onClick={()=>window.dispatchEvent(new Event('grokbot:refresh'))}>{refreshing?'Reconnecting…':retryAt>Date.now()?'Waiting to retry…':'Reconnect'}</button>}</div> : null}
     <div ref={stream} hidden={voiceMode} onScroll={() => { const el = stream.current; if (el) followLatest.current = el.scrollHeight - el.scrollTop - el.clientHeight < 100; setAwayFromLatest(!followLatest.current); }} className="message-stream" style={{ flex:1,overflowY:'auto',display:'flex',flexDirection:'column' }}>{hasEarlier ? <button className="load-earlier" disabled={loadingEarlier} onClick={loadEarlier}>{loadingEarlier ? 'Loading…' : 'Load earlier messages'}</button> : null}{visibleMessages.map((m,index) => {
         const previous = visibleMessages[index - 1];
         const next = visibleMessages[index + 1];

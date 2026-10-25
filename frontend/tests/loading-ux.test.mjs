@@ -5,10 +5,14 @@ import { environment, renderer, load, deferred, find, textOf, button } from './s
 function workspace(search = '') {
   const env = environment(), view = renderer(env), pending = deferred();
   env.window.location = { search };
+  let bots = [], loadingBots = true;
   const names = ['BotRoster','SidebarShell','ChatPanel','BotCreator','PluginPanel','GoalsPanel','ChannelsPanel','WorkspaceSetup','RoomCreator','CommandPalette','WorkspaceHub','ComputerPanel'];
   const imports = Object.fromEntries(names.flatMap(name => [['../components/'+name, {[name]:name}], ['./'+name, {[name]:name}]]));
   imports['./PanelBoundary'] = { PanelBoundary:'panel-boundary' };
-  imports['../hooks/useBots'] = { useBots:()=>({bots:[],selectedBot:null,setSelectedBot(){},createBot(){},refreshBots:async()=>{},loading:true}) };
+  imports['../hooks/useBots'] = { useBots:()=>{
+    const [selectedBot,setSelectedBot]=view.react.useState(null);
+    return {bots,selectedBot,setSelectedBot,createBot(){},refreshBots:async()=>{},loading:loadingBots};
+  } };
   imports['../components/PreferencesPanel'] = { PreferencesPanel:'preferences',restoreAppearance(){} };
   imports['../components/RunControls'] = { DEFAULT_OPTIONS:{} };
   imports['../lib/api'] = { api:{getConversations:()=>pending.promise},request:async()=>[] };
@@ -16,7 +20,7 @@ function workspace(search = '') {
   const react = {...view.react,lazy:()=>'lazy-panel'};
   const {default:WorkspaceApp} = load('../src/components/WorkspaceApp.tsx',{react,...imports},{...env.globals,URLSearchParams,setInterval:()=>1,clearInterval(){}});
   view.mount(()=>WorkspaceApp({}));
-  return {view,pending};
+  return {view,pending,setBots(next){bots=next;loadingBots=false;view.rerender();}};
 }
 const lounge = {id:'synthetic-lounge',title:'Agent lounge',is_group:true,bot_ids:[]};
 
@@ -33,6 +37,29 @@ test('startup keeps the task home visible while existing rooms remain available'
   assert.equal(find(view.tree,node=>node.type==='ChatPanel').props.room,null);
   assert.equal(find(view.tree,node=>node.type==='BotRoster').props.rooms[0].id,lounge.id);
   assert.equal(find(view.tree,node=>node.type==='BotRoster').props.loadingRooms,false);
+  view.unmount();
+});
+
+test('sign-in return restores the requested agent after its conversation initially failed to open',()=>{
+  const {view,setBots}=workspace('?bot=synthetic-agent');
+  const agent={id:'synthetic-agent',name:'Saved agent',description:'Synthetic fixture',role:'Researcher',llmProvider:'openai',llmModel:'gpt-6.1-sol'};
+  assert.equal(find(view.tree,node=>node.type==='ChatPanel').props.bot,null,'wait for the saved agents list before resolving the return target');
+  setBots([agent]);
+  assert.equal(find(view.tree,node=>node.type==='ChatPanel').props.bot.id,agent.id);
+  assert.equal(find(view.tree,node=>node.type==='BotRoster').props.selectedBot.id,agent.id);
+  view.unmount();
+});
+
+test('a deliberate New task choice wins over a pending sign-in agent restore',async()=>{
+  const {view,pending,setBots}=workspace('?bot=synthetic-agent');
+  const agent={id:'synthetic-agent',name:'Saved agent',description:'Synthetic fixture',role:'Researcher',llmProvider:'openai',llmModel:'gpt-6.1-sol'};
+  find(view.tree,node=>node.type==='BotRoster').props.onHome();
+  setBots([agent]);
+  await view.flush();
+  pending.resolve([lounge]);
+  await view.flush();
+  assert.equal(find(view.tree,node=>node.type==='ChatPanel').props.bot,null);
+  assert.equal(find(view.tree,node=>node.type==='BotRoster').props.activeView,'home');
   view.unmount();
 });
 
