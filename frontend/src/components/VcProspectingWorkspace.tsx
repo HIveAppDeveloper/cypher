@@ -248,10 +248,6 @@ export default function VcProspectingWorkspace({ accountId }: { accountId?: stri
     finally { setDrafting(''); }
   }
 
-  function editOutreach(field: 'subject' | 'body', value: string) {
-    setOutreach(current => current ? { ...current, value: { ...current.value, [field]: value } } : current);
-  }
-
   async function copyOutreach() {
     if (!outreach) return;
     try {
@@ -386,7 +382,7 @@ export default function VcProspectingWorkspace({ accountId }: { accountId?: stri
             {selectedFounder.source_url ? <a className="vc-source-link" href={selectedFounder.source_url} target="_blank" rel="noreferrer">Review original source <VcIcon kind="external"/></a> : null}
           </div> : null}
           {detailTab === 'outreach' ? <div className="vc-detail-content">
-            <h3>Prepare a first conversation</h3><p>Cypher can prepare an editable email and meeting brief after it finds a company match. Nothing is sent automatically.</p>
+            <h3>Prepare a first conversation</h3><p>Cypher can prepare a source-backed draft preview and meeting brief after it finds a company match. Copy the preview into your outreach workflow to edit it. Nothing is sent here.</p>
             <button className="vc-outline-action" type="button" onClick={() => setWorkspaceStep('outreach')}>Review company matches</button>
           </div> : null}
           {detailTab === 'notes' ? <div className="vc-detail-content"><h3>Research notes</h3><p>Use the filing and its linked source to verify the person’s current role before reaching out.</p><p className="vc-muted">This record comes from public SEC data and does not include a verified email address.</p></div> : null}
@@ -399,7 +395,7 @@ export default function VcProspectingWorkspace({ accountId }: { accountId?: stri
     </div> : null}
 
     {workspaceStep === 'outreach' ? <section className="vc-outreach-workspace">
-      <header className="vc-candidates-heading"><div><h2>Company matches and outreach</h2><p>Review a match, then prepare an editable email and meeting brief. Cypher never sends it for you.</p></div><span className="vc-run-badge">{runStatus}</span></header>
+      <header className="vc-candidates-heading"><div><h2>Company matches and outreach</h2><p>Review a match, then prepare a draft preview and meeting brief. Copy the text into your outreach workflow to edit it.</p></div><span className="vc-run-badge">{runStatus}</span></header>
       {!run?.results?.length ? <div className="vc-workflow-empty"><h3>{activeRun ? 'Cypher is researching your thesis' : 'Start with your investment focus'}</h3><p>{activeRun ? 'This page will update when the public-source research is ready.' : 'Add your thesis and run a search. Cypher will use that research to prepare a source-backed first conversation.'}</p>{!activeRun ? <button className="vc-primary" type="button" onClick={() => setWorkspaceStep('thesis')}>Set up a search</button> : <span className="vc-live-indicator"><i /> Working in the background</span>}</div> : <>
         <div className="vc-outreach-grid"><div className="vc-match-list"><div className="vc-table-head"><h3>{run.direction === 'companies_for_thesis' ? 'Companies to review' : 'Investors to review'}</h3><span>{run.results.length} results</span></div>
           {run.results.map(result => <article className="vc-match-card" key={result.id}>
@@ -411,7 +407,7 @@ export default function VcProspectingWorkspace({ accountId }: { accountId?: stri
           {run.limitations?.length ? <p className="vc-muted">{run.limitations[0]}</p> : null}
         </div>
         <div className="vc-draft-card">
-          {outreach ? <><h3>Email draft · review before sending</h3><p className="vc-recipient">{outreach.value.recipient || 'Recipient not provided'}</p><label className="vc-draft-field">Subject<input value={outreach.value.subject} maxLength={300} onChange={event => editOutreach('subject', event.target.value)}/></label><label className="vc-draft-field">Message<textarea rows={9} maxLength={8000} value={outreach.value.body} onChange={event => editOutreach('body', event.target.value)}/></label><div className="vc-draft-actions"><button className="vc-outline-action" type="button" onClick={() => void copyOutreach()}>Copy draft</button><button className="vc-outline-action" type="button" onClick={() => setWorkspaceStep('meetings')}>Open meeting brief</button></div><p className="vc-muted">Edits stay in this workspace. Nothing is sent.</p></> : <div className="vc-workflow-empty"><h3>Outreach stays in your hands</h3><p>Choose a company and prepare a draft to see a researched message here. It will not be sent.</p></div>}
+          {outreach ? <><h3>Draft preview · review before use</h3><p className="vc-recipient">{outreach.value.recipient || 'Recipient not provided'}</p><p className="vc-draft-subject"><strong>Subject:</strong> {outreach.value.subject}</p><pre className="vc-draft-body">{outreach.value.body}</pre><div className="vc-draft-actions"><button className="vc-outline-action" type="button" onClick={() => void copyOutreach()}>Copy draft</button><button className="vc-outline-action" type="button" onClick={() => setWorkspaceStep('meetings')}>Open meeting brief</button></div><p className="vc-muted">This is a preview only. Nothing is sent.</p></> : <div className="vc-workflow-empty"><h3>Outreach stays in your hands</h3><p>Choose a company and prepare a draft to see a researched message here. It will not be sent.</p></div>}
         </div></div>
       </>}
       {run?.events?.length ? <details className="vc-source-activity"><summary>See public source activity</summary><ul>{run.events.slice(-8).reverse().map((event, index) => <li key={event.at + event.type + index}><span>{event.type.replaceAll('_', ' ')}</span>{typeof event.count === 'number' ? <small>{event.count.toLocaleString()}</small> : null}{event.source_url ? <a href={event.source_url} target="_blank" rel="noreferrer">Source</a> : null}</li>)}</ul></details> : null}

@@ -159,9 +159,8 @@
 .vc-draft-card { min-width: 0; padding: 17px; }
 .vc-draft-card h3 { margin: 8px 0 3px; font-size: 13px; }
 .vc-recipient { margin: 0; color: var(--cx-label-2, #65645f); font-size: 9px; }
-.vc-draft-field { display: grid; gap: 5px; margin-top: 12px; color: var(--cx-label-2, #65645f); font-size: 10px; font-weight: 550; }
-.vc-draft-field input, .vc-draft-field textarea { width: 100%; min-width: 0; padding: 9px 10px; border: 1px solid var(--cx-sep, #e7e5df); border-radius: 7px; background: var(--cx-bg, #faf9f6); color: var(--cx-label, #171715); font: 10px/1.5 var(--cx-sans, Inter, sans-serif); }
-.vc-draft-field textarea { min-height: 150px; resize: vertical; }
+.vc-draft-subject { margin: 13px 0 0; color: var(--cx-label, #171715); font-size: 10px; line-height: 1.5; overflow-wrap: anywhere; }
+.vc-draft-body { max-height: 320px; overflow: auto; margin: 8px 0 0; color: var(--cx-label-2, #65645f); font: 10px/1.6 var(--cx-sans, Inter, sans-serif); white-space: pre-wrap; overflow-wrap: anywhere; }
 .vc-draft-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
 .vc-draft-actions .vc-outline-action { min-height: 34px; padding: 7px 10px; }
 .vc-draft-card > .vc-muted { margin: 9px 0 0; font-size: 9px; }
