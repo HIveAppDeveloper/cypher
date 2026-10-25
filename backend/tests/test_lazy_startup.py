@@ -67,6 +67,62 @@ asyncio.run(check())
     assert result == {'health': 'ok', 'atlas': 'engine_disabled'}
 
 
+@pytest.mark.parametrize('case, status, code', [
+    ('missing', 401, 'invalid_signature'),
+    ('signature', 401, 'invalid_signature'),
+    ('body', 401, 'invalid_signature'),
+    ('stale', 401, 'invalid_signature'),
+    ('future', 401, 'invalid_signature'),
+    ('content_type', 415, 'invalid_content_type'),
+    ('contract', 400, 'invalid_request'),
+    ('recipient', 409, 'recipient_mismatch'),
+])
+def test_enabled_atlas_rejects_unauthenticated_or_invalid_requests_without_inference_imports(tmp_path, case, status, code):
+    result = isolated(tmp_path, f'case = {case!r}\n' + '''
+import asyncio
+import hashlib
+import hmac
+import importlib.abc
+import json
+import time
+from uuid import uuid4
+class NoOptionalModules(importlib.abc.MetaPathFinder):
+    def find_spec(self, fullname, path=None, target=None):
+        if fullname in {'litellm', 'app.services.llm_gateway', 'app.services.worker'}:
+            raise AssertionError('Optional module imported before request rejection: ' + fullname)
+sys.meta_path.insert(0, NoOptionalModules())
+from app.main import app
+from app.config import settings
+import httpx
+settings.GROKBOT_ATLAS_ENGINE_ENABLED = True
+settings.ATLAS_ENGINE_SIGNING_KEY = 'synthetic-engine-signing-key-32-characters'
+settings.GROKBOT_ATLAS_ENGINE_PROVIDER = 'openai'
+settings.GROKBOT_ATLAS_ENGINE_MODEL = 'gpt-6.1-sol'
+settings.GROKBOT_ATLAS_ENGINE_TRANSPORT = 'direct'
+settings.REQUIRE_USER_AUTH = True
+app.state.database_ready = True
+body = {'version': 1, 'requestId': str(uuid4()),
+        'principal': {'tenantId': 'synthetic', 'actorId': 'synthetic'},
+        'recipient': 'gemini' if case == 'recipient' else 'openai',
+        'messages': [{'role': 'user', 'content': 'Synthetic question'}]}
+raw = json.dumps({} if case == 'contract' else body).encode()
+timestamp = str(int(time.time()) + (-90 if case == 'stale' else 90 if case == 'future' else 0))
+signature = hmac.new(settings.ATLAS_ENGINE_SIGNING_KEY.encode(), b'v1\\n' + timestamp.encode() + b'\\n' + raw, hashlib.sha256).hexdigest()
+headers = {'content-type': 'application/json', 'x-atlas-engine-timestamp': timestamp,
+           'x-atlas-engine-signature': signature}
+if case == 'missing': headers.pop('x-atlas-engine-signature')
+if case == 'signature': headers['x-atlas-engine-signature'] = '0' * 64
+if case == 'body': raw += b' '
+if case == 'content_type': headers['content-type'] = 'text/plain'
+async def check():
+    async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url='http://test') as client:
+        response = await client.post('/api/integrations/atlas/v1/chat', content=raw, headers=headers)
+    print(json.dumps({'status': response.status_code, 'code': response.json()['code']}))
+asyncio.run(check())
+''')
+    assert result == {'status': status, 'code': code}
+
+
 @pytest.mark.parametrize('embedded', [False, True])
 def test_lifespan_only_imports_and_runs_explicit_embedded_worker(tmp_path, embedded):
     result = isolated(tmp_path, f'embedded = {embedded!r}\n' + '''
