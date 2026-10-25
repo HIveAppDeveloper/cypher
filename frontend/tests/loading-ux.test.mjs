@@ -114,7 +114,9 @@ test('unavailable voice intro explains the text fallback without exposing server
   assert.equal(voice?.props.disabled,true);
   assert.match(textOf(view.tree),/Audio intro isn't available for this workspace yet\. You can continue with the text workflow\./);
   assert.doesNotMatch(textOf(view.tree),/Vercel|API key/);
-  assert.notEqual(find(view.tree,node=>node.type==='input'&&node.props?.id==='prospecting-url')?.props.disabled,true);
+  const textInput=find(view.tree,node=>node.type==='input'&&node.props?.id==='prospecting-url');
+  assert.ok(textInput,'the text research field stays available');
+  assert.notEqual(textInput.props.disabled,true);
   view.unmount();
 });
 
