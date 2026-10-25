@@ -9,6 +9,7 @@ import os
 import secrets
 import time
 from urllib.parse import urlencode
+from cryptography.fernet import InvalidToken
 from fastapi import HTTPException
 from sqlalchemy import select, delete
 from app.db.tenancy import current_tenant_id
@@ -81,7 +82,12 @@ async def matching_connection(db,url,config):
     """Different grants for one endpoint remain separate account connections."""
     rows=(await db.execute(select(Plugin).where(Plugin.url==url))).scalars().all()
     for plugin in rows:
-        saved=reveal(plugin.credential)
+        try:
+            saved=reveal(plugin.credential)
+        except (InvalidToken, ValueError):
+            # An unreadable neighboring account cannot identify this grant.
+            # Preserve it and continue looking for the exact managed reference.
+            continue
         if saved==REFERENCE_PREFIX+config['id']:return plugin
     return None
 
