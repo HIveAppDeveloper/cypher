@@ -75,7 +75,11 @@ export function ChatPanel({ bot, room, bots, onCreateBot, onCreateRoom, onQuickS
   useEffect(() => {
     if (!draftReady) return;
     try {
-      const keys = new Set([draftKey, ...(conversationId ? [`grokbot-draft-${conversationId}`] : [])]);
+      const keys = [draftKey];
+      if (conversationId) {
+        const conversationKey = `grokbot-draft-${conversationId}`;
+        if (keys.indexOf(conversationKey) === -1) keys.push(conversationKey);
+      }
       for (const key of keys) {
         if (input) sessionStorage.setItem(key, input);
         else sessionStorage.removeItem(key);
