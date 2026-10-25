@@ -86,6 +86,7 @@ export default function ProspectingWorkspace({ accountId }: { accountId?: string
   const [restoredForm, setRestoredForm] = useState(false);
   const inFlight = useRef(false);
   const operation = useRef<AbortController | null>(null);
+  const accountIdentity = useRef(accountId);
   const voiceAudio = useRef<HTMLAudioElement | null>(null);
   const voiceObjectUrl = useRef('');
   const voiceContext = useRef<AudioContext | null>(null);
@@ -96,6 +97,35 @@ export default function ProspectingWorkspace({ accountId }: { accountId?: string
   const runId = run?.id;
   const signInHref = `/login?returnTo=${encodeURIComponent('/prospecting')}`;
   const formRecoveryKey = accountId ? `grokbot.prospecting-form.v1.${encodeURIComponent(accountId)}` : '';
+
+  useEffect(() => {
+    if (accountIdentity.current === accountId) return;
+    accountIdentity.current = accountId;
+    operation.current?.abort();
+    inFlight.current = false;
+    setUrl('');
+    setProfile(null);
+    setManual(false);
+    setMarket('');
+    setProduct('');
+    setConfirmed(false);
+    setAktaAvailable(false);
+    setUseAkta(false);
+    setRuns([]);
+    setRun(null);
+    setHistoryLoading(true);
+    setHistoryError('');
+    setSelected('');
+    setPending('');
+    setError('');
+    setPollError('');
+    setDraft(null);
+    setNotice('');
+    setRestoredForm(false);
+    stopVoice();
+    setVoiceState('checking');
+    setVoiceError('');
+  }, [accountId]);
 
   useEffect(() => {
     if (!formRecoveryKey) return;
@@ -128,7 +158,7 @@ export default function ProspectingWorkspace({ accountId }: { accountId?: string
       if (active) setVoiceState(data.configured ? 'ready' : 'setup');
     }).catch(() => { if (active) setVoiceState('error'); });
     return () => { active = false; };
-  }, []);
+  }, [accountId]);
 
   useEffect(() => {
     let current = true;
@@ -136,7 +166,7 @@ export default function ProspectingWorkspace({ accountId }: { accountId?: string
       if (current) setAktaAvailable(data.akta_available === true);
     }).catch(() => { if (current) setAktaAvailable(false); });
     return () => { current = false; };
-  }, []);
+  }, [accountId]);
 
   useEffect(() => () => {
     voiceAudio.current?.pause();
@@ -147,9 +177,11 @@ export default function ProspectingWorkspace({ accountId }: { accountId?: string
 
   useEffect(() => {
     const controller = new AbortController();
+    const requestedAccountId = accountId;
     setHistoryLoading(true);
     setHistoryError('');
     request('/prospecting/runs', { signal: controller.signal }).then((rows: Run[]) => {
+      if (controller.signal.aborted || accountIdentity.current !== requestedAccountId) return;
       setRuns(rows);
       setRun(current => current || rows[0] || null);
     }).catch(loadError => {
@@ -158,7 +190,7 @@ export default function ProspectingWorkspace({ accountId }: { accountId?: string
       if (!controller.signal.aborted) setHistoryLoading(false);
     });
     return () => { controller.abort(); operation.current?.abort(); };
-  }, [retry]);
+  }, [retry, accountId]);
 
   useEffect(() => {
     if (!runId || terminal(run?.status || '')) return;

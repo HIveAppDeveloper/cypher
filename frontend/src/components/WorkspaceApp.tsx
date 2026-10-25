@@ -72,7 +72,7 @@ export default function WorkspaceApp({ accountEmail, accountId }: { accountEmail
     else if (params.get('view') === 'settings') setCreator('setup');
   }, []);
   useEffect(() => {
-    if (botsLoading || restoredBotFromReturn.current) return;
+    if (navigated.current || botsLoading || restoredBotFromReturn.current) return;
     const botId = new URLSearchParams(window.location.search).get('bot');
     if (!botId) return;
     const requestedBot = bots.find(bot => bot.id === botId);

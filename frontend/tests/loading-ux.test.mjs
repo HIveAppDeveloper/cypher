@@ -50,6 +50,19 @@ test('sign-in return restores the requested agent after its conversation initial
   view.unmount();
 });
 
+test('a deliberate New task choice wins over a pending sign-in agent restore',async()=>{
+  const {view,pending,setBots}=workspace('?bot=synthetic-agent');
+  const agent={id:'synthetic-agent',name:'Saved agent',description:'Synthetic fixture',role:'Researcher',llmProvider:'openai',llmModel:'gpt-6.1-sol'};
+  find(view.tree,node=>node.type==='BotRoster').props.onHome();
+  setBots([agent]);
+  await view.flush();
+  pending.resolve([lounge]);
+  await view.flush();
+  assert.equal(find(view.tree,node=>node.type==='ChatPanel').props.bot,null);
+  assert.equal(find(view.tree,node=>node.type==='BotRoster').props.activeView,'home');
+  view.unmount();
+});
+
 test('pending agents and rooms never announce empty data',()=>{
   const env=environment(),view=renderer(env);
   const {BotRoster}=load('../src/components/BotRoster.tsx',{react:view.react,'./LoadingState':{LoadingState:'loading-state'},'./AccountMenu':{AccountMenu:'account-menu'},'./BotAvatar':{},'../lib/api':{request:async()=>({})}},{...env.globals,React:view.react.default});
