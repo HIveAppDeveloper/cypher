@@ -1,16 +1,28 @@
 'use client';
 
-import { Component, Suspense, createContext, lazy, useContext, useEffect, useMemo, useRef, type ComponentType, type ReactNode } from 'react';
+import { Component, Suspense, createContext, lazy, useContext, useEffect, useRef, type ComponentType, type ReactNode } from 'react';
 import { LoadingState } from './LoadingState';
 
-const PanelRetryContext = createContext(0);
+type PanelLoader = () => Promise<{ default: ComponentType<any> }>;
+type PanelRetryContextValue = { getLazyPanel: (loader: PanelLoader) => ComponentType<any> };
+const PanelRetryContext = createContext<PanelRetryContextValue | null>(null);
+const fallbackLazyPanels = new WeakMap<PanelLoader, ComponentType<any>>();
+
+function getFallbackLazyPanel(loader: PanelLoader) {
+  let panel = fallbackLazyPanels.get(loader);
+  if (!panel) {
+    panel = lazy(loader);
+    fallbackLazyPanels.set(loader, panel);
+  }
+  return panel;
+}
 
 export function RetryablePanel<P extends object>({ loader, componentProps }: {
   loader: () => Promise<{ default: ComponentType<P> }>;
   componentProps: P;
 }) {
-  const retryVersion = useContext(PanelRetryContext);
-  const LazyPanel = useMemo(() => lazy(loader), [loader, retryVersion]);
+  const retryContext = useContext(PanelRetryContext);
+  const LazyPanel = (retryContext?.getLazyPanel(loader) ?? getFallbackLazyPanel(loader)) as ComponentType<P>;
   return <LazyPanel {...componentProps}/>;
 }
 
@@ -37,11 +49,24 @@ export function InlinePanelNotice({ title, onClose, onRetry, failed = false }: {
 
 export class PanelBoundary extends Component<{ title: string; onClose: () => void; children: ReactNode; inline?: boolean }, { failed: boolean; retryVersion: number }> {
   state = { failed: false, retryVersion: 0 };
+  private lazyPanelCache = new Map<PanelLoader, { retryVersion: number; component: ComponentType<any> }>();
+
+  private getLazyPanel = (loader: PanelLoader) => {
+    const cached = this.lazyPanelCache.get(loader);
+    if (cached?.retryVersion === this.state.retryVersion) return cached.component;
+    const component = lazy(loader);
+    this.lazyPanelCache.set(loader, { retryVersion: this.state.retryVersion, component });
+    return component;
+  };
+
   static getDerivedStateFromError() { return { failed: true }; }
-  retry = () => { this.setState(state => ({ failed: false, retryVersion: state.retryVersion + 1 })); };
+  retry = () => {
+    this.lazyPanelCache.clear();
+    this.setState(state => ({ failed: false, retryVersion: state.retryVersion + 1 }));
+  };
   render() {
     const Notice = this.props.inline ? InlinePanelNotice : PanelNotice;
     if (this.state.failed) return <Notice title={this.props.title} onClose={this.props.onClose} onRetry={this.retry} failed/>;
-    return <PanelRetryContext.Provider value={this.state.retryVersion}><Suspense fallback={<Notice title={this.props.title} onClose={this.props.onClose}/>}>{this.props.children}</Suspense></PanelRetryContext.Provider>;
+    return <PanelRetryContext.Provider value={{ getLazyPanel: this.getLazyPanel }}><Suspense fallback={<Notice title={this.props.title} onClose={this.props.onClose}/>}>{this.props.children}</Suspense></PanelRetryContext.Provider>;
   }
 }

@@ -3,16 +3,17 @@ import assert from 'node:assert/strict';
 import { environment, renderer, load, find, textOf, button } from './support/component-harness.mjs';
 
 test('inline Apps loading and error recovery stay in the workspace without a modal', () => {
-  const env=environment(),view=renderer(env);let closed=0,contextVersion=0,memoDeps=null,memoValue;
+  const env=environment(),view=renderer(env);let closed=0;
   class Component {
     constructor(props){this.props=props;}
     setState(update){this.state={...this.state,...(typeof update==='function'?update(this.state,this.props):update)};}
   }
-  const lazyTypes=[];
-  const react={...view.react,Component,Suspense:'suspense',createContext:value=>({Provider:'context-provider',_currentValue:value}),useContext:()=>contextVersion,useMemo:(create,deps)=>{if(!memoDeps||deps.some((value,index)=>!Object.is(value,memoDeps[index]))){memoDeps=deps;memoValue=create();}return memoValue;},lazy:loader=>{const type={loader};lazyTypes.push(type);return type;}};
+  const lazyTypes=[];let retryContext;
+  const react={...view.react,Component,Suspense:'suspense',createContext:value=>(retryContext={Provider:'context-provider',_currentValue:value}),useContext:context=>context._currentValue,lazy:loader=>{const type={loader};lazyTypes.push(type);return type;}};
   const {PanelBoundary,InlinePanelNotice,RetryablePanel}=load('../src/components/PanelBoundary.tsx',{react,'./LoadingState':{LoadingState:'loading-state'}},{...env.globals,React:view.react.default});
   const boundary=new PanelBoundary({inline:true,title:'Apps',onClose:()=>closed++,children:'Loaded apps'});
-  let notice=boundary.render().props.children[0].props.fallback;
+  let rendered=boundary.render();retryContext._currentValue=rendered.props.value;
+  let notice=rendered.props.children[0].props.fallback;
   assert.equal(notice.type,InlinePanelNotice);
   view.mount(()=>notice.type(notice.props));
   assert.equal(view.tree.type,'section');
@@ -24,14 +25,16 @@ test('inline Apps loading and error recovery stay in the workspace without a mod
   const loader=async()=>({default:'recovered-panel'});
   const firstPanel=RetryablePanel({loader,componentProps:{}});
   assert.equal(firstPanel.type.loader,loader);
+  const rerenderedPanel=RetryablePanel({loader,componentProps:{}});
+  assert.equal(rerenderedPanel.type,firstPanel.type,'initial suspension and parent rerenders reuse one lazy type');
   button(view.tree,'Try again').props.onClick();
   assert.equal(boundary.state.failed,false);
   assert.equal(boundary.state.retryVersion,1);
-  contextVersion=boundary.state.retryVersion;
+  rendered=boundary.render();retryContext._currentValue=rendered.props.value;
   const retriedPanel=RetryablePanel({loader,componentProps:{}});
   assert.notEqual(retriedPanel.type,firstPanel.type,'a retry gets a fresh React.lazy type');
   assert.equal(retriedPanel.type.loader,loader);
-  assert.equal(lazyTypes.length,2);
+  assert.equal(lazyTypes.length,2,'the boundary creates one lazy type initially and one on retry');
   view.unmount();
 });
 

@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "test": "node --test tests/*.test.mjs",
     "test:attachments": "node --test tests/attachments.test.mjs",
     "dev": "next dev",
     "build": "next build",
@@ -24,6 +25,7 @@
     "@types/react-dom": "^19.3.0",
     "eslint": "^8.0.0",
     "eslint-config-next": "^15.5.28",
+    "jsdom": "26.1.0",
     "typescript": "^5.6.0"
   },
   "overrides": {
