@@ -53,7 +53,7 @@ export function ModelConnections({ items, canManage, workerReady, onQueued, omni
     <h3 id="model-connections-title">Model access</h3>
     <p className="field-help">{omniroute ? 'Model requests go through OmniRoute. Connect eligible accounts in OmniRoute, then check them here. Provider sign-ins stay in OmniRoute; Requests use the existing gateway key. Checks send a short model request.' : 'Check or add a provider connection for this workspace. Checks send a short model request.'}</p>
     {omniroute && canManage && safeManageUrl ? <p className="field-help"><a className="setup-doc-link" href={safeManageUrl} target="_blank" rel="noopener noreferrer">Connect accounts in OmniRoute</a></p> : null}
-    {!canManage ? <p className="field-help">The installation owner manages these shared provider connections.</p> : <ul className="model-connection-list">
+    {!canManage ? <p className="field-help">The installation owner manages these shared provider connections.</p> : !items.length ? <p className="field-help" role="status">No provider connections are configured for this workspace.</p> : <ul className="model-connection-list">
       {items.map(item => {
         const checking = item.state === 'checking' || busy === item.id;
         const verification = googleLink(item.verification_url);

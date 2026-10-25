@@ -1,0 +1,37 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {environment,renderer,load,find,textOf,button} from './support/component-harness.mjs';
+
+function panel(fetcher){
+  const env=environment(),view=renderer(env);
+  const {WorkspaceSetup}=load('../src/components/WorkspaceSetup.tsx',{react:view.react,'./ModelConnections':{ModelConnections:'model-connections'}},{...env.globals,React:view.react.default,fetch:fetcher,setInterval:()=>1,clearInterval(){}});
+  view.mount(()=>WorkspaceSetup({onClose(){}}));
+  return view;
+}
+
+test('runtime probe failures stay unknown and retry without claiming the cloud is disconnected',async()=>{
+  let runtimeCalls=0;
+  const view=panel(async url=>{
+    if(url==='/api/connections')throw Error('Settings service offline');
+    if(++runtimeCalls===1)throw Error('Runtime service offline');
+    return {ok:true,json:async()=>({connected:true,worker:false,database:true,model_configured:true})};
+  });
+  await view.flush();
+  assert.match(textOf(view.tree),/Cloud status unavailable/);
+  assert.match(textOf(view.tree),/Could not check the cloud runtime/);
+  assert.doesNotMatch(textOf(view.tree),/Cloud runtime not connected|Connect your database/);
+  button(view.tree,'Retry status check').props.onClick();
+  await view.flush();
+  assert.match(textOf(view.tree),/Cloud API connected · worker not ready/);
+  assert.doesNotMatch(textOf(view.tree),/Could not check the cloud runtime/);
+  view.unmount();
+});
+
+test('connection-settings request failures do not mark a healthy runtime disconnected',async()=>{
+  const view=panel(async url=>url==='/api/connections'?Promise.reject(Error('Settings service offline')):{ok:true,json:async()=>({connected:true,worker:true,database:true})});
+  await view.flush();
+  assert.match(textOf(view.tree),/Cloud workspace connected/);
+  assert.doesNotMatch(textOf(view.tree),/Cloud runtime not connected|Could not check the cloud runtime/);
+  assert.equal(find(view.tree,node=>node.props?.role==='alert'),undefined);
+  view.unmount();
+});

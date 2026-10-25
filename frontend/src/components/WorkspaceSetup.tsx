@@ -8,6 +8,7 @@ export function WorkspaceSetup({ onClose }: { onClose: () => void }) {
   const dialog = useRef<HTMLDialogElement>(null);
   const [detail, setDetail] = useState<Runtime>({});
   const [status, setStatus] = useState('checking');
+  const [statusError, setStatusError] = useState('');
   const [error, setError] = useState('');
   const [omnirouteManageUrl, setOmnirouteManageUrl] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -16,16 +17,16 @@ export function WorkspaceSetup({ onClose }: { onClose: () => void }) {
   const requestStatus = detail.checks?.check_request?.status;
   const pending = submitting || requestStatus === 'pending' || requestStatus === 'running' || detail.model_connections?.some(item => item.state === 'checking');
   async function check() {
+    setStatusError('');
+    void fetch('/api/connections', { cache: 'no-store' }).then(response => response.json()).then((settings: ConnectionSettings) => { setOmnirouteManageUrl(settings.models?.manageUrl || ''); }).catch(() => {});
     try {
-      const [response, connectionResponse] = await Promise.all([
-        fetch('/api/runtime', { cache: 'no-store' }),
-        fetch('/api/connections', { cache: 'no-store' }),
-      ]);
+      const response = await fetch('/api/runtime', { cache: 'no-store' });
+      if (!response.ok) throw new Error('Runtime check failed.');
       const data = await response.json();
-      const settings = await connectionResponse.json().catch((): ConnectionSettings => ({}));
-      setDetail(data); setOmnirouteManageUrl(settings.models?.manageUrl || ''); setStatus(data.connected ? 'connected' : 'disconnected');
+      if (!data || typeof data !== 'object') throw new Error('Runtime check returned invalid data.');
+      setDetail(data); setStatus(data.connected ? 'connected' : 'disconnected'); setError('');
     }
-    catch { setStatus('disconnected'); }
+    catch { setStatus('error'); setStatusError('Could not check the cloud runtime. Refresh to try again.'); }
   }
   async function runChecks() {
     setSubmitting(true); setError('');
@@ -52,12 +53,14 @@ export function WorkspaceSetup({ onClose }: { onClose: () => void }) {
   useEffect(() => { const previous = document.activeElement as HTMLElement; dialog.current?.showModal(); void check(); return () => { dialog.current?.close(); previous?.focus(); }; }, []);
   useEffect(() => { const timer = setInterval(() => void check(), pending ? 3000 : 5000); return () => clearInterval(timer); }, [pending]);
   const workerUpdating = detail.worker_version_matches === false;
+  const hasRuntimeStatus = Object.keys(detail).length > 0;
   const modelPassed = detail.checks?.model?.status === 'passed';
   const modelFailed = detail.checks?.model?.status === 'failed';
   return <dialog ref={dialog} className="bot-dialog setup-dialog" aria-labelledby="setup-title" onCancel={onClose}>
     <h2 id="setup-title">Your cloud workspace</h2><p className="dialog-intro">One setup. Then work from any device.</p>
     <div className="agent-form"><div className="agent-form-fields">
-      <div className="connection-state" data-state={status}><span className="connection-dot"/><div><strong>{status === 'checking' ? 'Checking connection…' : detail.connected ? detail.worker ? 'Cloud workspace connected' : 'Cloud API connected · worker not ready' : 'Cloud runtime not connected'}</strong><p>{detail.connected ? 'Database and worker readiness are separate from model and tool access.' : 'Agents need a reachable hosted runtime before they can work.'}</p></div></div>
+      <div className="connection-state" data-state={status}><span className="connection-dot"/><div><strong>{status === 'checking' ? 'Checking connection…' : status === 'error' ? 'Cloud status unavailable' : detail.connected ? detail.worker ? 'Cloud workspace connected' : 'Cloud API connected · worker not ready' : 'Cloud runtime not connected'}</strong><p>{status === 'error' ? hasRuntimeStatus ? 'Showing the last successful runtime check. Its status may be out of date.' : 'The setup details are hidden until Cypher can check the runtime.' : detail.connected ? 'Database and worker readiness are separate from model and tool access.' : 'Agents need a reachable hosted runtime before they can work.'}</p></div></div>
+      {statusError ? <p role="alert" className="form-error">{statusError} <button type="button" className="btn-secondary" onClick={() => void check()}>Retry status check</button></p> : null}
       {detail.model_transport !== 'omniroute' ? <section className="provider-setup" aria-labelledby="gemini-setup-title">
         <h3 id="gemini-setup-title">Connect Gemini</h3>
         <p>Add your Gemini API key in Model access below. We verify it with a short model request and use it directly for Gemini calls.</p>
@@ -71,11 +74,11 @@ export function WorkspaceSetup({ onClose }: { onClose: () => void }) {
         </div>
         <p className="provider-test-cost">Testing sends one short request to Gemini and may use your provider quota.</p>
       </section> : null}
-      <ol className="setup-steps">
+      {status !== 'error' || hasRuntimeStatus ? <ol className="setup-steps">
         <li><strong>{detail.database ? 'Database connected' : 'Connect your database'}</strong><p>Agent history stays in a separate PostgreSQL schema.</p></li>
         <li><strong>{modelPassed ? 'Model response verified' : detail.model_configured ? 'Model connection configured' : 'Enable model access'}</strong><p>{detail.model_transport === 'omniroute' ? modelFailed ? 'The OmniRoute check failed. Your saved tasks remain available; verify the connection again to see its current state.' : 'Model requests use your existing OmniRoute connection. Provider account limits still apply.' : modelFailed ? 'The last model check failed. Check the configured provider connection, then verify again.' : 'Model requests use your configured provider connection.'}</p></li>
         <li><strong>{detail.worker ? 'Cloud worker responding' : workerUpdating ? 'Cloud worker updating' : 'Cloud worker not ready'}</strong><p>{workerUpdating ? 'The worker is still on an earlier release. This status updates automatically when the current release starts.' : 'A running cloud worker continues queued tasks when this page closes or your laptop is off.'}</p></li>
-      </ol>
+      </ol> : null}
       {detail.can_manage_model_connections ? <ModelConnections items={(detail.model_connections || []).filter(item => detail.model_transport === 'omniroute' || item.id === 'gemini' || item.id === 'xai')} canManage workerReady={!!detail.worker} onQueued={check} omniroute={detail.model_transport === 'omniroute'} manageUrl={omnirouteManageUrl}/> : null}
       <details className="advanced-settings"><summary>Live check results</summary><p className="field-help">Run checks makes small model requests, reads public documentation, opens a test page, and starts then stops a test computer. It can use provider credits and cloud compute.</p><ul className="setup-steps">{Object.entries(CHECK_LABELS).map(([name, label]) => { const result = detail.checks?.[name]; return <li key={name}><strong>{label}: {result?.status || 'Not checked'}</strong>{result?.checked_at ? <p>Last checked {new Date(result.checked_at).toLocaleString()}</p> : null}{result?.detail?.message ? <p>{result.detail.message}</p> : null}</li>; })}</ul></details>
       <details className="advanced-settings"><summary>Host in your AWS account</summary><p className="field-help">Sign in to AWS and create a private workspace you own. The template provisions one EC2 host, an encrypted 60 GB disk, PostgreSQL, Redis, HTTPS, and an owner login. AWS bills these resources to your account.</p><ol className="setup-steps"><li><strong>Prepare your account</strong><p>Choose a domain you control. Save your OpenAI API key as an SSM SecureString named /grokbot/openai-api-key in the AWS region you will use.</p></li><li><strong>Review and launch</strong><p>Download the template. In CloudFormation choose Create stack → Upload a template file. Select your VPC and public subnet, enter your domain, review the resources and IAM permissions, then create the stack.</p></li><li><strong>Open your private workspace</strong><p>Point your domain to the HostAddress stack output. Sign in as owner using the password in the LoginPasswordParameter SSM SecureString. Credentials stay in your AWS account. Stack creation waits for the API and database to respond.</p></li></ol><a className="setup-doc-link" href="/setup/aws-workspace.json" download>Download AWS template</a><a className="setup-doc-link" href="https://console.aws.amazon.com/cloudformation/home#/stacks/create/template" target="_blank" rel="noreferrer">Sign in to AWS and create workspace</a><p className="field-help">This is a single-host deployment. Configure backups before relying on it. Creating a stack is the approval step; downloading this template creates no resources.</p></details>
