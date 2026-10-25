@@ -2,6 +2,7 @@
 import { LoadingState } from './LoadingState';
 import { useEffect, useRef, useState } from 'react';
 import { api, request } from '../lib/api';
+import { dateFromApi } from '../lib/dates';
 import { Bot, Conversation } from '../lib/types';
 import { GlassSelect } from './GlassSelect';
 
@@ -17,7 +18,7 @@ const resourceLabels:Record<WorkspaceResource,string>={knowledge:'saved knowledg
 function loadFailureMessage(failed:WorkspaceResource[]){return failed.length?`Couldn’t load ${failed.map(resource=>resourceLabels[resource]).join(', ')}. Retry to check again.`:'';}
 export interface WorkspacePreferences { hidden_bots?:string[]; pinned_bots?:string[]; bot_sections?:Record<string,string[]>; notifications?:boolean; weekly_token_limit?:number|null; tool_approval?:'never'|'writes'|'always' }
 const tabs:Tab[]=['Agents','Memory','Skills','Routines','Activity','Usage'];
-function date(value?:string){return value?new Date(value.endsWith('Z')?value:value+'Z').toLocaleString():'—';}
+function date(value?:string){return dateFromApi(value)?.toLocaleString()||'—';}
 function downloadTemplate(data:unknown){const url=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'}));const a=document.createElement('a');a.href=url;a.download='grokbot-agent.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
 
 export function WorkspaceHub({bots,rooms,ensureRoom,onRefresh,onOpenWorkspace,onClose,initialTab='Memory'}:{initialTab?:Tab;bots:Bot[];rooms:Conversation[];ensureRoom:()=>Promise<Conversation>;onRefresh:()=>Promise<void>;onOpenWorkspace:(id:string)=>void;onClose:()=>void}){

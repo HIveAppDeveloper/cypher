@@ -25,6 +25,7 @@ test('partial Activity load failures stay visible until retry succeeds',async()=
     './LoadingState':{LoadingState:'loading-state'},
     './GlassSelect':{GlassSelect:'select'},
     '../lib/api':{api:{},request},
+    '../lib/dates':load('../src/lib/dates.ts'),
   },{...env.globals,React:view.react.default,setInterval:()=>1,clearInterval(){}});
   view.mount(()=>WorkspaceHub({bots:[],rooms:[],ensureRoom:async()=>({id:'room-a'}),onRefresh:async()=>{},onOpenWorkspace(){},onClose(){},initialTab:'Activity'}));
   await view.flush();
@@ -73,6 +74,7 @@ test('settings recovery hydrates the current sidebar section and an untouched de
     './LoadingState':{LoadingState:'loading-state'},
     './GlassSelect':{GlassSelect:'select'},
     '../lib/api':{api:{updateBot:async()=>{updates++;},deleteBot:async()=>{}},request},
+    '../lib/dates':load('../src/lib/dates.ts'),
   },{...env.globals,React:view.react.default,setInterval:()=>1,clearInterval(){}});
   const bots=[{id:'bot-a',name:'Researcher',role:'Research assistant',description:'Synthetic agent',systemPrompt:'Synthetic instructions'}];
   view.mount(()=>WorkspaceHub({bots,rooms:[],ensureRoom:async()=>({id:'room-a'}),onRefresh:async()=>{},onOpenWorkspace(){},onClose(){},initialTab:'Agents'}));
@@ -118,6 +120,7 @@ test('an explicit sidebar section edit updates only the selected agent assignmen
     './LoadingState':{LoadingState:'loading-state'},
     './GlassSelect':{GlassSelect:'select'},
     '../lib/api':{api:{updateBot:async()=>{},deleteBot:async()=>{}},request},
+    '../lib/dates':load('../src/lib/dates.ts'),
   },{...env.globals,React:view.react.default,setInterval:()=>1,clearInterval(){}});
   const bots=[{id:'bot-a',name:'Researcher',role:'Research assistant',description:'Synthetic agent',systemPrompt:'Synthetic instructions'}];
   view.mount(()=>WorkspaceHub({bots,rooms:[],ensureRoom:async()=>({id:'room-a'}),onRefresh:async()=>{},onOpenWorkspace(){},onClose(){},initialTab:'Agents'}));

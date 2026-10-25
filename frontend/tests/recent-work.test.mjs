@@ -9,12 +9,13 @@ test('recent work lists the latest runs and opens the selected conversation', as
     title: `Task ${index}`,
     status: index === 1 ? 'completed' : 'pending',
     conversation_id: `conversation-${index}`,
-    created_at: index === 1 ? '2026-10-23T12:01:00+00:00' : `2026-10-23T12:0${index}:00`,
+    created_at: index === 1 ? '2026-10-23T12:01:00+0000' : `2026-10-23T12:0${index}:00`,
   }));
   const { RecentWork } = load('../src/components/cipher/RecentWork.tsx', {
     react: view.react,
     '../LoadingState': { LoadingState: 'loading-state' },
     '../../lib/api': { request: async path => { assert.equal(path, '/workspace/runs'); return runs; } },
+    '../../lib/dates': load('../src/lib/dates.ts'),
     './RecentWork.module.css': {},
   }, { ...env.globals, React: view.react.default });
 

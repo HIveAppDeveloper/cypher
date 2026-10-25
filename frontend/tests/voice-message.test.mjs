@@ -7,7 +7,7 @@ function renderMessage(attachments, content = placeholder) {
   const env = environment(), view = renderer(env);
   const react = {...view.react, lazy: () => 'markdown', Suspense: 'suspense'};
   const {MessageBubble} = load('../src/components/MessageBubble.tsx', {
-    react, './BotAvatar': {BotAvatar: 'avatar'},
+    react, './BotAvatar': {BotAvatar: 'avatar'}, '../lib/dates': load('../src/lib/dates.ts'),
   }, {...env.globals, React: react.default});
   const message = {id: 'voice', content, senderType: 'user', createdAt: '2026-10-24T19:28:00Z', attachments};
   view.mount(() => MessageBubble({message}));
