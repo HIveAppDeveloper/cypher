@@ -1,9 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
-import { stripTypeScriptTypes } from 'node:module';
-const source=stripTypeScriptTypes(readFileSync(new URL('../src/lib/plugin-status.ts',import.meta.url),'utf8'));
-const {pluginStatus,isAccountPlugin}=await import('data:text/javascript;base64,'+Buffer.from(source).toString('base64'));
+import { load } from './support/component-harness.mjs';
+const {pluginStatus,isAccountPlugin}=load('../src/lib/plugin-status.ts',{}, {Date});
 const now = Date.parse('2026-10-24T20:00:00Z');
 const base = {url:'https://service.example/mcp',enabled:true,tools:[{enabled:true}]};
 test('a saved connection and successful discovery do not claim execution passed',()=>{
