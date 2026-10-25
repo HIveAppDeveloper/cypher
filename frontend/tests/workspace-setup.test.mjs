@@ -14,16 +14,23 @@ test('runtime probe failures stay unknown and retry without claiming the cloud i
   const view=panel(async url=>{
     if(url==='/api/connections')throw Error('Settings service offline');
     if(++runtimeCalls===1)throw Error('Runtime service offline');
-    return {ok:true,json:async()=>({connected:true,worker:false,database:true,model_configured:true})};
+    if(runtimeCalls===2)return {ok:true,json:async()=>({connected:true,worker:false,database:true,model_configured:true})};
+    return {ok:true,json:async()=>({connected:true,worker:false,database:true,model_configured:true,model_transport:'direct'})};
   });
   await view.flush();
   assert.match(textOf(view.tree),/Cloud status unavailable/);
   assert.match(textOf(view.tree),/Could not check the cloud runtime/);
-  assert.doesNotMatch(textOf(view.tree),/Cloud runtime not connected|Connect your database/);
-  button(view.tree,'Retry status check').props.onClick();
+  assert.doesNotMatch(textOf(view.tree),/Cloud runtime not connected|Connect your database|Connect Gemini|Test Gemini connection|Get a Gemini API key/);
+  button(view.tree,'Refresh').props.onClick();
   await view.flush();
   assert.match(textOf(view.tree),/Cloud API connected · worker not ready/);
   assert.doesNotMatch(textOf(view.tree),/Could not check the cloud runtime/);
+  assert.match(textOf(view.tree),/Model route not confirmed/);
+  assert.doesNotMatch(textOf(view.tree),/Connect Gemini|Test Gemini connection|Get a Gemini API key/);
+  button(view.tree,'Refresh').props.onClick();
+  await view.flush();
+  assert.match(textOf(view.tree),/Connect Gemini/);
+  assert.match(textOf(view.tree),/Test Gemini connection/);
   view.unmount();
 });
 

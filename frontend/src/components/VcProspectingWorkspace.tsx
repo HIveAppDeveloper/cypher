@@ -61,6 +61,7 @@ export default function VcProspectingWorkspace({ accountId }: { accountId?: stri
   const [thesis, setThesis] = useState('Source recent SEC Form D issuer filings across industries for venture investor research. Treat filing-named people as related persons; label someone as a founder only when a filing explicitly says founder or co-founder. Do not contact anyone or add personal contact details.');
   const [industries, setIndustries] = useState('');
   const [loading, setLoading] = useState(true);
+  const [initialLoadFailed, setInitialLoadFailed] = useState(false);
   const [searching, setSearching] = useState(false);
   const [starting, setStarting] = useState(false);
   const [startingHistory, setStartingHistory] = useState(false);
@@ -123,8 +124,8 @@ export default function VcProspectingWorkspace({ accountId }: { accountId?: stri
     setLoading(true); setError('');
     try {
       const [next] = await Promise.all([loadFounders(0), loadRuns()]);
-      setData(next);
-    } catch (failure) { setError(errorMessage(failure)); }
+      setData(next); setInitialLoadFailed(false);
+    } catch (failure) { setError(errorMessage(failure)); if (!data) setInitialLoadFailed(true); }
     finally { setLoading(false); }
   }
 
@@ -135,8 +136,8 @@ export default function VcProspectingWorkspace({ accountId }: { accountId?: stri
     Promise.all([
       request(`/prospecting/investors/founders?${params.toString()}`, { signal: controller.signal }) as Promise<FounderPage>,
       loadRuns(controller.signal),
-    ]).then(([next]) => { if (!controller.signal.aborted) setData(next); })
-      .catch(failure => { if (!controller.signal.aborted) setError(errorMessage(failure)); })
+    ]).then(([next]) => { if (!controller.signal.aborted) { setData(next); setInitialLoadFailed(false); } })
+      .catch(failure => { if (!controller.signal.aborted) { setError(errorMessage(failure)); setInitialLoadFailed(true); } })
       .finally(() => { if (!controller.signal.aborted) setLoading(false); });
     return () => controller.abort();
   }, [loadRuns]); // Initial load only; searches are submitted explicitly.
@@ -262,7 +263,7 @@ export default function VcProspectingWorkspace({ accountId }: { accountId?: stri
   const toggleShortlist = (item: Founder) => setShortlistItems(rows => rows.some(row => row.id === item.id) ? rows.filter(row => row.id !== item.id) : [item, ...rows]);
   const currentDraftReady = !!outreach;
   const runStatus = !run ? 'No match yet' : activeRun ? 'Researching' : run.status === 'completed' ? 'Ready to review' : run.status === 'partial' ? 'Some results ready' : run.status === 'failed' ? 'Needs another try' : 'Stopped';
-  const initialDataFailure = !data && !loading && !!error;
+  const initialDataFailure = !data && !loading && initialLoadFailed;
   const dataStatus = loading ? 'Checking public data…' : initialDataFailure ? 'Could not load SEC data' : data?.database.snapshot_ready ? 'Public data connected' : 'Ready to find public data';
 
   return <WorkflowShell section="investors"><main className="vc-page">
@@ -278,7 +279,7 @@ export default function VcProspectingWorkspace({ accountId }: { accountId?: stri
       </button>)}
     </nav>
 
-    {error ? <div className="vc-alert" role="alert"><span aria-hidden="true">!</span><div><strong>We couldn’t finish that step.</strong><p>{error}</p>{/sign in again/i.test(error) ? <a href={`/login?returnTo=${encodeURIComponent('/prospecting/investors')}`}>Sign in</a> : null}{initialDataFailure ? <button type="button" onClick={() => void retryWorkspaceLoad()}>Retry</button> : null}<button type="button" onClick={() => setError('')}>Dismiss</button></div></div> : null}
+    {error || initialDataFailure ? <div className="vc-alert" role="alert"><span aria-hidden="true">!</span><div><strong>{initialDataFailure ? 'SEC public data could not load.' : 'We couldn’t finish that step.'}</strong>{error ? <p>{error}</p> : initialDataFailure ? <p>The public data request failed. Retry to check the filing records again.</p> : null}{/sign in again/i.test(error) ? <a href={`/login?returnTo=${encodeURIComponent('/prospecting/investors')}`}>Sign in</a> : null}{initialDataFailure ? <button type="button" onClick={() => void retryWorkspaceLoad()}>Retry</button> : null}{error ? <button type="button" onClick={() => setError('')}>Dismiss</button> : null}</div></div> : null}
     {notice ? <div className="vc-notice" role="status"><VcIcon kind="check"/>{notice}</div> : null}
 
     <section className="vc-data-settings">

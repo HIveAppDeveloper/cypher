@@ -356,6 +356,8 @@ button:disabled { opacity: .5; cursor: not-allowed; }
 .hub-tabs button{white-space:nowrap;padding:.6rem .8rem;border:0;background:transparent;border-radius:.5rem;color:inherit}
 .hub-tabs button[aria-pressed=true]{background:var(--surface-secondary,#e8e8e8);font-weight:600}
 .hub-body{overflow:auto;max-height:66dvh;padding:1rem 1.5rem 1.5rem;overscroll-behavior:contain}
+.hub-load-error{display:flex;align-items:center;justify-content:space-between;gap:.75rem;margin:0 0 1rem;padding:.7rem .8rem;border:1px solid var(--border,#ddd);border-radius:.625rem;background:var(--surface-secondary,#f7f7f7);color:var(--text,#222);font-size:.9rem;line-height:1.5}.hub-load-error span{flex:1}.hub-load-error button{flex:0 0 auto;white-space:nowrap}
+.hub-resource-error,.hub-empty{margin:.6rem 0;color:var(--text-secondary,#666);font-size:.9rem;line-height:1.55}.hub-resource-error[role=alert]{color:#a22039}
 .hub-form{display:grid;gap:.75rem;margin-top:1.5rem;max-width:650px}.hub-form label,.hub-share label,.hub-teach label{display:grid;gap:.4rem}
 .hub-form input,.hub-form textarea,.hub-share input{box-sizing:border-box;width:100%;padding:.65rem;border:1px solid var(--border,#ccc);border-radius:.5rem;background:var(--surface,#fff);color:inherit;font:inherit}
 .hub-form textarea{resize:vertical}.hub-list{display:grid;gap:.8rem;margin-top:1rem}.hub-list article{padding:1rem;border:1px solid var(--border,#ddd);border-radius:.75rem;overflow-wrap:anywhere}
