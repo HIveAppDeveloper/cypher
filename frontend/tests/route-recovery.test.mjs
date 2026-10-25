@@ -31,3 +31,19 @@ test('unauthenticated investor page return preserves the subpage and query param
     }
   );
 });
+
+test('legacy Cipher route keeps saved conversation links when it redirects to the workspace', async () => {
+  const { default: CipherPage } = load('../src/app/cipher/page.tsx', {
+    'next/navigation': { redirect: location => { throw new RedirectSignal(location); } },
+    '../../lib/canonical-app': load('../src/lib/canonical-app.ts', {}, { URL, URLSearchParams }),
+  });
+
+  await assert.rejects(
+    CipherPage({ searchParams: Promise.resolve({ conversation: 'saved-thread', view: 'work' }) }),
+    error => {
+      assert.ok(error instanceof RedirectSignal);
+      assert.equal(error.location, '/?conversation=saved-thread&view=work');
+      return true;
+    }
+  );
+});
