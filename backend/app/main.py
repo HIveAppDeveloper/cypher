@@ -45,8 +45,10 @@ async def lifespan(app: FastAPI):
         except Exception as e:
             logger.warning(f"Docker sandbox unavailable: {e}")
 
-    from app.services.worker import run_worker
-    worker = asyncio.create_task(run_worker()) if settings.RUN_EMBEDDED_WORKER else None
+    worker = None
+    if settings.RUN_EMBEDDED_WORKER:
+        from app.services.worker import run_worker
+        worker = asyncio.create_task(run_worker())
     from app.services.atlas_admission import run_admission_janitor
     admission_janitor = asyncio.create_task(run_admission_janitor()) if settings.GROKBOT_ATLAS_ENGINE_ENABLED and settings.GROKBOT_ATLAS_ENGINE_ADMISSION == "postgres" else None
     try:
