@@ -94,10 +94,15 @@ test('resending keeps the inbox confirmation visible while the request is pendin
   assert.match(find(pending, node => node.type === 'strong').props.children.join(''), /Check your inbox/);
   assert.ok(button(pending, 'Sending new link…'));
   assert.equal(button(pending, 'Sending new link…').props.disabled, true);
+  const changeEmail = button(pending, 'Use a different email');
+  assert.equal(changeEmail.props.disabled, true);
+  changeEmail.props.onClick();
+  assert.match(find(app.render(), node => node.type === 'strong').props.children.join(''), /Check your inbox/);
   resolveResend({ ok: true, json: async () => ({ sent: true }) });
   await flush();
   assert.match(find(app.render(), node => node.type === 'strong').props.children.join(''), /Check your inbox/);
   assert.equal(button(app.render(), 'Resend link').props.disabled, true);
+  assert.equal(button(app.render(), 'Use a different email').props.disabled, false);
 });
 
 test('a failed resend keeps the earlier inbox confirmation and allows recovery', async () => {

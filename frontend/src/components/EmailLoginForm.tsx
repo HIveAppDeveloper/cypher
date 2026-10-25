@@ -41,7 +41,7 @@ export function EmailLoginForm({ returnTo }: { returnTo?: string }) {
     {state === 'sent' ? <div className="email-login-sent" role="status">
       <strong>Check your inbox</strong>
       <p>A sign-in link was sent to <b>{email.trim()}</b>. Open it to continue. Check spam if it hasn’t arrived.</p>
-      <button type="button" className="login-skip" onClick={() => { setState('idle'); setError(''); }}>Use a different email</button>
+      <button type="button" className="login-skip" disabled={resending} onClick={() => { if (busy.current) return; setState('idle'); setError(''); }}>Use a different email</button>
       <p className="email-login-resend-note">For your security, sign-in links can be requested once a minute.</p>
       <button type="button" className="btn-secondary" disabled={!resendAvailable || resending} onClick={() => void requestLink(true)}>
         {resending ? 'Sending new link…' : 'Resend link'}

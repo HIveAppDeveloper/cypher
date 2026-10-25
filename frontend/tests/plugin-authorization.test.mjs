@@ -63,6 +63,26 @@ test('offline app errors stay focused on each section instead of repeating a sum
   p.view.unmount();
 });
 
+test('offline status does not hide an individual tool test failure',async()=>{
+  const p=panel({runtimeConnected:false,api:{getPlugins:async()=>[{id:'linked-account',name:item.name,url:item.url,enabled:true,authenticated:true,tools:[]}],testPlugin:async()=>{throw Error('Synthetic tool access denied');}}});
+  await p.view.flush();
+  button(p.view.tree,'Manage').props.onClick();
+  await p.view.flush();
+  button(p.view.tree,'Test tools').props.onClick();
+  await p.view.flush();
+  const alert=find(p.view.tree,node=>node.props?.role==='alert'&&textOf(node).includes('Synthetic tool access denied'));
+  assert.ok(alert,'an action failure must stay visible while the runtime is disconnected');
+  p.view.unmount();
+});
+
+test('connected runtime keeps the summary recovery notice when connections cannot load',async()=>{
+  const p=panel({runtimeConnected:true,api:{getPlugins:async()=>{throw Error('Synthetic failure');}}});
+  await p.view.flush();
+  assert.match(textOf(p.view.tree),/Some connections could not load/);
+  assert.ok(button(p.view.tree,'Refresh connections'));
+  p.view.unmount();
+});
+
 test('embedded app management opens the saved connection without reauthorizing or claiming a tool test',async()=>{
   let authorizations=0;
   const p=panel({embedded:true,api:{getPlugins:async()=>[{id:'linked-account',name:item.name,url:item.url,enabled:true,authenticated:true,tools:[{name:'read_source',description:'Read a source',enabled:true}]}],authorizePlugin:async()=>{authorizations++;throw Error('Management must not start authorization');}}});
