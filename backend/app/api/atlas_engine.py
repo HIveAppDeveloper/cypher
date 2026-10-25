@@ -22,7 +22,6 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_valida
 
 from app.config import settings
 from app.db.tenancy import current_tenant_id
-from app.services.llm_gateway import LLMGateway, model_selection
 from app.services.model_routing import ModelConfigurationError, ModelCapabilityError
 from app.services.atlas_admission import AdmissionDenied, AdmissionUnavailable, DurableAdmission, local_admission_allowed
 from app.db.session import AsyncSessionLocal, engine as database_engine
@@ -239,6 +238,7 @@ async def events(body: ChatInput, deadline: float | None = None):
     model = settings.GROKBOT_ATLAS_ENGINE_MODEL
     source = None
     try:
+        from app.services.llm_gateway import LLMGateway
         loop = asyncio.get_running_loop()
         deadline = loop.time() + body.timeoutMs / 1000 if deadline is None else deadline
         if loop.time() >= deadline:
@@ -343,6 +343,7 @@ async def chat(request: Request):
     if len(key.encode()) < 32 or provider not in {"gemini", "openai", "anthropic", "deepseek"} or not model:
         return failure(503, "engine_not_configured", "The Atlas inference integration is not configured.")
     try:
+        from app.services.llm_gateway import model_selection
         model_selection(model, provider)
         if settings.GROKBOT_ATLAS_ENGINE_TRANSPORT == "omniroute":
             from app.services import omniroute
