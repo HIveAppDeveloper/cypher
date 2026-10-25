@@ -24,5 +24,5 @@ export default async function ProspectingPage(
     const returnTo = internalPathWithSearch('/prospecting', searchParams);
     redirect(`/login?returnTo=${encodeURIComponent(returnTo)}`);
   }
-  return <ProspectingWorkspace/>;
+  return <ProspectingWorkspace accountId={session?.sub}/>;
 }
