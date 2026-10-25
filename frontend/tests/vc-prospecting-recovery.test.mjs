@@ -50,6 +50,17 @@ test('dismissing an initial SEC load error keeps retry and unavailable status un
   view.mount(()=>Workspace({}));
   await view.flush();
   assert.match(textOf(view.tree),/Could not load SEC data/);
+  assert.match(textOf(view.tree),/Coverage unavailable/);
+  assert.match(textOf(view.tree),/Candidates \(—\)/);
+  assert.match(textOf(view.tree),/Filing record counts unavailable/);
+  assert.doesNotMatch(textOf(view.tree),/0 people and company records|0 people found/);
+  const totals=find(view.tree,node=>node.props?.className==='vc-stats');
+  assert.ok(totals);
+  for(const metric of totals.props.children.slice(0,2)) {
+    const value=find(metric,node=>node.type==='strong');
+    assert.equal(textOf(value),'—');
+    assert.equal(value.props['aria-label'],'Unavailable');
+  }
   assert.ok(button(view.tree,'Retry'));
 
   button(view.tree,'Dismiss').props.onClick();
@@ -63,5 +74,9 @@ test('dismissing an initial SEC load error keeps retry and unavailable status un
   assert.equal(founderCalls,2);
   assert.match(textOf(view.tree),/Ready to find public data/);
   assert.doesNotMatch(textOf(view.tree),/Could not load SEC data/);
+  assert.match(textOf(view.tree),/0 people and company records/);
+  assert.match(textOf(view.tree),/Candidates \(0\)/);
+  assert.match(textOf(view.tree),/0 people found · showing 0/);
+  assert.doesNotMatch(textOf(view.tree),/Coverage unavailable|Filing record counts unavailable/);
   view.unmount();
 });
