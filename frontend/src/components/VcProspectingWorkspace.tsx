@@ -266,6 +266,8 @@ export default function VcProspectingWorkspace({ accountId }: { accountId?: stri
   const runStatus = !run ? 'No match yet' : activeRun ? 'Researching' : run.status === 'completed' ? 'Ready to review' : run.status === 'partial' ? 'Some results ready' : run.status === 'failed' ? 'Needs another try' : 'Stopped';
   const initialDataFailure = !data && !loading && initialLoadFailed;
   const dataStatus = loading ? 'Checking public data…' : initialDataFailure ? 'Could not load SEC data' : data?.database.snapshot_ready ? 'Public data connected' : 'Ready to find public data';
+  const secCount = (value: number | undefined) => loading || initialDataFailure ? '—' : (value ?? 0).toLocaleString();
+  const secMetricLabel = loading ? 'Loading' : initialDataFailure ? 'Unavailable' : undefined;
 
   return <WorkflowShell section="investors"><main className="vc-page">
     <header className="vc-titlebar">
@@ -285,10 +287,10 @@ export default function VcProspectingWorkspace({ accountId }: { accountId?: stri
 
     <section className="vc-data-settings">
       <details>
-        <summary><span className="vc-source-dot" />SEC public data and coverage <small>{loading ? 'Checking data…' : (data?.database.records ?? 0).toLocaleString() + ' people and company records'}</small><span className="vc-summary-chevron"><VcIcon kind="chevron"/></span></summary>
+        <summary><span className="vc-source-dot" />SEC public data and coverage <small>{loading ? 'Checking data…' : initialDataFailure ? 'Coverage unavailable' : `${secCount(data?.database.records)} people and company records`}</small><span className="vc-summary-chevron"><VcIcon kind="chevron"/></span></summary>
         <div className="vc-data-settings-body">
           <p>Cypher uses public SEC Form D filings. A person is labeled a founder only when the filing explicitly says founder or co-founder.</p>
-          <div className="vc-data-facts"><span><b>{(data?.database.explicit_founder_signals ?? 0).toLocaleString()}</b> filed founder signals</span><span><b>{data?.database.quarter_count ?? 0}</b> SEC quarters indexed</span><span>Last updated <b>{dateLabel(data?.database.snapshot_built_at)}</b></span></div>
+          <div className="vc-data-facts"><span><b aria-label={secMetricLabel}>{secCount(data?.database.explicit_founder_signals)}</b> filed founder signals</span><span><b aria-label={secMetricLabel}>{secCount(data?.database.quarter_count)}</b> SEC quarters indexed</span><span>Last updated <b>{loading ? 'Checking…' : initialDataFailure ? 'Unavailable' : dateLabel(data?.database.snapshot_built_at)}</b></span></div>
           {data?.database.historical.status === 'running' || data?.database.historical.status === 'pending' ? <p className="vc-history-progress">{data.database.historical.processed_quarters.toLocaleString()} of {data.database.historical.total_quarters.toLocaleString()} historical quarters indexed{data.database.historical.current_quarter ? ' · working on ' + data.database.historical.current_quarter.toUpperCase() : ''}</p> : null}
           {data?.database.historical.status === 'failed' ? <p className="vc-inline-error">The archive import paused. You can safely resume it.</p> : null}
           <div className="vc-data-actions">
@@ -320,8 +322,8 @@ export default function VcProspectingWorkspace({ accountId }: { accountId?: stri
 
         {workspaceStep === 'research' ? <>
           <div className="vc-stats" aria-label="Research totals">
-            <div><strong>{loading ? '—' : (data?.database.records ?? 0).toLocaleString()}</strong><span>People in SEC index</span></div>
-            <div><strong>{loading ? '—' : (data?.database.explicit_founder_signals ?? 0).toLocaleString()}</strong><span>Filed founder signals</span></div>
+            <div><strong aria-label={secMetricLabel}>{secCount(data?.database.records)}</strong><span>People in SEC index</span></div>
+            <div><strong aria-label={secMetricLabel}>{secCount(data?.database.explicit_founder_signals)}</strong><span>Filed founder signals</span></div>
             <div><strong>{run?.results?.length ?? 0}</strong><span>Company matches</span></div>
             <div><strong>{shortlistItems.length}</strong><span>Shortlisted</span></div>
           </div>
@@ -336,7 +338,7 @@ export default function VcProspectingWorkspace({ accountId }: { accountId?: stri
           </form>
         </> : null}
 
-        <div className="vc-table-head"><h3>{savedListView ? 'Saved candidates' : 'Candidates (' + (data?.database.matched_records ?? 0).toLocaleString() + ')'}</h3><span>Source-backed records</span></div>
+        <div className="vc-table-head"><h3>{savedListView ? 'Saved candidates' : `Candidates (${secCount(data?.database.matched_records)})`}</h3><span>Source-backed records</span></div>
         <div className="vc-table-wrap">
           <table className="vc-candidate-table">
             <thead><tr><th scope="col">Company</th><th scope="col">Founder or related person</th><th scope="col">Filed role</th><th scope="col">Evidence</th></tr></thead>
@@ -353,7 +355,7 @@ export default function VcProspectingWorkspace({ accountId }: { accountId?: stri
             </tbody>
           </table>
         </div>
-        {workspaceStep === 'research' ? <footer className="vc-pagination"><span>{(data?.database.matched_records ?? 0).toLocaleString()} people found · showing {data?.page.returned ?? 0}</span><div><button type="button" onClick={() => void loadFounders(Math.max(0, offset - 25)).catch(failure => setError(errorMessage(failure)))} disabled={offset === 0 || searching}>Previous</button><button type="button" onClick={() => void loadFounders(offset + 25).catch(failure => setError(errorMessage(failure)))} disabled={!data || offset + data.page.returned >= data.database.matched_records || searching}>Next</button></div></footer> : null}
+        {workspaceStep === 'research' ? <footer className="vc-pagination"><span>{loading ? 'Checking filing records…' : initialDataFailure ? 'Filing record counts unavailable' : `${(data?.database.matched_records ?? 0).toLocaleString()} people found · showing ${data?.page.returned ?? 0}`}</span><div><button type="button" onClick={() => void loadFounders(Math.max(0, offset - 25)).catch(failure => setError(errorMessage(failure)))} disabled={offset === 0 || searching}>Previous</button><button type="button" onClick={() => void loadFounders(offset + 25).catch(failure => setError(errorMessage(failure)))} disabled={!data || offset + data.page.returned >= data.database.matched_records || searching}>Next</button></div></footer> : null}
         <p className="vc-disclosure">A filing may name executives or other related people. Cypher only uses the founder label when the SEC filing explicitly says founder or co-founder.</p>
       </section>
 
