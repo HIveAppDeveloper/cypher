@@ -258,7 +258,7 @@ export default function VcProspectingWorkspace({ accountId }: { accountId?: stri
   ] as const;
   const savedListView = workspaceStep === 'shortlist';
   const visibleFounders = workspaceStep === 'shortlist' ? shortlistItems : (data?.items || []);
-  const selectedFounder = [...(data?.items || []), ...shortlistItems].find(item => item.id === selectedFounderId) || visibleFounders[0] || null;
+  const selectedFounder = visibleFounders.find(item => item.id === selectedFounderId) || visibleFounders[0] || null;
   const isShortlisted = (id: string) => shortlistItems.some(item => item.id === id);
   const toggleShortlist = (item: Founder) => setShortlistItems(rows => rows.some(row => row.id === item.id) ? rows.filter(row => row.id !== item.id) : [item, ...rows]);
   const currentDraftReady = !!outreach;
