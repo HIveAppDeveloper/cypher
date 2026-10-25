@@ -9,7 +9,7 @@ test('recent work lists the latest runs and opens the selected conversation', as
     title: `Task ${index}`,
     status: index === 1 ? 'completed' : 'pending',
     conversation_id: `conversation-${index}`,
-    created_at: `2026-10-23T12:0${index}:00`,
+    created_at: index === 1 ? '2026-10-23T12:01:00+00:00' : `2026-10-23T12:0${index}:00`,
   }));
   const { RecentWork } = load('../src/components/cipher/RecentWork.tsx', {
     react: view.react,
@@ -31,6 +31,7 @@ test('recent work lists the latest runs and opens the selected conversation', as
   collect(view.tree);
   assert.equal(rows.length, 3);
   assert.equal(textOf(rows[0]).includes('Task 1'), true);
+  assert.match(textOf(rows[0]), /Just now/);
   rows[0].props.onClick();
   assert.deepEqual(opened, ['conversation-1']);
 });
