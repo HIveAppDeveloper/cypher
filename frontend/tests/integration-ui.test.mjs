@@ -4,19 +4,25 @@ import { environment, renderer, load, find, textOf, button } from './support/com
 
 test('inline Apps loading and error recovery stay in the workspace without a modal', () => {
   const env=environment(),view=renderer(env);let closed=0;
-  class Component { constructor(props){this.props=props;} }
-  const react={...view.react,Component,Suspense:'suspense'};
+  class Component {
+    constructor(props){this.props=props;}
+    setState(update){this.state={...this.state,...(typeof update==='function'?update(this.state,this.props):update)};}
+  }
+  const react={...view.react,Component,Suspense:'suspense',createContext:value=>({Provider:'context-provider',_currentValue:value}),useContext:context=>context._currentValue,useMemo:create=>create(),lazy:loader=>({loader})};
   const {PanelBoundary,InlinePanelNotice}=load('../src/components/PanelBoundary.tsx',{react,'./LoadingState':{LoadingState:'loading-state'}},{...env.globals,React:view.react.default});
   const boundary=new PanelBoundary({inline:true,title:'Apps',onClose:()=>closed++,children:'Loaded apps'});
-  let notice=boundary.render().props.fallback;
+  let notice=boundary.render().props.children[0].props.fallback;
   assert.equal(notice.type,InlinePanelNotice);
   view.mount(()=>notice.type(notice.props));
   assert.equal(view.tree.type,'section');
   assert.equal(find(view.tree,node=>node.type==='dialog'),undefined);
   assert.equal(find(view.tree,node=>node.type==='loading-state').props.label,'Opening apps…');
   button(view.tree,'Close').props.onClick();assert.equal(closed,1);
-  boundary.state={failed:true};notice=boundary.render();view.rerender();
+  boundary.state={failed:true,retryVersion:0};notice=boundary.render();view.rerender();
   assert.match(textOf(find(view.tree,node=>node.props?.role==='alert')),/couldn’t load/);
+  button(view.tree,'Try again').props.onClick();
+  assert.equal(boundary.state.failed,false);
+  assert.equal(boundary.state.retryVersion,1);
   view.unmount();
 });
 
