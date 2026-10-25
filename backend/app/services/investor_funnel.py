@@ -911,7 +911,7 @@ def prepare_outreach(run, result):
             "before_sending": ["Verify the recipient and current investment or fundraising focus.", "Replace bracketed details with accurate information.", "Review the cited SEC record and remove any claim you cannot substantiate."],
             "sources": result.get("sources", []),
         },
-        "sending": "This is a draft. Cypher does not send messages from this workflow. Review it, supply a verified recipient address, and use an explicitly requested connected email action if available.",
+        "sending": "This is a draft. Confirm the recipient’s work email, review the email, then choose Create Gmail draft when you’re ready. Cypher won’t send it.",
     }
 
 

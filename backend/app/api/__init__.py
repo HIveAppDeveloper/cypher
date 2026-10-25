@@ -49,3 +49,6 @@ from .prospecting import router as prospecting_router
 router.include_router(prospecting_router, prefix='/prospecting', tags=['prospecting'])
 from .investor_funnel import router as investor_funnel_router
 router.include_router(investor_funnel_router, prefix='/prospecting/investors', tags=['investor-matching'])
+
+from .sourcing_outreach import router as sourcing_outreach_router
+router.include_router(sourcing_outreach_router, prefix='/sourcing/outreach', tags=['sourcing-outreach'])
