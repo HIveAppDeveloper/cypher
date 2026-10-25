@@ -342,16 +342,6 @@ async def chat(request: Request):
     provider, model = settings.GROKBOT_ATLAS_ENGINE_PROVIDER, settings.GROKBOT_ATLAS_ENGINE_MODEL
     if len(key.encode()) < 32 or provider not in {"gemini", "openai", "anthropic", "deepseek"} or not model:
         return failure(503, "engine_not_configured", "The Atlas inference integration is not configured.")
-    try:
-        from app.services.llm_gateway import model_selection
-        model_selection(model, provider)
-        if settings.GROKBOT_ATLAS_ENGINE_TRANSPORT == "omniroute":
-            from app.services import omniroute
-            if not omniroute.enabled():
-                raise ModelConfigurationError("The pinned cloud transport is unavailable.")
-            omniroute.endpoint()
-    except ModelConfigurationError:
-        return failure(503, "engine_not_configured", "The Atlas inference route is not configured.")
     if request.headers.get("content-type", "").split(";", 1)[0].strip().lower() != "application/json" or request.headers.get("content-encoding"):
         return failure(415, "invalid_content_type", "Use an uncompressed JSON request.")
     if signature_time(request.headers.get("x-atlas-engine-timestamp"), request.headers.get("x-atlas-engine-signature")) is None:
@@ -387,6 +377,17 @@ async def chat(request: Request):
     recipient = "omniroute" if settings.GROKBOT_ATLAS_ENGINE_TRANSPORT == "omniroute" else provider
     if body.recipient != recipient:
         return failure(409, "recipient_mismatch", "The configured inference recipient does not match the request.")
+    # Reject unauthenticated or invalid requests before loading inference code.
+    try:
+        from app.services.llm_gateway import model_selection
+        model_selection(model, provider)
+        if settings.GROKBOT_ATLAS_ENGINE_TRANSPORT == "omniroute":
+            from app.services import omniroute
+            if not omniroute.enabled():
+                raise ModelConfigurationError("The pinned cloud transport is unavailable.")
+            omniroute.endpoint()
+    except ModelConfigurationError:
+        return failure(503, "engine_not_configured", "The Atlas inference route is not configured.")
     # Count admission/queue time and any process pause against the original
     # inference budget. A delayed worker must not start under an expired lease.
     inference_deadline = asyncio.get_running_loop().time() + body.timeoutMs / 1000
