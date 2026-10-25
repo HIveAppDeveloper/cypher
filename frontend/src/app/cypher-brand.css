@@ -169,6 +169,8 @@ body :is(.app-layout,.login-page,dialog) a {color:var(--cx-label);text-decoratio
 .sidebar-shell .roster-empty button {color:var(--cx-label);text-decoration:underline;text-underline-offset:3px}
 .login-skip,.login-page .login-card a {color:var(--cx-label)}
 .login-email-sent {background:var(--cx-bg);border-color:var(--cx-sep)}
+.email-login-resend-note {margin:18px 0 8px;color:var(--cx-label-2);font-size:12px;line-height:1.5}
+.email-login-sent .btn-secondary:disabled {opacity:.55;cursor:wait}
 @media(max-width:760px) {
   .quickstart {padding:72px 20px 28px;justify-content:flex-start}.quickstart-panel {padding:0}.quickstart .quickstart-mark {width:min(280px,90%);margin-bottom:20px}
   .quickstart h1 {font-size:40px}
