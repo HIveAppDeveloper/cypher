@@ -277,6 +277,63 @@ test('failed conversation opening reconnects once and preserves the draft throug
   view.unmount();
 });
 
+test('an expired agent-opening session returns to the selected agent and preserves its draft', async () => {
+  const env = environment(storage({ 'grokbot-draft-synthetic-agent': 'Keep this agent draft' }));
+  const view = chat(env, {
+    conversationForBot: async () => { throw new ApiError('Synthetic expired session', 401); },
+    syncConversation: async () => { assert.fail('sync must not start without an opened conversation'); },
+  });
+  await view.flush();
+
+  const signIn = find(view.tree, node => node.type === 'a' && textOf(node) === 'Sign in');
+  assert.equal(signIn?.props.href, '/login?returnTo=%2F%3Fbot%3Dsynthetic-agent');
+  assert.equal(field(view.tree, 'message').props.value, 'Keep this agent draft');
+  assert.match(textOf(find(view.tree, node => node.props?.className === 'sync-status')), /session expired/i);
+  view.unmount();
+});
+
+test('an expired sync session links back to the same conversation and preserves the draft', async () => {
+  const env = environment(storage({ 'grokbot-draft-synthetic-agent': 'Keep this draft through sign in' }));
+  const view = chat(env, {
+    conversationForBot: async () => 'synthetic-conversation',
+    syncConversation: async () => { throw new ApiError('Synthetic expired session', 401); },
+  });
+  await view.flush();
+
+  const status = find(view.tree, node => node.props?.className === 'sync-status');
+  const signIn = find(view.tree, node => node.type === 'a' && textOf(node) === 'Sign in');
+  assert.match(textOf(status), /Your session expired/);
+  assert.equal(signIn?.props.href, '/login?returnTo=%2F%3Fconversation%3Dsynthetic-conversation');
+  assert.equal(field(view.tree, 'message').props.value, 'Keep this draft through sign in');
+  assert.equal(button(view.tree, 'Reconnect'), undefined, 'expired sessions offer sign in instead of a retry loop');
+  view.unmount();
+});
+
+test('a send-time 401 restores the message in the composer and returns to its conversation', async () => {
+  const env = environment(); env.globals.crypto = { randomUUID: () => 'synthetic-message-id' }; let sends = 0;
+  const draft = 'Keep my message after the session expires';
+  const view = chat(env, {
+    conversationForBot: async () => 'synthetic-conversation',
+    syncConversation: async () => ({ messages: [message], tasks: [] }),
+    sendMessage: async () => { sends++; throw new ApiError('Synthetic expired session', 401); },
+  });
+  await view.flush();
+  field(view.tree, 'message').props.onChange({ target: { value: draft }, currentTarget: { style: {}, scrollHeight: 24 } });
+  await view.flush();
+
+  find(view.tree, node => node.type === 'button' && node.props?.['aria-label'] === 'Send message').props.onClick();
+  await view.flush();
+
+  const failed = find(view.tree, node => node.type === 'message-bubble' && node.props?.message.content === draft);
+  const signIn = find(view.tree, node => node.type === 'a' && textOf(node) === 'Sign in');
+  assert.equal(sends, 1);
+  assert.equal(failed?.props.message.delivery, 'failed');
+  assert.equal(field(view.tree, 'message').props.value, draft);
+  assert.equal(signIn?.props.href, '/login?returnTo=%2F%3Fconversation%3Dsynthetic-conversation');
+  assert.match(textOf(find(view.tree, node => node.props?.className === 'sync-status')), /your message is kept in the composer/i);
+  view.unmount();
+});
+
 test('online recovery after sync failure runs immediately and coalesces while a request is pending', async () => {
   const env = environment(), recovered = deferred(); let syncs = 0;
   const view = chat(env, { conversationForBot: async () => 'synthetic-conversation', syncConversation: () => {

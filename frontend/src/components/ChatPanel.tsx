@@ -140,7 +140,8 @@ export function ChatPanel({ bot, room, bots, onCreateBot, onCreateRoom, onQuickS
   const followLatest = useRef(true);
   const roomMembers = room?.is_group ? bots.filter(member=>room.bot_ids.includes(member.id)) : [];
   const title = room?.title === 'Agent lounge' ? 'Your team' : room?.title || bot?.name || 'Workspace';
-  const signInReturnTo = conversationId ? `/?conversation=${encodeURIComponent(conversationId)}` : '/';
+  const returnConversationId = conversationId || room?.id;
+  const signInReturnTo = returnConversationId ? `/?conversation=${encodeURIComponent(returnConversationId)}` : bot ? `/?bot=${encodeURIComponent(bot.id)}` : '/';
   const signInHref = `/login?returnTo=${encodeURIComponent(signInReturnTo)}`;
   function showExpiredSession(message = 'Your session expired. Sign in again to reconnect.') {
     setSessionExpired(true);

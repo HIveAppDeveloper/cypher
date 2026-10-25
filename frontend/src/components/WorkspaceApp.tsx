@@ -32,6 +32,7 @@ export default function WorkspaceApp({ accountEmail, accountId }: { accountEmail
   const [rooms, setRooms] = useState<Conversation[]>([]);
   const [roomsLoading, setRoomsLoading] = useState(true);
   const navigated = useRef(false);
+  const restoredBotFromReturn = useRef(false);
   const [selectedRoom, setSelectedRoom] = useState<Conversation | null>(null);
   const [voiceMode, setVoiceMode] = useState(false);
   const [voiceStream, setVoiceStream] = useState<MediaStream | null>(null);
@@ -70,6 +71,22 @@ export default function WorkspaceApp({ accountEmail, accountId }: { accountEmail
     else if (params.get('view') === 'saved') { setHubTab('Memory'); setCreator('hub'); }
     else if (params.get('view') === 'settings') setCreator('setup');
   }, []);
+  useEffect(() => {
+    if (botsLoading || restoredBotFromReturn.current) return;
+    const botId = new URLSearchParams(window.location.search).get('bot');
+    if (!botId) return;
+    const requestedBot = bots.find(bot => bot.id === botId);
+    if (!requestedBot) {
+      if (!error) {
+        restoredBotFromReturn.current = true;
+        setRoomError('The agent from your sign-in link could not be found. Choose an agent from the sidebar.');
+      }
+      return;
+    }
+    restoredBotFromReturn.current = true;
+    setSelectedRoom(null);
+    setSelectedBot(requestedBot);
+  }, [bots, botsLoading, error]);
   function openApps() { navigated.current = true; stopVoice(); setCreator('plugins'); }
   function openHome() { navigated.current = true; stopVoice(); setCreator(null); setSelectedRoom(null); setSelectedBot(null); }
   const activeView = creator === 'plugins' ? 'apps' : creator === 'hub' ? (hubTab === 'Activity' ? 'work' : 'saved') : creator === 'setup' || creator === 'preferences' ? 'settings' : !selectedBot && !selectedRoom ? 'home' : 'conversation';
