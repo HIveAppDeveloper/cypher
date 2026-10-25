@@ -41,7 +41,7 @@
 .google-direct-connection>summary {min-height:44px;padding:12px 0;color:var(--cx-label-2);font-size:13px;cursor:pointer}
 .google-direct-connection[open]>summary {margin-bottom:16px;color:var(--cx-label)}
 
-.google-privacy-page {padding:28px clamp(22px,5vw,72px) 56px}
+.google-privacy-page {height:100dvh;overflow:auto;padding:28px clamp(22px,5vw,72px) 56px}
 .google-privacy-topbar {width:min(100%,1200px);min-height:48px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:20px}
 .google-privacy-top-link {display:inline-flex;align-items:center;min-height:44px;color:var(--cx-label-2);font-size:13px;text-decoration:none;text-underline-offset:4px}
 .google-privacy-top-link:hover {color:var(--cx-label);text-decoration:underline}
