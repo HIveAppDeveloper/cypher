@@ -13,9 +13,12 @@ export const metadata = {
   icons: { icon: '/cypher-mark.svg', apple: '/cypher-mark.svg' },
 };
 
-export default function WorkspacePage({ searchParams }: { searchParams?: Record<string, string | string[] | undefined> }) {
+export default async function WorkspacePage(
+  props: { searchParams?: Promise<Record<string, string | string[] | undefined>> }
+) {
+  const searchParams = await props.searchParams;
   let session: AppSession | null = null;
-  try { session = readSignedPayload<AppSession>(cookies().get('grokbot_session')?.value); } catch { session = null; }
+  try { session = readSignedPayload<AppSession>((await cookies()).get('grokbot_session')?.value); } catch { session = null; }
   if (process.env.REQUIRE_USER_AUTH === 'true' && !session) {
     const returnTo = internalPathWithSearch('/workspace', searchParams);
     redirect(`/login?returnTo=${encodeURIComponent(returnTo)}`);
