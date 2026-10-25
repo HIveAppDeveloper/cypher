@@ -13,9 +13,9 @@ export const metadata: Metadata = {
   icons: { icon: '/cipher-logo.png', apple: '/cipher-logo.png' },
 };
 
-export default function VcProspectingPage() {
+export default async function VcProspectingPage() {
   let session: AppSession | null = null;
-  try { session = readSignedPayload<AppSession>(cookies().get('grokbot_session')?.value); } catch { session = null; }
+  try { session = readSignedPayload<AppSession>((await cookies()).get('grokbot_session')?.value); } catch { session = null; }
   if (process.env.REQUIRE_USER_AUTH === 'true' && !session) redirect('/login');
   return <VcProspectingWorkspace accountId={session?.sub} />;
 }

@@ -39,8 +39,8 @@ function getElevenLabsApiKey() {
   return process.env.ELEVENLABS_API_KEY?.trim() || process.env.ELEVEN_LABS_API_KEY?.trim() || '';
 }
 
-function hasAppSession() {
-  try { return !!readSignedPayload<AppSession>(cookies().get('grokbot_session')?.value); }
+async function hasAppSession() {
+  try { return !!readSignedPayload<AppSession>((await cookies()).get('grokbot_session')?.value); }
   catch { return false; }
 }
 
@@ -52,7 +52,7 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  if (process.env.REQUIRE_USER_AUTH === 'true' && !hasAppSession()) {
+  if (process.env.REQUIRE_USER_AUTH === 'true' && !(await hasAppSession())) {
     return NextResponse.json({ detail: 'Sign in to use Cypher voice.' }, { status: 401, headers: { 'Cache-Control': 'no-store' } });
   }
 

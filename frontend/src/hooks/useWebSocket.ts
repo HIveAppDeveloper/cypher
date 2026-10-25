@@ -7,7 +7,7 @@ export function useWebSocket(conversationId?: string) {
   const [isConnected, setIsConnected] = useState(false);
   const [lastMessage, setLastMessage] = useState<WebSocketMessage | null>(null);
   const ws = useRef<WebSocket | null>(null);
-  const reconnectTimeout = useRef<NodeJS.Timeout>();
+  const reconnectTimeout = useRef<NodeJS.Timeout | undefined>(undefined);
   
   const connect = useCallback(() => {
     if (!conversationId) return;

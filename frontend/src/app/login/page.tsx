@@ -9,11 +9,12 @@ import CypherEntrance from '../../components/cipher/CypherEntrance';
 
 export const dynamic = 'force-dynamic';
 
-export default function LoginPage({ searchParams }: { searchParams?: { error?: string; returnTo?: string } }) {
+export default async function LoginPage(props: { searchParams?: Promise<{ error?: string; returnTo?: string }> }) {
+  const searchParams = await props.searchParams;
   let session: AppSession | null = null;
-  try { session = readSignedPayload<AppSession>(cookies().get('grokbot_session')?.value); } catch { session = null; }
+  try { session = readSignedPayload<AppSession>((await cookies()).get('grokbot_session')?.value); } catch { session = null; }
   const returnTo = safeInternalReturnTo(searchParams?.returnTo);
-  const host = requestHostname(headers());
+  const host = requestHostname(await headers());
   const local = host === 'localhost' || host === '127.0.0.1';
   const origin = local ? process.env.GROKBOT_PUBLIC_URL || 'http://localhost:3000' : CANONICAL_APP_ORIGIN;
   if (!local && isOffCanonicalHost(host)) {

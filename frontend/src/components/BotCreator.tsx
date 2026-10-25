@@ -5,7 +5,7 @@ import { ModelControls, ModelValue } from './ModelControls';
 import { AGENT_PRESETS, MODEL_CHOICES } from '../lib/presets';
 export function BotCreator({ onClose, onCreate }: { onClose: () => void; onCreate: (bot: Partial<Bot>, clientRequestId: string) => Promise<Bot> }) {
   const dialog = useRef<HTMLDialogElement>(null);
-  const requestId = useRef<string>();
+  const requestId = useRef<string | undefined>(undefined);
   const customization = useRef<HTMLDetailsElement>(null);
   const instructionsField = useRef<HTMLTextAreaElement>(null);
   const inFlight = useRef(false);

@@ -14,9 +14,12 @@ export const metadata: Metadata = {
 };
 
 // Keep the agent workspace as the default Cypher experience.
-export default function Page({ searchParams }: { searchParams?: Record<string, string | string[] | undefined> }) {
+export default async function Page(
+  props: { searchParams?: Promise<Record<string, string | string[] | undefined>> }
+) {
+  const searchParams = await props.searchParams;
   let session: AppSession | null = null;
-  try { session = readSignedPayload<AppSession>(cookies().get('grokbot_session')?.value); } catch { session = null; }
+  try { session = readSignedPayload<AppSession>((await cookies()).get('grokbot_session')?.value); } catch { session = null; }
   if (process.env.REQUIRE_USER_AUTH === 'true' && !session) {
     const returnTo = internalPathWithSearch('/', searchParams);
     redirect(`/login?returnTo=${encodeURIComponent(returnTo)}`);

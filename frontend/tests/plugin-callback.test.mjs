@@ -12,7 +12,7 @@ function req(query,returnTo='/?workspace=1&conversation=123',binding=true){retur
 test('authorization proxy keeps the browser binding private and saves a same-origin return',async()=>{
   const proxy=route('../src/app/api/[...path]/route.ts',async()=>Response.json({status:'awaiting_login',flow_id:id,name:'Fixture',binding:'browser-binding',authorization_url:'https://provider.example/allow'}));
   const request=new next.NextRequest(origin+'/api/plugins/authorize',{method:'POST',body:'{}',headers:{referer:origin+'/?workspace=1&conversation=123'}});
-  const response=await proxy.POST(request,{params:{path:['plugins','authorize']}});
+  const response=await proxy.POST(request,{params:Promise.resolve({path:['plugins','authorize']})});
   assert.equal((await response.json()).binding,undefined);assert.equal(response.cookies.get('grokbot-oauth-'+id).value,'browser-binding');assert.equal(response.cookies.get('grokbot-oauth-return-'+id).value,'/?workspace=1&conversation=123');assert.match(response.headers.get('set-cookie'),/HttpOnly/);
 });
 test('a successful Allow returns to the original conversation without provider codes',async()=>{
