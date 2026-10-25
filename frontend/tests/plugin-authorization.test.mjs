@@ -133,7 +133,7 @@ test('restoring the callback conversation does not dismiss its plugin result pan
   imports['./PanelBoundary']={PanelBoundary:'panel-boundary'};
   imports['./cipher/CypherEntrance']={__esModule:true,default:'CypherEntrance'};
   const {default:WorkspaceApp}=load('../src/components/WorkspaceApp.tsx',{react:{...view.react,lazy:loader=>{const component={};loader().then(module=>{component.resolved=module.default;});return component;}},...imports},{...env.globals,URLSearchParams,setInterval:()=>1,clearInterval(){}});
-  view.mount(()=>WorkspaceApp({}));await view.flush();assert.ok(find(view.tree,n=>n.type?.resolved==='PluginPanel'),'callback result remains visible after conversation restoration');view.unmount();
+  view.mount(()=>WorkspaceApp({}));await view.flush();assert.ok(find(view.tree,n=>n.props?.embedded===true),'callback result remains visible after conversation restoration');view.unmount();
 });
 
 test('provider registration errors open an actionable OAuth form without claiming connection',async()=>{
