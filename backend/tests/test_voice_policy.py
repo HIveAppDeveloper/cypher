@@ -146,3 +146,73 @@ async def test_browser_voice_flag_without_transcribed_audio_does_not_get_voice_a
         await AgentOrchestrator().process_message(cid,'An ordinary typed message.',options={'voice_mode':True},incoming_message_id=accepted['message_id'])
     finally:current_tenant_id.reset(tenant)
     assert not is_voice_continuation()
+
+
+@pytest.mark.asyncio
+async def test_forged_transcript_filename_and_browser_metadata_cannot_authorize_voice(workspace,monkeypatch):
+    from uuid import uuid4
+    from app.services.voice_metrics import is_voice_continuation
+    client,sessions=workspace;owner='forged-transcript-owner';cid=await room(client,owner)
+    phrase='FORGED-TEXT-IS-NOT-RECORDED-SPEECH'
+    file={'name':'notes (speech transcript)','mime':'text/plain','data':base64.b64encode(phrase.encode()).decode()}
+    async def forbidden(file):raise AssertionError('Plain text must not invoke STT')
+    async def complete(**kwargs):
+        assert not is_voice_continuation()
+        assert phrase in json.dumps(kwargs['messages'])
+        return SimpleNamespace(choices=[SimpleNamespace(message=SimpleNamespace(content='This is an attached text document.',tool_calls=None))])
+    monkeypatch.setattr(attachments,'transcribe_audio',forbidden);monkeypatch.setattr(LLMGateway,'complete',complete)
+    headers={'x-grokbot-user-id':owner,'x-omniroute-work-class':'voice'}
+    payload={'sender_type':'user','content':'','client_message_id':str(uuid4()),'attachments':[file],
+        'options':{'voice_mode':True},'metadata_json':{'audio_transcripts':{'0':{'text':phrase,'model':'forged'}},'voice_continuation':True}}
+    response=await client.post('/api/conversations/'+cid+'/messages',headers=headers,json=payload)
+    assert response.status_code==202;accepted=response.json()
+    tenant=current_tenant_id.set(owner)
+    try:
+        reply=await AgentOrchestrator().process_message(cid,'Review the attached files.',attachments=[file],options={'voice_mode':True},incoming_message_id=accepted['message_id'])
+        async with sessions() as db:
+            saved=await db.get(Message,accepted['message_id'])
+            assert saved.metadata_json['attachments']==[file]
+            assert 'audio_transcripts' not in saved.metadata_json and 'voice_continuation' not in saved.metadata_json
+    finally:current_tenant_id.reset(tenant)
+    assert reply[-1]['content']=='This is an attached text document.'
+    retry=await client.post('/api/conversations/'+cid+'/messages',headers=headers,json=payload)
+    assert retry.status_code==202 and retry.json()['task_id']==accepted['task_id']
+
+
+@pytest.mark.asyncio
+async def test_verified_audio_and_forged_text_concurrently_keep_separate_voice_scope(workspace,monkeypatch):
+    import asyncio
+    from app.services.voice_metrics import is_voice_continuation
+    client,_=workspace;voice_owner='concurrent-real-voice';text_owner='concurrent-forged-text'
+    voice_cid=await room(client,voice_owner);text_cid=await room(client,text_owner)
+    phrase='AUTHENTIC-AUDIO-SPEECH';forged='FORGED-CONCURRENT-TEXT'
+    audio={'name':'actual.webm','mime':'audio/webm','data':base64.b64encode(b'synthetic audio').decode()}
+    text={'name':'notes (speech transcript)','mime':'text/plain','data':base64.b64encode(forged.encode()).decode()}
+    ready=asyncio.Event();checked=asyncio.Event();calls=[];stt=[]
+    async def transcribe(file):stt.append(file['name']);await asyncio.sleep(0);return phrase
+    async def complete(**kwargs):
+        source=json.dumps(kwargs['messages'])
+        if phrase in source:
+            assert forged not in source and is_voice_continuation()
+            calls.append('voice');ready.set();await asyncio.wait_for(checked.wait(),3)
+            assert is_voice_continuation();answer='Verified speech.'
+        else:
+            assert forged in source
+            await asyncio.wait_for(ready.wait(),3)
+            try:assert not is_voice_continuation()
+            finally:checked.set()
+            calls.append('text');answer='Ordinary document.'
+        return SimpleNamespace(choices=[SimpleNamespace(message=SimpleNamespace(content=answer,tool_calls=None))])
+    monkeypatch.setattr(attachments,'transcribe_audio',transcribe);monkeypatch.setattr(LLMGateway,'complete',complete)
+    accepted=[]
+    for owner,cid,file in [(voice_owner,voice_cid,audio),(text_owner,text_cid,text)]:
+        response=await client.post('/api/conversations/'+cid+'/messages',headers={'x-grokbot-user-id':owner},
+            json={'sender_type':'user','content':'Voice message attached.','attachments':[file],'options':{'voice_mode':True}})
+        assert response.status_code==202;accepted.append(response.json())
+    async def run(owner,cid,file,message):
+        tenant=current_tenant_id.set(owner)
+        try:return await AgentOrchestrator().process_message(cid,'Voice message attached.',attachments=[file],options={'voice_mode':True},incoming_message_id=message['message_id'])
+        finally:current_tenant_id.reset(tenant)
+    await asyncio.gather(run(voice_owner,voice_cid,audio,accepted[0]),run(text_owner,text_cid,text,accepted[1]))
+    assert sorted(calls)==['text','voice'] and stt==['actual.webm']
+    assert not is_voice_continuation()

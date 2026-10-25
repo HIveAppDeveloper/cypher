@@ -1,5 +1,4 @@
 """Voice-turn defaults; typed requests and explicit model selection stay intact."""
-import base64
 import re
 
 VOICE_INSTRUCTIONS = (
@@ -19,8 +18,8 @@ def voice_options(options):
     })
 
 def speech_request(prepared):
-    return '\n'.join(base64.b64decode(file['data']).decode('utf-8') for file in prepared
-                     if file['mime'] == 'text/plain' and file['name'].endswith(' (speech transcript)')).strip()
+    from app.services.attachments import PreparedAttachments
+    return prepared.speech_text if isinstance(prepared, PreparedAttachments) else ''
 
 def requests_teammates(message, bots, lead):
     # Preserve explicit named/unique-role participation and the normal bounded

@@ -103,7 +103,11 @@ async def test_saved_webm_classification_and_transcript_are_cached_without_rewri
             pass
     first = await attachments.prepare_audio(DB(), message, [saved_webm])
     second = await attachments.prepare_audio(DB(), message, [saved_webm])
+    from app.services.voice_policy import speech_request
     assert first == second and calls == ['/audio/transcriptions']
+    assert speech_request(first) == speech_request(second) == 'A verifiable saved recording.'
+    assert speech_request(list(second)) == ''  # Copies of provider files carry no authority.
+    assert all(set(file) == {'name','mime','data'} for file in second)
     assert message.metadata_json['attachments'] == [source]
     assert message.metadata_json['attachment_mime_overrides'] == {'0': source['mime'].replace('video/', 'audio/')}
 

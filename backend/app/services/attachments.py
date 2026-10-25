@@ -6,6 +6,21 @@ from app.services.model_routing import ModelCapabilityError
 from app.services.voice_metrics import stage, timed
 
 
+class PreparedAttachments(list):
+    """Provider-compatible files with process-local speech provenance.
+
+    JSON uploads cannot create this provenance. Only the successful audio or
+    server-owned transcript-cache branch records speech; file names are data.
+    """
+    def __init__(self):
+        super().__init__()
+        self._speech_transcripts = []
+
+    @property
+    def speech_text(self):
+        return '\n'.join(self._speech_transcripts).strip()
+
+
 def attachment_mime(metadata, index, file):
     """Expose only a verified audio correction, preserving the original upload."""
     audio = {'video/webm': 'audio/webm', 'video/mp4': 'audio/mp4',
@@ -55,7 +70,7 @@ async def prepare_audio(db, message, files):
     """Only the attachment sets included in this task reach a transcription model."""
     metadata = dict(message.metadata_json or {})
     cached = dict(metadata.get('audio_transcripts') or {})
-    prepared = []
+    prepared = PreparedAttachments()
     normalized = []
     overrides = dict(metadata.get('attachment_mime_overrides') or {})
     for index, original in enumerate(files):
@@ -99,4 +114,5 @@ async def prepare_audio(db, message, files):
             message.metadata_json = dict(metadata)
             await db.commit()
         prepared.append({'name': file['name']+' (speech transcript)', 'mime': 'text/plain', 'data': base64.b64encode(cached[key]['text'].encode()).decode()})
+        prepared._speech_transcripts.append(cached[key]['text'])
     return prepared
