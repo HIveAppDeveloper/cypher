@@ -63,6 +63,51 @@ test('ghost shapes are hidden from assistive technology and have one descriptive
   assert.ok(find(node,item=>item.props?.['aria-hidden']==='true'));
 });
 
+function prospecting(request) {
+  const env=environment(),view=renderer(env);
+  env.globals.fetch=async()=>({json:async()=>({configured:true})});
+  const {default:Workspace}=load('../src/components/ProspectingWorkspace.tsx',{
+    react:view.react,
+    '../lib/api':{request},
+    '../lib/company-website':{companyWebsite:value=>value},
+    '../lib/cypher-voice':{CYPHER_VOICE_INTRO:'Synthetic introduction'},
+    './cipher/BinaryLens':{__esModule:true,default:'binary-lens'},
+    './cipher/CypherMark':{__esModule:true,default:'cypher-mark'},
+    './WorkflowShell':{__esModule:true,default:'workflow-shell'},
+    './prospecting-workspace.css':{},
+  },{...env.globals,React:view.react.default});
+  view.mount(()=>Workspace());
+  return view;
+}
+
+test('prospecting keeps the empty state hidden until saved research finishes loading',async()=>{
+  const history=deferred();
+  const view=prospecting(path=>path==='/prospecting/runs'?history.promise:Promise.resolve({akta_available:false}));
+  const loading=find(view.tree,node=>typeof node.type==='function'&&node.type.name==='ResearchLoading');
+  assert.equal(loading?.props.label,'Loading your saved research');
+  assert.equal(loading?.props.variant,'results');
+  assert.doesNotMatch(textOf(view.tree),/No research yet|No saved runs yet/);
+  history.resolve([]);await view.flush();
+  assert.match(textOf(view.tree),/No saved research yet/);
+  assert.match(textOf(view.tree),/No saved runs yet/);
+  view.unmount();
+});
+
+test('prospecting history errors offer retry without claiming the shortlist is empty',async()=>{
+  let calls=0;
+  const saved={id:'saved-run',market:'Synthetic market',product:'Synthetic offer',limit:20,status:'completed',results:[],events:[],gmail:{status:'connection_required'},limitations:[]};
+  const view=prospecting(path=>path==='/prospecting/runs'?++calls===1?Promise.reject(new Error('Offline')):Promise.resolve([saved]):Promise.resolve({akta_available:false}));
+  await view.flush();
+  assert.match(textOf(view.tree),/Saved research could not be loaded/);
+  assert.match(textOf(view.tree),/Saved research is unavailable/);
+  assert.doesNotMatch(textOf(view.tree),/No saved research yet|No saved runs yet/);
+  button(view.tree,'Retry').props.onClick();await view.flush();
+  assert.match(textOf(view.tree),/Synthetic market/);
+  assert.match(textOf(view.tree),/Recent research/);
+  assert.equal(calls,2);
+  view.unmount();
+});
+
 
 test('an explicit saved conversation link still opens the existing team after startup',async()=>{
   const {view,pending}=workspace('?conversation=synthetic-lounge');

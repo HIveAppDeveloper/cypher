@@ -52,6 +52,14 @@ const statusLabel = (status: string) => STATUS_LABELS[status] || status.replace(
 const errorText = (error: unknown) => error instanceof Error ? error.message : 'Something went wrong. Please try again.';
 const localTime = (value: string) => new Date(value).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
+function ResearchLoading({ label, variant }: { label: string; variant: 'results' | 'history' }) {
+  return <div className={`cx-research-skeleton cx-research-skeleton-${variant}`} role="status" aria-label={label} aria-busy="true">
+    {Array.from({ length: variant === 'results' ? 3 : 2 }, (_, index) => <span className="cx-research-skeleton-row" key={index} aria-hidden="true">
+      <i/><span><i/><i/></span><i/>
+    </span>)}
+  </div>;
+}
+
 export default function ProspectingWorkspace() {
   const [url, setUrl] = useState('');
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -63,6 +71,7 @@ export default function ProspectingWorkspace() {
   const [useAkta, setUseAkta] = useState(false);
   const [runs, setRuns] = useState<Run[]>([]);
   const [run, setRun] = useState<Run | null>(null);
+  const [historyLoading, setHistoryLoading] = useState(true);
   const [historyError, setHistoryError] = useState('');
   const [selected, setSelected] = useState('');
   const [pending, setPending] = useState('');
@@ -110,12 +119,15 @@ export default function ProspectingWorkspace() {
 
   useEffect(() => {
     const controller = new AbortController();
+    setHistoryLoading(true);
+    setHistoryError('');
     request('/prospecting/runs', { signal: controller.signal }).then((rows: Run[]) => {
-      setHistoryError('');
       setRuns(rows);
       setRun(current => current || rows[0] || null);
     }).catch(loadError => {
       if (!controller.signal.aborted) setHistoryError(errorText(loadError));
+    }).finally(() => {
+      if (!controller.signal.aborted) setHistoryLoading(false);
     });
     return () => { controller.abort(); operation.current?.abort(); };
   }, [retry]);
@@ -343,7 +355,7 @@ export default function ProspectingWorkspace() {
 
     <section className="cx-results-area" aria-label="Research results">
       <div className="cx-board">
-        <div className="cx-section-heading cx-results-heading"><div><h2>{run ? run.market : 'Your shortlist'}</h2><p className="cx-status" role="status">{run ? `${statusLabel(run.status)} · ${run.results.length} of up to ${run.limit} candidates` : 'No research yet'}</p></div>
+        <div className="cx-section-heading cx-results-heading"><div><h2>{run ? run.market : 'Your shortlist'}</h2><p className="cx-status" role="status">{run ? `${statusLabel(run.status)} · ${run.results.length} of up to ${run.limit} candidates` : historyLoading ? 'Loading saved research…' : historyError ? 'Saved research could not be loaded' : 'No saved research yet'}</p></div>
           {active && <button type="button" className="cx-secondary" disabled={!!pending || run?.status === 'cancel_requested'} onClick={() => void perform('cancel', async signal => {
             const next: Run = await request(`/prospecting/runs/${encodeURIComponent(run!.id)}/cancel`, { method: 'POST', signal });
             if (!signal.aborted) { setRun(next); setRuns(rows => [next, ...rows.filter(row => row.id !== next.id)]); setRetry(value => value + 1); }
@@ -352,7 +364,8 @@ export default function ProspectingWorkspace() {
         {pollError && <div role="alert" className="cx-error cx-poll-error">{pollError}<button type="button" className="cx-inline-button" disabled={!!pending} onClick={() => setRetry(value => value + 1)}>Retry status check</button></div>}
         {historyError && <div role="alert" className="cx-error cx-history-error"><span>{historyError}</span><div><button type="button" className="cx-inline-button" disabled={!!pending} onClick={() => setRetry(value => value + 1)}>Retry</button><a href={/sign in|session/i.test(historyError) ? '/login' : '/workspace'}>{/sign in|session/i.test(historyError) ? 'Sign in' : 'Workspace setup'}</a></div></div>}
         {run && <div className="cx-truth-note"><strong>Company candidates, not verified customers.</strong><span>Relevance uses text overlap. Demand, contacts, and competitor status need separate verification.</span></div>}
-        {!run ? <div className="cx-empty"><BinaryLens className="cx-empty-lens" cols={21} rows={9} label="Cypher lens"/><h3>A better shortlist starts with context.</h3><p>Enter your company website above, then edit the customer profile before research.</p></div> : null}
+        {!run && historyLoading && <div className="cx-empty cx-empty-loading"><h3>Loading your saved research…</h3><ResearchLoading label="Loading your saved research" variant="results"/></div>}
+        {!run && !historyLoading && !historyError && <div className="cx-empty"><BinaryLens className="cx-empty-lens" cols={21} rows={9} label="Cypher lens"/><h3>A better shortlist starts with context.</h3><p>Enter your company website above, then edit the customer profile before research.</p></div>}
         {run && !run.results.length && <div className="cx-empty cx-empty-compact"><div className={active ? 'cx-loading-pulse' : 'cx-empty-dot'} aria-hidden="true"/><h3>{active ? 'Checking public company descriptions…' : 'No qualifying company candidates.'}</h3><p>{active ? 'Verified results appear here as the backend saves them.' : 'Try a more specific customer market or adjust your offer. Public source coverage is limited.'}</p></div>}
         {!!run?.results.length && <>
           <div className="cx-result-list" role="list" aria-label="Company candidates">
@@ -378,7 +391,7 @@ export default function ProspectingWorkspace() {
           <time dateTime={entry.at}>{localTime(entry.at)}</time><div><strong>{EVENT_LABELS[entry.type] || entry.type.replace(/_/g, ' ')}</strong>{entry.count !== undefined && <small>{entry.count} {entry.source === 'Akta' ? 'company records' : 'public candidates'}</small>}{entry.credits_consumed !== undefined && entry.credits_consumed !== null && <small>{entry.credits_consumed} Akta credits used</small>}{entry.credits_unknown && <small>Akta may have consumed credits before this request failed.</small>}{entry.code && <small className="cx-event-code">{entry.code.replace(/_/g, ' ')}</small>}{entry.source_url && <a href={entry.source_url} target="_blank" rel="noopener noreferrer">{entry.source === 'Akta' ? 'Akta list generation docs' : 'Evidence source'}</a>}{entry.result_id && <small>Saved to this account</small>}</div>
         </li>) : <li className="cx-activity-empty"><span>{run ? 'No activity recorded yet.' : 'Research steps and source links will appear here.'}</span></li>}</ol>
         <div className="cx-provider-status"><h3>Outreach connections</h3><div><strong>Gmail</strong><span className={run?.gmail?.status === 'connection_saved' ? 'is-connected' : 'is-setup'}>{run?.gmail?.status === 'connection_saved' ? 'Connection saved · not verified' : run?.gmail?.status === 'connection_required' ? 'Needs setup' : 'Check workspace'}</span></div><p>{run?.gmail?.detail || 'Google sign-in alone does not grant mailbox access. Check the existing workspace connection before using Gmail.'}</p><div><strong>Resend</strong><span className="is-unavailable">Unavailable in this flow</span></div><p>Sending stays disabled. The app has no verified Resend sender or authorized outreach account.</p><a href="/workspace?plugins=1">Open workspace connections</a></div>
-        <div className="cx-history"><div className="cx-log-head"><h2 className="cx-label">Recent research</h2></div>{runs.length === 0 ? <p>No saved runs yet.</p> : runs.slice(0, 6).map(item => <button key={item.id} type="button" className={item.id === runId ? 'is-selected' : ''} disabled={!!pending} onClick={() => selectRun(item)} aria-pressed={item.id === runId}><strong>{item.market}</strong><span>{statusLabel(item.status)} · {item.results.length} candidates</span></button>)}</div>
+        <div className="cx-history"><div className="cx-log-head"><h2 className="cx-label">Recent research</h2></div>{historyLoading && runs.length === 0 ? <ResearchLoading label="Loading recent research" variant="history"/> : historyError && runs.length === 0 ? <p>Saved research is unavailable. Use Retry above to try again.</p> : runs.length === 0 ? <p>No saved runs yet.</p> : runs.slice(0, 6).map(item => <button key={item.id} type="button" className={item.id === runId ? 'is-selected' : ''} disabled={!!pending} onClick={() => selectRun(item)} aria-pressed={item.id === runId}><strong>{item.market}</strong><span>{statusLabel(item.status)} · {item.results.length} candidates</span></button>)}</div>
       </aside>
     </section>
     <footer className="cx-footer"><span>Research and drafts are saved to your workspace.</span><a href="/workspace">Open workspace</a></footer>
