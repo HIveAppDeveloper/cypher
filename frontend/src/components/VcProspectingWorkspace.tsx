@@ -240,12 +240,26 @@ export default function VcProspectingWorkspace({ accountId }: { accountId?: stri
 
   async function prepareOutreach(result: MatchResult) {
     if (!run || drafting) return;
-    setDrafting(result.id); setError(''); setOutreach(null);
+    setDrafting(result.id); setError(''); setNotice(''); setOutreach(null);
     try {
       const value: Outreach = await request(`/prospecting/investors/runs/${encodeURIComponent(run.id)}/results/${encodeURIComponent(result.id)}/outreach`, { method: 'POST' });
       setOutreach({ resultId: result.id, value });
     } catch (failure) { setError(errorMessage(failure)); }
     finally { setDrafting(''); }
+  }
+
+  function editOutreach(field: 'subject' | 'body', value: string) {
+    setOutreach(current => current ? { ...current, value: { ...current.value, [field]: value } } : current);
+  }
+
+  async function copyOutreach() {
+    if (!outreach) return;
+    try {
+      await navigator.clipboard.writeText(`Subject: ${outreach.value.subject}\n\n${outreach.value.body}`);
+      setNotice('Draft copied. Nothing was sent.');
+    } catch {
+      setNotice('Clipboard access was unavailable. Your draft is still here.');
+    }
   }
 
   const activeRun = !!run && ACTIVE.has(run.status);
@@ -397,7 +411,7 @@ export default function VcProspectingWorkspace({ accountId }: { accountId?: stri
           {run.limitations?.length ? <p className="vc-muted">{run.limitations[0]}</p> : null}
         </div>
         <div className="vc-draft-card">
-          {outreach ? <><h3>{outreach.value.subject}</h3><p className="vc-recipient">{outreach.value.recipient || 'Recipient not provided'}</p><pre>{outreach.value.body}</pre><button className="vc-outline-action" type="button" onClick={() => setWorkspaceStep('meetings')}>Open meeting brief</button></> : <div className="vc-workflow-empty"><h3>Outreach stays in your hands</h3><p>Choose a company and prepare a draft to see a researched message here. It will not be sent.</p></div>}
+          {outreach ? <><h3>Email draft · review before sending</h3><p className="vc-recipient">{outreach.value.recipient || 'Recipient not provided'}</p><label className="vc-draft-field">Subject<input value={outreach.value.subject} maxLength={300} onChange={event => editOutreach('subject', event.target.value)}/></label><label className="vc-draft-field">Message<textarea rows={9} maxLength={8000} value={outreach.value.body} onChange={event => editOutreach('body', event.target.value)}/></label><div className="vc-draft-actions"><button className="vc-outline-action" type="button" onClick={() => void copyOutreach()}>Copy draft</button><button className="vc-outline-action" type="button" onClick={() => setWorkspaceStep('meetings')}>Open meeting brief</button></div><p className="vc-muted">Edits stay in this workspace. Nothing is sent.</p></> : <div className="vc-workflow-empty"><h3>Outreach stays in your hands</h3><p>Choose a company and prepare a draft to see a researched message here. It will not be sent.</p></div>}
         </div></div>
       </>}
       {run?.events?.length ? <details className="vc-source-activity"><summary>See public source activity</summary><ul>{run.events.slice(-8).reverse().map((event, index) => <li key={event.at + event.type + index}><span>{event.type.replaceAll('_', ' ')}</span>{typeof event.count === 'number' ? <small>{event.count.toLocaleString()}</small> : null}{event.source_url ? <a href={event.source_url} target="_blank" rel="noreferrer">Source</a> : null}</li>)}</ul></details> : null}
