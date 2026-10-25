@@ -100,6 +100,24 @@ test('resending keeps the inbox confirmation visible while the request is pendin
   assert.equal(button(app.render(), 'Resend link').props.disabled, true);
 });
 
+test('a failed resend keeps the earlier inbox confirmation and allows recovery', async () => {
+  let calls = 0;
+  const app = fixture(async () => ++calls === 1
+    ? { ok: true, json: async () => ({ sent: true }) }
+    : { ok: false, json: async () => ({ detail: 'Synthetic resend failure.' }) });
+  find(app.render(), node => node.props?.id === 'workspace-email').props.onChange({ target: { value: 'owner@example.test' } });
+  app.render().props.onSubmit({ preventDefault() {} });
+  await flush();
+  app.render();
+  app.advance(60_000);
+  button(app.render(), 'Resend link').props.onClick();
+  await flush();
+  const tree = app.render();
+  assert.match(find(tree, node => node.type === 'strong').props.children.join(''), /Check your inbox/);
+  assert.equal(find(tree, node => node.props?.role === 'alert').props.children.join(''), 'Synthetic resend failure.');
+  assert.equal(button(tree, 'Resend link').props.disabled, false);
+});
+
 test('pending email submissions coalesce and disable both controls', async () => {
   let resolve;
   let calls = 0;
