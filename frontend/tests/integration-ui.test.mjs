@@ -38,3 +38,25 @@ test('saved founder shortlists stay isolated when the signed-in account changes'
   assert.equal(entries.get('cypher-vc-shortlist'),'legacy-must-stay-untouched');
   view.unmount();
 });
+
+test('investor load errors offer sign-in recovery and retry before showing the empty index', async () => {
+  const env=environment(),view=renderer(env);
+  class ApiError extends Error { constructor(status){super('Request failed');this.status=status;} }
+  let failures=2,calls=0;
+  const page={database:{records:0,explicit_founder_signals:0,matched_records:0,snapshot_ready:false,snapshot_built_at:null,quarters:[],quarter_count:0,historical:{status:'idle',total_quarters:0,processed_quarters:0,current_quarter:null,error:null},source:'Synthetic fixture'},items:[],page:{limit:25,offset:0,returned:0},limitations:[]};
+  const request=async path=>{
+    calls++;
+    if(failures>0){failures--;throw new ApiError(401);}
+    return path.includes('/founders?')?page:[];
+  };
+  const {default:Workspace}=load('../src/components/VcProspectingWorkspace.tsx',{react:view.react,'../lib/api':{ApiError,request},'./WorkflowShell':{__esModule:true,default:'workflow-shell'},'./vc-prospecting.css':{}},{...env.globals,React:view.react.default,URLSearchParams});
+  view.mount(()=>Workspace({}));await view.flush();
+  assert.match(textOf(view.tree),/Could not load SEC data/);
+  assert.match(textOf(view.tree),/Public filing records could not be loaded/);
+  assert.ok(find(view.tree,node=>node.type==='a'&&node.props?.href==='/login?returnTo=%2Fprospecting%2Finvestors'));
+  button(view.tree,'Retry').props.onClick();await view.flush();
+  assert.equal(calls,4);
+  assert.match(textOf(view.tree),/The SEC index is ready to build/);
+  assert.doesNotMatch(textOf(view.tree),/We couldn’t finish that step/);
+  view.unmount();
+});

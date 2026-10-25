@@ -119,6 +119,15 @@ export default function VcProspectingWorkspace({ accountId }: { accountId?: stri
     return rows;
   }, []);
 
+  async function retryWorkspaceLoad() {
+    setLoading(true); setError('');
+    try {
+      const [next] = await Promise.all([loadFounders(0), loadRuns()]);
+      setData(next);
+    } catch (failure) { setError(errorMessage(failure)); }
+    finally { setLoading(false); }
+  }
+
   useEffect(() => {
     const controller = new AbortController();
     setLoading(true);
@@ -253,12 +262,14 @@ export default function VcProspectingWorkspace({ accountId }: { accountId?: stri
   const toggleShortlist = (item: Founder) => setShortlistItems(rows => rows.some(row => row.id === item.id) ? rows.filter(row => row.id !== item.id) : [item, ...rows]);
   const currentDraftReady = !!outreach;
   const runStatus = !run ? 'No match yet' : activeRun ? 'Researching' : run.status === 'completed' ? 'Ready to review' : run.status === 'partial' ? 'Some results ready' : run.status === 'failed' ? 'Needs another try' : 'Stopped';
+  const initialDataFailure = !data && !loading && !!error;
+  const dataStatus = loading ? 'Checking public data…' : initialDataFailure ? 'Could not load SEC data' : data?.database.snapshot_ready ? 'Public data connected' : 'Ready to find public data';
 
   return <WorkflowShell section="investors"><main className="vc-page">
     <header className="vc-titlebar">
       <a className="vc-back" href="/prospecting" aria-label="Back to company research"><VcIcon kind="back"/></a>
       <div><h1>{oneLiner || 'Find founders for your climate fund'}</h1><p>Research founders and companies with public SEC evidence.</p></div>
-      <span className="vc-title-status"><i aria-hidden="true" />{data?.database.snapshot_ready ? 'Public data connected' : 'Ready to find public data'}</span>
+      <span className={`vc-title-status ${initialDataFailure ? 'is-unavailable' : ''}`}><i aria-hidden="true" />{dataStatus}</span>
     </header>
 
     <nav className="vc-steps" aria-label="Founder research steps">
@@ -267,7 +278,7 @@ export default function VcProspectingWorkspace({ accountId }: { accountId?: stri
       </button>)}
     </nav>
 
-    {error ? <div className="vc-alert" role="alert"><span aria-hidden="true">!</span><div><strong>We couldn’t finish that step.</strong><p>{error}</p><button type="button" onClick={() => setError('')}>Dismiss</button></div></div> : null}
+    {error ? <div className="vc-alert" role="alert"><span aria-hidden="true">!</span><div><strong>We couldn’t finish that step.</strong><p>{error}</p>{/sign in again/i.test(error) ? <a href={`/login?returnTo=${encodeURIComponent('/prospecting/investors')}`}>Sign in</a> : null}{initialDataFailure ? <button type="button" onClick={() => void retryWorkspaceLoad()}>Retry</button> : null}<button type="button" onClick={() => setError('')}>Dismiss</button></div></div> : null}
     {notice ? <div className="vc-notice" role="status"><VcIcon kind="check"/>{notice}</div> : null}
 
     <section className="vc-data-settings">
@@ -336,7 +347,7 @@ export default function VcProspectingWorkspace({ accountId }: { accountId?: stri
                   <td>{item.title || item.roles.join(', ') || 'Not listed'}</td>
                   <td><span className={founderSignal ? 'vc-evidence-badge is-founder' : 'vc-evidence-badge'}>{founderSignal ? 'Founder named' : 'Related person'}</span></td>
                 </tr>;
-              }) : <tr><td colSpan={4} className="vc-table-message"><strong>{workspaceStep === 'shortlist' ? 'Your shortlist is empty' : data?.database.snapshot_ready ? 'No matching people found' : 'The SEC index is ready to build'}</strong><span>{workspaceStep === 'shortlist' ? 'Save a person from research and they’ll show up here.' : data?.database.snapshot_ready ? 'Try another name or remove a filter.' : 'Open “SEC public data and coverage” above to load the latest filings.'}</span></td></tr>}
+              }) : <tr><td colSpan={4} className="vc-table-message"><strong>{workspaceStep === 'shortlist' ? 'Your shortlist is empty' : initialDataFailure ? 'Public filing records could not be loaded' : data?.database.snapshot_ready ? 'No matching people found' : 'The SEC index is ready to build'}</strong><span>{workspaceStep === 'shortlist' ? 'Save a person from research and they’ll show up here.' : initialDataFailure ? 'Retry the workspace load above, or sign in again if your session expired.' : data?.database.snapshot_ready ? 'Try another name or remove a filter.' : 'Open “SEC public data and coverage” above to load the latest filings.'}</span></td></tr>}
             </tbody>
           </table>
         </div>
