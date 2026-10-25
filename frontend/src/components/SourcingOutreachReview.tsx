@@ -8,7 +8,7 @@ import './sourcing-outreach-review.css';
 const endpoint = '/sourcing/outreach';
 type Action = 'review' | 'cancel' | 'create-draft';
 
-export default function SourcingOutreachReview({ initialProposalId = '', initialSourceRunId = '', initialSourceResultId = '' }: { initialProposalId?: string; initialSourceRunId?: string; initialSourceResultId?: string }) {
+export default function SourcingOutreachReview({ accountId: ownerAccountId = 'anonymous', initialProposalId = '', initialSourceRunId = '', initialSourceResultId = '' }: { accountId?: string; initialProposalId?: string; initialSourceRunId?: string; initialSourceResultId?: string }) {
   const [accounts, setAccounts] = useState<SendingAccount[]>([]);
   const [accountId, setAccountId] = useState('');
   const [recipient, setRecipient] = useState('');
@@ -25,6 +25,9 @@ export default function SourcingOutreachReview({ initialProposalId = '', initial
   const [clock, setClock] = useState(Date.now());
   const [clockOffset, setClockOffset] = useState(0);
   const [reload, setReload] = useState(0);
+  const [stateOwnerAccountId, setStateOwnerAccountId] = useState(ownerAccountId);
+  const currentOwnerAccountId = useRef(ownerAccountId);
+  const requestGeneration = useRef(0);
   const active = useRef(true);
   const pending = useRef(false);
   const heading = useRef<HTMLElement>(null);
@@ -67,6 +70,17 @@ export default function SourcingOutreachReview({ initialProposalId = '', initial
 
   useEffect(() => {
     active.current = true;
+    const generation = ++requestGeneration.current;
+    const isCurrent = () => active.current && requestGeneration.current === generation;
+    if (currentOwnerAccountId.current !== ownerAccountId) {
+      currentOwnerAccountId.current = ownerAccountId;
+      setStateOwnerAccountId(ownerAccountId);
+      pending.current = false;
+      draftRequest.current = null;
+      setAccounts([]); setAccountId(''); setRecipient(''); setSubject(''); setBody('');
+      setProposal(null); setReviewToken(null); setConfirmed(false); setNeedsStatusCheck(false);
+      setBusy(''); setError(''); setSignIn(false); setClockOffset(0); setClock(Date.now());
+    }
     const controller = new AbortController();
     setLoading(true);
     setError('');
@@ -84,7 +98,7 @@ export default function SourcingOutreachReview({ initialProposalId = '', initial
               : Promise.reject(new Error('invalid-source-link'))
             : Promise.resolve(null),
         ]);
-        if (!active.current || controller.signal.aborted) return;
+        if (!isCurrent() || controller.signal.aborted) return;
         if (accountResult.status === 'fulfilled') {
           const saved = accountResult.value;
           if (Array.isArray(saved.accounts)) {
@@ -104,14 +118,18 @@ export default function SourcingOutreachReview({ initialProposalId = '', initial
           else setError('Cypher couldn’t reopen this researched match. Return to VC Intelligence and prepare the draft again.');
         }
       } catch (cause) {
-        if (active.current && !controller.signal.aborted) explain(cause);
+        if (isCurrent() && !controller.signal.aborted) explain(cause);
       } finally {
-        if (active.current && !controller.signal.aborted) setLoading(false);
+        if (isCurrent() && !controller.signal.aborted) setLoading(false);
       }
     };
     void load();
-    return () => { active.current = false; controller.abort(); };
-  }, [initialProposalId, initialSourceResultId, initialSourceRunId, reload]);
+    return () => {
+      active.current = false;
+      if (requestGeneration.current === generation) requestGeneration.current++;
+      controller.abort();
+    };
+  }, [ownerAccountId, initialProposalId, initialSourceResultId, initialSourceRunId, reload]);
 
   useEffect(() => {
     if (!proposal || proposal.status !== 'awaiting_approval') return;
@@ -126,26 +144,30 @@ export default function SourcingOutreachReview({ initialProposalId = '', initial
     const content = { provider: account.provider, account_id: account.id, recipient, subject, body };
     const fingerprint = JSON.stringify(content);
     if (draftRequest.current?.fingerprint !== fingerprint) draftRequest.current = { fingerprint, id: crypto.randomUUID() };
+    const generation = requestGeneration.current;
+    const isCurrent = () => active.current && requestGeneration.current === generation;
     pending.current = true;
     setBusy('prepare'); setError('');
     try {
       const row = await request(endpoint, { method: 'POST', body: JSON.stringify({ request_id: draftRequest.current.id, ...content }) });
-      if (!active.current) return;
+      if (!isCurrent()) return;
       accept(row);
       window.history.replaceState(null, '', '/sourcing/outreach?proposal=' + encodeURIComponent(row.id));
       heading.current?.scrollIntoView({ block: 'start' });
-    } catch (cause) { if (active.current) explain(cause); }
-    finally { pending.current = false; if (active.current) setBusy(''); }
+    } catch (cause) { if (isCurrent()) explain(cause); }
+    finally { if (isCurrent()) { pending.current = false; setBusy(''); } }
   }
 
   async function refreshStatus() {
     if (!proposal || pending.current) return;
+    const generation = requestGeneration.current;
+    const isCurrent = () => active.current && requestGeneration.current === generation;
     pending.current = true; setBusy('refresh'); setError('');
     try {
       const row = await request(endpoint + '/' + encodeURIComponent(proposal.id));
-      if (active.current) accept(row);
-    } catch (cause) { if (active.current) explain(cause); }
-    finally { pending.current = false; if (active.current) setBusy(''); }
+      if (isCurrent()) accept(row);
+    } catch (cause) { if (isCurrent()) explain(cause); }
+    finally { if (isCurrent()) { pending.current = false; setBusy(''); } }
   }
 
   async function act(action: Action) {
@@ -154,15 +176,17 @@ export default function SourcingOutreachReview({ initialProposalId = '', initial
     if (action === 'create-draft' && !canCreateDraftProposal(proposal, now)) return;
     if (action === 'review' && !canReviewProposal(proposal, now)) return;
     if (action === 'cancel' && !canCancelProposal(proposal)) return;
+    const generation = requestGeneration.current;
+    const isCurrent = () => active.current && requestGeneration.current === generation;
     pending.current = true; setBusy(action); setError('');
     try {
       const options: RequestInit = { method: 'POST' };
       if (action === 'create-draft') options.body = JSON.stringify({ digest: proposal.digest, review_token: reviewToken, confirmation: 'create_gmail_draft_exact_message_and_account' });
       const path = action === 'create-draft' ? 'create-draft' : action;
       const row = await request(`${endpoint}/${encodeURIComponent(proposal.id)}/${path}`, options);
-      if (active.current) accept(row);
+      if (isCurrent()) accept(row);
     } catch (cause) {
-      if (!active.current) return;
+      if (!isCurrent()) return;
       explain(cause);
       setReviewToken(null); setConfirmed(false);
       // A lost response never triggers another mutation. Inspect the saved row.
@@ -170,11 +194,13 @@ export default function SourcingOutreachReview({ initialProposalId = '', initial
         setNeedsStatusCheck(true);
         try {
           const row = await request(endpoint + '/' + encodeURIComponent(proposal.id));
-          if (active.current) accept(row);
+          if (isCurrent()) accept(row);
         } catch { /* Keep the error and require an explicit status refresh. */ }
       }
-    } finally { pending.current = false; if (active.current) setBusy(''); }
+    } finally { if (isCurrent()) { pending.current = false; setBusy(''); } }
   }
+
+  if (stateOwnerAccountId !== ownerAccountId) return <main className="outreach-review" aria-labelledby="outreach-title"><header className="outreach-heading"><h1 id="outreach-title">Review outreach</h1><p>Loading your outreach workspace…</p></header><p className="outreach-loading" role="status">Switching accounts…</p></main>;
 
   const now = clock + clockOffset;
   const eligible = accounts.filter(row => row.available && row.sender);

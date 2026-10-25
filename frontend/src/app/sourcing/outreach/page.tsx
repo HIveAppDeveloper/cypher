@@ -17,6 +17,7 @@ export default async function OutreachPage(props: { searchParams?: Promise<Recor
   const sourceResultId = typeof searchParams?.result === 'string' ? searchParams.result : '';
   const returnTo = '/sourcing/outreach' + (proposalId ? '?proposal=' + encodeURIComponent(proposalId) : sourceRunId && sourceResultId ? '?run=' + encodeURIComponent(sourceRunId) + '&result=' + encodeURIComponent(sourceResultId) : '');
   if (process.env.REQUIRE_USER_AUTH === 'true' && !session) redirect('/login?returnTo=' + encodeURIComponent(returnTo));
+  const accountScopeId = session?.sub || 'anonymous';
   const reviewKey = proposalId || (sourceRunId && sourceResultId ? `${sourceRunId}:${sourceResultId}` : 'draft');
-  return <WorkflowShell section="investors"><SourcingOutreachReview key={reviewKey} initialProposalId={proposalId} initialSourceRunId={sourceRunId} initialSourceResultId={sourceResultId} /></WorkflowShell>;
+  return <WorkflowShell section="investors"><SourcingOutreachReview key={JSON.stringify([accountScopeId, reviewKey])} accountId={accountScopeId} initialProposalId={proposalId} initialSourceRunId={sourceRunId} initialSourceResultId={sourceResultId} /></WorkflowShell>;
 }
