@@ -18,7 +18,9 @@ export function BotRoster({ bots, selectedBot, onSelectBot, onCreateNew, rooms, 
   const [showAllAgents, setShowAllAgents] = useState(false);
   const [showAllRooms, setShowAllRooms] = useState(false);
   const [recentRuns, setRecentRuns] = useState<RecentRun[]>([]);
+  const [recentRunsLoading, setRecentRunsLoading] = useState(true);
   const [recentRunsUnavailable, setRecentRunsUnavailable] = useState(false);
+  const [recentRunsAttempt, setRecentRunsAttempt] = useState(0);
 
   useEffect(() => {
     let active = true;
@@ -32,11 +34,15 @@ export function BotRoster({ bots, selectedBot, onSelectBot, onCreateNew, rooms, 
 
   useEffect(() => {
     let active = true;
+    setRecentRunsLoading(true);
+    setRecentRunsUnavailable(false);
     void request('/workspace/runs').then((data: RecentRun[]) => {
-      if (active) { setRecentRuns(Array.isArray(data) ? data.slice(0, 5) : []); setRecentRunsUnavailable(false); }
-    }).catch(() => { if (active) setRecentRunsUnavailable(true); });
+      if (active) setRecentRuns(Array.isArray(data) ? data.slice(0, 5) : []);
+    }).catch(() => { if (active) setRecentRunsUnavailable(true); }).finally(() => {
+      if (active) setRecentRunsLoading(false);
+    });
     return () => { active = false; };
-  }, []);
+  }, [recentRunsAttempt]);
 
   useEffect(() => {
     try {
@@ -84,9 +90,9 @@ export function BotRoster({ bots, selectedBot, onSelectBot, onCreateNew, rooms, 
       <button aria-current={activeView === 'settings' ? 'page' : undefined} onClick={onSetup}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5 14 5l2.5-.2.9 2.3 2.1 1.4-.6 2.5.6 2.5-2.1 1.4-.9 2.3L14 17l-2 1.5L10 17l-2.5.2-.9-2.3-2.1-1.4.6-2.5-.6-2.5 2.1-1.4.9-2.3L10 5l2-1.5Z"/><circle cx="12" cy="11.5" r="2.5"/></svg><span>Settings</span></button>
     </nav>
 
-    <section className="cypher-recent-tasks" aria-labelledby="cypher-recent-tasks-title">
+    <section className="cypher-recent-tasks" aria-labelledby="cypher-recent-tasks-title" aria-busy={recentRunsLoading}>
       <h2 id="cypher-recent-tasks-title">Recent tasks</h2>
-      {recentRunsUnavailable ? <p>Recent tasks are unavailable.</p> : recentRuns.length ? recentRuns.map(run => <button key={run.id} title={run.title || 'Untitled task'} onClick={() => onOpenRecent(run.conversation_id)}><span className="cypher-task-dot" aria-hidden="true"/><span>{run.title || 'Untitled task'}</span></button>) : <p>No recent tasks yet.</p>}
+      {recentRunsLoading ? <p role="status">Loading recent tasks…</p> : recentRunsUnavailable ? <p className="cypher-recent-tasks-error" role="status"><span>Recent tasks are unavailable.</span><button type="button" onClick={() => setRecentRunsAttempt(value => value + 1)}>Retry</button></p> : recentRuns.length ? recentRuns.map(run => <button key={run.id} title={run.title || 'Untitled task'} onClick={() => onOpenRecent(run.conversation_id)}><span className="cypher-task-dot" aria-hidden="true"/><span>{run.title || 'Untitled task'}</span></button>) : <p>No recent tasks yet.</p>}
     </section>
 
     <details className="cypher-team-disclosure">
