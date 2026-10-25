@@ -40,3 +40,27 @@ For the first release after this source migration only, the gate accepts the exa
 Configuration flags establish credentials are present, not provider acceptance. Real model/tool execution and consent checks remain necessary. Redis and unused MinIO settings remain optional.
 
 This wrapper protects releases made through it. The canonical owner must enforce checks operationally or through Vercel Deployment Checks/branch policy and disable competing production auto-promotions. This commit does not change account policy, Git connection, project settings, database, or aliases. CI success alone does not test a deployed candidate.
+
+## Content-free diagnostics for the next planned gate
+
+The existing requests now retain one diagnostic row each: relative route path, monotonic `elapsed_ms` (request through body parsing, capped at one hour), numeric HTTP status when received, and a format-validated `x-vercel-id` as `vercel_id`. Exceptions retain only an allowlisted name/code and phase (`fetch`, `body`, or `response`); unknown names become `UnknownError`, unknown codes are omitted as null. Raw exception messages, causes/stacks, origins, URLs/queries, cookies, keys, full headers and response/user content are never copied into diagnostic rows. Malformed request IDs/provenance values are labeled `invalid` rather than echoed.
+
+Only `/api/release` and `/api/runtime` add provenance snapshots: expected versus actual public deployment ID, full SHA and environment. Runtime snapshots distinguish the candidate API from the explicitly specified currently active worker during activation preflight. Missing values remain null. These diagnostics do not establish that a timeout was caused by a database outage or cold start.
+
+Successful smoke reports include the rows in `routes`; failures expose the safe partial rows as `error.diagnostics`, and the standalone CLI prints those rows on failure. For an existing retry/check script, retain `error.diagnostics` alongside its existing safe failure label. Alternatively pass an optional synchronous `onDiagnostic(row)` sink to `smoke` or `guardedPromote`; each row is detached before delivery, and observer errors cannot change readiness outcomes. Keep the sink bounded to the existing attempt limit; it must not start requests or jobs.
+
+The browser adapter may attach optional numeric `releaseTimings = { in_page_fetch_ms, bridge_ms }` to its returned Response or thrown error. Only finite nonnegative numbers up to one hour survive. `in_page_fetch_ms` is the duration actually measured inside the page (include body completion if that is what was measured); leave it absent if unavailable. `bridge_ms` is the whole outer SDK/adapter round trip and includes in-page work. These are relative durations, not synchronized cross-process timestamps or proof of a particular failure cause.
+
+To measure the existing adapter without changing its request, options, timeout, result, error or call count:
+
+```js
+import { smoke, withBridgeTiming } from './scripts/release-smoke.mjs';
+const result = await smoke(expected, {
+  fetchImpl: withBridgeTiming(existingBrowserFetchAdapter),
+  onDiagnostic: row => existingBoundedEvidence.push(row),
+});
+```
+
+The wrapper preserves any available allowlisted in-page timing and adds the measured bridge duration. It tolerates frozen response/error objects by leaving timing absent. Do not substitute a new browser fetch mechanism, change the adapter's existing timeout, or add a page evaluation/probe to obtain optional timings. Use this instrumentation only on the release owner's **next already-planned bounded check**, not as an additional sweep.
+
+All readiness rules, paths, redirects, 35-second request budgets, 24-attempt/120-second activation logic, five-second retry pauses, worker freshness/version requirements, alias guards and exact rollback behavior are unchanged. The diagnostics follow-up changes tooling only and does not modify application health timeouts, runtime environment, production aliases or PostgreSQL.

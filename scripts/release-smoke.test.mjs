@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { smoke, validateRuntime } from './release-smoke.mjs';
+import { smoke, validateRuntime, withBridgeTiming } from './release-smoke.mjs';
 import { guardedPromote, validateDeployment, validateReleaseConfig } from './promote-release.mjs';
 
 const expected = { url: 'https://cypher-candidate-hiveapp.vercel.app', deploymentId: 'dpl_current', commit: 'a'.repeat(40), services: ['model', 'model_control', 'backend_auth'] };
@@ -168,4 +168,175 @@ test('a concurrent different release prevents rollback over its aliases', async 
   };
   await assert.rejects(guardedPromote(env, f), /Canonical alias changed/);
   assert.deepEqual(f.calls.map(c => c[1][0]), ['promote']);
+});
+
+// Content-free diagnostics exercise the real getter and preserve its exact requests.
+const privateValue = 'PRIVATE_cookie_key_user_content';
+const vercelId = 'iad1::abc12-1792891532662-e9b7656bfc64';
+async function blocked(expectedInput, options) {
+  let failure;
+  try { await smoke(expectedInput, options); } catch (error) { failure = error; }
+  assert.ok(failure, 'the existing gate must still fail');
+  assert.ok(Array.isArray(failure.diagnostics));
+  const encoded = JSON.stringify(failure.diagnostics) + failure.message;
+  assert.ok(!encoded.includes(privateValue));
+  assert.ok(!encoded.includes('https://'));
+  assert.ok(!encoded.includes('Authorization'));
+  return failure;
+}
+for (const [name, code] of [['TimeoutError', null], ['TypeError', 'UND_ERR_CONNECT_TIMEOUT'], ['PageExecutionTimeoutError', null]]) {
+  test(`${name} retains safe classification without a raw fetch message`, async () => {
+    const error = new Error(`https://private.invalid/?token=${privateValue} Authorization ${privateValue}`);
+    error.name = name;
+    error.cause = { code, get message() { throw new Error('must never read a cause message'); } };
+    error.releaseTimings = { bridge_ms: 35001, in_page_fetch_ms: 12, cookie: privateValue };
+    const records = [];
+    let requests = 0;
+    const failure = await blocked(expected, { headers: { Cookie: privateValue, Authorization: privateValue },
+      onDiagnostic: row => records.push(row), fetchImpl: async () => { requests++; throw error; } });
+    assert.equal(requests, 1);
+    assert.equal(failure.message, '/: request failed or timed out');
+    assert.deepEqual(failure.diagnostics[0].error, { phase: 'fetch', name, code });
+    assert.deepEqual(records, failure.diagnostics);
+    assert.ok(Number.isFinite(records[0].elapsed_ms) && records[0].elapsed_ms >= 0);
+    assert.deepEqual(records[0].adapter_timing, { in_page_fetch_ms: 12, bridge_ms: 35001 });
+    assert.equal(records[0].status, undefined);
+  });
+}
+test('unknown or changing exception properties cannot leak into diagnostics', async () => {
+  let namesRead = 0;
+  const error = { get name() { return namesRead++ ? privateValue : 'Error'; }, code: privateValue, message: privateValue };
+  const failure = await blocked(expected, { fetchImpl: async () => { throw error; } });
+  assert.equal(failure.diagnostics[0].error.name, 'Error');
+  assert.equal(namesRead, 1);
+  const unknown = await blocked(expected, { fetchImpl: async () => { throw { name: privateValue, code: privateValue, message: privateValue }; } });
+  assert.equal(unknown.diagnostics[0].error.name, 'UnknownError');
+  assert.equal(unknown.diagnostics[0].error.code, null);
+});
+test('HTTP failure keeps status and request ID without consuming error content or full headers', async () => {
+  const app = fixture();
+  let bodyReads = 0;
+  const failure = await blocked(expected, { fetchImpl: async (url, options) => {
+    if (url.pathname !== '/api/health') return app.fetchImpl(url, options);
+    return { status: 503, headers: { get: name => { assert.equal(name, 'x-vercel-id'); return vercelId; } }, json: () => { bodyReads++; return { secret: privateValue }; } };
+  } });
+  const row = failure.diagnostics.at(-1);
+  assert.equal(row.path, '/api/health');
+  assert.equal(row.status, 503);
+  assert.equal(row.vercel_id, vercelId);
+  assert.equal(bodyReads, 0);
+  assert.equal(failure.diagnostics.length, 4);
+});
+test('invalid request IDs and adapter metadata are dropped or redacted, never echoed', async () => {
+  const app = fixture();
+  const report = await smoke(expected, { fetchImpl: async (url, options) => {
+    const r = await app.fetchImpl(url, options);
+    r.headers.set('x-vercel-id', `https://private.invalid/${privateValue}`);
+    r.releaseTimings = { bridge_ms: Infinity, in_page_fetch_ms: privateValue, url: privateValue, headers: { Cookie: privateValue } };
+    return r;
+  } });
+  assert.ok(report.routes.every(row => row.vercel_id === 'invalid' && !('adapter_timing' in row)));
+  assert.ok(!JSON.stringify(report.routes).includes(privateValue));
+});
+test('expected and actual frontend provenance survive an HTTP-200 identity failure safely', async () => {
+  const failure = await blocked(expected, fixture({ '/api/release': { deployment_id: 'dpl_old', commit: 'b'.repeat(40), environment: 'preview', backend_bound: true, key: privateValue } }));
+  const row = failure.diagnostics.at(-1);
+  assert.equal(row.path, '/api/release');
+  assert.equal(row.status, 200);
+  assert.deepEqual(row.provenance, { expected: identity, actual: { deployment_id: 'dpl_old', commit: 'b'.repeat(40), environment: 'preview' } });
+  const invalid = await blocked(expected, fixture({ '/api/release': { deployment_id: privateValue, commit: privateValue, environment: privateValue } }));
+  assert.deepEqual(invalid.diagnostics.at(-1).provenance.actual, { deployment_id: 'invalid', commit: 'invalid', environment: 'invalid' });
+});
+test('runtime diagnostics distinguish candidate API from the exact active previous worker', async () => {
+  const r = runtime(); r.worker = false; r.worker_version_matches = false;
+  const previous = { deploymentId: env.RELEASE_PREVIOUS_DEPLOYMENT_ID, commit: env.RELEASE_PREVIOUS_COMMIT };
+  r.worker_deployment = { deployment_id: previous.deploymentId, commit: previous.commit, environment: 'production' };
+  r.checks = { privateValue };
+  const report = await smoke(expected, { ...fixture({ '/api/runtime': r }), activeWorker: previous });
+  const row = report.routes.find(r => r.path === '/api/runtime');
+  assert.deepEqual(row.provenance.expected.api, identity);
+  assert.deepEqual(row.provenance.expected.worker, r.worker_deployment);
+  assert.deepEqual(row.provenance.actual, { api: identity, worker: r.worker_deployment });
+  assert.ok(!JSON.stringify(row).includes(privateValue));
+});
+test('body failures keep a received status and safe exception but never the raw message', async () => {
+  const app = fixture();
+  const failure = await blocked(expected, { fetchImpl: async (url, options) => {
+    if (url.pathname !== '/api/runtime') return app.fetchImpl(url, options);
+    return { status: 200, headers: new Headers({ 'content-type': 'application/json', 'x-vercel-id': vercelId }), json: async () => { throw new SyntaxError(privateValue); } };
+  } });
+  assert.match(failure.message, /invalid JSON/);
+  assert.deepEqual(failure.diagnostics.at(-1).error, { phase: 'body', name: 'SyntaxError', code: null });
+  assert.equal(failure.diagnostics.at(-1).vercel_id, vercelId);
+  const html = await blocked(expected, { fetchImpl: async () => ({ status: 200, headers: new Headers({ 'content-type': 'text/html' }), text: async () => { throw new Error(privateValue); } }) });
+  assert.equal(html.message, '/: response body failed');
+});
+test('diagnostics and observers do not change requests, timeout budgets, or readiness results', async () => {
+  const app = fixture();
+  const originalTimeout = AbortSignal.timeout;
+  const budgets = [];
+  AbortSignal.timeout = ms => { budgets.push(ms); return originalTimeout(ms); };
+  try {
+    const report = await smoke(expected, { ...app, onDiagnostic: row => { row.path = privateValue; throw new Error(privateValue); } });
+    assert.equal(report.passed, true);
+    assert.equal(report.phase, 'full-stack');
+    assert.equal(app.calls.length, 9);
+    assert.deepEqual(budgets, Array(9).fill(35000));
+    assert.ok(!JSON.stringify(report.routes).includes(privateValue));
+  } finally { AbortSignal.timeout = originalTimeout; }
+});
+test('diagnostic getters or response-header errors cannot add a new gate failure or leak a raw exception', async () => {
+  const app = fixture();
+  const report = await smoke(expected, { fetchImpl: async (url, options) => {
+    const response = await app.fetchImpl(url, options);
+    Object.defineProperty(response, 'releaseTimings', { get() { throw new Error(privateValue); } });
+    const get = response.headers.get.bind(response.headers);
+    response.headers.get = name => { if (name === 'x-vercel-id') throw new Error(privateValue); return get(name); };
+    return response;
+  } });
+  assert.equal(report.passed, true);
+  const failure = await blocked(expected, { fetchImpl: async () => ({ status: 200, headers: { get(name) { if (name === 'x-vercel-id') return null; throw new Error(privateValue); } } }) });
+  assert.equal(failure.message, '/: response handling failed');
+});
+test('promotion forwards the optional diagnostic observer through both phases and both canonical checks', async () => {
+  const observer = () => {};
+  const observations = [];
+  const f = promotionFixture(() => {}, async (_e, options) => {
+    observations.push(options);
+    return { passed: true, phase: options.activeWorker ? 'activation-preflight' : 'full-stack', candidate_worker_verified: !options.activeWorker };
+  });
+  await guardedPromote(env, { ...f, onDiagnostic: observer });
+  assert.equal(observations.length, 4);
+  assert.ok(observations.every(options => options.onDiagnostic === observer));
+  assert.deepEqual(f.calls.map(call => call[1][0]), ['promote']);
+});
+
+
+test('existing adapter bridge timing preserves call count, options, results and frozen values', async () => {
+  const app = fixture();
+  const wrapped = withBridgeTiming(async (url, options) => {
+    const response = await app.fetchImpl(url, options);
+    response.releaseTimings = { in_page_fetch_ms: 3.25, rawMessage: privateValue };
+    return response;
+  });
+  const report = await smoke(expected, { fetchImpl: wrapped });
+  assert.equal(app.calls.length, 9);
+  assert.ok(report.routes.every(row => row.adapter_timing.in_page_fetch_ms === 3.25 && Number.isFinite(row.adapter_timing.bridge_ms)));
+  assert.ok(!JSON.stringify(report.routes).includes(privateValue));
+  const value = Object.freeze({ status: 200 });
+  const options = { signal: AbortSignal.timeout(35000) };
+  let calls = 0;
+  assert.equal(await withBridgeTiming(async (url, received) => { calls++; assert.equal(received, options); return value; })(expected.url, options), value);
+  assert.equal(calls, 1);
+});
+test('adapter errors retain timing and a received HTTP status without leaking content', async () => {
+  const error = new Error(privateValue); error.name = 'HTTPError';
+  error.response = { status: 504, headers: new Headers({ 'x-vercel-id': vercelId, 'set-cookie': privateValue }) };
+  const failure = await blocked(expected, { fetchImpl: withBridgeTiming(async () => { throw error; }) });
+  const row = failure.diagnostics[0];
+  assert.equal(row.status, 504); assert.equal(row.vercel_id, vercelId);
+  assert.equal(row.error.name, 'HTTPError');
+  assert.ok(row.adapter_timing.bridge_ms >= 0);
+  const frozen = Object.freeze(new Error(privateValue));
+  await assert.rejects(withBridgeTiming(async () => { throw frozen; })(expected.url, {}), e => e === frozen);
 });

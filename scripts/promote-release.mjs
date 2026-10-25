@@ -25,7 +25,7 @@ export function validateReleaseConfig(config) {
   check(config.services.frontend.bindings?.some(binding => binding.type === 'service' && binding.service === 'backend' && binding.env === 'BACKEND_INTERNAL_URL'), 'Frontend backend service binding is required');
   check(config.daemons?.['agent-worker']?.root === 'backend' && config.daemons['agent-worker'].command?.join(' ') === 'python -m app.worker_main', 'Persistent agent worker configuration is required');
 }
-export async function guardedPromote(env, { fetchImpl = fetch, smokeImpl = smoke, run = spawnSync, pause = ms => new Promise(resolve => setTimeout(resolve, ms)), attempts = 24 } = {}) {
+export async function guardedPromote(env, { fetchImpl = fetch, smokeImpl = smoke, run = spawnSync, pause = ms => new Promise(resolve => setTimeout(resolve, ms)), attempts = 24, onDiagnostic } = {}) {
   check(env.VERCEL_TOKEN && env.RELEASE_TEAM_ID && env.RELEASE_PROJECT_ID, 'Vercel token, intended team and project IDs are required');
   validateReleaseConfig(JSON.parse(readFileSync(new URL('../vercel.json', import.meta.url), 'utf8')));
   const expected = expectedFromEnv(env);
@@ -55,7 +55,7 @@ export async function guardedPromote(env, { fetchImpl = fetch, smokeImpl = smoke
   const headers = headersFromEnv(env);
   // Vercel starts the new daemon only when this becomes the production deployment.
   // Preflight verifies candidate API/DB plus the exact still-active previous worker.
-  const preflight = await smokeImpl(expected, { fetchImpl, headers, activeWorker: previous });
+  const preflight = await smokeImpl(expected, { fetchImpl, headers, activeWorker: previous, onDiagnostic });
   check(preflight?.passed === true && preflight.phase === 'activation-preflight', 'Activation preflight did not pass');
   await assertAliases(previous.deploymentId); // Do not race a newer release.
   const execute = command => {
@@ -67,11 +67,11 @@ export async function guardedPromote(env, { fetchImpl = fetch, smokeImpl = smoke
     const deadline = Date.now() + 120000;
     for (let attempt = 0; attempt < attempts; attempt++) {
       try {
-        const report = await smokeImpl(expected, { fetchImpl, headers });
+        const report = await smokeImpl(expected, { fetchImpl, headers, onDiagnostic });
         check(report?.passed === true && report.phase === 'full-stack' && report.candidate_worker_verified === true, 'Full-stack post-activation verification did not pass');
         await assertAliases(expected.deploymentId);
         for (const host of canonical) {
-          const live = await smokeImpl({ ...expected, url: `https://${host}` }, { fetchImpl, headers });
+          const live = await smokeImpl({ ...expected, url: `https://${host}` }, { fetchImpl, headers, onDiagnostic });
           check(live?.passed === true && live.phase === 'full-stack' && live.candidate_worker_verified === true, 'Canonical live smoke did not pass');
         }
         return { ...report, activation_preflight: preflight, canonical_aliases: canonical };
