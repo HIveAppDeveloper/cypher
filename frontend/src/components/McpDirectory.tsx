@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { LoadingState } from './LoadingState';
 import { api } from '../lib/api';
 
@@ -82,16 +82,27 @@ export function McpDirectory({
   const [previews, setPreviews] = useState<Record<string, McpToolPreview>>({});
   const [previewBusy, setPreviewBusy] = useState<Record<string, boolean>>({});
   const [previewErrors, setPreviewErrors] = useState<Record<string, string>>({});
+  const requestGeneration = useRef(0);
+
+  function invalidateDirectory() {
+    requestGeneration.current += 1;
+    setItems([]);
+    setTotal(0);
+    setCount(0);
+    setFetchedAt(null);
+    setLoading(true);
+    setLoadingMore(false);
+    setError('');
+  }
 
   useEffect(() => {
     let active = true;
+    const generation = ++requestGeneration.current;
     const timer = setTimeout(() => {
-      setLoading(true);
-      setError('');
-      setItems([]);
+      if (!active || generation !== requestGeneration.current) return;
       api.getMcpDirectory({ q: query.trim(), category, kind, offset: 0, limit: PAGE_SIZE })
         .then(page => {
-          if (!active) return;
+          if (!active || generation !== requestGeneration.current) return;
           setItems(page.items);
           setCategories(page.categories);
           setTotal(page.total);
@@ -99,28 +110,34 @@ export function McpDirectory({
           setFetchedAt(page.fetched_at || null);
         })
         .catch(reason => {
-          if (active) setError(reason instanceof Error ? reason.message : 'The MCP directory could not load.');
+          if (active && generation === requestGeneration.current) setError(reason instanceof Error ? reason.message : 'The MCP directory could not load.');
         })
-        .finally(() => { if (active) setLoading(false); });
+        .finally(() => { if (active && generation === requestGeneration.current) setLoading(false); });
     }, 180);
-    return () => { active = false; clearTimeout(timer); };
+    return () => {
+      active = false;
+      clearTimeout(timer);
+      if (generation === requestGeneration.current) requestGeneration.current += 1;
+    };
   }, [query, category, kind, retry]);
 
   async function loadMore() {
     if (loadingMore || items.length >= total) return;
+    const generation = requestGeneration.current;
     setLoadingMore(true);
     setError('');
     try {
       const page = await api.getMcpDirectory({ q: query.trim(), category, kind, offset: items.length, limit: PAGE_SIZE });
+      if (generation !== requestGeneration.current) return;
       setItems(current => {
         const seen = new Set(current.map(item => item.id));
         return [...current, ...page.items.filter(item => !seen.has(item.id))];
       });
       setTotal(page.total);
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : 'Could not load more servers.');
+      if (generation === requestGeneration.current) setError(reason instanceof Error ? reason.message : 'Could not load more servers.');
     } finally {
-      setLoadingMore(false);
+      if (generation === requestGeneration.current) setLoadingMore(false);
     }
   }
 
@@ -153,17 +170,17 @@ export function McpDirectory({
   return <section className="mcp-directory-panel" aria-label="Full MCP directory">
     <div className="catalog-heading"><div><h3>Full MCP directory <span>{count.toLocaleString()}</span></h3><p>Find a service you already use and sign in to connect it.</p></div></div>
     <label className="mcp-directory-search" htmlFor="mcp-directory-search">Find a tool or service</label>
-    <input id="mcp-directory-search" type="search" value={query} onChange={event => setQuery(event.target.value)} placeholder="Try GitHub, Notion, maps…" maxLength={120} />
+    <input id="mcp-directory-search" type="search" value={query} onChange={event => { const next = event.target.value; if (next === query) return; invalidateDirectory(); setQuery(next); }} placeholder="Try GitHub, Notion, maps…" maxLength={120} />
     <div className="mcp-directory-toolbar">
       <label htmlFor="mcp-directory-category">Category</label>
-      <select id="mcp-directory-category" value={category} onChange={event => setCategory(event.target.value)}><option value="">All categories</option>{categories.map(value => <option key={value} value={value}>{value}</option>)}</select>
+      <select id="mcp-directory-category" value={category} onChange={event => { const next = event.target.value; if (next === category) return; invalidateDirectory(); setCategory(next); }}><option value="">All categories</option>{categories.map(value => <option key={value} value={value}>{value}</option>)}</select>
       <label htmlFor="mcp-directory-kind">Show</label>
-      <select id="mcp-directory-kind" value={kind} onChange={event => setKind(event.target.value as typeof kind)}><option value="all">Everything</option><option value="hosted">Hosted services</option><option value="verified">Connection checked</option><option value="auth">Sign-in required</option><option value="local">Needs setup or hosting</option></select>
+      <select id="mcp-directory-kind" value={kind} onChange={event => { const next = event.target.value as typeof kind; if (next === kind) return; invalidateDirectory(); setKind(next); }}><option value="all">Everything</option><option value="hosted">Hosted services</option><option value="verified">Connection checked</option><option value="auth">Sign-in required</option><option value="local">Needs setup or hosting</option></select>
     </div>
     <p className="mcp-directory-permissions">Choose a service, sign in, then review and approve the access it asks for. The connection uses the permissions the service publishes. You can turn off tools later.</p>
     <p className="catalog-results" role="status">{loading ? 'Loading the directory…' : `${items.length.toLocaleString()} of ${total.toLocaleString()} matches · ${count.toLocaleString()} listings total`}{fetchedAt ? ` · updated ${new Date(fetchedAt).toLocaleDateString()}` : ''}</p>
     {loading && !items.length ? <LoadingState label="Loading the directory…" rows={4}/> : null}
-    {error ? <p className="connector-error" role="alert">{error} <button type="button" className="connector-retry" onClick={() => setRetry(value => value + 1)}>Retry</button></p> : null}
+    {error ? <p className="connector-error" role="alert">{error} <button type="button" className="connector-retry" onClick={() => { invalidateDirectory(); setRetry(value => value + 1); }}>Retry</button></p> : null}
     {loading ? null : !items.length ? <p className="connector-empty">No services match that search. Try another name or choose “Everything”.</p> : <div className="connector-catalog">{items.map(entry => {
       const connected = connectedUrls.includes(entry.url);
       const preview = previews[entry.id];
