@@ -51,6 +51,7 @@ function quickStart(onStart, initialOptions = { routing: 'auto', provider: 'open
   let options = initialOptions;
   const { QuickStart } = load('../src/components/QuickStart.tsx', {
     react: runtime.react, './GlassSelect': { GlassSelect: 'select' }, '../lib/presets': presets,
+    '../hooks/useModelChoices': { useModelChoices: () => ({ choices: presets.MODEL_CHOICES, nicrronChoices: [], nicrronStatus: 'not_configured' }) },
     './cipher/BinaryLens': { __esModule: true, default: 'binary-lens' },
     './cipher/CypherMark': { __esModule: true, default: 'cypher-mark' },
     './cipher/RecentWork': { RecentWork: 'recent-work' },

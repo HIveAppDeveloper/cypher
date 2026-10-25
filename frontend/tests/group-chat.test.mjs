@@ -6,7 +6,7 @@ stubs['../lib/dates']=load('../src/lib/dates.ts');
 stubs['./AgentConversationActivity']={...load('../src/lib/agent-conversation.ts'),AgentConversationActivity:'agent-conversation-activity'};
 stubs['./cipher/BinaryLens']={__esModule:true,default:'binary-lens'};
 stubs['./cipher/CypherMark']={__esModule:true,default:'cypher-mark'};
-const {messageTime,sameMessageGroup}=load('../src/components/ChatPanel.tsx',{...stubs,react:{}});
+const {messageTime,sameMessageGroup}=load('../src/components/ChatPanel.tsx',{...stubs,react:{},'../hooks/useModelChoices':{useModelChoices:()=>({choices:[],nicrronChoices:[],nicrronStatus:'not_configured'})}});
 const msg=(createdAt,senderBotId='one',senderType='bot')=>({createdAt,senderBotId,senderType});
 test('grouping treats naive backend timestamps as UTC and keeps explicit offsets',()=>{
  assert.equal(messageTime('2026-10-24T16:00:00').toISOString(),'2026-10-24T16:00:00.000Z');

@@ -115,10 +115,18 @@ function load(path, imports = {}, globals = {}) {
     require: name => {
       if (name === '../lib/canonical-app') return { CANONICAL_APP_ORIGIN: 'https://app.example', isOffCanonicalHost: () => false };
       if (name === '../lib/dates' || name === './dates') return load('../src/lib/dates.ts', {}, globals);
+      if (name === '../hooks/useModelChoices' && !(name in imports)) {
+        return { useModelChoices: () => ({ choices: harnessModelChoices(), nicrronChoices: [], nicrronStatus: 'not_configured' }) };
+      }
       if (!(name in imports)) throw new Error('Unexpected import: ' + name);
       return imports[name];
     } });
   return exports;
+}
+let modelChoices;
+function harnessModelChoices() {
+  modelChoices ??= load('../../src/lib/presets.ts').MODEL_CHOICES;
+  return modelChoices;
 }
 function find(node, predicate) {
   if (!node || typeof node !== 'object') return undefined;

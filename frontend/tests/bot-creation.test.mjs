@@ -48,6 +48,7 @@ function creator(onCreate, onClose = () => {}) {
   const { BotCreator } = load('../src/components/BotCreator.tsx', {
     react: runtime.react, './GlassSelect': { GlassSelect: 'select' }, './ModelControls': { ModelControls: 'model-controls' },
     '../lib/presets': load('../src/lib/presets.ts'),
+    '../hooks/useModelChoices': { useModelChoices: () => ({ choices: load('../src/lib/presets.ts').MODEL_CHOICES, nicrronChoices: [], nicrronStatus: 'not_configured' }) },
   });
   return () => runtime.render(() => BotCreator({ onCreate, onClose }));
 }
