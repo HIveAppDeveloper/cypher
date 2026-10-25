@@ -10,3 +10,13 @@ export function dateFromApi(value: string | null | undefined): Date | null {
   const date = new Date(hasTimeZone ? isoCompatible : withoutTimeZone);
   return Number.isNaN(date.getTime()) ? null : date;
 }
+
+/** Calendar-only fields keep their stated day; timestamp inputs still use the viewer's local date. */
+export function calendarDateLabel(value: string | null | undefined): string | null {
+  const normalized = typeof value === 'string' ? value.trim() : '';
+  const date = dateFromApi(normalized);
+  if (!date) return null;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(normalized)) return date.toLocaleDateString();
+  if (date.toISOString().slice(0, 10) !== normalized) return null;
+  return date.toLocaleDateString(undefined, { timeZone: 'UTC' });
+}

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { ApiError, request } from '../lib/api';
-import { dateFromApi } from '../lib/dates';
+import { calendarDateLabel, dateFromApi } from '../lib/dates';
 import WorkflowShell from './WorkflowShell';
 import './vc-prospecting.css';
 
@@ -363,7 +363,7 @@ export default function VcProspectingWorkspace({ accountId }: { accountId?: stri
           <h2>{selectedFounder.company_name}</h2><p className="vc-detail-subtitle">{selectedFounder.industry || 'Company named in an SEC filing'}</p>
           <nav className="vc-detail-tabs" aria-label="Candidate details">{(['overview', 'evidence', 'outreach', 'notes'] as const).map(tab => <button type="button" key={tab} aria-current={detailTab === tab ? 'page' : undefined} onClick={() => setDetailTab(tab)}>{tab[0].toUpperCase() + tab.slice(1)}</button>)}</nav>
           {detailTab === 'overview' ? <div className="vc-detail-content">
-            <dl className="vc-facts"><div><dt>Person named</dt><dd>{selectedFounder.person_name}</dd></div><div><dt>Role in filing</dt><dd>{selectedFounder.title || selectedFounder.roles.join(', ') || 'Not specified'}</dd></div><div><dt>Location</dt><dd>{[selectedFounder.location?.city, selectedFounder.location?.state].filter(Boolean).join(', ') || 'Not listed'}</dd></div><div><dt>Filing date</dt><dd>{selectedFounder.filing_date ? dateLabel(selectedFounder.filing_date) : 'Not listed'}</dd></div></dl>
+            <dl className="vc-facts"><div><dt>Person named</dt><dd>{selectedFounder.person_name}</dd></div><div><dt>Role in filing</dt><dd>{selectedFounder.title || selectedFounder.roles.join(', ') || 'Not specified'}</dd></div><div><dt>Location</dt><dd>{[selectedFounder.location?.city, selectedFounder.location?.state].filter(Boolean).join(', ') || 'Not listed'}</dd></div><div><dt>Filing date</dt><dd>{calendarDateLabel(selectedFounder.filing_date) || 'Not listed'}</dd></div></dl>
             <h3>Why this person appears</h3><p>{selectedFounder.founder_status === 'founder_named_in_filing' ? (selectedFounder.founder_evidence || 'The filing explicitly identifies a founder role.') : 'This person is named in a company filing. The filing does not explicitly identify them as a founder.'}</p>
             {selectedFounder.source_url ? <a className="vc-source-link" href={selectedFounder.source_url} target="_blank" rel="noreferrer">Open SEC filing <VcIcon kind="external"/></a> : null}
           </div> : null}
