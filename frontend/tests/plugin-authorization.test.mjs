@@ -20,6 +20,36 @@ function panel({saved={},popupBlocked=false,api:overrides={},embedded=false}={})
 }
 async function connect(p){await p.view.flush();button(p.view.tree,'Connect').props.onClick();await p.view.flush();await p.view.flush();}
 
+test('catalog request failures show recovery instead of a valid empty catalog',async()=>{
+  let calls=0;
+  const p=panel({api:{getPluginCatalog:async()=>{if(++calls===1)throw Error('Synthetic offline');return [item];}}});
+  await p.view.flush();
+  assert.match(textOf(p.view.tree),/App catalog unavailable/);
+  assert.doesNotMatch(textOf(p.view.tree),/No apps match/);
+  find(p.view.tree,n=>n.type==='button'&&textOf(n)==='Retry catalog').props.onClick();
+  await p.view.flush();
+  assert.doesNotMatch(textOf(p.view.tree),/App catalog unavailable/);
+  assert.match(textOf(p.view.tree),/Fixture Service/);
+  p.view.unmount();
+});
+
+test('connection request failures do not claim there are no saved tools and retry recovers',async()=>{
+  let calls=0;
+  const p=panel({api:{getPlugins:async()=>{if(++calls===1)throw Error('Synthetic offline');return [];}}});
+  await p.view.flush();
+  assert.match(textOf(p.view.tree),/Could not load your saved connections/);
+  assert.doesNotMatch(textOf(p.view.tree),/Connect an app below/);
+  button(p.view.tree,'Connected').props.onClick();
+  await p.view.flush();
+  assert.match(textOf(p.view.tree),/Connections unavailable/);
+  assert.doesNotMatch(textOf(p.view.tree),/No tools connected yet/);
+  find(p.view.tree,n=>n.type==='button'&&textOf(n)==='Retry connections').props.onClick();
+  await p.view.flush();
+  assert.match(textOf(p.view.tree),/No tools connected yet/);
+  assert.doesNotMatch(textOf(p.view.tree),/Connections unavailable/);
+  p.view.unmount();
+});
+
 test('embedded app management opens the saved connection without reauthorizing or claiming a tool test',async()=>{
   let authorizations=0;
   const p=panel({embedded:true,api:{getPlugins:async()=>[{id:'linked-account',name:item.name,url:item.url,enabled:true,authenticated:true,tools:[{name:'read_source',description:'Read a source',enabled:true}]}],authorizePlugin:async()=>{authorizations++;throw Error('Management must not start authorization');}}});
