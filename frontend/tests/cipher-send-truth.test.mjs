@@ -43,11 +43,11 @@ function setup({ webhook = '' } = {}) {
   }, { ...env.globals, React: react.default });
 
   view.mount(() => CipherApp());
-  return { env, view, dispatched };
+  return { env, view, dispatched, assistant };
 }
 
 test('missing sequence sender opens Setup and leaves the lead ready to send', async () => {
-  const { env, view, dispatched } = setup();
+  const { env, view, dispatched, assistant } = setup();
   const start = find(view.tree, node => node.type === 'button' && textOf(node).startsWith('Start 1 hot sequence'));
   start.props.onClick();
   await view.flush();
@@ -66,6 +66,11 @@ test('missing sequence sender opens Setup and leaves the lead ready to send', as
   await view.flush();
 
   assert.equal(JSON.parse(env.globals.localStorage.getItem('cipher-territory-v2')).leads[0].stage, 'manual-sent');
+  const saved=JSON.parse(env.globals.localStorage.getItem('cipher-territory-v2'));
+  const context={offering:saved.offering,persona:saved.persona};
+  assert.match(assistant.localReply('pipeline',saved.leads,context).text,/1 sent manually/);
+  assert.doesNotMatch(assistant.localReply('who should we call first?',saved.leads,context).text,/Sequences are already running/);
+  assert.ok(find(view.tree,node=>node.type==='div'&&textOf(node)==='In sequence0'));
   assert.ok(find(view.tree, node => node.type === 'button' && textOf(node) === 'Mark replied'));
   view.unmount();
 });

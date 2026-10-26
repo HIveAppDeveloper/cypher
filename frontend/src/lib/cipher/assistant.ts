@@ -76,13 +76,13 @@ export function localReply(question: string, leads: Lead[], ctx: { offering: str
   }
   if (/\b(pipeline|status|summary|overview|how (are|is) (we|it|things)|progress|meetings?)\b/.test(q)) {
     const by = (s: Lead['stage']) => leads.filter(l => l.stage === s).length;
-    return { text: `${leads.length} accounts ranked: ${hot.length} hot, ${leads.filter(l => l.tier === 'Warm').length} warm. ${by('drafted')} ready to send, ${by('sent')} in sequence, ${by('replied')} replied, ${by('meeting')} meeting${by('meeting') === 1 ? '' : 's'} booked.${hot.length ? ` Top account: ${hot[0].company.name} at ${hot[0].score}.` : ''}`, tickers: hot.slice(0, 3).map(l => l.id) };
+    return { text: `${leads.length} accounts ranked: ${hot.length} hot, ${leads.filter(l => l.tier === 'Warm').length} warm. ${by('drafted')} ready to send, ${by('sent')} in sequence, ${by('manual-sent')} sent manually, ${by('replied')} replied, ${by('meeting')} meeting${by('meeting') === 1 ? '' : 's'} booked.${hot.length ? ` Top account: ${hot[0].company.name} at ${hot[0].score}.` : ''}`, tickers: hot.slice(0, 3).map(l => l.id) };
   }
   if (/\b(warm)\b/.test(q)) { const w = ranked.filter(l => l.tier === 'Warm'); return { text: w.length ? `${w.length} warm accounts: ${list(w.slice(0, 6).map(l => `${l.company.name} (${l.score})`))}. A little research could tip the top ones into hot.` : 'No warm accounts in this run.', tickers: w.slice(0, 6).map(l => l.id) }; }
   if (/\b(cold|watch|skip|ignore|worst)\b/.test(q)) { const w = ranked.filter(l => l.tier === 'Watch'); return { text: w.length ? `Park these for now: ${list(w.slice(0, 6).map(l => l.company.name))}. Not enough is happening there yet.` : 'Nothing to park; every account has some signal.', tickers: [] }; }
   if (/\b(first|call|priorit|who should|top|best|hot|focus|target)\b/.test(q)) {
     const top = (hot.length ? hot : ranked).slice(0, 3);
-    return { text: `Call ${top[0].company.name} first: ${firstSentence(top[0].why).toLowerCase()}. Then ${list(top.slice(1).map(l => `${l.company.name} (${l.score})`))}. ${top[0].stage === 'drafted' ? 'Their emails are drafted and ready to send.' : 'Sequences are already running.'}`, tickers: top.map(l => l.id) };
+    return { text: `Call ${top[0].company.name} first: ${firstSentence(top[0].why).toLowerCase()}. Then ${list(top.slice(1).map(l => `${l.company.name} (${l.score})`))}. ${top[0].stage === 'drafted' ? 'Their emails are drafted and ready to send.' : top[0].stage === 'manual-sent' ? 'Their email was marked sent manually.' : 'Sequences are already running.'}`, tickers: top.map(l => l.id) };
   }
   return null;
 }
