@@ -44,3 +44,12 @@ def test_skill_search_does_not_grow_the_model_tool_list():
     import jsonschema
     for tool in definitions:
         jsonschema.Draft202012Validator.check_schema(tool['function']['parameters'])
+
+
+def test_automatic_full_recipes_require_a_named_domain_but_discovery_stays_broad():
+    arithmetic = 'Report revenue and profit growth: Q1 revenue 100 cost 80; Q2 revenue 120 cost 90.'
+    assert any(card['id'].startswith('cost-optimization.') for card in search_skills(arithmetic))
+    assert task_skill_prompt(arithmetic) == ''
+    assert task_skill_prompt('Python') == ''
+    assert 'python.concurrency-review' in task_skill_prompt('Python concurrency race review')
+    assert 'cost-optimization.cost-review' in task_skill_prompt('Review cost optimization savings')
