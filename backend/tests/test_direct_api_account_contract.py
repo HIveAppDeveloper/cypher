@@ -121,3 +121,124 @@ async def test_legacy_current_route_does_not_require_new_capability_or_account_r
     legacy={k:v for k,v in ready(provider).items() if k in {'state','public_model','transport_model'}}
     mock_control(monkeypatch,legacy)
     assert await service.control_check({'provider':provider,'action':'check','verification_target':'current_route'})==legacy
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize('provider,model,base',[
+    ('gemini','gemini-3.8-flash','https://generativelanguage.googleapis.com/v1alpha'),
+    ('xai','grok-4.5','https://api.x.ai/v1'),
+])
+async def test_verified_saved_key_reaches_real_gateway_direct_route_with_tool_preflight(setup,monkeypatch,provider,model,base):
+    import socket
+    from litellm import ModelResponse
+    from app.config import settings
+    from app.services import llm_gateway,model_routing,omniroute,usage
+    client,sessions,owner,_=setup
+    key='synthetic-submitted-'+provider+'-api-key-not-live'
+    queued=await client.post(f'/api/runtime/model-connections/{provider}/api-key',headers=owner,json={'api_key':key})
+    assert queued.status_code==202
+    with monkeypatch.context() as patch:
+        mock_control(patch,ready(provider))
+        assert await service.run_requested_check(sessions,AsyncMock())
+    async with sessions() as db:
+        row=await db.get(RuntimeCheck,service.PREFIX+provider)
+        assert row.status=='completed' and row.detail['state']=='ready'
+        assert row.detail['credentials_encrypted'] and key not in json.dumps(row.detail)
+
+    def forbidden(*args,**kwargs):raise AssertionError('No catalog, gateway fallback or real network is allowed')
+    monkeypatch.setattr(socket.socket,'connect',forbidden)
+    for name in ('catalog','request','complete','model_id'):
+        monkeypatch.setattr(omniroute,name,forbidden)
+    monkeypatch.setattr(model_routing,'route_catalog',forbidden)
+    monkeypatch.setattr(llm_gateway,'validate_capabilities',forbidden)
+    monkeypatch.setattr(omniroute,'_managed_records',[])
+    monkeypatch.setattr(settings,'LLM_API_KEY','ambient-key-must-not-be-used')
+    monkeypatch.setattr(settings,'LLM_API_BASE','https://unapproved-router.invalid')
+    monkeypatch.setattr(settings,'LLM_FALLBACK_PROVIDER','openai')
+    monkeypatch.setattr(settings,'LLM_FALLBACK_MODEL','gpt-6.1-sol')
+    monkeypatch.setattr(usage,'check_allowance',AsyncMock())
+    record=AsyncMock();monkeypatch.setattr(usage,'record',record)
+    messages=[{'role':'user','content':'Read the selected record.'}]
+    tools=[{'type':'function','function':{'name':'read_record','parameters':{'type':'object','properties':{}}}}]
+    preflight=AsyncMock(wraps=model_routing.validate_direct_capabilities)
+    monkeypatch.setattr(model_routing,'validate_direct_capabilities',preflight)
+    result=ModelResponse(model=provider+'/'+model,choices=[{'message':{'role':'assistant','content':'Synthetic model response'}}])
+    complete=AsyncMock(return_value=result);monkeypatch.setattr(llm_gateway.litellm,'acompletion',complete)
+    response=await llm_gateway.LLMGateway.complete(messages,tools,provider=provider,model=model,allow_fallback=False,max_tokens=16)
+    preflight.assert_awaited_once_with(messages,tools,provider,model)
+    assert complete.await_count==1
+    sent=complete.await_args.kwargs
+    assert sent['api_key']==key and sent['model']==provider+'/'+model and sent['api_base']==base
+    assert sent['tools']==tools and sent['messages']==messages and sent['num_retries']==0
+    assert sent['max_tokens']==16
+    assert response._hidden_params['grokbot_route']=={'provider':provider,'model':model,'fallback':False,'transport':'provider_api'}
+    assert omniroute.managed_api_key(provider)==key
+    assert record.await_args.kwargs=={'direct':True}
+
+
+def provider_response(provider,identity='valid'):
+    model='gemini-3.8-flash' if provider=='gemini' else 'grok-4.5'
+    data={'candidates':[{'content':{'parts':[{'text':'Synthetic model response'}]}}]} if provider=='gemini' else {'choices':[{'message':{'content':'Synthetic model response'}}]}
+    if identity!='missing':data['modelVersion' if provider=='gemini' else 'model']=model if identity=='valid' else 'another-model'
+    return data
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize('provider',PROVIDERS)
+@pytest.mark.parametrize('identity',['valid','missing','wrong'])
+async def test_direct_self_host_verifies_documented_response_model_without_fallback(setup,monkeypatch,provider,identity):
+    seen=[];key='synthetic-direct-'+provider+'-provider-api-key';real=httpx.AsyncClient
+    def respond(request):
+        seen.append(request)
+        expected='https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent' if provider=='gemini' else 'https://api.x.ai/v1/chat/completions'
+        assert str(request.url)==expected
+        assert request.headers['x-goog-api-key' if provider=='gemini' else 'authorization']==(key if provider=='gemini' else 'Bearer '+key)
+        assert json.loads(request.content)['generationConfig' if provider=='gemini' else 'max_tokens']==({'maxOutputTokens':16} if provider=='gemini' else 16)
+        return httpx.Response(200,json=provider_response(provider,identity))
+    monkeypatch.setattr(httpx,'AsyncClient',lambda **kwargs:real(transport=httpx.MockTransport(respond),**kwargs))
+    result=await service.provider_key_check(provider,key)
+    assert len(seen)==1 and result['state']==('ready' if identity=='valid' else 'unavailable')
+    if identity=='valid':
+        assert result['public_model']==ready(provider)['public_model'] and result['transport_model']==ready(provider)['transport_model']
+    else:assert 'transport_model' not in result
+
+
+@pytest.mark.asyncio
+async def test_direct_google_thought_only_output_is_not_a_model_answer(setup,monkeypatch):
+    data=provider_response('gemini')
+    data['candidates'][0]['content']['parts'][0]['thought']=True
+    real=httpx.AsyncClient
+    monkeypatch.setattr(httpx,'AsyncClient',lambda **kwargs:real(transport=httpx.MockTransport(lambda _:httpx.Response(200,json=data)),**kwargs))
+    result=await service.provider_key_check('gemini','synthetic-api-key-not-live')
+    assert result['state']=='unavailable' and 'transport_model' not in result
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize('provider',PROVIDERS)
+async def test_self_host_invalid_model_cannot_replace_saved_verified_key(setup,monkeypatch,provider):
+    from app.config import settings
+    from app.services.plugins import reveal
+    client,sessions,owner,_=setup
+    for name in ('OMNIROUTE_URL','OMNIROUTE_API_KEY','OMNIROUTE_CONTROL_KEY'):monkeypatch.setattr(settings,name,'')
+    forbidden=AsyncMock(side_effect=AssertionError('Self-host API verification must not call gateway controls or fall back'))
+    monkeypatch.setattr(service,'direct_api_account_support',forbidden)
+    monkeypatch.setattr(service,'control_check',forbidden)
+    original='synthetic-original-'+provider+'-provider-api-key'
+    for index,identity in enumerate(('valid','missing','wrong')):
+        key=original if index==0 else 'synthetic-replacement-'+identity+'-'+provider+'-api-key'
+        queued=await client.post(f'/api/runtime/model-connections/{provider}/api-key',headers=owner,json={'api_key':key})
+        assert queued.status_code==202
+        with monkeypatch.context() as patch:
+            real=httpx.AsyncClient
+            def respond(request):
+                assert request.headers['x-goog-api-key' if provider=='gemini' else 'authorization']==(key if provider=='gemini' else 'Bearer '+key)
+                return httpx.Response(200,json=provider_response(provider,identity))
+            patch.setattr(httpx,'AsyncClient',lambda **kwargs:real(transport=httpx.MockTransport(respond),**kwargs))
+            assert await service.run_requested_check(sessions,AsyncMock())
+        async with sessions() as db:
+            row=await db.get(RuntimeCheck,service.PREFIX+provider)
+            assert row.status=='completed' and row.detail['state']=='ready'
+            assert reveal(row.detail['credentials_encrypted'])==original
+            assert row.detail['active_route']=={k:ready(provider)[k] for k in ('public_model','transport_model')}
+            row.updated_at=datetime.utcnow()-timedelta(minutes=1);await db.commit()
+    assert forbidden.await_count==0

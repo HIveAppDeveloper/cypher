@@ -2,7 +2,8 @@
 
 This app counterpart requires the paired private worker before accepting an
 explicit `provider_account` check or an API-key enrollment. Legacy
-`current_route` behavior and direct local API-key verification are unchanged.
+`current_route` behavior is unchanged. Direct local API-key verification uses
+the same documented response-model requirement without a worker preflight.
 It introduces no database schema, environment, provider-default or alias change.
 
 An owner-control POST with `{provider, action:"capabilities"}` must return the
@@ -34,6 +35,13 @@ to the request, `verification_scope:"provider_account"`, the exact fixed
 Returned provider messages, credentials and browser verification URLs are never
 forwarded. Failure receipts use fixed app text. Existing route/key preservation
 and stale-result guards remain in the durable worker.
+
+The direct self-host path uses its existing fixed official endpoint and the
+submitted or encrypted app-saved credential. It also requires the exact
+`modelVersion`/`model`, rejects thought-only Google text, and returns the registry
+transport ID after success. Missing/wrong model responses cannot replace a
+working saved credential. It requires no remote worker capability. Its saved
+app credential is distinct from the native worker's fixed slot.
 
 Google's [GenerateContentResponse reference](https://ai.google.dev/api/generate-content#generatecontentresponse)
 defines `modelVersion` as the version used for the response. The
