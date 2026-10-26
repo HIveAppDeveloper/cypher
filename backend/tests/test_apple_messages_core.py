@@ -150,7 +150,7 @@ async def test_updates_require_optin_and_never_leak_internal_content(workspace):
                 {'sender_type':'bot','content':'Private chain','metadata':{'internal':True}},
                 {'sender_type':'user','content':'User request'}, {'sender_type':'bot','content':'Verified public answer'}]})
             db.add(task); await db.flush(); await service.queue_task_result(db, task); await service.queue_task_result(db, task)
-            rows = (await db.scalars(select(AppleOutbox).where(AppleOutbox.source_id == 'task:'+task.id))).all()
+            rows = (await db.scalars(select(AppleOutbox).where(AppleOutbox.source_id == 'update:'+task.id))).all()
             assert len(rows) == 1 and 'Verified public answer' in rows[0].body
             assert 'Private chain' not in rows[0].body and 'User request' not in rows[0].body
             assert rows[0].reported_cost is None and rows[0].currency is None; await db.commit()
@@ -231,6 +231,38 @@ async def test_explicit_unlink_releases_identity_without_moving_old_history(work
 
 
 pg_only = pytest.mark.skipif(not os.getenv('CYPHER_APPLE_TEST_POSTGRES_URL'), reason='Requires disposable Apple-core PostgreSQL')
+
+
+@pg_only
+@pytest.mark.asyncio
+async def test_concurrent_consent_withdrawal_and_task_update_cannot_leave_pending_update(workspace):
+    sessions, rooms = workspace
+    thread_id, _ = await linked(sessions, rooms, updates=True)
+    with service.tenant_scope('owner-a'):
+        async with sessions() as db:
+            bot = await db.scalar(select(Bot.id))
+            task = Task(id=str(uuid4()), conversation_id=rooms['owner-a'], bot_id=bot,
+                title='Synthetic complete task', description='Synthetic', status='completed', result={})
+            db.add(task)
+            await db.commit()
+            task_id = task.id
+    async def withdraw():
+        with service.tenant_scope('owner-a'):
+            async with sessions() as db:
+                await service.set_updates_opt_in(db, thread_id, False)
+                await db.commit()
+    async def queue_result():
+        with service.tenant_scope('owner-a'):
+            async with sessions() as db:
+                await service.queue_task_result(db, await db.get(Task, task_id))
+                await db.commit()
+    await asyncio.wait_for(asyncio.gather(withdraw(), queue_result()), timeout=10)
+    with service.tenant_scope('owner-a'):
+        async with sessions() as db:
+            assert (await db.get(AppleThread, thread_id)).updates_opt_in is False
+            states = (await db.scalars(select(AppleOutbox.status).where(
+                AppleOutbox.thread_id == thread_id, AppleOutbox.source_id == 'update:'+task_id))).all()
+            assert set(states) <= {'suppressed'}
 
 @pytest.mark.asyncio
 @pg_only

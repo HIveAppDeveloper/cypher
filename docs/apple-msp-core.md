@@ -1,6 +1,6 @@
 # Cypher Apple Messages provider core
 
-Status: source-only backend foundation. This is **not** an Apple-approved MSP,
+Status: source candidate with dormant account management. This is **not** an Apple-approved MSP,
 Apple transport implementation, or working native messaging connection.
 
 The provider belongs in Cypher's existing FastAPI backend and dedicated worker,
@@ -36,16 +36,47 @@ The functions whose names contain `verified` are an internal trust boundary,
 not HTTP authentication. A reviewed Apple transport must authenticate each
 Apple envelope before calling them. The core alone cannot establish that trust.
 
+## Same-runtime account API
+
+The additive bootstrap registers four new tenant-scoped tables through the existing
+API/worker advisory lock and revision path. It creates no replacement database,
+changes no existing rows and requires no provider environment values. The prior
+revision is upgraded once; concurrent startup and repeat startup are tested on
+disposable PostgreSQL. Release remains the canonical owner's responsibility.
+
+The existing authenticated backend boundary exposes `/api/apple-messages`:
+
+- `GET /status` reports that linking, sending and the native transport are unavailable.
+  It does not infer Apple approval from organization registration or an inquiry.
+- `GET /threads?limit=50` returns at most 100 owned thread summaries without
+  opaque IDs, hashes, secrets or message bodies.
+- `PATCH /threads/{id}` accepts only an explicit boolean `updates_opt_in`.
+  Withdrawal suppresses pending proactive updates while preserving direct replies.
+  It cannot reactivate a closed, opted-out or human-controlled conversation.
+- `DELETE /threads/{id}` closes the owned link, clears its encrypted external
+  identity, and suppresses pending messages. Foreign IDs are indistinguishable
+  from unknown IDs; old tenant history stays in its original workspace.
+- `GET /usage?hours=720` aggregates owned message counts and reported costs over
+  at most 744 hours by message creation time. Decimal amounts are strings, each
+  currency is separate, and unreported prices are counted without assuming zero.
+  This is reporting only, not an invoice or billing charge.
+
+All routes require a workspace even when local user authentication is disabled,
+retain the existing internal bearer-token boundary and return private/no-store
+responses. No route grants provider staff authority or accepts Apple IDs from a
+browser. A user cannot enable the transport by changing configuration here.
+
 ## Intentionally inactive
 
-No public webhook, account-link API, operator UI, outbound network call, worker
-hook, app model registration, bootstrap revision, migration, environment change,
-or new billing charge is enabled by this commit. Dispatch defaults to disabled.
+No public webhook, account-link creation API, operator UI, outbound network call,
+worker hook, provider environment change or new billing charge is enabled.
+Dispatch defaults to disabled.
 There are no invented Apple payloads, certificate formats, or API endpoints.
 
-These four model tables must be registered and created through the existing
-advisory-locked additive bootstrap in the eventual reviewed integration; simply
-importing this service is not a production migration. Existing data must remain.
+The additive schema and account controls are safe preparation for the later
+reviewed transport. They do not create an approved or working MSP. In-flight
+claimed deliveries cannot be recalled by withdrawing consent; the transport
+must handle its actual Apple cancellation/reconciliation contract.
 
 ## Required Apple integration work
 
@@ -70,7 +101,7 @@ Before activating this foundation:
 3. Wire authenticated browser linking, customer identity verification and a real
    operator console/takeover flow. Add rich links, welcome/triage messages and
    required customer controls using Apple's actual supported payloads.
-4. Register additive tables, wire task-completion and outbox worker hooks, reconcile
+4. Wire task-completion and outbox worker hooks, reconcile
    ambiguous deliveries, and expose reported messaging costs separately in Usage.
 5. Validate actual PostgreSQL concurrency, duplicate callbacks, STOP-versus-send,
    worker restart/reconciliation and cross-tenant isolation on disposable data.
@@ -91,10 +122,13 @@ Three additional actual PostgreSQL cases pass for concurrent duplicate events,
 exclusive delivery claims, and cross-tenant identity-link races. Test schemas and
 the owned server/data directory are removed after execution.
 
-The final backend suite passes 559 tests with seven PostgreSQL-gated skips. The
-three new PostgreSQL-only cases are independently exercised in the fourteen-case
-native-core PostgreSQL pass; four older PostgreSQL-gated cases are outside this
-change. The task is explicitly flushed before an existing inbound event obtains
+The original foundation passed 559 tests with seven PostgreSQL-gated skips. The
+server-preparation follow-up adds real HTTP authentication, strict input/consent,
+foreign-ID privacy, durable disconnect, exact cost/unknown-price and content
+redaction cases. An additional PostgreSQL race covers consent withdrawal versus
+task-result queueing, and a PostgreSQL upgrade case proves concurrent startup
+from the prior revision preserves existing data. Updated counts are recorded in
+the server evidence receipt. The task is explicitly flushed before an existing inbound event obtains
 its immediate foreign-key reference, within the same transaction.
 
 Apple transport/device proof is still required; it must not be inferred from

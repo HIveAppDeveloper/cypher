@@ -1,4 +1,4 @@
-"""Unactivated MSP domain storage; register/migrate only with the reviewed adapter."""
+"""Additive same-runtime storage; native transport remains unavailable."""
 from datetime import datetime
 from uuid import uuid4
 from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Numeric, String, Text, UniqueConstraint
