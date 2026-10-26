@@ -55,6 +55,8 @@ class AgentOrchestrator:
         from app.services.fleet import ModelFleet
         self.fleet = ModelFleet()
         self.fleet.register(self.registry)
+        from app.services.agent_skills import register_agent_skill_tools
+        register_agent_skill_tools(self.registry, AsyncSessionLocal)
 
     @track_task
     @audio_task
@@ -414,7 +416,8 @@ class AgentOrchestrator:
             # Indexed local retrieval, not an extra planner/model call. Never
             # put the full 10,000-profile catalog into the conversation context.
             from app.services.specialist_catalog import task_skill_prompt
-            messages[0]['content'] += task_skill_prompt(trigger_message)
+            if not self.options.voice_mode:
+                messages[0]['content'] += task_skill_prompt(trigger_message)
             messages[0]['content'] += (
                 '\nInternal specialist workflow: handle straightforward requests directly. '
                 'Use the selected recipes yourself when sufficient. For useful independent checks, '
@@ -422,7 +425,7 @@ class AgentOrchestrator:
                 'bounded tool-free assignments together. Gather live evidence with your own enabled tools first. '
                 'Do not ask the user to choose or manage specialists. Synthesize their advice into one answer; '
                 'never treat advice as a receipt of an external action.'
-            )
+            ) if not self.options.voice_mode else '\nFor routine spoken turns, answer directly; defer skill selection. Discover or consult specialists only when the user requests it or useful independent work requires it.'
 
             from app.services.model_profiles import task_specialty, routing_profiles
             from app.services.model_routing import required_modalities
@@ -435,6 +438,11 @@ class AgentOrchestrator:
             # The closed-set greeting fast path needs no plugin discovery or
             # tool schemas. Every substantive or contextual request keeps tools.
             fast_greeting = self.options.allow_tools and not efficient_run.allow_tools
+            if not fast_greeting and not self.options.voice_mode:
+                from app.services.agent_skills import prompt_for_bot
+                messages[0]['content'] += await prompt_for_bot(db, bot_id)
+                if not self.options.allow_tools or getattr(self, 'planning', False):
+                    messages[0]['content'] += '\nSkill-selection tools are disabled for this phase; use the existing recipes as advice without changing the selection.'
             # Get available tools for this bot
             with stage('plugin_load'):
                 if not fast_greeting:
