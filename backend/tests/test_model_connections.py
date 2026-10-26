@@ -28,6 +28,7 @@ async def setup(tmp_path, monkeypatch):
     from app.db import session
     monkeypatch.setattr(session, 'AsyncSessionLocal', sessions)
     monkeypatch.setattr(service,'anthropic_account_support',AsyncMock(return_value=True))
+    monkeypatch.setattr(service,'direct_api_account_support',AsyncMock(return_value=True))
     owner = {'authorization':'Bearer private-backend-test-key-at-least-32-characters', 'x-grokbot-user-id':account_id_for('owner@example.test')}
     other = {**owner, 'x-grokbot-user-id':account_id_for('other@example.test')}
     try:
