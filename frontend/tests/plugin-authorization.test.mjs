@@ -20,6 +20,65 @@ function panel({saved={},popupBlocked=false,api:overrides={},embedded=false,runt
 }
 async function connect(p){await p.view.flush();button(p.view.tree,'Connect').props.onClick();await p.view.flush();await p.view.flush();}
 
+const linkedPlugin=(verification={status:'not_tested'})=>({id:'linked-account',name:item.name,url:item.url,enabled:true,authenticated:true,tools:[{name:'read_profile',description:'Read an authorized profile',enabled:true}],verification});
+
+test('explicit connection checks its exact returned plugin once and shows verification progress',async()=>{
+  const check=deferred();let saved=[],calls=0,authorizations=0;
+  const p=panel({api:{getPlugins:async()=>saved,authorizePlugin:async()=>{authorizations++;saved=[linkedPlugin()];return{status:'connected',plugin_id:'linked-account',name:item.name};},testPlugin:async pid=>{assert.equal(pid,'linked-account');calls++;return check.promise;}}});
+  await p.view.flush();assert.equal(calls,0,'opening Apps never executes a provider tool');
+  const start=button(p.view.tree,'Connect');start.props.onClick();start.props.onClick();
+  await p.view.flush();
+  assert.equal(authorizations,1);assert.equal(calls,1);
+  assert.match(textOf(p.view.tree),/checking its tools/);
+  saved=[linkedPlugin({status:'passed',checked_at:new Date().toISOString()})];
+  check.resolve({status:'passed',message:'A read-only tool returned successfully.',latency_ms:10});
+  await p.view.flush();await p.view.flush();
+  assert.match(textOf(p.view.tree),/Fixture Service connected/);
+  assert.match(textOf(p.view.tree),/Test passed/);
+  assert.equal(calls,1);p.view.unmount();
+});
+
+test('Allow completion verifies the returned plugin instead of guessing a matching service',async()=>{
+  let status='awaiting_login',checks=0;
+  const p=panel({api:{pluginAuthStatus:async()=>({status,name:item.name,plugin_id:'linked-account'}),getPlugins:async()=>status==='connected'?[linkedPlugin({status:'discovered'})]:[],testPlugin:async pid=>{assert.equal(pid,'linked-account');checks++;return{status:'discovered',message:'Tools discovered. Execution has not been tested for this service.'};}}});
+  await connect(p);assert.equal(checks,0);
+  status='connected';p.env.time.advance(2000);await p.view.flush();await p.view.flush();
+  assert.equal(checks,1);assert.equal(p.session.getItem(auth.PLUGIN_SIGN_IN_KEY),null);
+  assert.match(textOf(p.view.tree),/Tools found/);
+  assert.doesNotMatch(textOf(p.view.tree),/Test passed/);p.view.unmount();
+});
+
+test('a failed HTTP tool check refreshes persisted sign-in evidence and preserves the saved connection',async()=>{
+  let verification={status:'passed',checked_at:new Date().toISOString()},loads=0;
+  const p=panel({api:{getPlugins:async()=>{loads++;return[linkedPlugin(verification)];},testPlugin:async()=>{verification={status:'failed',detail:{code:'sign_in_required',message:'Reconnect this account.'}};throw Error('Reconnect this account.');}}});
+  await p.view.flush();button(p.view.tree,'Manage').props.onClick();await p.view.flush();
+  button(p.view.tree,'Test again').props.onClick();await p.view.flush();await p.view.flush();
+  assert.equal(loads,2);
+  assert.match(textOf(p.view.tree),/Sign in again/);
+  assert.doesNotMatch(textOf(p.view.tree),/Test passed/);
+  assert.match(textOf(p.view.tree),/Account or API access linked/);
+  assert.ok(button(p.view.tree,'Reconnect'));p.view.unmount();
+});
+
+test('successful sign-in stays saved when execution fails and never claims a successful tool call',async()=>{
+  let saved=[];
+  const p=panel({api:{getPlugins:async()=>saved,authorizePlugin:async()=>{saved=[linkedPlugin({status:'failed',detail:{message:'Provider unavailable.'}})];return{status:'connected',plugin_id:'linked-account',name:item.name};},testPlugin:async()=>{throw Error('Provider unavailable.');}}});
+  await connect(p);await p.view.flush();
+  assert.match(textOf(p.view.tree),/saved connection was preserved/);
+  assert.match(textOf(p.view.tree),/Needs attention/);
+  assert.doesNotMatch(textOf(p.view.tree),/Test passed/);
+  assert.ok(button(p.view.tree,'Test tools'));p.view.unmount();
+});
+
+test('a failed evidence refresh stays retryable rather than silently leaving a stale pass',async()=>{
+  let loads=0;
+  const p=panel({api:{getPlugins:async()=>{if(++loads>1)throw Error('Synthetic offline');return[linkedPlugin()];},testPlugin:async()=>({status:'passed',message:'A read-only tool returned successfully.'})}});
+  await p.view.flush();button(p.view.tree,'Manage').props.onClick();await p.view.flush();
+  button(p.view.tree,'Test tools').props.onClick();await p.view.flush();await p.view.flush();
+  assert.match(textOf(p.view.tree),/Could not refresh connection status/);
+  assert.ok(button(p.view.tree,'Refresh connections'));p.view.unmount();
+});
+
 test('catalog request failures show recovery instead of a valid empty catalog',async()=>{
   let calls=0;
   const p=panel({api:{getPluginCatalog:async()=>{if(++calls===1)throw Error('Synthetic offline');return [item];}}});
