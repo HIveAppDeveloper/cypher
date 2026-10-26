@@ -100,6 +100,14 @@ async def update_bot(bot_id: UUID, bot_update: BotUpdate, db: AsyncSession = Dep
     await db.refresh(bot)
     return bot
 
+@router.get("/{bot_id}/skills")
+async def agent_skills(bot_id: UUID, db: AsyncSession = Depends(get_db)):
+    bot = await db.get(Bot, str(bot_id))
+    if not bot or bot.status == 'deleted':
+        raise HTTPException(status_code=404, detail="Bot not found")
+    from app.services.agent_skills import get_agent_skills
+    return await get_agent_skills(db, bot)
+
 @router.delete("/{bot_id}")
 async def delete_bot(bot_id: UUID, db: AsyncSession = Depends(get_db)):
     bot = (await db.execute(select(Bot).where(Bot.id==str(bot_id)).with_for_update())).scalar_one_or_none()
