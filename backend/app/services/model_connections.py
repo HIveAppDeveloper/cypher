@@ -298,17 +298,17 @@ async def provider_key_check(provider, api_key):
         if provider == 'gemini':
             choices = body.get('candidates') or []
             content = choices[0].get('content', {}).get('parts', []) if choices else []
-            verified = any(isinstance(part, dict) and isinstance(part.get('text'), str) and part['text'].strip() for part in content)
+            verified = body.get('modelVersion') == model and any(isinstance(part, dict) and isinstance(part.get('text'), str) and part['text'].strip() and not part.get('thought') for part in content)
         else:
             choices = body.get('choices') or []
             message = choices[0].get('message') if choices else None
-            verified = isinstance(message, dict) and isinstance(message.get('content'), str) and bool(message['content'].strip())
+            verified = body.get('model') == model and isinstance(message, dict) and isinstance(message.get('content'), str) and bool(message['content'].strip())
     except (ValueError, TypeError, AttributeError, IndexError):
         verified = False
     if not verified:
-        return {'state': 'unavailable', 'message': f'{PROVIDERS[provider][0]} returned no model response. Check model availability and retry.'}
+        return {'state': 'unavailable', 'message': f'{PROVIDERS[provider][0]} did not verify the expected model response. Check model availability and retry.'}
     return {'state': 'ready', 'message': f'{PROVIDERS[provider][0]} API key verified with a model response.',
-            'public_model': PROVIDERS[provider][1], 'transport_model': PROVIDERS[provider][1]}
+            'public_model': PROVIDERS[provider][1], 'transport_model': API_ACCOUNT_CONTRACTS[provider][3]}
 
 async def recover_checks(sessions):
     async with sessions() as db:
