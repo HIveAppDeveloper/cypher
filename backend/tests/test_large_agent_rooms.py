@@ -115,3 +115,26 @@ async def test_adding_a_teammate_promotes_direct_conversation_to_group(workspace
     room = (await client.post('/api/conversations', json={'title':'Now a team', 'bot_ids':bots[:1]})).json()['id']
     assert (await client.post('/api/conversations/'+room+'/participants', params={'bot_id':bots[1]})).status_code == 200
     assert (await client.get('/api/conversations')).json()[0]['is_group'] is True
+
+
+@pytest.mark.asyncio
+async def test_agent_skill_api_exposes_only_its_own_five_and_actual_persisted_choice(workspace):
+    client, sessions, _, bots, foreign, deleted = workspace
+    path = '/api/bots/'+bots[0]+'/skills'
+    response = await client.get(path)
+    assert response.status_code == 200, response.text
+    profile = response.json()
+    assert profile['bot_id'] == bots[0]
+    assert len(set(profile['skill_ids'])) == len(profile['skills']) == 5
+    assert profile['selected_by'] == 'automatic'
+    assert profile['persisted'] is False
+    from app.services.agent_skills import select_agent_skills
+    async with sessions() as db:
+        await select_agent_skills(db, bots[0], list(reversed(profile['skill_ids'])))
+    chosen = (await client.get(path)).json()
+    assert chosen['selected_by'] == 'agent'
+    assert chosen['persisted'] is True
+    assert chosen['skill_ids'] == list(reversed(profile['skill_ids']))
+    assert (await client.get(path, headers={'x-grokbot-user-id':'other-owner'})).status_code == 404
+    for unavailable in [foreign, deleted]:
+        assert (await client.get('/api/bots/'+unavailable+'/skills')).status_code == 404
