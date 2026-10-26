@@ -7,6 +7,7 @@ import { EmailLoginForm } from '../../components/EmailLoginForm';
 import CypherMark from '../../components/cipher/CypherMark';
 import CypherEntrance from '../../components/cipher/CypherEntrance';
 import { loginReadiness, previewDestination } from '../../lib/login-readiness.mjs';
+import './readiness.css';
 
 export const dynamic = 'force-dynamic';
 
@@ -52,7 +53,7 @@ export default async function LoginPage(props: { searchParams?: Promise<{ error?
             <div className="login-divider"><span>or use your email</span></div>
           </> : null}
           {readiness.preview ? <>
-            <a className="login-email-button" href={previewDestination(returnTo)}>Open gateway preview<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></a>
+            <a className="login-email-button login-readiness-action" href={previewDestination(returnTo)}>Open gateway preview<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></a>
             <p className="login-privacy">This local preview uses sample data. Real account connections and sign-in are available in the cloud app.</p>
             <a className="login-skip" href={CANONICAL_APP_ORIGIN+'/login'}>Open the cloud app</a>
           </> : readiness.configured ? <>
@@ -61,7 +62,7 @@ export default async function LoginPage(props: { searchParams?: Promise<{ error?
             <p className="login-privacy">Sign in or create your workspace with a secure email link. No password needed.</p>
           </> : <>
             <p className="login-error" role="alert">Sign-in is temporarily unavailable. No email has been sent.</p>
-            <a className="login-email-button" href={returnTo?'/login?returnTo='+encodeURIComponent(returnTo):'/login'}>Try again</a>
+            <a className="login-email-button login-readiness-action" href={returnTo?'/login?returnTo='+encodeURIComponent(returnTo):'/login'}>Try again</a>
           </>}
         </section>
       </div>

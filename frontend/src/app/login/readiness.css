@@ -1,0 +1,13 @@
+.login-page .login-card a.login-readiness-action,
+.login-page .login-card a.login-readiness-action:hover {
+  background:var(--brand-action,#111);
+  color:var(--brand-on-action,#fff);
+  box-shadow:none;
+  text-decoration:none;
+  filter:none;
+  transform:none;
+}
+.login-page .login-card a.login-readiness-action:focus-visible {
+  outline:2px solid var(--brand-action,#111);
+  outline-offset:4px;
+}
