@@ -119,3 +119,23 @@ test('channel operations announce their own pending action and keep switch names
   assert.equal(textOf(progress()),'');
   view.unmount();
 });
+
+test('a late initial channel load cannot replace a channel created while it was pending',async()=>{
+  const initialLoad=deferred();
+  const created={id:'channel-new',name:'Fresh tasks',enabled:true,manager_model:'gpt-6.1-sol',conversation_id:'room-a',token:'fresh-key',inbound_path:'/api/channels/channel-new/inbound'};
+  const view=panel(()=>initialLoad.promise,{createChannel:async()=>created});
+  await view.flush();
+  find(view.tree,node=>node.props?.id==='channel-name').props.onChange({target:{value:'Fresh tasks'}});
+  await view.flush();
+  const creating=find(view.tree,node=>node.type==='form').props.onSubmit({preventDefault(){}});
+  await view.flush();
+  await creating;
+  await view.flush();
+  assert.match(textOf(view.tree),/Fresh tasks/);
+
+  initialLoad.resolve([]);
+  await view.flush();
+  assert.match(textOf(view.tree),/Fresh tasks/,'the initial response cannot erase the newly created channel');
+  assert.doesNotMatch(textOf(view.tree),/No channels yet/);
+  view.unmount();
+});

@@ -6,7 +6,7 @@ import { GlassSelect } from './GlassSelect';
 interface DemoStep {action:string;url?:string;target?:{label?:string;selector?:string;requires_human?:boolean};key?:string;delta?:number;parameter?:string}
 interface View {interaction?:DemoStep['target'];success?:boolean;error?:string;url?:string;title?:string;image?:string;width?:number;height?:number;stdout?:string;content?:string;entries?:unknown[]}
 export function ComputerPanel({bots,selectedBot,loadingAgents=false,agentsError='',onRetryAgents,onRefreshAgents,onSelectBot,onCreateAgent,onClose}:{bots:Bot[];selectedBot?:Bot|null;loadingAgents?:boolean;agentsError?:string;onRetryAgents?:()=>void;onRefreshAgents?:()=>Promise<void>;onSelectBot?:(bot:Bot)=>void;onCreateAgent?:()=>void;onClose:()=>void}){
- const dialog=useRef<HTMLDialogElement>(null),inputFile=useRef<HTMLInputElement>(null),mounted=useRef(true);
+ const dialog=useRef<HTMLDialogElement>(null),inputFile=useRef<HTMLInputElement>(null),mounted=useRef(true),sharedLoadGeneration=useRef(0);
  const [botId,setBotId]=useState(selectedBot?.id||bots[0]?.id||''),[tab,setTab]=useState<'Browser'|'Terminal'|'Files'|'Shared files'|'Local devices'>('Browser');
  const [recording,setRecording]=useState(false),[demo,setDemo]=useState<DemoStep[]>([]),[recipe,setRecipe]=useState(''),[skillName,setSkillName]=useState('taught-workflow'),[saved,setSaved]=useState('');
  const [control,setControl]=useState(false),[busy,setBusy]=useState(false),[starting,setStarting]=useState(false),[error,setError]=useState(''),[view,setView]=useState<View|null>(null);
@@ -18,7 +18,7 @@ export function ComputerPanel({bots,selectedBot,loadingAgents=false,agentsError=
  const botReady=bots.some(bot=>bot.id===botId);
  const activeBot=bots.find(bot=>bot.id===botId);
  useEffect(()=>{if(selectedBot&&bots.some(bot=>bot.id===selectedBot.id)){setBotId(selectedBot.id);return;}if(!botId||!bots.some(bot=>bot.id===botId))setBotId(bots[0]?.id||'');},[botId,bots,selectedBot?.id]);
- useEffect(()=>{const previous=document.activeElement as HTMLElement;dialog.current?.showModal();mounted.current=true;return()=>{mounted.current=false;dialog.current?.close();previous?.focus();if(hasControl.current)void request('/computer/'+currentBot.current+'/control',{method:'POST',body:JSON.stringify({takeover:false})}).catch(()=>{});};},[]);
+ useEffect(()=>{const previous=document.activeElement as HTMLElement;dialog.current?.showModal();mounted.current=true;return()=>{mounted.current=false;sharedLoadGeneration.current++;dialog.current?.close();previous?.focus();if(hasControl.current)void request('/computer/'+currentBot.current+'/control',{method:'POST',body:JSON.stringify({takeover:false})}).catch(()=>{});};},[]);
  useEffect(()=>{if(!control)return;const timer=setInterval(()=>{void request('/computer/'+botId+'/control',{method:'POST',body:JSON.stringify({takeover:true})}).catch(()=>setControl(false));},60000);return()=>clearInterval(timer);},[control,botId]);
  async function take(value:boolean){const shouldStart=value&&!activeBot?.containerId;setBusy(true);setStarting(shouldStart);setError('');try{if(shouldStart)await api.startBot(botId);await request('/computer/'+botId+'/control',{method:'POST',body:JSON.stringify({takeover:value})});setControl(value);setView(null);if(shouldStart&&onRefreshAgents)void onRefreshAgents().catch(()=>{});}catch(e){setError(e instanceof Error?e.message:String(e));}finally{setBusy(false);setStarting(false);}}
  async function act(action:string,args:Record<string,unknown>={}){
@@ -39,8 +39,8 @@ export function ComputerPanel({bots,selectedBot,loadingAgents=false,agentsError=
    if(mounted.current)throw new Error('The worker has not returned this action yet. Refresh its state before sending another action.');
   }catch(e){if(mounted.current)setError(e instanceof Error?e.message:String(e));}finally{if(mounted.current)setBusy(false);}
  }
- async function loadShared(){setError('');try{setShared(await request('/computer/shared/files'));}catch(e){setError(String(e));}}
- useEffect(()=>{if(tab==='Shared files')void loadShared();if(tab==='Local devices')void request('/local-device/devices').then(setDevices).catch(e=>setError(String(e)));},[tab]);
+ async function loadShared(){const generation=++sharedLoadGeneration.current;setError('');try{const files=await request('/computer/shared/files');if(generation===sharedLoadGeneration.current)setShared(files);}catch(e){if(generation===sharedLoadGeneration.current)setError(String(e));}}
+ useEffect(()=>{if(tab==='Shared files')void loadShared();else sharedLoadGeneration.current++;if(tab==='Local devices')void request('/local-device/devices').then(setDevices).catch(e=>setError(String(e)));},[tab]);
  async function saveShared(){setBusy(true);setError('');try{await request('/computer/shared/files',{method:'POST',body:JSON.stringify({name:fileName,content})});await loadShared();}catch(e){setError(String(e));}finally{setBusy(false);}}
  return <dialog ref={dialog} className="bot-dialog workspace-hub computer-panel" aria-labelledby="computer-title" onCancel={e=>{e.preventDefault();if(!busy)onClose();}}>
  <header className="hub-header"><div><h2 id="computer-title">Computer</h2><p>Choose an agent, take control, then use its browser, terminal, or files.</p></div><button className="btn-secondary" disabled={busy} onClick={onClose}>Done</button></header>
