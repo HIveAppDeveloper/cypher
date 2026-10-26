@@ -12,6 +12,7 @@ async function page({local=true,env={},session=null,returnTo}={}){
  '../../components/GoogleLogin':{GoogleLogin:'google-login'},'../../components/EmailLoginForm':{EmailLoginForm:'email-login'},
  '../../components/cipher/CypherMark':{__esModule:true,default:'mark'},'../../components/cipher/CypherEntrance':{__esModule:true,default:'entrance'},
  '../../lib/login-readiness.mjs':readiness,
+ './readiness.css':{},
  },{React:react,process:{env},URL,URLSearchParams}).default;
  return Page({searchParams:Promise.resolve({returnTo})});
 }
