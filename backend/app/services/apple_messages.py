@@ -202,6 +202,9 @@ async def accept_verified_event(db, *, business_id, opaque_id, event_id, body=''
                     'options': {'routing': 'auto', 'provider': 'openai', 'model': 'gpt-6.1-sol',
                         'max_tokens': 2048, 'max_iterations': 8, 'reasoning_effort': 'low', 'team_rounds': 1}}})
             db.add(task)
+            # The event was autoflushed by the rate query. Persist its new task
+            # before assigning that existing event's immediate foreign key.
+            await db.flush()
             db.add(Message(id=message_id, conversation_id=thread.conversation_id, sender_type='user', content=body,
                 metadata_json={'task_id': task.id, 'source': 'apple_messages', 'apple_thread_id': thread.id}))
             row.task_id = task.id
