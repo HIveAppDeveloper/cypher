@@ -17,22 +17,22 @@
     {
       "case": "supplied_evidence",
       "before_bytes": 20868,
-      "after_bytes": 17475,
+      "after_bytes": 16105,
       "before_approximate_tokens": 3935,
-      "after_approximate_tokens": 3324,
-      "payload_bytes_reduction_percent": 16.26,
-      "approximate_tokens_reduction_percent": 15.53,
+      "after_approximate_tokens": 3083,
+      "payload_bytes_reduction_percent": 22.82,
+      "approximate_tokens_reduction_percent": 21.65,
       "tool_names_unchanged": true,
       "local_model_unchanged": true
     },
     {
       "case": "independent_checks",
       "before_bytes": 21078,
-      "after_bytes": 17685,
+      "after_bytes": 16315,
       "before_approximate_tokens": 3978,
-      "after_approximate_tokens": 3367,
-      "payload_bytes_reduction_percent": 16.1,
-      "approximate_tokens_reduction_percent": 15.36,
+      "after_approximate_tokens": 3131,
+      "payload_bytes_reduction_percent": 22.6,
+      "approximate_tokens_reduction_percent": 21.29,
       "tool_names_unchanged": true,
       "local_model_unchanged": true
     }
@@ -41,8 +41,9 @@
     "Same synthetic bot instructions, task text, tool set and local model before/after.",
     "Local default routing policy, not a production model-route attestation.",
     "cl100k approximates serialized payload size; actual provider token counts, cache accounting, latency and billing remain unverified.",
-    "Five eligible profiles remain in API/storage; full guidance remains in discovery tools and relevant automatic recipes.",
-    "This reduces the287regression; it does not prove savings versus original9c."
+    "Five eligible profiles remain in API/storage; full guidance remains in discovery tools.",
+    "Upfront full recipes require named domain and procedure words. Broad alias discovery stays available; useful ambiguous guides may instead need a lazy lookup.",
+    "This reduces the287regression; it does not prove savings versus original9c or compare different token methods."
   ],
-  "validation": "47 focused skill persistence/discovery, efficiency, consultation, durable recovery and source eligibility tests pass; offline composition probe passes before and after."
+  "validation": "47 focused persistence/discovery, efficiency, consultation, recovery and eligibility tests passed for directory change; subsequent named-recipe delta passes11 catalog/efficiency/offline-composition checks."
 }

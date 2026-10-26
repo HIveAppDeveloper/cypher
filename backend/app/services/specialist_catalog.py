@@ -391,7 +391,22 @@ def search_skills(query, limit=6):
 def task_skill_prompt(query):
     if not isinstance(query, str) or not _rank(query[:2000], DOMAIN_INDEX) or not _rank(query[:2000], PROCEDURE_INDEX):
         return ''
-    cards = search_skills(query, 2)
+    words = _words(query[:2000])
+    cards = []
+    # Discovery remains broad. Upfront full recipes require an explicitly
+    # named domain and a separate procedure clue: the word "cost" in supplied
+    # arithmetic is insufficient evidence for a cost-optimization workflow.
+    for card in search_skills(query, 8):
+        domain_id, procedure_id = card['id'].split('.')
+        domain, procedure = DOMAIN_BY_ID[domain_id], PROCEDURE_BY_ID[procedure_id]
+        domain_words = _words(domain.id+' '+domain.title)
+        named_domain = _words(domain.id) <= words or _words(domain.title) <= words
+        named_procedure = _words(procedure.id) <= words or _words(procedure.title) <= words
+        procedure_clues = _words(procedure.id+' '+procedure.title) - domain_words
+        if named_domain and named_procedure and procedure_clues & words:
+            cards.append(card)
+            if len(cards) == 2:
+                break
     if not cards:
         return ''
     text = '\nRelevant internal skill recipes (use only where they fit the user request; no work has run):\n'
