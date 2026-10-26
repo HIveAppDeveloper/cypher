@@ -130,3 +130,29 @@ test('model controls select a live Nicrron model with its explicit provider ID',
   const modelSelect = find(render(), node => node.type === 'select' && node.props.id === 'model-controls-test-model');
   assert.ok(find(modelSelect, node => node.props?.value === 'anthropic/claude-sonnet-5-5'));
 });
+
+test('model controls preserve an unavailable saved Nicrron model until the user replaces it', () => {
+  const nicrronChoices = catalog.choicesFromNicrronCatalog({
+    configured: true,
+    status: 'ready',
+    models: [{ id: 'anthropic/claude-sonnet-5-5', name: 'Claude Sonnet 5.5', modality: 'chat' }],
+  });
+  const { ModelControls } = load('../src/components/ModelControls.tsx', {
+    'react': React,
+    './GlassSelect': { GlassSelect: 'select' },
+    '../hooks/useModelChoices': { useModelChoices: () => ({
+      choices: [...presets.MODEL_CHOICES, ...nicrronChoices], nicrronChoices, nicrronStatus: 'ready',
+    }) },
+  });
+  let selected = { provider: 'nicrron', model: 'anthropic/claude-haiku-4-5' };
+  const render = () => ModelControls({ value: selected, onChange: value => { selected = value; } });
+  const modelSelect = find(render(), node => node.type === 'select' && node.props.id === 'model-controls-test-model');
+  assert.equal(modelSelect.props.value, 'anthropic/claude-haiku-4-5');
+  assert.ok(find(modelSelect, node => node.props?.value === 'anthropic/claude-haiku-4-5'
+    && node.props?.disabled === true
+    && node.props?.children?.join('') === 'anthropic/claude-haiku-4-5 (currently unavailable)'));
+  modelSelect.props.onChange({ target: { value: 'anthropic/claude-sonnet-5-5' } });
+  assert.equal(selected.provider, 'nicrron');
+  assert.equal(selected.model, 'anthropic/claude-sonnet-5-5');
+  assert.equal(selected.reasoning_effort, undefined);
+});

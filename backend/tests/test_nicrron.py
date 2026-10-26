@@ -15,7 +15,6 @@ def _reset_catalog(monkeypatch):
     monkeypatch.setattr(nicrron, "_catalog_checked_at", None)
     monkeypatch.setattr(nicrron, "_route_model_ids", set())
     monkeypatch.setattr(nicrron, "_route_checked_at", 0.0)
-    monkeypatch.setattr(nicrron, "_enrollment_attempted_at", 0.0)
 
 
 def _configure(monkeypatch, *, key="nicrron-test-key-do-not-return"):
@@ -154,7 +153,37 @@ async def test_catalog_is_unavailable_safely_and_unknown_models_are_rejected(mon
 
 
 @pytest.mark.asyncio
-async def test_catalog_enrolls_with_owner_control_and_exposes_only_omniroute_models(monkeypatch):
+async def test_catalog_read_does_not_enroll_nicrron_key(monkeypatch):
+    secret = "nicrron-private-provider-key"
+    _configure(monkeypatch, key=secret)
+    _reset_catalog(monkeypatch)
+    route_calls = []
+
+    async def route_request(path, payload=None):
+        route_calls.append(path)
+        assert path == "/models"
+        return _route_payload([])
+
+    monkeypatch.setattr(omniroute, "request", route_request)
+    requests = []
+
+    def handler(request):
+        requests.append(request)
+        pytest.fail("A catalog read must not enroll a key or fetch Nicrron's model list without a route.")
+
+    _mock_provider(monkeypatch, handler)
+    result = await nicrron.model_catalog(refresh=True)
+    assert result == {
+        "provider": "nicrron", "configured": True, "status": "unavailable",
+        "models": [], "checked_at": None,
+    }
+    assert route_calls == ["/models"]
+    assert requests == []
+    assert secret not in json.dumps(result)
+
+
+@pytest.mark.asyncio
+async def test_explicit_connection_check_can_enroll_nicrron_key(monkeypatch):
     secret = "nicrron-private-provider-key"
     control_key = "omniroute-control-test-key"
     inference_key = "omniroute-inference-test-key"
@@ -175,40 +204,28 @@ async def test_catalog_enrolls_with_owner_control_and_exposes_only_omniroute_mod
     def handler(request):
         nonlocal connected
         requests.append(request)
-        if request.method == "POST":
-            assert request.url == "https://omniroute.test/api/internal/connections/check"
-            assert request.headers["authorization"] == f"Bearer {control_key}"
-            assert request.headers["x-vercel-protection-bypass"] == "vercel-bypass-test"
-            assert inference_key not in request.headers["authorization"]
-            body = json.loads(request.content)
-            assert body == {"provider": "nicrron", "action": "connect_api_key", "api_key": secret}
-            connected = True
-            return httpx.Response(
-                200,
-                json={
-                    "state": "ready",
-                    "public_model": "nicrron/anthropic/claude-opus-5-5",
-                    "transport_model": "nicrron/anthropic/claude-opus-5-5",
-                },
-            )
-        assert request.method == "GET" and request.url == "https://api.nicrron.ai/v1/models"
-        assert "authorization" not in request.headers
+        assert request.method == "POST"
+        assert request.url == "https://omniroute.test/api/internal/connections/check"
+        assert request.headers["authorization"] == f"Bearer {control_key}"
+        assert request.headers["x-vercel-protection-bypass"] == "vercel-bypass-test"
+        assert inference_key not in request.headers["authorization"]
+        body = json.loads(request.content)
+        assert body == {"provider": "nicrron", "action": "connect_api_key", "api_key": secret}
+        connected = True
         return httpx.Response(
             200,
             json={
-                "data": [
-                    {"id": "anthropic/claude-opus-5-5", "name": "Claude Opus 5.5", "modality": "chat"},
-                    {"id": "anthropic/claude-sonnet-5-5", "name": "Sonnet is not routed", "modality": "chat"},
-                ]
+                "state": "ready",
+                "public_model": "nicrron/anthropic/claude-opus-5-5",
+                "transport_model": "nicrron/anthropic/claude-opus-5-5",
             },
         )
 
     _mock_provider(monkeypatch, handler)
-    result = await nicrron.model_catalog(refresh=True)
-    assert result["status"] == "ready"
-    assert [item["id"] for item in result["models"]] == ["anthropic/claude-opus-5-5"]
+    result = await nicrron.test_connection()
+    assert result == {"state": "ready", "message": "Nicrron was connected and verified through OmniRoute."}
     assert route_calls == ["/models", "/models"]
-    assert len(requests) == 2
+    assert len(requests) == 1
     assert secret not in json.dumps(result)
     assert control_key not in json.dumps(result)
     assert inference_key not in json.dumps(result)

@@ -88,6 +88,24 @@ async def test_dynamic_nicrron_models_are_selectable_and_use_omniroute(router, m
 
 
 @pytest.mark.asyncio
+async def test_omniroute_catalog_does_not_enroll_configured_nicrron_key(router, monkeypatch):
+    seen, install = router
+    from app.services import nicrron
+
+    monkeypatch.setattr(settings, 'NICRRON_API_KEY', 'nicrron-test-key-never-live')
+    monkeypatch.setattr(nicrron, '_route_model_ids', set())
+    monkeypatch.setattr(nicrron, '_route_checked_at', 0.0)
+    monkeypatch.setattr(nicrron, '_catalog', {})
+    monkeypatch.setattr(nicrron, '_catalog_at', 0.0)
+
+    install(lambda request: httpx.Response(200, json={'choices': []}))
+    await omniroute.catalog()
+
+    assert [request.method for request in seen] == ['GET', 'GET']
+    assert [request.url.path for request in seen] == ['/v1/models', '/v1/models']
+
+
+@pytest.mark.asyncio
 async def test_tools_receipts_images_and_specialist_fallback_use_only_router(router, monkeypatch):
     seen, install = router
     def forbidden(**kwargs):

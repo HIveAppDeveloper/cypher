@@ -12,14 +12,12 @@ from app.config import settings
 BASE_URL = "https://api.nicrron.ai/v1"
 CATALOG_TTL = 300
 OMNIROUTE_ROUTE_TTL = 15
-ENROLLMENT_RETRY_SECONDS = 30
 _MODEL_ID = re.compile(r"^[a-z0-9][a-z0-9._-]{0,100}/[a-z0-9][a-z0-9._-]{0,140}$", re.I)
 _catalog: dict[str, dict] = {}
 _catalog_at = 0.0
 _catalog_checked_at: str | None = None
 _route_model_ids: set[str] = set()
 _route_checked_at = 0.0
-_enrollment_attempted_at = 0.0
 _route_lock = asyncio.Lock()
 _catalog_lock = asyncio.Lock()
 _CONNECTION_TEST_MODEL = "nicrron/anthropic/claude-opus-5-5"
@@ -99,9 +97,9 @@ def _catalog_response(model_ids: set[str]) -> dict:
     }
 
 
-async def _live_omniroute_model_ids(*, refresh: bool = False, force_enrollment: bool = False) -> tuple[set[str], bool]:
-    """Return only Nicrron IDs listed by OmniRoute, enrolling the owner key once if needed."""
-    global _route_model_ids, _route_checked_at, _enrollment_attempted_at
+async def _live_omniroute_model_ids(*, refresh: bool = False, allow_enrollment: bool = False) -> tuple[set[str], bool]:
+    """Read Nicrron routes from OmniRoute; enrollment is reserved for an explicit connection check."""
+    global _route_model_ids, _route_checked_at
     if not settings.OMNIROUTE_URL or not settings.OMNIROUTE_API_KEY:
         return set(), False
     from app.services import omniroute
@@ -120,12 +118,9 @@ async def _live_omniroute_model_ids(*, refresh: bool = False, force_enrollment: 
 
         _route_model_ids = set()
         _route_checked_at = monotonic()
-        if not configured() or not settings.OMNIROUTE_CONTROL_KEY:
-            return set(), False
-        if not force_enrollment and monotonic() - _enrollment_attempted_at < ENROLLMENT_RETRY_SECONDS:
+        if not allow_enrollment or not configured() or not settings.OMNIROUTE_CONTROL_KEY:
             return set(), False
 
-        _enrollment_attempted_at = monotonic()
         endpoint = omniroute.endpoint().removesuffix("/v1") + "/api/internal/connections/check"
         headers = omniroute.headers()
         headers["Authorization"] = "Bearer " + settings.OMNIROUTE_CONTROL_KEY
@@ -230,7 +225,7 @@ async def test_connection() -> dict:
         return {"state": "unavailable", "message": "NICRRON_API_KEY is not configured on the backend and worker."}
     if not settings.OMNIROUTE_URL or not settings.OMNIROUTE_API_KEY:
         return {"state": "unavailable", "message": "OmniRoute is not configured on this runtime."}
-    ids, connected_now = await _live_omniroute_model_ids(refresh=True, force_enrollment=True)
+    ids, connected_now = await _live_omniroute_model_ids(refresh=True, allow_enrollment=True)
     if not ids:
         return {"state": "unavailable", "message": "Nicrron is not available through OmniRoute. Check its connection and retry."}
     if connected_now:
