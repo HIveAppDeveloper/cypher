@@ -106,25 +106,27 @@
     "fft_custom_graph.py": "5e21089059bda125255b31bbe6b173914df6dc229ebd20e2f1e643af81620abc",
     "paradee-requirements.lock.txt": "1052939c3b7aea50e8966826c3936b7c611e0ae967980e32134236c4a24ae6d8",
     "paradee_cpu_fft.onnx": "6ab18cb6a4712a17061dea9e1a208da0554d9922c5fd93e1ccc932c3abd2d9f8",
-    "paradee_fft.so": "feba2cd38b3c6ebff55264996756a9bb605f7c8b94a5b6f44364fdde22779420"
+    "paradee_fft.so": "feba2cd38b3c6ebff55264996756a9bb605f7c8b94a5b6f44364fdde22779420",
+    "frontend_voice_route.ts": "54abe3d7ed79a6b0815d04919b9a1e55ef2f02a507aa02ea16214aeebf82180f"
   },
   "checks": {
     "service_and_optimizer_tests_passed": 19,
-    "frontend_voice_route_playback_message_tests_passed": 20,
+    "frontend_voice_route_playback_message_tests_passed": 22,
     "frontend_production_build": "passed",
     "linux_amd64_docker_build": "passed; artifact checksum asserted",
     "real_linux_container_pcm_mp3": "passed",
     "ffprobe": "MP3, 24000 Hz, mono",
-    "built_next_proxy": "unsigned401; synthetic-local-signed200; identity paradee-8m-v1.1",
+    "built_next_proxy": "standalone Next: unsigned PCM401, signed PCM200 with real first-chunk audio and79 body reads; default MP3 200; unsupported format400; benchmark CLI requested PCM correctly; synthetic local session only",
     "native_cancellation": "five429 while inference completes then200 recovery, 161.043ms",
     "quality": "upstream controlled-seed waveform similarity about35-37dB; sparse rewrite about138-141dB; deterministic precompute final-v-previous 80-86dB",
-    "coarse_intelligibility": "8 actual service PCM/MP3 clips decoded and transcribed before deterministic-precompute update; not human listening"
+    "coarse_intelligibility": "8 actual service PCM/MP3 clips decoded and transcribed before deterministic-precompute update; not human listening",
+    "proxy_pcm_evidence": "evidence/pcm-proxy-integration.json"
   },
   "limitations": [
     "Warm server processing in disposable Vercel Sandbox, not deployed Functions/public network latency.",
     "No all-request, cold-start or 20ms MP3 tail guarantee; longer first words can exceed target.",
     "No final production frontend/API/worker parity claim.",
-    "Frontend proxy and ASR checks preceded numerically equivalent deterministic style precomputation; final comparison is recorded separately."
+    "ASR checks preceded numerically equivalent deterministic style precomputation; final waveform comparison is recorded separately."
   ],
   "production": {
     "activated": false,

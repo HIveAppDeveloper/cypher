@@ -83,12 +83,21 @@ export async function POST(request: Request) {
   }
   const rawBody = await readBoundedText(request, MAX_VOICE_BODY).catch(() => '');
   if (rawBody === null) return NextResponse.json({ detail: 'Voice request is too large.' }, { status: 413, headers: { 'Cache-Control': 'no-store' } });
-  let body: { text?: unknown } | null = null;
-  try { body = JSON.parse(rawBody) as { text?: unknown }; } catch {}
+  type VoiceInput = { text?: unknown; response_format?: unknown };
+  let body: VoiceInput | null = null;
+  try { body = JSON.parse(rawBody) as VoiceInput; } catch {}
   const text = typeof body?.text === 'string' ? body.text.trim() : '';
   if (!text || text.length > MAX_VOICE_TEXT) {
     return NextResponse.json({ detail: `Voice text must be between 1 and ${MAX_VOICE_TEXT} characters.` }, { status: 400, headers: { 'Cache-Control': 'no-store' } });
   }
+  const audioFormat = body?.response_format === undefined ? 'mp3' : body.response_format;
+  if (audioFormat !== 'mp3' && audioFormat !== 'pcm') {
+    return NextResponse.json({ detail: 'Choose mp3 or pcm for the voice response format.' }, { status: 400, headers: { 'Cache-Control': 'no-store' } });
+  }
+  if (audioFormat === 'pcm' && !kokoro) {
+    return NextResponse.json({ detail: 'PCM requires the configured Kokoro voice service.' }, { status: 400, headers: { 'Cache-Control': 'no-store' } });
+  }
+  const contentType = audioFormat === 'pcm' ? 'audio/pcm' : 'audio/mpeg';
 
   const url = new URL(`https://api.elevenlabs.io/v1/text-to-speech/${encodeURIComponent(voiceId)}/stream`);
   url.searchParams.set('output_format', 'mp3_44100_128');
@@ -96,8 +105,8 @@ export async function POST(request: Request) {
     const generationStarted = performance.now();
     const response = await fetch(kokoro?.url || url, {
       method: 'POST',
-      headers: kokoro ? { 'Content-Type': 'application/json', 'Accept': 'audio/mpeg', 'Authorization': `Bearer ${kokoro.key}` } : { 'Content-Type': 'application/json', 'Accept': 'audio/mpeg', 'xi-api-key': apiKey },
-      body: JSON.stringify(kokoro ? { model: kokoro.model, input: text, voice: kokoro.voice, response_format: 'mp3', speed: 1.0 } : { text, model_id: 'eleven_flash_v2_5', voice_settings: { stability: 0.38, similarity_boost: 0.82, style: 0, use_speaker_boost: true, speed: 1.03 } }),
+      headers: kokoro ? { 'Content-Type': 'application/json', 'Accept': contentType, 'Authorization': `Bearer ${kokoro.key}` } : { 'Content-Type': 'application/json', 'Accept': 'audio/mpeg', 'xi-api-key': apiKey },
+      body: JSON.stringify(kokoro ? { model: kokoro.model, input: text, voice: kokoro.voice, response_format: audioFormat, speed: 1.0 } : { text, model_id: 'eleven_flash_v2_5', voice_settings: { stability: 0.38, similarity_boost: 0.82, style: 0, use_speaker_boost: true, speed: 1.03 } }),
       cache: 'no-store',
       signal: AbortSignal.any([request.signal, AbortSignal.timeout(20_000)]),
     });
@@ -110,7 +119,7 @@ export async function POST(request: Request) {
       }
       return NextResponse.json({ detail: `${provider} could not generate this voice line. Try again.` }, { status: 502, headers: { 'Cache-Control': 'no-store' } });
     }
-    if (useKokoro && response.headers.get('content-type')?.split(';')[0].trim() !== 'audio/mpeg') {
+    if (useKokoro && response.headers.get('content-type')?.split(';')[0].trim() !== contentType) {
       void response.body.cancel().catch(() => {});
       return NextResponse.json({ detail: 'Kokoro returned an unsupported audio format.' }, { status: 502, headers: { 'Cache-Control': 'no-store' } });
     }
@@ -118,7 +127,7 @@ export async function POST(request: Request) {
     const kokoroTiming = useKokoro && firstAudio && /^\d+(\.\d+)?$/.test(firstAudio) ? `, tts_first_audio;dur=${firstAudio}` : '';
     return new Response(response.body, {
       status: 200,
-      headers: { 'Content-Type': response.headers.get('content-type') || 'audio/mpeg', 'Cache-Control': 'private, no-store', 'X-Content-Type-Options': 'nosniff', 'X-Voice-Provider': useKokoro ? kokoro!.model : 'elevenlabs', 'Server-Timing': `voice_provider_headers;dur=${(performance.now() - generationStarted).toFixed(1)}${kokoroTiming}` },
+      headers: { 'Content-Type': response.headers.get('content-type') || contentType, 'Cache-Control': 'private, no-store', 'X-Content-Type-Options': 'nosniff', 'X-Voice-Provider': useKokoro ? kokoro!.model : 'elevenlabs', ...(audioFormat === 'pcm' ? { 'X-Audio-Sample-Rate': '24000', 'X-Audio-Channels': '1', 'X-Audio-Format': 's16le' } : {}), 'Server-Timing': `voice_provider_headers;dur=${(performance.now() - generationStarted).toFixed(1)}${kokoroTiming}` },
     });
   } catch {
     return NextResponse.json({ detail: `${useKokoro ? 'Kokoro' : 'ElevenLabs'} did not respond in time. Try again.` }, { status: 504, headers: { 'Cache-Control': 'no-store' } });

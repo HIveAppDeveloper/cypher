@@ -6,6 +6,7 @@ function route(fetch,environment={}){
     {Request,Response,TextDecoder,Uint8Array,URL,AbortSignal,performance:{now:()=>100},process:{env:{ELEVENLABS_API_KEY:'server-fixture-key',...environment}},fetch});
 }
 function request(signal){return new Request('https://cypher.example/api/voice',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:'Voice latency fixture.'}),signal});}
+function formatRequest(format){return new Request('https://cypher.example/api/voice',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:'Voice latency fixture.',response_format:format})});}
 test('realtime TTS preserves server credentials and stream while removing style overhead',async()=>{
  let seen;
  const {POST}=route(async(url,options)=>{seen={url,options};return new Response(new Uint8Array([1,2,3]),{headers:{'Content-Type':'audio/mpeg'}});});
@@ -29,6 +30,25 @@ test('approved derivative sends its real model and single voice identity',async(
  const result=await POST(request());assert.equal(result.status,200);assert.equal(seen.model,'paradee-8m-v1.1');assert.equal(seen.voice,'af_heart');assert.equal(result.headers.get('x-voice-provider'),'paradee-8m-v1.1');
  const invalid=route(async()=>{throw new Error('Must not reach provider');},{...kokoroEnv,KOKORO_TTS_MODEL:'unknown'});
  assert.equal((await invalid.POST(request())).status,503);
+});
+test('PCM streams progressively through app auth with explicit sample metadata',async()=>{
+ let seen,body,cancelled=false;
+ const {POST}=route(async(_url,options)=>{seen=options;return new Response(new ReadableStream({start(c){body=c;},cancel(){cancelled=true;}}),{headers:{'Content-Type':'audio/pcm','X-Server-First-Audio-Ms':'15.214'}});},{...kokoroEnv,KOKORO_TTS_MODEL:'paradee-8m-v1.1'});
+ const result=await POST(formatRequest('pcm'));assert.equal(result.status,200);
+ assert.equal(seen.headers.Accept,'audio/pcm');assert.equal(JSON.parse(seen.body).response_format,'pcm');assert.equal(JSON.parse(seen.body).voice,'af_heart');
+ assert.equal(result.headers.get('content-type'),'audio/pcm');assert.equal(result.headers.get('x-audio-sample-rate'),'24000');assert.equal(result.headers.get('x-audio-channels'),'1');assert.equal(result.headers.get('x-audio-format'),'s16le');
+ assert.equal(result.headers.get('authorization'),null);assert.match(result.headers.get('server-timing'),/tts_first_audio;dur=15.214/);
+ const reader=result.body.getReader();body.enqueue(new Uint8Array([1,0,2,0]));assert.deepEqual([...(await reader.read()).value],[1,0,2,0]);await reader.cancel();assert.equal(cancelled,true);
+ let calls=0;const locked=route(async()=>{calls++;},{...kokoroEnv,REQUIRE_USER_AUTH:'true'});
+ assert.equal((await locked.POST(formatRequest('pcm'))).status,401);assert.equal(calls,0);
+});
+test('invalid or unavailable formats fail before inference and mismatches cancel upstream',async()=>{
+ for(const format of ['wav',null,17]){
+  let calls=0;const {POST}=route(async()=>{calls++;},kokoroEnv);assert.equal((await POST(formatRequest(format))).status,400);assert.equal(calls,0);
+ }
+ let calls=0;const fallback=route(async()=>{calls++;});assert.equal((await fallback.POST(formatRequest('pcm'))).status,400);assert.equal(calls,0);
+ let cancelled=false;const mismatched=route(async()=>new Response(new ReadableStream({cancel(){cancelled=true;}}),{headers:{'Content-Type':'audio/mpeg'}}),kokoroEnv);
+ assert.equal((await mismatched.POST(formatRequest('pcm'))).status,502);assert.equal(cancelled,true);
 });
 test('opt-in Kokoro uses the private binding and MP3 contract without exposing internal credentials',async()=>{
  let seen;

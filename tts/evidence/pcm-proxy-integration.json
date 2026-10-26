@@ -1,0 +1,21 @@
+{
+  "environment": "Built standalone Next route and Linux/amd64 model container under local emulation; synthetic local app session only",
+  "model": "paradee-8m-v1.1",
+  "route_source_sha256": "54abe3d7ed79a6b0815d04919b9a1e55ef2f02a507aa02ea16214aeebf82180f",
+  "unsigned_status": 401,
+  "pcm_status": 200,
+  "format": "audio/pcm",
+  "sample_rate": 24000,
+  "channels": 1,
+  "encoding": "s16le",
+  "first_chunk_bytes": 34800,
+  "first_chunk_rms": 0.02762388363830324,
+  "first_chunk_peak": 0.24285888671875,
+  "total_pcm_bytes": 2292000,
+  "body_reads": 79,
+  "default_mp3_status": 200,
+  "default_mp3_bytes": 20928,
+  "unsupported_format_status": 400,
+  "benchmark_format": "audio/pcm",
+  "cloud_or_public_network_latency_claim": false
+}
