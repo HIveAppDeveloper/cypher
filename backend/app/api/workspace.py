@@ -128,6 +128,17 @@ async def run_metrics(response:Response,hours:int=Query(default=24,ge=1,le=168),
     response.headers['Cache-Control']='private, no-store'
     return await task_metrics(db,tenant,hours=hours,cap=cap)
 
+@router.get('/runs/{id}/metrics')
+async def run_observation(id:UUID,response:Response,db:AsyncSession=Depends(get_db)):
+    from app.db.tenancy import current_tenant_id
+    from app.services.task_observation import task_observation
+    tenant=current_tenant_id.get()
+    if not tenant:raise HTTPException(401,'Sign in to read workspace task metrics.')
+    result=await task_observation(db,tenant,str(id))
+    if result is None:raise HTTPException(404,'Task not found')
+    response.headers['Cache-Control']='private, no-store'
+    return result
+
 @router.post('/runs/{id}/skill-draft')
 async def skill_draft(id:UUID,db:AsyncSession=Depends(get_db)):
     import re
