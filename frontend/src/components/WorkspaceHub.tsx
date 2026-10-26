@@ -93,10 +93,33 @@ export function WorkspaceHub({bots,rooms,ensureRoom,onRefresh,onOpenWorkspace,on
 }
 
 
+interface AgentSkillSource {
+ repository:string; url:string; commit:string; path:string;
+ stars:number; checked_at:string; license:string; adaptation_scope:string;
+}
+interface AgentSkillCard {
+ id:string; name:string; specialty:string;
+ sources?:AgentSkillSource[];
+ eligibility?:{eligible:boolean;minimum_stars:number};
+}
 interface AgentSkillProfile {
  bot_id:string;
  selected_by:'automatic'|'agent'|'owner';
- skills:{id:string;name:string;specialty:string}[];
+ availability?:string;
+ selection_count?:number;
+ required_selection_count?:number;
+ skills:AgentSkillCard[];
+}
+
+function verifiedSkillSources(skill:AgentSkillCard){
+ if(skill.eligibility?.eligible!==true||!Number.isInteger(skill.eligibility.minimum_stars)||skill.eligibility.minimum_stars<10000||!Array.isArray(skill.sources))return [];
+ return skill.sources.filter(source=>source&&typeof source.repository==='string'&&/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(source.repository)
+  &&typeof source.commit==='string'&&/^[a-f0-9]{40}$/.test(source.commit)
+  &&typeof source.path==='string'&&source.path.endsWith('.md')&&!source.path.startsWith('/')&&!/[?#\\]/.test(source.path)
+  &&source.path.split('/').every(part=>part&&part!=='.'&&part!=='..')
+  &&source.url===`https://github.com/${source.repository}/blob/${source.commit}/${source.path}`
+  &&Number.isInteger(source.stars)&&source.stars>=10000&&dateFromApi(source.checked_at)
+  &&['MIT','Apache-2.0'].includes(source.license)&&source.adaptation_scope==='workflow_adaptation').slice(0,2);
 }
 
 export function AgentSkills({botId}:{botId:string}){
@@ -111,15 +134,20 @@ export function AgentSkills({botId}:{botId:string}){
   try{
    const next:AgentSkillProfile=await request('/bots/'+encodeURIComponent(botId)+'/skills');
    if(requestId!==generation.current)return;
-   if(next.bot_id!==botId||!Array.isArray(next.skills)||next.skills.length!==5||new Set(next.skills.map(skill=>skill.id)).size!==5)throw new Error('This agent’s skills could not be loaded. Try again.');
+   const validSkills=['automatic','agent','owner'].includes(next.selected_by)&&Array.isArray(next.skills)&&next.skills.length===5&&next.skills.every(skill=>skill&&typeof skill.id==='string'&&typeof skill.name==='string'&&typeof skill.specialty==='string')&&new Set(next.skills.map(skill=>skill.id)).size===5;
+   const unavailable=next.selected_by==='automatic'&&next.availability==='primary_agent_fallback'&&next.selection_count===0&&next.required_selection_count===5&&Array.isArray(next.skills)&&next.skills.length===0;
+   if(next.bot_id!==botId||(!validSkills&&!unavailable))throw new Error('This agent’s skills could not be loaded. Try again.');
    setProfile(next);
   }catch(failure){if(requestId===generation.current)setError(failure instanceof Error?failure.message:'This agent’s skills could not be loaded. Try again.');}
   finally{if(requestId===generation.current){pending.current=false;setLoading(false);}}
  }
  return <details className="agent-skill-profile" onToggle={event=>{if(event.currentTarget.open&&!profile)void loadSkills();}}>
-  <summary>Five working skills</summary>
+  <summary>{profile?.availability==='primary_agent_fallback'?'Working skills':'Five working skills'}</summary>
   {loading?<p role="status" className="field-help">Loading this agent’s skills…</p>:null}
   {error?<p role="alert" className="form-error">{error} <button type="button" disabled={loading} onClick={()=>void loadSkills()}>Retry skills</button></p>:null}
-  {profile?<><p className="field-help">{profile.selected_by==='agent'?'Chosen by this agent.':profile.selected_by==='owner'?'Chosen by you.':'Suggested from this agent’s instructions. It can choose its own five as it works.'}</p><ul>{profile.skills.map(skill=><li key={skill.id}><strong>{skill.name}</strong><span> · {skill.specialty}</span></li>)}</ul><p className="field-help">These guide its work. GitHub and connected tools use the access you’ve granted.</p></>:null}
+  {profile?.availability==='primary_agent_fallback'?<p role="status" className="field-help">Skill guides are temporarily unavailable. Your agent can continue with its own instructions and enabled tools.</p>:profile?<><p className="field-help">{profile.selected_by==='agent'?'Chosen by this agent.':profile.selected_by==='owner'?'Chosen by you.':'Suggested from this agent’s instructions. It can choose its own five as it works.'}</p><ul>{profile.skills.map(skill=>{
+   const sources=verifiedSkillSources(skill);
+   return <li key={skill.id}><strong>{skill.name}</strong><span> · {skill.specialty}</span>{sources.length?<details><summary>GitHub sources</summary><ul>{sources.map(source=><li key={source.url}><a href={source.url} target="_blank" rel="noopener noreferrer" title={source.path}>{source.repository}</a><p className="field-help">{source.stars.toLocaleString()} stars · checked <time dateTime={source.checked_at}>{dateFromApi(source.checked_at)?.toLocaleDateString()}</time> · {source.license}</p></li>)}</ul></details>:null}</li>;
+  })}</ul><p className="field-help">These guide its work. GitHub and connected tools use the access you’ve granted.</p></>:null}
  </details>;
 }

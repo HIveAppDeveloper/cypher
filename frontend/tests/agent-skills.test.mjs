@@ -53,3 +53,42 @@ test('invalid or cross-agent five-skill profiles stay unavailable',async()=>{
   view.unmount();
  }
 });
+
+const source=()=>({repository:'example/reviewed-skills',commit:'a'.repeat(40),path:'skills/review/SKILL.md',url:'https://github.com/example/reviewed-skills/blob/'+ 'a'.repeat(40)+'/skills/review/SKILL.md',stars:164173,checked_at:'2026-10-26T15:00:00Z',license:'MIT',adaptation_scope:'workflow_adaptation'});
+
+test('eligible skill sources link to pinned GitHub files and label dated star evidence',async()=>{
+ const result=profile('bot-a');
+ for(const skill of result.skills){skill.eligibility={eligible:true,minimum_stars:10000};skill.sources=[source()];}
+ const {view}=mount(async()=>result);open(view);await view.flush();
+ const link=find(view.tree,node=>node.type==='a');
+ assert.equal(link.props.href,source().url);
+ assert.equal(link.props.target,'_blank');
+ assert.equal(link.props.rel,'noopener noreferrer');
+ assert.equal(link.props.title,'skills/review/SKILL.md');
+ assert.match(textOf(view.tree),/GitHub sources/);
+ assert.match(textOf(view.tree),/164.?173 stars/);
+ assert.equal(find(view.tree,node=>node.type==='time').props.dateTime,source().checked_at);
+ view.unmount();
+});
+
+test('ineligible or mismatched source metadata cannot appear as verified GitHub evidence',async()=>{
+ for(const invalid of [{...source(),url:'https://github.com.evil.example/repo'},{...source(),stars:9999},{...source(),commit:'not-pinned'},{...source(),license:'unknown'}]){
+  const result=profile('bot-a');
+  for(const skill of result.skills){skill.eligibility={eligible:true,minimum_stars:10000};skill.sources=[invalid];}
+  const {view}=mount(async()=>result);open(view);await view.flush();
+  assert.equal(find(view.tree,node=>node.type==='a'),undefined);
+  assert.doesNotMatch(textOf(view.tree),/GitHub sources|stars/);
+  view.unmount();
+ }
+});
+
+test('expired or unavailable source catalog keeps the primary-agent fallback truthful',async()=>{
+ const {view}=mount(async()=>({bot_id:'bot-a',selected_by:'automatic',availability:'primary_agent_fallback',selection_count:0,required_selection_count:5,skills:[]}));
+ open(view);await view.flush();
+ assert.match(textOf(view.tree),/Skill guides are temporarily unavailable/);
+ assert.match(textOf(view.tree),/agent can continue with its own instructions and enabled tools/);
+ assert.doesNotMatch(textOf(view.tree),/Chosen by this agent|Suggested from|Five working skills/);
+ assert.equal(button(view.tree,'Retry skills'),undefined,'a source-eligibility fallback is not a failed request');
+ assert.equal(find(view.tree,node=>node.props?.role==='alert'),undefined);
+ view.unmount();
+});
