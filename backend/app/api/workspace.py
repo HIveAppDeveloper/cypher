@@ -3,7 +3,7 @@ from typing import Literal
 from uuid import UUID,uuid4
 from zoneinfo import ZoneInfo,ZoneInfoNotFoundError
 import secrets
-from fastapi import APIRouter,Depends,HTTPException
+from fastapi import APIRouter,Depends,HTTPException,Query,Response
 from pydantic import BaseModel,Field,field_validator,ConfigDict
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -118,6 +118,15 @@ async def run_routine(id:UUID,db:AsyncSession=Depends(get_db)):
 async def runs(db:AsyncSession=Depends(get_db)):
     rows=(await db.execute(select(Task.id,Task.title,Task.status,Task.conversation_id,Task.created_at,Task.completed_at).order_by(Task.created_at.desc()).limit(100))).all()
     return [dict(row._mapping) for row in rows]
+
+@router.get('/runs/metrics')
+async def run_metrics(response:Response,hours:int=Query(default=24,ge=1,le=168),cap:int=Query(default=5000,ge=1,le=10000),db:AsyncSession=Depends(get_db)):
+    from app.db.tenancy import current_tenant_id
+    from app.services.task_metrics import task_metrics
+    tenant=current_tenant_id.get()
+    if not tenant:raise HTTPException(401,'Sign in to read workspace task metrics.')
+    response.headers['Cache-Control']='private, no-store'
+    return await task_metrics(db,tenant,hours=hours,cap=cap)
 
 @router.post('/runs/{id}/skill-draft')
 async def skill_draft(id:UUID,db:AsyncSession=Depends(get_db)):
