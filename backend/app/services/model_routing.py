@@ -48,6 +48,8 @@ async def validate_direct_capabilities(messages, tools, provider, model):
 
 
 async def validate_capabilities(messages, tools, provider, model, *, direct=False):
+    """Return the verified catalog entry for reuse within this route preflight."""
+    catalog_model = None
     required = required_modalities(messages)
     from app.services import omniroute
     if not direct and omniroute.enabled():
@@ -55,6 +57,7 @@ async def validate_capabilities(messages, tools, provider, model, *, direct=Fals
         item = (await route_catalog()).get(model_route_id(provider,model))
         if item is None or item.get("type") != "language":
             raise ModelCapabilityError("The selected model is unavailable on the configured model connection. Choose an available chat model in conversation settings.")
+        catalog_model = item
         supported = set(item.get("modalities", {}).get("input", []))
         supports_tools = "tools" in item.get("supported_parameters", [])
     else:
@@ -72,6 +75,7 @@ async def validate_capabilities(messages, tools, provider, model, *, direct=Fals
     tool_context = tools or any(message.get('role') == 'tool' or message.get('tool_calls') for message in messages)
     if tool_context and not supports_tools:
         raise ModelCapabilityError("The selected model does not support tool calls. Choose a model with tool support before running this agent.")
+    return catalog_model
 
 
 def retryable(error):
