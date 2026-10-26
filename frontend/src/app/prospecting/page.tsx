@@ -10,7 +10,7 @@ export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
   title: 'Cypher Prospecting',
-  description: 'Website-first company prospecting, powered by Open GrokBot.',
+  description: 'Research companies and find contacts with Cypher.',
   icons: { icon: '/cypher-mark.svg', apple: '/cypher-mark.svg' },
 };
 

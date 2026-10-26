@@ -9,7 +9,7 @@ export const dynamic = 'force-dynamic';
 
 export const metadata = {
   title: 'Cypher Workspace',
-  description: 'Open GrokBot agents, conversations, and connected tools.',
+  description: 'Your workspace for Cypher conversations, agents, and connected tools.',
   icons: { icon: '/cypher-mark.svg', apple: '/cypher-mark.svg' },
 };
 
