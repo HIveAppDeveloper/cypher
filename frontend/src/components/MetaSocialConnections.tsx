@@ -41,7 +41,7 @@ export function MetaSocialConnections({result=''}:{result?:string}={}){
         if(connection&&!connection.connection_id&&connections.filter(item=>item.url===connection.url).length>1)throw Error('Several saved connections use this address. Reconnect the intended account from My apps.');
         const url=connection?.url||'https://mcp.windsor.ai/';const approval_id=await approveConnection('connect_plugin:'+url);
         if(!mounted.current||current!==sequence.current)return;
-        response=await fetch('/api/plugins/authorize',{...options,referrer:window.location.origin+'/connect/meta',body:JSON.stringify({name:'Windsor.ai',url,approval_id,reconnect:!!connection,...(connection?.connection_id?{connection_id:connection.connection_id}:{})})});
+        response=await fetch('/api/plugins/authorize',{...options,referrer:window.location.origin+'/connect/meta',referrerPolicy:'same-origin',body:JSON.stringify({name:'Windsor.ai',url,approval_id,reconnect:!!connection,...(connection?.connection_id?{connection_id:connection.connection_id}:{})})});
       }else response=await fetch(`/api/plugins/${encodeURIComponent(selected)}/meta/${action}`,{...options,body:JSON.stringify(action==='authorize'?{service}:{})});
       const data=await response.json();
       if(!mounted.current||current!==sequence.current)return;
