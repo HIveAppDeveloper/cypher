@@ -23,7 +23,7 @@ log = logging.getLogger(__name__)
 
 class Speech(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    model: Literal["kokoro"] = "kokoro"
+    model: Literal["kokoro", "paradee-8m-v1.1"] = "kokoro"
     input: str = Field(min_length=1, max_length=2000)
     voice: Literal["af_bella", "af_heart", "am_michael", "am_adam"] = "af_bella"
     response_format: Literal["pcm", "mp3"] = "pcm"
@@ -78,6 +78,7 @@ class AdmittedStream(StreamingResponse):
 
 
 class Engine:
+    model_id = "kokoro"
     def __init__(self):
         import onnxruntime as ort
         from kokoro_onnx import Kokoro
@@ -127,7 +128,17 @@ async def in_thread(function, *args):
             raise
 
 
-def create_app(engine_factory=Engine):
+def configured_engine():
+    model = os.environ.get("KOKORO_TTS_MODEL", "kokoro")
+    if model == "kokoro":
+        return Engine()
+    if model == "paradee-8m-v1.1":
+        from paradee_engine import ParadeeEngine
+        return ParadeeEngine()
+    raise RuntimeError("Unsupported configured TTS model.")
+
+
+def create_app(engine_factory=configured_engine):
     @asynccontextmanager
     async def lifespan(web):
         web.state.engine = await in_thread(engine_factory)
@@ -150,7 +161,7 @@ def create_app(engine_factory=Engine):
     @web.get("/health")
     async def health(request: Request):
         authorize(request)
-        return JSONResponse({"ready": True, "model": "kokoro", "runtime": "onnx-cpu", "providers": web.state.engine.providers}, headers={"Cache-Control": "no-store"})
+        return JSONResponse({"ready": True, "model": getattr(web.state.engine, "model_id", "kokoro"), "runtime": "onnx-cpu", "providers": web.state.engine.providers}, headers={"Cache-Control": "no-store"})
 
     @web.post("/v1/audio/speech")
     async def speech(request: Request):
@@ -167,11 +178,14 @@ def create_app(engine_factory=Engine):
             payload = Speech.model_validate(json.loads(raw))
         except (ValueError, ValidationError, RecursionError):
             raise HTTPException(400, "Invalid voice request; provide 1–2000 characters and a supported voice/format.") from None
+        engine = web.state.engine
+        model_id = getattr(engine, "model_id", "kokoro")
+        if payload.model != model_id or (model_id == "paradee-8m-v1.1" and payload.voice != "af_heart"):
+            raise HTTPException(400, "Requested model or voice does not match this voice service.")
         if admission.locked():
             raise HTTPException(429, "Voice instance is busy; try again.")
         await admission.acquire()
-        engine = web.state.engine
-        chunks = iter(text_chunks(payload.input))
+        chunks = iter(getattr(engine, "chunks", text_chunks)(payload.input))
         encoder = None
         try:
             if payload.response_format == "mp3":
@@ -180,7 +194,7 @@ def create_app(engine_factory=Engine):
                 encoder.set_bit_rate(64)
                 encoder.set_in_sample_rate(SAMPLE_RATE)
                 encoder.set_channels(1)
-                encoder.set_quality(2)
+                encoder.set_quality(5 if model_id == "paradee-8m-v1.1" else 2)
             first = await in_thread(engine.synthesize, next(chunks), payload.voice, payload.speed)
             if encoder:
                 first = encoder.encode(first)
@@ -219,7 +233,7 @@ def create_app(engine_factory=Engine):
         return AdmittedStream(stream(), admission=admission, media_type="audio/mpeg" if payload.response_format == "mp3" else "audio/pcm", headers={
             "Cache-Control": "private, no-store", "X-Content-Type-Options": "nosniff",
             "X-Audio-Sample-Rate": str(SAMPLE_RATE), "X-Audio-Channels": "1",
-            "X-Kokoro-Runtime": "onnx-cpu", "X-Server-First-Audio-Ms": f"{first_audio_ms:.3f}",
+            "X-Kokoro-Runtime": "onnx-cpu", "X-TTS-Model": model_id, "X-Server-First-Audio-Ms": f"{first_audio_ms:.3f}",
             "Server-Timing": f"tts_first_audio;dur={first_audio_ms:.3f}",
         })
 

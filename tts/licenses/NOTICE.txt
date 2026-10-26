@@ -5,3 +5,11 @@ https://github.com/thewh1teagle/kokoro-onnx/releases/tag/model-files-v1.0
 The distributed ONNX file is the upstream quantized conversion; Cypher makes no further changes to its weights.
 kokoro-onnx wrapper: MIT, see kokoro-onnx-MIT.txt.
 Runtime dependency licenses, including ONNX Runtime (MIT), LAME/lameenc (LGPL), and espeak-ng/phonemizer (GPL), remain in the installed packages and Debian /usr/share/doc.
+
+Optional Paradee 8M v1.1 image: single af_heart voice, distilled from Kokoro-82M, Apache-2.0.
+Upstream code https://github.com/sahilmahendrakar/paradee at 606e16e12f53bc6dfb814fe89fef338726687161
+Model https://huggingface.co/sahilmahendrakar/Paradee-8M-v1.1 at 330617ad1f097b4f6b02c103e54b39006c090b45
+Cypher modifies the ONNX graph with offline constant folding, a harmonic-series identity and native PocketFFT operators; this is explicitly not the exact Kokoro-82M model. Neural weights are not dynamically quantized.
+PocketFFT header at 4d865cba24359b05b37da4e75aee24498c3b78e7, BSD-3-Clause, notice included.
+ONNX Runtime custom-operator headers rel-1.23.2, MIT, notice included. Runtime ONNX Runtime 1.31.0 preserves its installed license.
+English spaCy en_core_web_sm 3.8.0 (MIT), Misaki dictionaries (Apache-2.0), and remaining runtime packages preserve installed notices.

@@ -1,0 +1,9 @@
+{
+  "unsigned_status": 401,
+  "signed_status": 200,
+  "provider": "paradee-8m-v1.1",
+  "content_type": "audio/mpeg",
+  "audio_bytes": 41856,
+  "synthetic_local_session": true,
+  "live_user_session": false
+}

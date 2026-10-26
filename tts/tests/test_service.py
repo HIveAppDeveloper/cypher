@@ -94,6 +94,28 @@ def test_chunks_preserve_words_and_order():
     assert list(text_chunks("x" * 100)) == ["x" * 100]
 
 
+def test_derivative_preserves_identity_voice_and_chunk_contract(monkeypatch):
+    from paradee_engine import MODEL_ID, streaming_chunks
+    class Derivative(FakeEngine):
+        model_id = MODEL_ID
+        chunks = staticmethod(streaming_chunks)
+    monkeypatch.setenv("GROKBOT_BACKEND_API_TOKEN", KEY)
+    with TestClient(create_app(Derivative)) as client:
+        payload = {"model": MODEL_ID, "voice": "af_heart", "input": "Check pipeline latency."}
+        assert client.post("/v1/audio/speech", headers=AUTH, json={**payload, "model": "kokoro"}).status_code == 400
+        assert client.post("/v1/audio/speech", headers=AUTH, json={**payload, "voice": "af_bella"}).status_code == 400
+        assert client.app.state.engine.calls == []
+        result = client.post("/v1/audio/speech", headers=AUTH, json=payload)
+        assert result.status_code == 200
+        assert result.headers["x-tts-model"] == MODEL_ID
+        assert client.get("/health", headers=AUTH).json()["model"] == MODEL_ID
+        assert client.app.state.engine.calls == ["Check", "pipeline latency."]
+    assert list(streaming_chunks("A fresh response.")) == ["A fresh", "response."]
+    assert list(streaming_chunks("  Hi.  ")) == ["Hi."]
+    text = "one " * 80 + "last"
+    assert " ".join(streaming_chunks(text)) == text
+
+
 def test_header_send_failure_releases_admission():
     async def scenario():
         lock = asyncio.Lock()

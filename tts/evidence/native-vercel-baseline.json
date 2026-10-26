@@ -1,0 +1,96 @@
+{
+  "environment": "native Vercel Sandbox, not a deployed Function",
+  "platform": "Linux-6.18.49-x86_64-with-glibc2.43",
+  "cpu": [
+    "model name\t: Intel(R) Xeon(R) Processor @ 2.50GHz"
+  ],
+  "quota": "max 100000\n",
+  "init_ms": 4458.454897999999,
+  "peak_rss_kib": 321476,
+  "results": [
+    {
+      "input": "Check pipeline latency.",
+      "run": 0,
+      "wall_ms": 5389.994,
+      "cpu_ms": 5249.986,
+      "audio_bytes": 73728
+    },
+    {
+      "input": "Check pipeline latency.",
+      "run": 1,
+      "wall_ms": 5426.373,
+      "cpu_ms": 5246.461,
+      "audio_bytes": 73728
+    },
+    {
+      "input": "Check pipeline latency.",
+      "run": 2,
+      "wall_ms": 5355.39,
+      "cpu_ms": 5220.408,
+      "audio_bytes": 73728
+    },
+    {
+      "input": "Check pipeline latency.",
+      "run": 3,
+      "wall_ms": 5216.021,
+      "cpu_ms": 5156.66,
+      "audio_bytes": 73728
+    },
+    {
+      "input": "A fresh response for this CPU test.",
+      "run": 0,
+      "wall_ms": 7844.582,
+      "cpu_ms": 7084.577,
+      "audio_bytes": 112640
+    },
+    {
+      "input": "A fresh response for this CPU test.",
+      "run": 1,
+      "wall_ms": 7531.546,
+      "cpu_ms": 7209.516,
+      "audio_bytes": 112640
+    },
+    {
+      "input": "A fresh response for this CPU test.",
+      "run": 2,
+      "wall_ms": 7269.589,
+      "cpu_ms": 7108.117,
+      "audio_bytes": 112640
+    },
+    {
+      "input": "A fresh response for this CPU test.",
+      "run": 3,
+      "wall_ms": 7320.655,
+      "cpu_ms": 7114.553,
+      "audio_bytes": 112640
+    },
+    {
+      "input": "Hi.",
+      "run": 0,
+      "wall_ms": 3082.919,
+      "cpu_ms": 2924.432,
+      "audio_bytes": 28672
+    },
+    {
+      "input": "Hi.",
+      "run": 1,
+      "wall_ms": 2953.215,
+      "cpu_ms": 2864.517,
+      "audio_bytes": 28672
+    },
+    {
+      "input": "Hi.",
+      "run": 2,
+      "wall_ms": 3113.126,
+      "cpu_ms": 2922.614,
+      "audio_bytes": 28672
+    },
+    {
+      "input": "Hi.",
+      "run": 3,
+      "wall_ms": 3043.469,
+      "cpu_ms": 2898.315,
+      "audio_bytes": 28672
+    }
+  ]
+}

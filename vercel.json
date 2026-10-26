@@ -12,7 +12,7 @@
         {"type": "service", "service": "kokoro", "format": "url", "env": "KOKORO_INTERNAL_URL"}
       ]
     },
-    "kokoro": {"root": "tts", "runtime": "container", "entrypoint": "Dockerfile"},
+    "kokoro": {"root": "tts", "runtime": "container", "entrypoint": "Dockerfile.paradee"},
     "backend": {"root": "backend", "runtime": "container", "entrypoint": "Dockerfile"}
   },
   "daemons": {

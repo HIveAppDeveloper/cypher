@@ -8,7 +8,7 @@ import urllib.error
 import urllib.request
 
 
-def measure(url, mode, text, audio_format):
+def measure(url, mode, text, audio_format, model="kokoro"):
     headers = {"Content-Type": "application/json"}
     if mode == "cypher":
         cookie = os.environ.get("CYPHER_BENCH_COOKIE")
@@ -20,7 +20,7 @@ def measure(url, mode, text, audio_format):
         if not key:
             raise RuntimeError("Set the service authentication token securely in the environment.")
         headers["Authorization"] = "Bearer " + key
-        payload = {"input": text, "model": "kokoro", "voice": "af_bella", "response_format": audio_format}
+        payload = {"input": text, "model": model, "voice": "af_heart" if model == "paradee-8m-v1.1" else "af_bella", "response_format": audio_format}
     start = time.perf_counter()
     request = urllib.request.Request(url, data=json.dumps(payload).encode(), headers=headers, method="POST")
     # Redirects are deliberately refused so auth cannot leak to another host.
@@ -42,7 +42,7 @@ def measure(url, mode, text, audio_format):
         if content_type == "audio/pcm" and total % 2:
             raise RuntimeError("The PCM stream ended mid-sample.")
         timing = response.headers.get("Server-Timing", "")
-        return {"headers_ms": round(headers_ms, 3), "network_first_audio_ms": round(first_audio_ms, 3), "total_ms": round((time.perf_counter() - start) * 1000, 3), "audio_bytes": total, "format": content_type, "server_timing": timing}
+        return {"headers_ms": round(headers_ms, 3), "network_first_audio_ms": round(first_audio_ms, 3), "total_ms": round((time.perf_counter() - start) * 1000, 3), "audio_bytes": total, "format": content_type, "server_timing": timing, "model": response.headers.get("X-TTS-Model") or response.headers.get("X-Voice-Provider")}
 
 
 def main():
@@ -50,14 +50,15 @@ def main():
     parser.add_argument("url")
     parser.add_argument("--mode", choices=["service", "cypher"], default="cypher")
     parser.add_argument("--format", choices=["pcm", "mp3"], default="pcm")
+    parser.add_argument("--model", choices=["kokoro", "paradee-8m-v1.1"], default="kokoro")
     parser.add_argument("--runs", type=int, default=5)
     parser.add_argument("--text", default="Check pipeline latency.")
     args = parser.parse_args()
     if not 1 <= args.runs <= 20:
         parser.error("Use 1–20 measured runs.")
     # Nonblank warmups exercise phonemization, inference and encoding.
-    warmups = [measure(args.url, args.mode, "Warm up voice.", args.format) for _ in range(3)]
-    results = [measure(args.url, args.mode, args.text, args.format) for _ in range(args.runs)]
+    warmups = [measure(args.url, args.mode, "Warm up voice.", args.format, args.model) for _ in range(3)]
+    results = [measure(args.url, args.mode, args.text, args.format, args.model) for _ in range(args.runs)]
     print(json.dumps({"warmups": warmups, "samples": results, "median_network_first_audio_ms": statistics.median(r["network_first_audio_ms"] for r in results), "under_20ms_all_samples": all(r["network_first_audio_ms"] < 20 for r in results)}, indent=2))
 
 

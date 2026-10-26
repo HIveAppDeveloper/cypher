@@ -24,6 +24,12 @@ test('voice auth still rejects requests before contacting the provider',async()=
 });
 
 const kokoroEnv = {KOKORO_TTS_ENABLED:'true',KOKORO_INTERNAL_URL:'http://kokoro.internal',GROKBOT_BACKEND_API_TOKEN:'local-test-fixture-not-a-live-key-0000'};
+test('approved derivative sends its real model and single voice identity',async()=>{
+ let seen;const {POST}=route(async(_url,options)=>{seen=JSON.parse(options.body);return new Response(new Uint8Array([0xff,0xfb]),{headers:{'Content-Type':'audio/mpeg'}});},{...kokoroEnv,KOKORO_TTS_MODEL:'paradee-8m-v1.1'});
+ const result=await POST(request());assert.equal(result.status,200);assert.equal(seen.model,'paradee-8m-v1.1');assert.equal(seen.voice,'af_heart');assert.equal(result.headers.get('x-voice-provider'),'paradee-8m-v1.1');
+ const invalid=route(async()=>{throw new Error('Must not reach provider');},{...kokoroEnv,KOKORO_TTS_MODEL:'unknown'});
+ assert.equal((await invalid.POST(request())).status,503);
+});
 test('opt-in Kokoro uses the private binding and MP3 contract without exposing internal credentials',async()=>{
  let seen;
  const {POST}=route(async(url,options)=>{seen={url,options};return new Response(new Uint8Array([0xff,0xfb]),{headers:{'Content-Type':'audio/mpeg','X-Server-First-Audio-Ms':'145.123','Authorization':'must-not-forward','X-Internal-URL':'must-not-forward'}});},kokoroEnv);

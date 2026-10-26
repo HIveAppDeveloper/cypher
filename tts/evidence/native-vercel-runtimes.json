@@ -1,0 +1,246 @@
+{
+  "runtime": "native Vercel Sandbox,1vCPU",
+  "peak_rss_kib": 1133124,
+  "results": [
+    {
+      "backend": "onnx-fp32-1thread",
+      "input": "Ready.",
+      "run": 0,
+      "wall_ms": 1293.525,
+      "cpu_ms": 1212.623,
+      "samples": 13312,
+      "finite": true,
+      "rms": 0.08138416707515717
+    },
+    {
+      "backend": "onnx-fp32-1thread",
+      "input": "Ready.",
+      "run": 1,
+      "wall_ms": 1184.62,
+      "cpu_ms": 1156.128,
+      "samples": 13312,
+      "finite": true,
+      "rms": 0.08138416707515717
+    },
+    {
+      "backend": "onnx-fp32-1thread",
+      "input": "Ready.",
+      "run": 2,
+      "wall_ms": 1113.29,
+      "cpu_ms": 1102.269,
+      "samples": 13312,
+      "finite": true,
+      "rms": 0.08138416707515717
+    },
+    {
+      "backend": "onnx-fp32-1thread",
+      "input": "Check pipeline latency.",
+      "run": 0,
+      "wall_ms": 1944.363,
+      "cpu_ms": 1929.631,
+      "samples": 36864,
+      "finite": true,
+      "rms": 0.07232815027236938
+    },
+    {
+      "backend": "onnx-fp32-1thread",
+      "input": "Check pipeline latency.",
+      "run": 1,
+      "wall_ms": 2056.656,
+      "cpu_ms": 1948.752,
+      "samples": 36864,
+      "finite": true,
+      "rms": 0.07232815027236938
+    },
+    {
+      "backend": "onnx-fp32-1thread",
+      "input": "Check pipeline latency.",
+      "run": 2,
+      "wall_ms": 2109.522,
+      "cpu_ms": 1961.719,
+      "samples": 36864,
+      "finite": true,
+      "rms": 0.07232815027236938
+    },
+    {
+      "backend": "onnx-fp32-1thread",
+      "input": "A fresh response for this CPU test.",
+      "run": 0,
+      "wall_ms": 2966.17,
+      "cpu_ms": 2751.42,
+      "samples": 56832,
+      "finite": true,
+      "rms": 0.07714173942804337
+    },
+    {
+      "backend": "onnx-fp32-1thread",
+      "input": "A fresh response for this CPU test.",
+      "run": 1,
+      "wall_ms": 3197.258,
+      "cpu_ms": 2666.736,
+      "samples": 56832,
+      "finite": true,
+      "rms": 0.07714173942804337
+    },
+    {
+      "backend": "onnx-fp32-1thread",
+      "input": "A fresh response for this CPU test.",
+      "run": 2,
+      "wall_ms": 2678.697,
+      "cpu_ms": 2615.102,
+      "samples": 56832,
+      "finite": true,
+      "rms": 0.07714173942804337
+    },
+    {
+      "backend": "onnx-fp32-1thread",
+      "input": "Hi.",
+      "run": 0,
+      "wall_ms": 1559.274,
+      "cpu_ms": 1119.384,
+      "samples": 14336,
+      "finite": true,
+      "rms": 0.06319518387317657
+    },
+    {
+      "backend": "onnx-fp32-1thread",
+      "input": "Hi.",
+      "run": 1,
+      "wall_ms": 1134.64,
+      "cpu_ms": 1091.308,
+      "samples": 14336,
+      "finite": true,
+      "rms": 0.06319518387317657
+    },
+    {
+      "backend": "onnx-fp32-1thread",
+      "input": "Hi.",
+      "run": 2,
+      "wall_ms": 1086.297,
+      "cpu_ms": 1071.321,
+      "samples": 14336,
+      "finite": true,
+      "rms": 0.06319518387317657
+    },
+    {
+      "backend": "openvino-fp32-1thread",
+      "input": "Ready.",
+      "run": 0,
+      "wall_ms": 1487.35,
+      "cpu_ms": 1308.885,
+      "samples": 14336,
+      "finite": true,
+      "rms": 0.0657535195350647
+    },
+    {
+      "backend": "openvino-fp32-1thread",
+      "input": "Ready.",
+      "run": 1,
+      "wall_ms": 1107.379,
+      "cpu_ms": 1050.359,
+      "samples": 14336,
+      "finite": true,
+      "rms": 0.0657535195350647
+    },
+    {
+      "backend": "openvino-fp32-1thread",
+      "input": "Ready.",
+      "run": 2,
+      "wall_ms": 1176.452,
+      "cpu_ms": 1092.065,
+      "samples": 14336,
+      "finite": true,
+      "rms": 0.0657535195350647
+    },
+    {
+      "backend": "openvino-fp32-1thread",
+      "input": "Check pipeline latency.",
+      "run": 0,
+      "wall_ms": 2347.886,
+      "cpu_ms": 2136.807,
+      "samples": 37376,
+      "finite": true,
+      "rms": 0.060929957777261734
+    },
+    {
+      "backend": "openvino-fp32-1thread",
+      "input": "Check pipeline latency.",
+      "run": 1,
+      "wall_ms": 2163.397,
+      "cpu_ms": 1925.794,
+      "samples": 37376,
+      "finite": true,
+      "rms": 0.060929957777261734
+    },
+    {
+      "backend": "openvino-fp32-1thread",
+      "input": "Check pipeline latency.",
+      "run": 2,
+      "wall_ms": 2260.204,
+      "cpu_ms": 2030.865,
+      "samples": 37376,
+      "finite": true,
+      "rms": 0.060929957777261734
+    },
+    {
+      "backend": "openvino-fp32-1thread",
+      "input": "A fresh response for this CPU test.",
+      "run": 0,
+      "wall_ms": 3240.99,
+      "cpu_ms": 2949.061,
+      "samples": 57344,
+      "finite": true,
+      "rms": 0.06423861533403397
+    },
+    {
+      "backend": "openvino-fp32-1thread",
+      "input": "A fresh response for this CPU test.",
+      "run": 1,
+      "wall_ms": 2874.982,
+      "cpu_ms": 2721.827,
+      "samples": 57344,
+      "finite": true,
+      "rms": 0.06423861533403397
+    },
+    {
+      "backend": "openvino-fp32-1thread",
+      "input": "A fresh response for this CPU test.",
+      "run": 2,
+      "wall_ms": 3056.057,
+      "cpu_ms": 2692.074,
+      "samples": 57344,
+      "finite": true,
+      "rms": 0.06423861533403397
+    },
+    {
+      "backend": "openvino-fp32-1thread",
+      "input": "Hi.",
+      "run": 0,
+      "wall_ms": 1323.734,
+      "cpu_ms": 1123.258,
+      "samples": 15360,
+      "finite": true,
+      "rms": 0.05109138786792755
+    },
+    {
+      "backend": "openvino-fp32-1thread",
+      "input": "Hi.",
+      "run": 1,
+      "wall_ms": 1079.36,
+      "cpu_ms": 1010.316,
+      "samples": 15360,
+      "finite": true,
+      "rms": 0.05109138786792755
+    },
+    {
+      "backend": "openvino-fp32-1thread",
+      "input": "Hi.",
+      "run": 2,
+      "wall_ms": 1029.809,
+      "cpu_ms": 985.596,
+      "samples": 15360,
+      "finite": true,
+      "rms": 0.05109138786792755
+    }
+  ]
+}

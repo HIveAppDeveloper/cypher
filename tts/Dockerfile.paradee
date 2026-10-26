@@ -1,0 +1,26 @@
+FROM python:3.12-slim AS build
+ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
+WORKDIR /build
+RUN apt-get update && apt-get install -y --no-install-recommends g++ && rm -rf /var/lib/apt/lists/*
+COPY paradee-requirements.lock.txt ./
+RUN pip install --no-cache-dir -r paradee-requirements.lock.txt
+COPY download_paradee.py optimize_paradee.py fft_custom_graph.py ./
+COPY native/paradee_fft.cc ./
+RUN python download_paradee.py \
+    && python optimize_paradee.py /opt/models/paradee_int8.onnx /opt/models/paradee_optimized.onnx --harmonic \
+    && python fft_custom_graph.py /opt/models/paradee_optimized.onnx /opt/models/paradee_cpu_fft.onnx \
+    && python -c 'from download_paradee import verify_optimized; verify_optimized("/opt/models/paradee_cpu_fft.onnx")' \
+    && g++ -O3 -DNDEBUG -std=c++17 -fPIC -shared -I/opt/models/include paradee_fft.cc -o /opt/models/paradee_fft.so \
+    && rm -rf /opt/models/include /opt/models/paradee_int8.onnx /opt/models/paradee_optimized.onnx
+
+FROM python:3.12-slim
+ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 KOKORO_MODEL_DIR=/opt/models KOKORO_TTS_MODEL=paradee-8m-v1.1 KOKORO_CPU_THREADS=2 HF_HUB_OFFLINE=1
+WORKDIR /app
+RUN apt-get update && apt-get install -y --no-install-recommends libgomp1 espeak-ng && rm -rf /var/lib/apt/lists/*
+COPY --from=build /usr/local/lib/python3.12/site-packages /usr/local/lib/python3.12/site-packages
+COPY --from=build /usr/local/bin/uvicorn /usr/local/bin/uvicorn
+COPY --from=build /opt/models /opt/models
+COPY kokoro_service.py paradee_engine.py ./
+COPY licenses /usr/share/doc/cypher-kokoro
+EXPOSE 80
+CMD ["sh", "-c", "exec uvicorn kokoro_service:app --host 0.0.0.0 --port ${PORT:-80} --workers 1 --no-access-log"]
