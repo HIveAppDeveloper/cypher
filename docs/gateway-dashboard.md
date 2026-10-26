@@ -1,102 +1,96 @@
-# Cypher gateway dashboard — additive surface
+# Cypher gateway dashboard — internal provider catalog
 
-This document describes the local `/gateway` frontend candidate reviewed on October 26, 2026. It extends the existing Cypher workspace with an operational view of the same runtime, provider connections, workspace consumption, and task history. It is a source-only review candidate; it does not establish a deployment or working provider access.
+This describes the local `/gateway` source candidate on October 26, 2026. The default **Connections** view is a searchable provider catalog with focused setup details inside Cypher. Hosting separates adding a computer to the existing workspace from running a new installation of the whole app. This is source-only work; it establishes no deployment, authorized provider account, email delivery, or successful full Linux startup.
 
-## Existing design authority
+## Design authority and scope
 
-[`PRODUCT.md`](../PRODUCT.md), [`DESIGN.md`](../DESIGN.md), and `.impeccable/design.json` remain the incumbent product and design authorities. This surface inherits Cypher's system typography, restrained hierarchy, opaque surfaces, compact navigation, explicit recovery states, and existing identity asset. The green treatment below is a scoped operational variant implemented by `gateway.css`, confined to the gateway shell. It does not replace the monochrome workspace world, revise global tokens, or authorize recoloring other screens. Acceptance of this candidate variant belongs to release review.
+[`PRODUCT.md`](../PRODUCT.md), [`DESIGN.md`](../DESIGN.md), and [`.impeccable/design.json`](../.impeccable/design.json) remain the incumbent authorities. This ordinary extension preserves those files. Its surface direction is in [`.impeccable/surfaces/gateway-connections.md`](../.impeccable/surfaces/gateway-connections.md).
 
-The route uses the existing `/cypher-mark.svg` asset with Cypher text and a small GATEWAY descriptor. Provider marks are initials, rather than new provider logos or connection guarantees. The shell inherits its font family; code inherits the existing `--font-mono`. The route explicitly declares `color-scheme: light` and has no gateway-specific dark palette; the workspace's broader appearance support must not be inferred for this surface.
+`connections.css`, imported after `gateway.css`, replaces the earlier candidate's green navigation/actions with warm neutral surfaces, white cards, graphite actions, and the existing platform font stack. Green is a semantic connected-state signal. The route retains the existing Cypher asset and explicitly uses a light color scheme; a gateway-specific dark palette is not implemented.
 
-### Observed local values
+Provider/hosting marks are original SVG bytes from LobeHub's MIT-licensed Lobe Icons, pinned at `49a2130`, with README and LICENSE in `frontend/public/provider-logos/`. They identify products without implying endorsement, grants, or model access. Some retain provider color, whereas incumbent connection guidance describes grayscale imagery. That scoped distinction is documented without changing the global system.
 
-These values are extracted from `frontend/src/app/gateway/gateway.css`. Only the first three entries are named CSS custom properties; the other entries are existing local literals, documented here without adding global tokens.
+### Observed composition and values
 
-| Role | CSS source value | Application |
+Connections opens with title, search, All providers / Subscriptions / API providers / Connected filters, then a three-column grid. At 1150px and below it becomes two columns; at 650px and below it becomes one. The recorded 900px view has two columns and 390px has one. Detail replaces the catalog inline with a return action and focused heading; it does not open a large setup dialog.
+
+The shell has a compact sidebar, sticky white topbar, and separately scrolling content. Main content is capped at 1250px with desktop padding of 36px 40px, reduced at narrower breakpoints. Existing mobile navigation retains inert background/closed-navigation handling, Tab trapping, Escape dismissal, and focus restoration.
+
+| Local role | Observed source value | Use |
 | --- | --- | --- |
-| Ink | `--gw-ink: #334238` | Default gateway text |
-| Muted text | `--gw-muted: #626f65` | Supporting copy and labels |
-| Separator | `--gw-line: #dfe5dd` | Panel boundaries and shell dividers |
-| Canvas / panel | `#f7f8f5` / `#fff` | Quiet outer surface and opaque panels |
-| Sidebar / active navigation | `#142019` / `#2b4433` | Persistent navigation and selected destination |
-| Primary action / hover / text | `#27432e` / `#365e3b` / `#f1f8e9` | Provider/setup action |
-| Usage bar | `#779c65` | Relative recorded provider token consumption |
-| Positive status | `#edf5e6` fill, `#d0e1c6` border, `#456539` text | Confirmed readiness and saved verification |
-| Attention status | `#faf4e0` fill, `#eadcb8` border, `#826429` text | Failed tasks and provider attention states |
-| Error | `#fff5ed` fill, `#ecd5c2` border, `#86582e` text | Read failures with retry |
-| Keyboard focus | `3px solid #8caf94`, `3px` offset | Buttons, links, and inputs |
+| Ink / muted / separator | `#242423` / `#666660` / `#e5e5e0` | Neutral hierarchy and boundaries |
+| Canvas / sidebar / card | `#fafaf8` / `#f1f1ee` / `#fff` | Opaque flat surfaces |
+| Primary action | `#292927`, white text | Supported setup actions |
+| Connected status | `#eaf2ec` fill, `#346344` text | Explicit server-reported account connection |
+| Page / card / description type | 30px / 17px / 13px | Page title becomes 28px on mobile |
+| Card radius / padding | 12px / 23px | Card padding becomes 21px at narrower widths |
+| Keyboard focus | 2px neutral outline, 4px offset | Buttons, links, inputs, summaries |
 
-The shell body is (13px), with a (1.5) line height. The desktop page heading is (28px/550), line height (1.25), tracking (-.035em); section headings use (14px/550). Supporting copy generally uses (10–12px). Metrics use tabular numerals and a (27px/500) desktop value. Button corners are (6px); principal panels and the metric strip are (9px); navigation rows are (5px). Tonal surfaces and thin borders supply depth. The copy toast alone uses the local shadow `0 6px 24px #203c2130`.
-
-### Composition and responsive behavior
-
-The fixed, full-viewport shell places a (228px) sidebar beside a separately scrolling content area. The desktop topbar is (66px), content padding is (34px), and main content is capped at (1530px). Overview leads with a four-column metric strip, then usage and runtime-route panels, provider summaries, recent tasks, and integration guidance. There is no inference console embedded in this view.
-
-Breakpoints exist at (1600px), (1200px), (1000px), (780px), and (650px). At (1000px) the overview becomes one column, metrics and provider summaries become two columns, and the cost callout hides. At (650px) navigation becomes an off-canvas modal drawer, the topbar becomes (59px), and main padding becomes (25px 18px). Tables retain horizontal scrolling within their own wrapper. The drawer marks closed navigation inert, makes background content inert while open, traps Tab, closes with Escape or the shade, and restores prior focus. OS reduced motion suppresses transitions and animations. This source behavior is distinct from a comprehensive assistive-technology audit.
+Inputs have explicit placeholder contrast and password masking where appropriate. Main mobile actions have at least 44px targets; filters use a scrollable row with 42px targets. Detail reveal runs only when OS reduced motion is inactive; the inherited shell also suppresses animation/transitions for reduced motion. This is not a comprehensive assistive-technology audit.
 
 ## Route, authentication, and owner boundary
 
-`frontend/src/app/gateway/page.tsx` is a force-dynamic server route. It reads the signed `grokbot_session` cookie through the existing authentication helper. When `REQUIRE_USER_AUTH === 'true'`, a missing or invalid session redirects to `/login?returnTo=%2Fgateway`. Existing local development behavior when authentication is disabled is preserved. This addition creates no new sign-in system.
+`frontend/src/app/gateway/page.tsx` is force-dynamic and reads the existing signed `grokbot_session` cookie. With `REQUIRE_USER_AUTH=true`, missing/invalid sessions redirect to `/login?returnTo=%2Fgateway`. There is no new sign-in system. Account changes/unmounts invalidate and abort old reads; late responses cannot replace a newer account's view. Requests use the existing same-origin authenticated proxy.
 
-The server passes the session subject as `accountId` and keys the dashboard by that subject. Account changes/unmounts invalidate and abort old reads; late responses cannot replace a newer account's view. Requests continue through the existing same-origin authenticated API path.
+Shared model records/actions require runtime `can_manage_model_connections === true`. Backend owner authorization remains authoritative; hidden controls are not authorization. Worker readiness gates API-key verification and model checks. Preview disables those writes.
 
-The dashboard displays shared model-connection records and management actions only when the runtime returns `can_manage_model_connections === true`. Advanced gateway links additionally require `model_transport === 'omniroute'` and an approved public URL. The existing backend remains authoritative: runtime responses omit model-connection records from non-owners, and the existing queued connection checks call `require_owner()`. Hiding a control is not an authorization mechanism on its own.
+## Provider catalog and supported actions
 
-## Data contract and honest states
+`GatewayConnections` and `lib/gateway-connections.mjs` provide six discovery entries: ChatGPT, Claude, Gemini, Grok, OpenRouter, and Meta. Search matches provider/company names; Connected requires real `account_connected === true` and excludes preview fixtures. Provider-owned account/key destinations are distinct from authorization. Opening a provider website connects nothing.
 
-The dashboard refreshes on mount, every (30 seconds), and through Refresh/Retry. It issues only these three read requests itself, with `cache: 'no-store'`:
+The original Claude/Codex **Connect → provider sign-in → allow → return** objective is **not complete**. This branch has no native subscription account sign-in adapter for those providers. Cards show **Account sign-in unavailable** and **View setup** unless a supported runtime action or API-key option is actually advertised. These are not working/prepared adapters or adapters merely awaiting deployment. Optional OpenRouter consent source exists separately in `cypher-provider-consent` (`acc7f4c`, lower `cb1c090`); it is not integrated here or deployed by this work.
 
-| Existing endpoint | Displayed evidence | Limits |
+- **Browser sign-in:** requires an owner-authorized runtime record with `can_connect === true` and `connect_url` exactly `/api/model-connections/{known-provider-id}/begin`. The browser posts only to that same-origin path and accepts the returned authorization URL only on the provider's explicit HTTPS host allowlist, without credentials/nondefault port. It never invents OAuth from a name or redirects Connect to OmniRoute.
+- **API key:** supported records with `can_add_api_key === true` use existing `/api/runtime/model-connections/{provider}/api-key`, with owner permission, ready worker, and no preview. The password field clears on submission. The existing server encrypts and checks the key before replacing a working connection. API billing is separate from chat subscriptions.
+- **Model check:** existing `/api/runtime/model-connections/{provider}/verify` queues an explicit check that may consume quota. The UI requires a pending/running response before reporting a queued check. Unsupported verification is labeled unavailable. Passive refresh never verifies access.
+- **Setup:** unsupported entries show inline requirements, provider-owned key links where applicable, and honest limits. Meta consumer login is explicitly distinguished from Llama-compatible API access.
+
+**Account connected** requires `account_connected === true`; saved `state: ready` alone says **Route available**. Checking and actionable failure states retain explicit text. Preview always says **Preview**, including synthetic ready records. A route check, catalog entry, or logo is not an authorized account.
+
+## Hosting: computer pairing or the whole app
+
+Hosting offers two modes, each with local, AWS, and Azure choices.
+
+### Connect a computer
+
+This adds approved tools through existing `/api/local-device/` endpoints while the app/history remain in the cloud. AWS/Azure options point to machines the user controls and provider guides. The UI reads devices, explicitly creates codes, cancels pairing, and confirms saved-device disconnection.
+
+Device ID, code format, and future expiry are checked. Codes remain in component memory and a read-only password field, clear on expiry/pairing/account change, and are neither put in companion commands nor persisted in browser storage. The companion command limits access to the Cypher folder and leaves shell off. Each action retains local companion approval; pairing is not blanket shell permission. Preview does not create, revoke, or enumerate real devices.
+
+### Host the whole app
+
+`GatewayDeployment` offers `/setup/cypher_host.py` as a download and commands for the user's local hardware or existing AWS EC2/Azure Linux machine. It does **not** provision cloud machines, create accounts, configure DNS, or guarantee provider/email access. Users supply Docker Compose, Git, Python 3.10+, their own dedicated direct PostgreSQL URL, and their own gateway/key. Public cloud setup additionally requires a domain, owner email, and Resend key with verified sender.
+
+The wizard creates a **new directory**, unique Compose project, and unique application schema. Directory permissions are `0700`; `.env` is exclusively created at `0600`. Existing destinations are refused. No existing cloud environment, database data, accounts, or provider grants are imported/migrated. The user reviews settings before explicitly starting containers.
+
+Compose runs frontend, private API, and worker; the cloud profile adds Caddy HTTPS. Local frontend binds to loopback. API and supplied database are not exposed as public host ports. Local mode is loopback-only with local auth disabled; public cloud requires email sign-in. No Docker socket is mounted; agent-managed Docker computers need a separate sandbox.
+
+The wizard clones canonical `HIveAppDeveloper/cypher` branch `main` and stops before startup if it lacks self-hosted-origin support; it does not patch older source to bypass that check. `NEXT_PUBLIC_SELF_HOSTED_ORIGIN` is an explicit compile-time operator setting. Missing/invalid values retain `https://cypher-agent.vercel.app`. The parser accepts HTTPS origins or HTTP loopback and rejects credentials, non-root paths, queries, fragments, and surrounding whitespace. Request headers never choose callback/sign-in origin. Request-hostname inspection for preview detection does not select that origin.
+
+## Read data and advanced controls
+
+Shared reads refresh on mount, every 30 seconds, and through Refresh/Retry, independently with `cache: 'no-store'`:
+
+| Existing endpoint | Evidence | Limit |
 | --- | --- | --- |
-| `GET /api/runtime` | Transport, configured route IDs, model configuration, database/worker readiness, worker heartbeat age and release match, owner permission, saved provider-check states/times | The frontend expects `connected: true` from the existing runtime proxy. Configured routes are deduplicated; they are not a complete discovery catalog or evidence of successful inference. |
-| `GET /api/workspace/usage` | Week-to-date input/output tokens, recorded estimated cost, per-model/provider rows, weekly token allowance and reset time | Workspace-scoped accounting; estimates are not invoices, and a zero estimate does not prove free access. Provider totals sum finite nonnegative recorded values and sort by token count. |
-| `GET /api/workspace/runs` | Up to 100 recent task IDs, status, start time, completion time; overview takes the first five | Task history is not provider request logging. The presentation helper projects only `id`, `status`, `created_at`, and `completed_at`, excluding titles, prompts, output, and arbitrary fields. |
+| `GET /api/runtime` | Transport/configuration, database/worker readiness, heartbeat/release match, owner permission, saved provider states | Acceptance requires `connected: true`; configuration is not inference or consent. |
+| `GET /api/workspace/usage` | Week-to-date tokens, estimated cost, allowance/reset, per-model/provider rows | Workspace estimates are not invoices; zero does not prove free access. |
+| `GET /api/workspace/runs` | Up to 100 task IDs, statuses, start/completion times | Task history is not provider request logs; presentation excludes prompts, titles, outputs, arbitrary fields. |
 
-The three reads settle independently. A failed read clears that resource's stale data and shows a retryable error. A 401 asks the user to sign in again. A runtime payload without `connected: true`, a usage payload without a model-row array, or a non-array task response is treated as unavailable. Unknown, negative, nonfinite, or nonnumeric headline metrics render as **Unavailable**, while a recorded numeric zero remains zero. The provider aggregation helper ignores invalid numeric contributions; it is a display summary, not a data-quality certification.
+Failed reads clear stale resource data and offer retry. A 401 requests sign-in. Invalid/missing metrics say **Unavailable**; numeric zero stays zero. Missing times say **Not recorded**. Worker readiness/release match stay separate. **Read at** records a refresh attempt, not provider verification.
 
-Readiness labels have bounded meanings:
+Routing, fallbacks, caching, budgets, logs, latency, and rate-limit settings are unavailable from these reads. Advanced links remain optional for an owner in OmniRoute mode; provider setup stays in Cypher. Management URLs pass the existing exact-host HTTPS allowlist for `omniroute-cloud-ten.vercel.app` or `omniroute-cloud-hiveapp.vercel.app`, approved paths, and default port. Private runtime URLs, credentials, bindings, and bypass headers never enter the client. Connect tools derives only an illustrative `/v1` endpoint from an approved origin; it issues no key and proves no client connection. No second inference/MCP service or native desktop binary is added.
 
-- **Cloud API connected** means an accepted runtime response, not that every provider or tool works.
-- **Ready** on Cloud worker reflects the runtime's worker readiness boolean; the separate heartbeat age and release-match result provide context.
-- **Configured** describes the runtime's model configuration. It does not mean a model call succeeded.
-- **Verified** on a provider card represents a saved `ready` check and its recorded time, not a live availability guarantee. Attention states retain text such as Verification needed, Sign-in needed, Access denied, Review billing, and Rate limited.
-- Runtime readiness rows distinguish **Confirmed**, **Not confirmed**, and **Unavailable**. Missing timestamps read **Not recorded**. Empty usage and task lists have explicit empty states.
-- The footer's **Read at** time records the completed refresh attempt; it is not a successful provider-check timestamp. The static status-dot styling does not override these textual states.
+## Preview and release limits
 
-Current routing strategy, fallback order, cache policy, gateway budgets, provider logs, request latency, and rate-limit configuration are not returned by these read APIs. The page states that they are unavailable locally and offers native OmniRoute links when permitted. It does not invent values or add local editors for them.
+Unauthenticated loopback preview is separate from sign-in. When local forwarding/session configuration is absent, `/login` offers **Open gateway preview**, labels samples, and creates no session. Public/auth-required configurations never receive that fallback. Existing configured Google/email login remains, without claiming successful mail delivery or provider consent.
 
-## Existing connection and setup flows
-
-The Providers view reuses `ModelConnections`; Overview/Providers setup actions and the Usage setup action open the existing `WorkspaceSetup` dialog. This preserves existing provider sign-in, Google verification, API-key submission, queued worker checks, and setup behavior rather than implementing a second credential flow.
-
-Passive dashboard refresh reads saved data and sends no provider verification request. An explicit **Check access**, **Check again**, or API-key verification action in `ModelConnections` uses the existing POST endpoints under `/api/runtime/model-connections/{provider}/verify` or `/api-key`; it sends a short model request and may consume provider quota. Worker readiness gates those actions. Opening a Google verification link alone never marks the connection verified. `WorkspaceSetup` retains its own existing reads, explicit cloud-check/model-test actions, and deployment guidance; opening it must not be described as this dashboard provisioning infrastructure or performing all those actions automatically.
-
-## Public management URL boundary
-
-The server checks `OMNIROUTE_DASHBOARD_URL`, falling back to `OMNIROUTE_URL`, through `publicGatewayManagementUrl()`. Only HTTPS URLs on the exact hosts `omniroute-cloud-ten.vercel.app` and `omniroute-cloud-hiveapp.vercel.app` are accepted. The default HTTPS port is permitted; other ports, user information, query strings, fragments, and unrecognized paths are rejected. Accepted input paths are `/`, `/v1`, and `/dashboard/providers` (including the URL parser's empty-path case). The output is always the approved origin plus `/dashboard/providers`.
-
-The route never forwards a raw private runtime URL, credential, service binding, or protection-bypass header into the dashboard. The client presents the approved management link only for an installation owner in OmniRoute mode; external dashboard anchors use `noopener noreferrer`. A failed URL check yields no inferred destination. The public URL's allowlist membership is a safety boundary in source, not a new live verification of that deployment.
-
-Connect tools derives `/v1` from that same gated public origin and offers an illustrative OpenAI-compatible client snippet. It issues no key and makes no inference/model-list request from the dashboard. Credentials and deployment access remain prerequisites supplied through the existing owner process.
-
-## Integration and release limits
-
-Advanced routing, fallbacks, load balancing, caching, budgets, provider analytics, and subscription sign-in stay in the existing native OmniRoute dashboard. This candidate adds no Node inference service, database, alternate production application, or second MCP server. Its MCP paragraph points to the installed OmniRoute version's supported configuration. Desktop access means opening the cloud page or using browser shortcut/Add to Dock behavior; no native desktop binary or newly verified desktop/MCP integration is included.
-
-The existing shared production PostgreSQL and environment values must be preserved. Canonical source remains `HIveAppDeveloper/cypher`, integration branch `main`, Vercel project `cypher`, and submission URL `https://cypher-agent.vercel.app`. Follow `CYPHER_SHARED_RUNTIME.md` before runtime changes or release. The sole release owner is chat `01a16f1c-f827-7ab0-ae4a-6bccbbb7eed2` (**Polish and deploy VentureCruiter**). This local work is handed to that owner for review and any production alias action. Final frontend, API, and worker parity against one release remains a release gate.
+Canonical source is `HIveAppDeveloper/cypher`, integration branch `main`, Vercel project `cypher`, submission URL `https://cypher-agent.vercel.app`. Preserve shared production PostgreSQL data and environment values. Read `CYPHER_SHARED_RUNTIME.md` before runtime changes/release. Ready changes go to release-owner chat `01a16f1c-f827-7ab0-ae4a-6bccbbb7eed2` (**Polish and deploy VentureCruiter**); production aliases belong to that owner. Frontend, API, and worker require verification against the same final release before completion is claimed.
 
 ## Bounded verification evidence
 
-Sources reviewed: incumbent product/design documents; the gateway server route, stylesheet, dashboard component and presentation helpers; existing `ModelConnections`/`WorkspaceSetup`; and backend owner-check/runtime source. No incumbent design-system file was edited for this extension.
+Documentation checked the final route, dashboard, connections/hosting/deployment/logo components, helpers/CSS, explicit origin opt-in, setup wizard, and logo attribution/license against incumbent guidance. Product/design authority files were preserved. Obsolete green-shell/reused-setup-dialog descriptions are replaced here; no global design drift was repaired.
 
-The local evidence directory is `/Users/boaznovik/Documents/Codex/2026-10-26/gateway-verification`. `fixture.mjs` supplies synthetic provider names, usage, task history, and readiness. The inspected `desktop.png`, `mobile.png`, and `providers-desktop.png` are **first-viewport captures only**. They support a bounded layout review at desktop/mobile sizes; their apparently ready providers, costs, and worker state are fixture values. They do not demonstrate the lower page, all tabs, real authentication/consent, provider execution, cloud readiness, or an end-to-end integration.
+Reported final implementation evidence: all 312 frontend tests and the production build passed after the action-copy change. Four Python setup tests passed, and actual Docker Compose configuration resolution validated unique project/schema isolation. These are source checks, not provider, email, provisioning, or full Linux-startup verification.
 
-The focused command `node --test tests/gateway-dashboard.test.mjs tests/gateway-dashboard-component.test.mjs` passed **11/11 tests** from `frontend/`. Coverage includes the URL boundary, numeric handling, configured-route deduplication, task-content exclusion, exact read endpoints, non-owner management suppression, stale-account/unmount response handling, failed-refresh state clearing, and closed mobile navigation/Escape focus restoration. Existing local logs also record a successful frontend production build (`build-final.txt`) and a **291/291** frontend-suite pass (`frontend-tests-recheck.txt`); those are recorded local source checks, not cloud verification. No real provider call or production deployment was performed by this documentation review.
-
-## Local preview sign-in repair
-
-The follow-up login change keeps an explicitly unauthenticated loopback preview separate from real account sign-in. When `REQUIRE_USER_AUTH=false` on localhost and the local authentication forwarding/session configuration is missing, `/login` offers **Open gateway preview** and labels its data as samples. It does not show an email form that cannot send. The continuation stays internal and cannot loop back to `/login`; no session is created.
-
-Public or auth-required environments never receive this preview fallback. A real unconfigured sign-in service shows an unavailable/retry state. When backend forwarding and session signing are configured, the existing Google sign-in, email fallback, callback URI, and signed-in return behavior remain in place. Configuration presence is not evidence of successful mail delivery or provider authorization. The change does not send an email, modify an environment value, or weaken a production authentication check.
-
-The final follow-up frontend suite passed 298 tests, including six new readiness/page cases. Its production build passed. Built local browser checks at 1024×900 and 390×844 confirmed the removed email input, readable primary link, no horizontal overflow, and navigation to `/gateway`. These are local fixture results; production integration remains the release owner's responsibility.
+`.impeccable/review/` contains desktop, mobile, user-900px, Hosting, deployment, Azure, and Claude captures with synthetic sample states. The independent finish review returned **FIX**: catalog availability-label wording was **RESOLVED** with valid three-viewport recaptures, while native Claude/Codex adapters remain **UNRESOLVED** as a technical dependency. No regressions were observed from the catalog correction. The original provider connection objective remains incomplete, not merely awaiting deployment. No production environment/database/alias/cloud operations, real provider authorization, or email delivery were performed by this work.
