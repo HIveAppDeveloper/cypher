@@ -23,4 +23,6 @@
 .workspace-hub[open] { display: flex; flex-direction: column; }
 .workspace-hub .hub-header, .workspace-hub .hub-tabs { flex-shrink: 0; }
 .workspace-hub .hub-tabs { flex-wrap: wrap; }
+.workspace-hub .hub-tabs button[aria-pressed="true"] { background: var(--system-selected); color: var(--cx-label); }
+.workspace-hub .hub-load-error { background: var(--cx-fill-2); border-color: var(--cx-sep); color: var(--cx-label); }
 .workspace-hub .hub-body { flex: 1; min-height: 0; max-height: none; }
