@@ -1,0 +1,25 @@
+.state { display:flex; align-items:flex-start; gap:14px; padding:22px 0; color:var(--cx-label, var(--text-primary)); overflow-wrap:anywhere; }
+.icon { width:24px; height:24px; flex:0 0 24px; margin-top:2px; color:var(--cx-label-2, var(--text-muted)); }
+.state strong { display:block; font-size:15px; line-height:1.5; font-weight:600; }
+.description { max-width:65ch; margin-top:5px; font-size:13px; line-height:1.6; color:var(--cx-label-2, var(--text-muted)); }
+.actions { display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; }
+.actions button { min-height:44px; }
+.progress { display:flex; align-items:center; gap:10px; min-height:40px; padding:8px 0; font-size:13px; line-height:1.5; color:var(--cx-label-2, var(--text-muted)); }
+.dot { width:7px; height:7px; flex:0 0 7px; border-radius:50%; background:currentColor; animation:pending 1.2s ease-in-out 3; }
+@keyframes pending { 50% { opacity:.35; transform:scale(.75); } }
+@media(prefers-reduced-motion:reduce) { .dot { animation:none; } }
+:global(html[data-motion="false"]) .dot { animation:none; }
+@media(max-width:600px) { .state { gap:12px; padding:18px 0; } }
+
+/* Keep these dialogs on the current theme, including their form controls. */
+.panel:global(.bot-dialog) { background:var(--cx-card); color:var(--cx-label); color-scheme:light; }
+:global(html[data-theme="dark"]) .panel { color-scheme:dark; }
+.panel:global(.bot-dialog) :is(:global(.dialog-intro),:global(.field-help),:global(.goal-row) p,:global(.goal-row) span,:global(.hub-header) p) { color:var(--cx-label-2); }
+.panel:global(.bot-dialog) :is(input,textarea,select,:global(.glass-select-trigger)) { background:var(--cx-card); color:var(--cx-label); border-color:var(--cx-sep); }
+.panel:global(.bot-dialog) :is(input,textarea)::placeholder { color:var(--cx-label-2); opacity:1; }
+.panel:global(.bot-dialog) :global(.dialog-actions) { background:var(--cx-card); border-color:var(--cx-sep); }
+.panel:global(.bot-dialog) :global(.btn-secondary) { background:var(--cx-fill-2); color:var(--cx-label); border-color:var(--cx-sep); }
+.panel:global(.bot-dialog) :global(.btn-primary) { background:var(--cx-label); color:var(--cx-inverse); }
+.panel:global(.bot-dialog) :global(.computer-agent-state) { background:var(--cx-fill-2); border-color:var(--cx-sep); }
+.panel:global(.bot-dialog) :global(.hub-tabs) button { color:var(--cx-label-2); }
+.panel:global(.bot-dialog) :global(.hub-tabs) button[aria-pressed="true"] { color:var(--cx-label); background:var(--cx-fill); }

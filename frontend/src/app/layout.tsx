@@ -1,3 +1,5 @@
+import { AppearanceSync } from '../components/AppearanceSync';
+import { THEME_BOOTSTRAP } from '../lib/appearance';
 import '@fontsource-variable/inter';
 import './globals.css';
 import './workspace-ux.css';
@@ -12,6 +14,7 @@ import './google-permissions.css';
 import './cypher-store.css';
 import './cypher-loading.css';
 import './cypher-reference.css';
+import './cypher-simple.css';
 import './agent-identity.css';
 import type { Metadata } from 'next';
 
@@ -27,8 +30,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
-      <body>{children}</body>
+    <html lang="en" suppressHydrationWarning>
+      <head><script dangerouslySetInnerHTML={{__html:THEME_BOOTSTRAP}}/></head>
+      <body>
+        <AppearanceSync/>{children}</body>
     </html>
   );
 }

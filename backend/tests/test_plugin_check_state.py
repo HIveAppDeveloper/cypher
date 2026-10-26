@@ -9,6 +9,28 @@ from .test_workspace_workflows import workspace
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize('status', [401, 403, 503])
+async def test_google_tool_failures_keep_safe_actionable_classification(workspace,monkeypatch,status):
+    from fastapi import HTTPException
+    from app.services import google_workspace
+    _,sessions=workspace
+    tenant=current_tenant_id.set('google-error-owner')
+    try:
+        async with sessions() as db:
+            plugin=Plugin(name='Google Workspace',url='https://cypher.example/api/google/mcp',credential=plugins.seal('grokbot-google-workspace'),enabled=True,tools=[{'name':'gmail_users_getProfile','schema':{'type':'object'},'read_only':True}])
+            db.add(plugin);await db.commit();pid=plugin.id
+        monkeypatch.setattr('app.db.session.AsyncSessionLocal',sessions)
+        async def reject(*_):raise HTTPException(status,'secret provider response and user data')
+        monkeypatch.setattr(google_workspace,'invoke',reject)
+        result=await plugins.invoke(pid,'gmail_users_getProfile',{})
+        assert result['success'] is False
+        assert result['code']==('sign_in_required' if status==401 else 'google_access_denied' if status==403 else 'google_unavailable')
+        assert 'secret' not in str(result) and 'user data' not in str(result)
+        if status==401:assert 'Reconnect Google' in result['error']
+    finally:current_tenant_id.reset(tenant)
+
+
+@pytest.mark.asyncio
 async def test_website_fallback_is_not_reported_as_mcp_execution_pass(workspace,monkeypatch):
     client,sessions=workspace
     async def invoke(*_):

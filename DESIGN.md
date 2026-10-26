@@ -579,3 +579,10 @@ The user's animation direction takes precedence over the earlier static identity
 Operate mode follows the supplied Cypher dashboard reference: warm ivory surfaces, one inset desktop frame with a narrow navigation rail, a readable animated binary mark, one task composer and four desktop shortcuts. Apps is an inline workspace with saved connections first and a browsable catalog. Connection labels distinguish saved access, discovery, current execution evidence, reauthentication, public-website fallback and unsupported legacy placeholders. Real recent tasks and source-backed research data determine populated states; no illustrative counts or meeting progress are seeded. Mobile uses two shortcut columns and a reachable navigation control.
 
 Keep the expanded main-chat binary Voice stage and reduced-motion controls. Saved audio uses native playback with an original-file fallback. Account actions expose the existing sign-in, switch-account and sign-out flows. Verification emails identify Cypher while retaining the configured sender mailbox and one-time-link security.
+
+
+## Everyday task flows — October 26, 2026
+
+Keep one clear starting action: describe a task. Use Apps for account connections, Library for retained information and reusable work, and Settings for everyday preferences. Do not send the primary Settings action to an installation console. Advanced setup stays reachable through a clearly named disclosure; retain all permission, cost and recovery information at the point where it matters.
+
+Use these display terms consistently: Memory → Notes; Skills → Saved instructions; Routines → Schedules; Activity → My work. Keep the original internal values and saved identities. Avoid requiring people to choose an AI model, conversation, server, scope or template parameters for ordinary default flows. Library tabs remain visible at narrow widths, each section starts at the top when chosen, and its body scrolls inside the available viewport. Preserve the fullscreen shell, original logo bytes, signature animation, monochrome palette, existing keyboard focus and permission checks.

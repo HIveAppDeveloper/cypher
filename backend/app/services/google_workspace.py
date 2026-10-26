@@ -75,13 +75,24 @@ async def api_request(token,method,url,params=None,body=None):
  async with client() as http:
   response=await http.request(method,url,headers={'Authorization':'Bearer '+token},params=params,json=body)
  if response.status_code>=400:
-  reason=''
-  try:reason=response.json().get('error',{}).get('status','')
-  except (ValueError,AttributeError):pass
+  reasons=set()
+  try:
+   error=response.json().get('error',{})
+   if isinstance(error,dict):
+    for item in [*(error.get('errors') or []),*(error.get('details') or [])]:
+     if isinstance(item,dict) and isinstance(item.get('reason'),str):reasons.add(item['reason'])
+    if isinstance(error.get('status'),str):reasons.add(error['status'])
+  except (ValueError,AttributeError,TypeError):pass
+  if response.status_code==429 or response.status_code==403 and reasons&{'dailyLimitExceeded','userRateLimitExceeded','rateLimitExceeded','quotaExceeded','RESOURCE_EXHAUSTED'}:
+   retry=response.headers.get('Retry-After','')
+   delay=min(86400,max(1,int(retry))) if len(retry)<=5 and retry.isdecimal() else 60
+   raise HTTPException(429,{'code':'rate_limited','message':'Google usage or rate limits were reached. Wait before retrying; your saved connection is unchanged.'},headers={'Retry-After':str(delay)})
   if response.status_code==401:raise HTTPException(401,'Google access expired or was revoked. Reconnect Google.')
-  if response.status_code==403:raise HTTPException(403,'Google denied this operation. Check the granted service permissions and whether its API is enabled in the Google project.'+(' ('+reason+')' if reason else ''))
+  if response.status_code==403:
+   if reasons&{'insufficientPermissions','ACCESS_TOKEN_SCOPE_INSUFFICIENT'}:
+    raise HTTPException(403,{'code':'permission_required','message':'Google needs additional service permissions for this operation. Reconnect Google and review the requested access.'})
+   raise HTTPException(403,{'code':'google_access_denied','message':'Google denied this operation. Check API and organization settings; your saved connection is unchanged.'})
   if response.status_code==404:raise HTTPException(404,'Google could not find that item, or this account cannot access it.')
-  if response.status_code==429:raise HTTPException(429,'Google is rate limiting this account. Try again later.')
   raise HTTPException(502,'Google did not complete this operation (HTTP '+str(response.status_code)+'). Check the tool parameters; no success was verified.')
  if response.status_code==204 or not response.content:return {'completed':True}
  if 'json' not in response.headers.get('content-type',''):return {'text':response.text[:50000]}
@@ -131,7 +142,7 @@ async def finish(db,state,binding,code='',denied=False):
  verified=[];failures={g:'Google did not grant every requested permission for this service. Reconnect and review its access.' for g in saved['groups'] if g not in candidates}
  async def probe(group):
   try:await api_request(token['access_token'],'GET',probes[group][0],probes[group][1]);return group,None
-  except HTTPException as e:return group,e.detail
+  except HTTPException as e:return group,e.detail.get('message','Google access could not be verified.') if isinstance(e.detail,dict) else e.detail
  for group,failure in await asyncio.gather(*(probe(group) for group in candidates)):
   if failure:failures[group]=failure
   else:verified.append(group)
@@ -159,7 +170,7 @@ async def invoke(db,name,arguments):
  row=await grant(db)
  if not row:raise HTTPException(401,'Connect Google first.')
  saved=DatabaseTokenStorage(db,row).read();tool=next((t for t in allowed_tools(saved) if t['name']==name),None)
- if not tool:raise HTTPException(403,'This Google tool is not included in the services you allowed. Update Google permissions.')
+ if not tool:raise HTTPException(403,{'code':'permission_required','message':'This Google tool is not included in the services you allowed. Update Google permissions.'})
  from jsonschema import Draft202012Validator,ValidationError
  try:Draft202012Validator(tool['schema']).validate(arguments)
  except ValidationError:raise HTTPException(422,'Arguments do not match this Google tool. Search its schema and try again.')

@@ -16,6 +16,7 @@ test('only a recent completed execution test gets the success state',()=>{
 });
 test('auth failures, paused tools and unsupported legacy websites have recovery states',()=>{
   assert.equal(pluginStatus({...base,verification:{status:'failed',detail:{code:'sign_in_required'}}},now).label,'Sign in again');
+  assert.equal(pluginStatus({...base,verification:{status:'failed',detail:{code:'rate_limited'}}},now).label,'Rate limited');
   assert.equal(pluginStatus({...base,enabled:false},now).label,'Paused');
   assert.equal(pluginStatus({...base,tools:[{enabled:false}]},now).label,'No tools enabled');
   assert.equal(pluginStatus({...base,url:'site-mcp://gmail.com'},now).label,'Needs setup');

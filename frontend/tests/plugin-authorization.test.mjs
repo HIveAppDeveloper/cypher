@@ -5,7 +5,7 @@ const auth=load('../src/lib/pluginAuthorization.ts',{}, {URL,Date});
 const id='e52dad3f-b0db-4cf8-a0f0-f9b88c16f230';
 const item={id:'fixture',name:'Fixture Service',url:'https://provider.example/mcp',domains:['provider.example'],description:'Synthetic service',category:'Testing'};
 const pending={id,name:item.name,url:'https://provider.example/allow?state=synthetic',startedAt:0};
-function panel({saved={},popupBlocked=false,api:overrides={},embedded=false,runtimeConnected=false}={}){
+function panel({saved={},popupBlocked=false,api:overrides={},embedded=false,runtimeConnected=false,onManageSkills}={}){
   const session=storage(saved),env=environment(session),view=renderer(env);let opens=0,closed=0;
   const popup={closed:false,opener:{},document:{title:'',createElement:()=>({style:{}}),body:{appendChild(){}}},location:{replace(){}},focus(){},close(){this.closed=true;closed++;}};
   env.document.createElement=()=>({style:{}});
@@ -15,10 +15,69 @@ function panel({saved={},popupBlocked=false,api:overrides={},embedded=false,runt
   const api={getPluginCatalog:async()=>[item],getPlugins:async()=>[],deviceStatus:async()=>({enrolled:false}),getAvailableConnections:async()=>[],pluginSyncStatus:async()=>null,accountStatus:async()=>({}),authorizePlugin:async()=>({status:'awaiting_login',flow_id:id,authorization_url:pending.url,name:item.name}),pluginAuthStatus:async()=>({status:'awaiting_login',name:item.name}),cancelPluginAuth:async()=>({status:'cancelled'}),...overrides};
   const scopedAuth=load('../src/lib/pluginAuthorization.ts',{}, {URL,Date:env.globals.Date});
   const {PluginPanel}=load('../src/components/PluginPanel.tsx',{react:view.react,'./LoadingState':{LoadingState:'loading-state'},'../lib/api':{api},'../lib/plugin-status':load('../src/lib/plugin-status.ts',{}, {Date}),'../lib/canonical-app':load('../src/lib/canonical-app.ts',{}, {URL}),'../lib/device':{approveConnection:async()=>undefined,enrollDevice:async()=>{}},'../lib/pluginAuthorization':scopedAuth,'./McpDirectory':{McpDirectory:'mcp-directory'},'./cipher/CypherMark':{__esModule:true,default:'cypher-mark'},'./cipher/BinaryLens':{__esModule:true,default:'binary-lens'}},{...env.globals,URL,URLSearchParams,React:view.react.default,fetch:async()=>({ok:true,json:async()=>({connected:runtimeConnected,variables:[]})})});
-  view.mount(()=>PluginPanel({onClose(){},embedded}));
+  view.mount(()=>PluginPanel({onClose(){},onManageSkills,embedded}));
   return {env,view,api,session,popup,get opens(){return opens;},get closed(){return closed;}};
 }
 async function connect(p){await p.view.flush();button(p.view.tree,'Connect').props.onClick();await p.view.flush();await p.view.flush();}
+
+const linkedPlugin=(verification={status:'not_tested'})=>({id:'linked-account',name:item.name,url:item.url,enabled:true,authenticated:true,tools:[{name:'read_profile',description:'Read an authorized profile',enabled:true}],verification});
+
+test('explicit connection checks its exact returned plugin once and shows verification progress',async()=>{
+  const check=deferred();let saved=[],calls=0,authorizations=0;
+  const p=panel({api:{getPlugins:async()=>saved,authorizePlugin:async()=>{authorizations++;saved=[linkedPlugin()];return{status:'connected',plugin_id:'linked-account',name:item.name};},testPlugin:async pid=>{assert.equal(pid,'linked-account');calls++;return check.promise;}}});
+  await p.view.flush();assert.equal(calls,0,'opening Apps never executes a provider tool');
+  const start=button(p.view.tree,'Connect');start.props.onClick();start.props.onClick();
+  await p.view.flush();
+  assert.equal(authorizations,1);assert.equal(calls,1);
+  assert.match(textOf(p.view.tree),/checking its tools/);
+  saved=[linkedPlugin({status:'passed',checked_at:new Date().toISOString()})];
+  check.resolve({status:'passed',message:'A read-only tool returned successfully.',latency_ms:10});
+  await p.view.flush();await p.view.flush();
+  assert.match(textOf(p.view.tree),/Fixture Service connected/);
+  assert.match(textOf(p.view.tree),/Test passed/);
+  assert.equal(calls,1);p.view.unmount();
+});
+
+test('Allow completion verifies the returned plugin instead of guessing a matching service',async()=>{
+  let status='awaiting_login',checks=0;
+  const p=panel({api:{pluginAuthStatus:async()=>({status,name:item.name,plugin_id:'linked-account'}),getPlugins:async()=>status==='connected'?[linkedPlugin({status:'discovered'})]:[],testPlugin:async pid=>{assert.equal(pid,'linked-account');checks++;return{status:'discovered',message:'Tools discovered. Execution has not been tested for this service.'};}}});
+  await connect(p);assert.equal(checks,0);
+  status='connected';p.env.time.advance(2000);await p.view.flush();await p.view.flush();
+  assert.equal(checks,1);assert.equal(p.session.getItem(auth.PLUGIN_SIGN_IN_KEY),null);
+  assert.match(textOf(p.view.tree),/Tools found/);
+  assert.doesNotMatch(textOf(p.view.tree),/Test passed/);p.view.unmount();
+});
+
+test('a failed HTTP tool check refreshes persisted sign-in evidence and preserves the saved connection',async()=>{
+  let verification={status:'passed',checked_at:new Date().toISOString()},loads=0;
+  const p=panel({api:{getPlugins:async()=>{loads++;return[linkedPlugin(verification)];},testPlugin:async()=>{verification={status:'failed',detail:{code:'sign_in_required',message:'Reconnect this account.'}};throw Error('Reconnect this account.');}}});
+  await p.view.flush();button(p.view.tree,'Manage').props.onClick();await p.view.flush();
+  button(p.view.tree,'Test again').props.onClick();await p.view.flush();await p.view.flush();
+  assert.equal(loads,2);
+  assert.match(textOf(p.view.tree),/Sign in again/);
+  assert.doesNotMatch(textOf(p.view.tree),/Test passed/);
+  assert.match(textOf(p.view.tree),/Account or API access linked/);
+  assert.ok(button(p.view.tree,'Reconnect'));p.view.unmount();
+});
+
+test('successful sign-in stays saved when execution fails and never claims a successful tool call',async()=>{
+  let saved=[];
+  const p=panel({api:{getPlugins:async()=>saved,authorizePlugin:async()=>{saved=[linkedPlugin({status:'failed',detail:{message:'Provider unavailable.'}})];return{status:'connected',plugin_id:'linked-account',name:item.name};},testPlugin:async()=>{throw Error('Provider unavailable.');}}});
+  await connect(p);await p.view.flush();
+  assert.match(textOf(p.view.tree),/saved connection was preserved/);
+  assert.match(textOf(p.view.tree),/Needs attention/);
+  assert.doesNotMatch(textOf(p.view.tree),/Test passed/);
+  assert.ok(button(p.view.tree,'Test tools'));p.view.unmount();
+});
+
+test('a failed evidence refresh stays retryable rather than silently leaving a stale pass',async()=>{
+  let loads=0;
+  const p=panel({api:{getPlugins:async()=>{if(++loads>1)throw Error('Synthetic offline');return[linkedPlugin()];},testPlugin:async()=>({status:'passed',message:'A read-only tool returned successfully.'})}});
+  await p.view.flush();button(p.view.tree,'Manage').props.onClick();await p.view.flush();
+  button(p.view.tree,'Test tools').props.onClick();await p.view.flush();await p.view.flush();
+  assert.match(textOf(p.view.tree),/Could not refresh connection status/);
+  assert.ok(button(p.view.tree,'Refresh connections'));p.view.unmount();
+});
 
 test('catalog request failures show recovery instead of a valid empty catalog',async()=>{
   let calls=0;
@@ -33,13 +92,27 @@ test('catalog request failures show recovery instead of a valid empty catalog',a
   p.view.unmount();
 });
 
+test('connecting from a website search reveals the saved connection instead of filtering it out',async()=>{
+  let saved=[];
+  const p=panel({api:{getPlugins:async()=>saved,authorizePlugin:async()=>{saved=[linkedPlugin()];return{status:'connected',plugin_id:'linked-account',name:item.name};},testPlugin:async()=>({status:'discovered',message:'Tools found; execution not tested.'})}});
+  await p.view.flush();
+  const search=find(p.view.tree,n=>n.type==='input'&&n.props?.type==='search');
+  search.props.onChange({target:{value:'provider.example'}});await p.view.flush();
+  find(p.view.tree,n=>n.type==='form').props.onSubmit({preventDefault(){}});await p.view.flush();await p.view.flush();
+  assert.match(textOf(p.view.tree),/Account or API access linked/);
+  assert.doesNotMatch(textOf(p.view.tree),/No connected services match/);
+  const connectedSearch=find(p.view.tree,n=>n.props?.['aria-label']==='Search my apps');
+  assert.equal(connectedSearch.props.value,item.name);
+  p.view.unmount();
+});
+
 test('connection request failures do not claim there are no saved tools and retry recovers',async()=>{
   let calls=0;
   const p=panel({api:{getPlugins:async()=>{if(++calls===1)throw Error('Synthetic offline');return [];}}});
   await p.view.flush();
   assert.match(textOf(p.view.tree),/Could not load your saved connections/);
   assert.doesNotMatch(textOf(p.view.tree),/Connect an app below/);
-  button(p.view.tree,'Connected').props.onClick();
+  button(p.view.tree,'My apps').props.onClick();
   await p.view.flush();
   assert.match(textOf(p.view.tree),/Connections unavailable/);
   assert.doesNotMatch(textOf(p.view.tree),/No tools connected yet/);
@@ -80,6 +153,18 @@ test('connected runtime keeps the summary recovery notice when connections canno
   await p.view.flush();
   assert.match(textOf(p.view.tree),/Some connections could not load/);
   assert.ok(button(p.view.tree,'Refresh connections'));
+  p.view.unmount();
+});
+
+test('Connected view opens saved skills separately from account connections',async()=>{
+  let opens=0;
+  const p=panel({onManageSkills:()=>{opens++;}});
+  await p.view.flush();
+  button(p.view.tree,'My apps').props.onClick();
+  await p.view.flush();
+  assert.match(textOf(p.view.tree),/Create and manage reusable skill recipes separately in your workspace library/);
+  button(p.view.tree,'Saved instructions').props.onClick();
+  assert.equal(opens,1);
   p.view.unmount();
 });
 
@@ -166,7 +251,15 @@ test('restoring the callback conversation does not dismiss its plugin result pan
   imports['./PanelBoundary']={PanelBoundary:'panel-boundary'};
   imports['./cipher/CypherEntrance']={__esModule:true,default:'CypherEntrance'};
   const {default:WorkspaceApp}=load('../src/components/WorkspaceApp.tsx',{react:{...view.react,lazy:loader=>{const component={};loader().then(module=>{component.resolved=module.default;});return component;}},...imports},{...env.globals,URLSearchParams,setInterval:()=>1,clearInterval(){}});
-  view.mount(()=>WorkspaceApp({}));await view.flush();assert.ok(find(view.tree,n=>n.props?.embedded===true),'callback result remains visible after conversation restoration');view.unmount();
+  view.mount(()=>WorkspaceApp({}));await view.flush();
+  assert.ok(find(view.tree,n=>n.props?.embedded===true),'callback result remains visible after conversation restoration');
+  const pluginPanel=find(view.tree,n=>n.props?.embedded===true);
+  assert.equal(typeof pluginPanel.props.onManageSkills,'function','Connected tools expose a skills-management handoff');
+  pluginPanel.props.onManageSkills();
+  view.render();
+  const skillsHub=find(view.tree,n=>n.props?.initialTab==='Skills');
+  assert.ok(skillsHub,'the handoff opens the workspace Skills tab directly');
+  view.unmount();
 });
 
 test('provider registration errors open an actionable OAuth form without claiming connection',async()=>{
@@ -191,10 +284,10 @@ test('provider registration errors open an actionable OAuth form without claimin
 test('connected tool descriptions are searchable and public tools have a separate view',async()=>{
   const connections=[{id:'account',name:'Account fixture',url:'https://account.example/mcp',authenticated:true,enabled:true,tools:[{name:'lookup',description:'Find invoices'}]},{id:'public',name:'Public fixture',url:'https://public.example/mcp',authenticated:false,enabled:true,tools:[{name:'public_read',description:'Public documentation'}]}];
   const p=panel({api:{getPlugins:async()=>connections}});await p.view.flush();
-  button(p.view.tree,'Connected · 2').props.onClick();await p.view.flush();
+  button(p.view.tree,'My apps · 2').props.onClick();await p.view.flush();
   assert.match(textOf(p.view.tree),/Account fixture/);assert.doesNotMatch(textOf(p.view.tree),/Public fixture/);
   button(p.view.tree,'Public tools · 1').props.onClick();await p.view.flush();assert.match(textOf(p.view.tree),/Public fixture/);
-  find(p.view.tree,n=>n.props?.['aria-label']==='Search connected plugins').props.onChange({target:{value:'invoices'}});await p.view.flush();
+  find(p.view.tree,n=>n.props?.['aria-label']==='Search my apps').props.onChange({target:{value:'invoices'}});await p.view.flush();
   assert.match(textOf(p.view.tree),/Account fixture/);assert.doesNotMatch(textOf(p.view.tree),/Public fixture/);
   p.view.unmount();
 });

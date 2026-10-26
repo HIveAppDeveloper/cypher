@@ -241,9 +241,12 @@ async def test_connection(id:UUID,db:AsyncSession=Depends(get_db)):
     message='A read-only tool returned successfully.' if passed else 'The read-only test failed. Reconnect or check the service permissions.'
     if code=='invalid_provider_output':message='The provider returned output that does not match its published tool schema.'
     elif code=='sign_in_required':message='This saved connection needs sign-in again. Reconnect it in Plugins.'
+    elif code=='rate_limited':message='Google usage or rate limits were reached. Wait before retrying; your saved connection is unchanged.'
+    elif code=='google_access_denied':message='Google denied this operation. Check API and organization settings; your saved connection is unchanged.'
     detail={'tool':example[0]}
     if passed and mode=='public_website_fallback':
         return await finish('fallback','The public website returned information. The MCP tool is still unavailable.',
                             **detail,verification_mode=mode,source_url=source_url)
-    if code in {'invalid_provider_output','sign_in_required'}:detail['code']=code
+    if code in {'invalid_provider_output','sign_in_required','rate_limited','google_access_denied'}:detail['code']=code
+    if code=='rate_limited':detail.update(retryable=True,provider_status=429)
     return await finish('passed' if passed else 'failed',message,**detail)

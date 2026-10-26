@@ -1,5 +1,6 @@
 from contextlib import asynccontextmanager
 from types import SimpleNamespace
+
 import asyncio,json
 import httpx,pytest
 from sqlalchemy import select
@@ -8,6 +9,21 @@ from app.models.plugin import Plugin
 from app.db.tenancy import current_tenant_id
 from app.services import plugins,plugin_sync
 from .test_workspace_workflows import workspace
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize('website',['facebook.com','business.facebook.com','instagram.com'])
+async def test_meta_social_lookup_returns_the_supported_bridge_without_claiming_a_grant(workspace,monkeypatch,website):
+    from app.api import plugin_catalog
+    async def no_network(*_):raise AssertionError('Known social connector lookup must not call a provider')
+    monkeypatch.setattr(plugin_catalog,'validate_endpoint',no_network)
+    client,_=workspace
+    response=await client.post('/api/plugins/resolve',headers={'x-grokbot-user-id':'social-lookup-owner'},json={'website':website})
+    assert response.status_code==200
+    item=response.json()
+    assert item['name']=='Windsor.ai' and item['url']=='https://mcp.windsor.ai/'
+    assert 'accounts you authorize' in item['description'] and 'model access is separate' in item['description']
+    assert item['verification']=='not_tested' and 'credential' not in item
 
 @pytest.mark.asyncio
 async def test_unreadable_credential_keeps_other_tools_discoverable_and_fails_closed(workspace, monkeypatch):

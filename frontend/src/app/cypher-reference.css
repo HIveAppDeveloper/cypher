@@ -331,7 +331,7 @@ body:has(.app-layout) { display: flow-root; }
   min-height: 0;
   align-items: stretch;
   justify-content: flex-start;
-  padding: 0 40px 24px;
+  padding: 24px 40px;
   overflow-y: auto;
 }
 .quickstart-panel {
@@ -381,7 +381,7 @@ body:has(.app-layout) { display: flow-root; }
   gap: 5px;
   padding: 6px 7px 6px 18px;
   border: 1px solid #e4e0d8;
-  border-radius: 999px;
+  border-radius: 22px;
   background: #fbf8f3;
   box-shadow: 0 5px 18px rgba(34, 28, 17, .025);
   transition: border-color .2s ease, box-shadow .2s ease, transform .2s cubic-bezier(.2,.8,.2,1);
@@ -404,7 +404,7 @@ body:has(.app-layout) { display: flow-root; }
   line-height: 22px;
   resize: none;
 }
-.quickstart .task-composer textarea::placeholder { color: #89857e; }
+.quickstart .task-composer textarea::placeholder { color: var(--cx-label-2); }
 .quickstart .task-composer-footer {
   display: flex;
   min-height: 40px;
@@ -470,6 +470,7 @@ body:has(.app-layout) { display: flow-root; }
 .quickstart .quickstart-submit:active:not(:disabled) { transform: scale(.96); }
 .quickstart .quickstart-submit:disabled { background: #11110f; color: #fffefa; opacity: .32; }
 .quickstart .quickstart-submit svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.quickstart .task-composer-footer .quickstart-submit { border-radius: 12px; }
 .quickstart .quickstart-error, .quickstart .speech-status { max-width: min(740px, 100%); margin: 8px 0 0; font-size: 11px; }
 .quickstart .starter-prompts {
   display: grid;
@@ -548,7 +549,7 @@ body:has(.app-layout) { display: flow-root; }
   .sidebar-brand { gap: 6px; font-size: 14px; }
   .sidebar-shell .sidebar-brand .brand-symbol { width: 44px; flex-basis: 44px; }
   .quickstart { padding-inline: 24px; }
-  .quickstart .starter-prompts { gap: 7px; }
+  .quickstart .starter-prompts { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
   .quickstart .starter-prompts .starter-card { padding-inline: 11px; }
 }
 @media (max-width: 760px) {
@@ -622,15 +623,28 @@ html[data-motion="false"] .new-task-button { animation: none !important; transit
 :root[data-theme="dark"] .workspace-main > .workspace-alert { background: var(--cx-fill-2); border-color: var(--cx-sep); }
 @media (max-width: 960px) { .apps-workspace .apps-connected-grid,.apps-workspace .connector-catalog { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 760px) {
-  .quickstart .task-composer { grid-template-columns: 36px minmax(0, 1fr) auto; gap: 4px; padding-inline: 6px; }
-  .task-attach-button,.quickstart .quickstart-voice,.quickstart .quickstart-submit,.quickstart-options > summary { width: 40px; min-width: 40px; height: 44px; min-height: 44px; }
-  .quickstart .task-composer textarea { padding-block: 11px; font-size: 13px; }
-  .quickstart-options > summary { width: 28px; min-width: 28px; }
+  .quickstart .task-composer { grid-template-columns: 44px minmax(0, 1fr) auto; gap: 4px; padding-inline: 8px; }
+  .task-attach-button,.quickstart .quickstart-voice,.quickstart .quickstart-submit,.quickstart-options > summary { width: 44px; min-width: 44px; height: 44px; min-height: 44px; }
+  .quickstart .task-composer textarea { min-width: 0; padding-block: 11px; font-size: 16px; }
+  .quickstart .task-composer-footer { flex-wrap: nowrap; }
+  .mobile-menu-button { width: 44px; height: 44px; border-radius: 12px; }
   .home-attachments button { min-width: 44px; min-height: 44px; }
   .apps-workspace .connectors-header { padding: 16px 16px 12px 60px; }
   .apps-workspace .connectors-body { padding: 16px; }
   .workspace-main > .workspace-alert { flex-wrap: wrap; padding: 8px 12px; }
   .workspace-main > .workspace-alert button { min-height: 44px; }
+}
+@media (max-width: 760px) {
+  .quickstart .task-composer {
+    grid-template-columns: 44px minmax(0, 1fr);
+    grid-template-rows: auto auto;
+    gap: 4px;
+  }
+  .quickstart .task-composer textarea { height: 48px; min-height: 48px; padding-block: 13px; }
+  .quickstart .task-composer-footer { grid-column: 1 / -1; grid-row: 2; justify-content: flex-end; gap: 8px; }
+  .quickstart .task-composer-footer .quickstart-submit { margin-left: 0; }
+  .quickstart .quickstart-options { margin-right: auto; }
+  .quickstart-options .task-composer-options { right: auto; left: 0; max-width: calc(100vw - 52px); }
 }
 @media (max-width: 560px) { .apps-workspace .apps-connected-grid,.apps-workspace .connector-catalog { grid-template-columns: minmax(0, 1fr); } }
 .workspace-conversation { display: flex; flex: 1; min-width: 0; min-height: 0; flex-direction: column; }
