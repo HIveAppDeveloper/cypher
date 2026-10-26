@@ -36,25 +36,28 @@ test('team-room creation cannot be dismissed or submitted twice while the save i
   }
 
   const pending = submit(view.tree);
+  const repeated = submit(view.tree);
   await view.flush();
   assert.equal(requests.length, 1);
   assert.equal(requests[0].name, 'Launch planning');
   assert.equal(requests[0].ids.join(','), 'bot-a,bot-b');
 
-  await submit(view.tree);
   find(view.tree, node => node.type === 'dialog').props.onCancel({ preventDefault() {} });
   assert.deepEqual(closed, [], 'Escape cannot abandon an accepted in-flight creation');
   assert.equal(button(view.tree, 'Cancel').props.disabled, true);
   assert.equal(button(view.tree, 'Creating…').props.disabled, true);
   assert.equal(find(view.tree, node => node.props?.id === 'room-name').props.disabled, true);
+  assert.equal(textOf(find(view.tree,node=>node.props?.role==='status')),'Creating your team room…');
+  assert.equal(find(find(view.tree,node=>node.type==='form'),node=>node.props?.role==='status'),undefined,'progress announcements stay outside the busy form');
   assert.equal(requests.length, 1, 'the in-flight guard blocks same-tick duplicate submissions');
 
   const room = { id: 'room-1', title: 'Launch planning', bot_ids: ['bot-a', 'bot-b'], is_group: true };
   response.resolve(room);
-  await pending;
+  await Promise.all([pending, repeated]);
   await view.flush();
   assert.deepEqual(created, [room]);
   assert.deepEqual(closed, ['closed']);
+  assert.equal(textOf(find(view.tree,node=>node.props?.role==='status')),'');
   view.unmount();
 });
 
