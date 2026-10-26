@@ -199,7 +199,7 @@ class ToolRegistry:
             return any(t['plugin_id'] == arguments.get('plugin_id') and t['name'] == arguments.get('tool_name') and t.get('read_only') for t in getattr(self, '_plugin_manifest', []))
         return name in {'read_file', 'list_directory', 'search_files', 'search_web',
                         'search_chat_history', 'list_context', 'forget_context', 'consult_specialist', 'consult_specialists', 'search_specialist_skills', 'search_agent_skills', 'choose_agent_skills', 'github_search', 'github_read', 'plugin_search', 'publish_file',
-                        'complete_goal', 'remember_context', 'get_vc_investor_match', 'prepare_vc_outreach', 'search_vc_founders', 'create_chart'}
+                        'complete_goal', 'remember_context', 'get_vc_investor_match', 'prepare_vc_outreach', 'search_vc_founders', 'create_chart', 'analyze_table'}
 
     def register_default_tools(self):
         """Register all built-in tools."""
@@ -212,6 +212,10 @@ class ToolRegistry:
             CHART_PARAMETERS,
             create_chart,
         )
+        from app.services.tools.tables import analyze_table, TABLE_PARAMETERS
+        self.register('analyze_table',
+            'Calculate CSV/JSON data summaries, grouped totals, means, medians and p90/p95/p99 locally without a sandbox or extra model calls. Prefer attachment_index for this task’s actual uploaded CSV/TSV. Reports missing/non-numeric cells and sample limits. Can produce a bar/line chart with PNG/SVG/CSV in the same call. Use actual user/tool data; mark demonstrations illustrative. Formula text is never executed.',
+            TABLE_PARAMETERS, analyze_table)
         from app.services.tools.investor_funnel import start_investor_match, get_investor_match, label_investor_match, prepare_investor_outreach, search_vc_founders
         thesis_properties = {
             "direction": {"type": "string", "enum": ["investors_for_thesis", "companies_for_thesis"], "description": "investors_for_thesis finds VCs for a company; companies_for_thesis finds SEC filing prospects for a VC mandate."},
@@ -539,15 +543,17 @@ class ToolRegistry:
         # Map tool category names to tool prefixes
         category_map = {
             "plugins": "plugin_",
-            "media": ["generate_image", "create_chart"],
-            "charts": ["create_chart"],
-            "visualization": ["create_chart"],
+            "media": ["generate_image", "create_chart", "analyze_table"],
+            "charts": ["create_chart", "analyze_table"],
+            "visualization": ["create_chart", "analyze_table"],
+            "data": ["analyze_table", "create_chart"],
+            "analysis": ["analyze_table", "create_chart"],
             "browser": ["search_web", "browse_url", "browser_click", "browser_type", "browser_screenshot", "browser_extract", "browser_fill_form", "github_search", "github_read", *vc_research],
             "github": ["github_search", "github_read"],
             "research": ["search_web", "browse_url", "browser_extract", "github_search", "github_read", *vc_research],
             "prospecting": [*vc_research, "label_vc_investor_match"],
             "shell": "shell",
-            "filesystem": ["local_device", "workspace_files", "publish_file", "read_file", "write_file", "list_directory", "search_files"],
+            "filesystem": ["local_device", "workspace_files", "publish_file", "read_file", "write_file", "list_directory", "search_files", "analyze_table"],
         }
 
         enabled_tool_names = {"consult_specialist", "consult_specialists", "search_specialist_skills", "search_agent_skills", "choose_agent_skills", "set_goal", "complete_goal", "remember_context", "list_context", "forget_context", "search_chat_history"}
