@@ -22,7 +22,7 @@ export function AgentConversationActivity({ message, bots }: { message: Message;
     {label ? <time dateTime={message.createdAt}>{label}</time> : null}
   </article>;
   return <article className="message incoming message-group-end agent-handoff-message" aria-label={`${senderName} requested a handoff`}>
-    <div className="message-sender-row"><BotAvatar name={senderName} small /><span className="message-sender">{senderName}</span>{label ? <time dateTime={message.createdAt}>{label}</time> : null}</div>
+    <div className="message-sender-row"><BotAvatar name={senderName} agentRole={activity.sender?.role} small /><span className="message-sender">{senderName}</span>{label ? <time dateTime={message.createdAt}>{label}</time> : null}</div>
     <div className="message-content">{activity.introduction ? <p className="agent-handoff-introduction">{activity.introduction}</p> : null}
       {activity.assignments.map((assignment, index) => <div className="agent-assignment" key={index}><p className="agent-assignment-target">Requested help from <strong>{assignment.name}</strong></p><p>{assignment.task}</p></div>)}
     </div>
