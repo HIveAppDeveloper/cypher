@@ -35,11 +35,11 @@ const ACTIVE = new Set(['pending', 'running', 'cancel_requested']);
 const errorMessage = (error: unknown) => {
   if (error instanceof ApiError) {
     if (error.status === 401) return 'Your sign-in expired. Sign in again to continue.';
-    if (error.status === 403) return 'This workspace can’t access that research yet.';
+    if (error.status === 403) return 'Cypher can’t access that research in this workspace.';
     if (error.status === 429) return 'Cypher is handling several research requests. Try again in a moment.';
     if (error.status >= 500) return 'Cypher couldn’t reach the research service. Try again shortly.';
   }
-  return 'That step didn’t finish. Please try again.';
+  return 'Cypher couldn’t finish that step. Please try again.';
 };
 const dateLabel = (value: string | null | undefined) => dateFromApi(value)?.toLocaleDateString() || 'Not refreshed yet';
 
@@ -183,7 +183,7 @@ export default function VcProspectingWorkspace({ accountId }: { accountId?: stri
         else if (next.status === 'completed') {
           await loadFounders(0);
           setNotice('Historical SEC Form D archive is indexed and searchable.');
-        } else if (next.error) setError(next.error);
+        } else if (next.error) setError('Cypher couldn’t finish importing the SEC archive. Try again in a moment.');
       } catch (failure) {
         if (!controller.signal.aborted) setError(errorMessage(failure));
       }
@@ -259,7 +259,7 @@ export default function VcProspectingWorkspace({ accountId }: { accountId?: stri
   ] as const;
   const savedListView = workspaceStep === 'shortlist';
   const visibleFounders = workspaceStep === 'shortlist' ? shortlistItems : (data?.items || []);
-  const selectedFounder = [...(data?.items || []), ...shortlistItems].find(item => item.id === selectedFounderId) || visibleFounders[0] || null;
+  const selectedFounder = visibleFounders.find(item => item.id === selectedFounderId) || visibleFounders[0] || null;
   const isShortlisted = (id: string) => shortlistItems.some(item => item.id === id);
   const toggleShortlist = (item: Founder) => setShortlistItems(rows => rows.some(row => row.id === item.id) ? rows.filter(row => row.id !== item.id) : [item, ...rows]);
   const currentDraftReady = !!outreach;
@@ -282,7 +282,7 @@ export default function VcProspectingWorkspace({ accountId }: { accountId?: stri
       </button>)}
     </nav>
 
-    {error || initialDataFailure ? <div className="vc-alert" role="alert"><span aria-hidden="true">!</span><div><strong>{initialDataFailure ? 'SEC public data could not load.' : 'We couldn’t finish that step.'}</strong>{error ? <p>{error}</p> : initialDataFailure ? <p>The public data request failed. Retry to check the filing records again.</p> : null}{/sign in again/i.test(error) ? <a href={`/login?returnTo=${encodeURIComponent('/prospecting/investors')}`}>Sign in</a> : null}{initialDataFailure ? <button type="button" onClick={() => void retryWorkspaceLoad()}>Retry</button> : null}{error ? <button type="button" onClick={() => setError('')}>Dismiss</button> : null}</div></div> : null}
+    {error || initialDataFailure ? <div className="vc-alert" role="alert"><span aria-hidden="true">!</span><div><strong>{initialDataFailure ? 'Cypher couldn’t load SEC public data.' : 'Cypher couldn’t finish that step.'}</strong>{error ? <p>{error}</p> : initialDataFailure ? <p>Retry to check the public filing records again.</p> : null}{/sign in again/i.test(error) ? <a href={`/login?returnTo=${encodeURIComponent('/prospecting/investors')}`}>Sign in</a> : null}{initialDataFailure ? <button type="button" onClick={() => void retryWorkspaceLoad()}>Retry</button> : null}{error ? <button type="button" onClick={() => setError('')}>Dismiss</button> : null}</div></div> : null}
     {notice ? <div className="vc-notice" role="status"><VcIcon kind="check"/>{notice}</div> : null}
 
     <section className="vc-data-settings">
@@ -388,7 +388,7 @@ export default function VcProspectingWorkspace({ accountId }: { accountId?: stri
     </div> : null}
 
     {workspaceStep === 'outreach' ? <section className="vc-outreach-workspace">
-      <header className="vc-candidates-heading"><div><h2>Company matches and outreach</h2><p>Review a match, then prepare an editable email and meeting brief. Cypher never sends it for you.</p></div><span className="vc-run-badge">{runStatus}</span></header>
+      <header className="vc-candidates-heading"><div><h2>Company matches and outreach</h2><p>Review a match, then prepare an editable email and meeting brief. You choose if and when to send it.</p></div><span className="vc-run-badge">{runStatus}</span></header>
       {!run?.results?.length ? <div className="vc-workflow-empty"><h3>{activeRun ? 'Cypher is researching your thesis' : 'Start with your investment focus'}</h3><p>{activeRun ? 'This page will update when the public-source research is ready.' : 'Add your thesis and run a search. Cypher will use that research to prepare a source-backed first conversation.'}</p>{!activeRun ? <button className="vc-primary" type="button" onClick={() => setWorkspaceStep('thesis')}>Set up a search</button> : <span className="vc-live-indicator"><i /> Working in the background</span>}</div> : <>
         <div className="vc-outreach-grid"><div className="vc-match-list"><div className="vc-table-head"><h3>{run.direction === 'companies_for_thesis' ? 'Companies to review' : 'Investors to review'}</h3><span>{run.results.length} results</span></div>
           {run.results.map(result => <article className="vc-match-card" key={result.id}>
@@ -400,7 +400,7 @@ export default function VcProspectingWorkspace({ accountId }: { accountId?: stri
           {run.limitations?.length ? <p className="vc-muted">{run.limitations[0]}</p> : null}
         </div>
         <div className="vc-draft-card">
-          {outreach ? <><h3>{outreach.value.subject}</h3><p className="vc-recipient">{outreach.value.recipient || 'Recipient not provided'}</p><pre>{outreach.value.body}</pre><button className="vc-outline-action" type="button" onClick={() => setWorkspaceStep('meetings')}>Open meeting brief</button></> : <div className="vc-workflow-empty"><h3>Outreach stays in your hands</h3><p>Choose a company and prepare a draft to see a researched message here. It will not be sent.</p></div>}
+          {outreach ? <><h3>{outreach.value.subject}</h3><p className="vc-recipient">{outreach.value.recipient || 'Recipient not provided'}</p><pre>{outreach.value.body}</pre><a className="vc-outline-action" href={`/sourcing/outreach?run=${encodeURIComponent(run.id)}&result=${encodeURIComponent(outreach.resultId)}`}>Review email and sending options</a><button className="vc-outline-action" type="button" onClick={() => setWorkspaceStep('meetings')}>Open meeting brief</button></> : <div className="vc-workflow-empty"><h3>Outreach stays in your hands</h3><p>Choose a company and prepare a draft to see a researched message here. You’ll review it before sending.</p></div>}
         </div></div>
       </>}
       {run?.events?.length ? <details className="vc-source-activity"><summary>See public source activity</summary><ul>{run.events.slice(-8).reverse().map((event, index) => <li key={event.at + event.type + index}><span>{event.type.replaceAll('_', ' ')}</span>{typeof event.count === 'number' ? <small>{event.count.toLocaleString()}</small> : null}{event.source_url ? <a href={event.source_url} target="_blank" rel="noreferrer">Source</a> : null}</li>)}</ul></details> : null}
@@ -414,7 +414,7 @@ export default function VcProspectingWorkspace({ accountId }: { accountId?: stri
         <h4>Before you send</h4><ul>{outreach.value.meeting_brief.before_sending.map((item, index) => <li key={index + item}>{item}</li>)}</ul>
         <h4>Sources</h4><ul>{outreach.value.meeting_brief.sources.map(source => <li key={source.url}><a href={source.url} target="_blank" rel="noreferrer">{source.label}</a></li>)}</ul>
         <button className="vc-outline-action" type="button" onClick={() => setWorkspaceStep('outreach')}>Back to outreach draft</button>
-      </div><aside className="vc-meeting-draft"><h3>{outreach.value.subject}</h3><p>{outreach.value.body}</p><small>{outreach.value.sending}</small></aside></div> : <div className="vc-workflow-empty"><h3>Your meeting brief will appear here</h3><p>Run a company search, then choose “Prepare outreach” on a match. Cypher will create a draft and a source-backed briefing.</p><button className="vc-primary" type="button" onClick={() => setWorkspaceStep(run?.results?.length ? 'outreach' : 'thesis')}>{run?.results?.length ? 'Review company matches' : 'Set up a search'}</button></div>}
+      </div><aside className="vc-meeting-draft"><h3>{outreach.value.subject}</h3><p>{outreach.value.body}</p><small>{outreach.value.sending}</small><a className="vc-outline-action" href={`/sourcing/outreach?run=${encodeURIComponent(run?.id || '')}&result=${encodeURIComponent(outreach.resultId)}`}>Review email and sending options</a></aside></div> : <div className="vc-workflow-empty"><h3>Your meeting brief will appear here</h3><p>Run a company search, then choose “Prepare outreach” on a match. Cypher will create a draft and a source-backed briefing.</p><button className="vc-primary" type="button" onClick={() => setWorkspaceStep(run?.results?.length ? 'outreach' : 'thesis')}>{run?.results?.length ? 'Review company matches' : 'Set up a search'}</button></div>}
     </section> : null}
 
     {run ? <p className="vc-run-footnote" aria-live="polite"><span className={activeRun ? 'vc-live-indicator' : ''}>{activeRun ? <><i /> Research in progress</> : runStatus}</span><span>{run.thesis?.one_liner || oneLiner}</span></p> : null}
