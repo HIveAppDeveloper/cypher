@@ -14,6 +14,13 @@ const labels: Record<string, string> = {
   access_denied: 'Access denied', billing_required: 'Review billing',
   rate_limited: 'Rate limited', unavailable: 'Could not verify',
 };
+const connectionHelp: Record<string, string> = {
+  openai: 'ChatGPT plan sign-in requires a registered Cypher connection. Checking saved model access does not create a new account connection.',
+  gemini: 'Connect Gemini with an AI Studio API key. Google Workspace permissions and Google AI subscriptions are separate.',
+  claude: 'Use a Claude Console API key for this app. Claude Pro and Max account sign-in is not offered here.',
+  xai: 'Use an xAI API key. A Grok membership does not automatically grant API access.',
+  meta: 'This checks the public Llama route. Meta Model API access, Facebook Pages and Instagram each require their own granted connection.',
+};
 function googleLink(value?: string | null) {
   try { const url = new URL(value || ''); return url.protocol === 'https:' && url.hostname === 'accounts.google.com' && !url.username && !url.password && (!url.port || url.port === '443') ? url.href : null; } catch { return null; }
 }
@@ -79,6 +86,7 @@ export function ModelConnections({ items, canManage, workerReady, onQueued, omni
         return <li key={item.id} className="model-connection-row">
           <div className="model-connection-title"><strong>{item.name}</strong><span className="model-connection-status" data-state={item.state}>{checking ? locallyQueued || item.job_status === 'pending' ? 'Queued' : 'Checking…' : labels[item.state] || 'Not checked'}</span></div>
           <p className="field-help" role={checking ? 'status' : undefined}>{locallyQueued ? 'Queued in the cloud. You can close setup while the check runs.' : item.message}</p>
+          {connectionHelp[item.id] ? <p className="field-help">{connectionHelp[item.id]}</p> : null}
           {item.verified_model ? <p className="model-connection-time">{item.access_label || 'Model route'} · {item.verified_model}{item.access_kind === 'public' ? ' · Does not verify a subscription or provider account' : ''}</p> : null}
           {checkedAt ? <p className="model-connection-time">Last checked {checkedAt.toLocaleString()}</p> : null}
           <div className="model-connection-actions">
