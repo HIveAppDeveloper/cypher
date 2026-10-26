@@ -204,17 +204,18 @@ async def uploaded_csv(index):
     if not current or not current[0] or not tenant:
         raise TableInputError('An active signed-in task is required to analyze its uploaded CSV.')
     async with current[1]() as db:
-        task = await db.scalar(select(Task).where(Task.id == current[0], Task.tenant_id == tenant))
-        request = (task.result or {}).get('request', {}) if task else {}
-        message_id = request.get('incoming_message_id')
+        task = (await db.execute(select(Task.conversation_id,
+            Task.result['request']['incoming_message_id'].as_string().label('incoming_message_id'))
+            .where(Task.id == current[0], Task.tenant_id == tenant))).first()
+        message_id = task.incoming_message_id if task else None
         if not task or not message_id:
             raise TableInputError('This task has no original CSV upload.')
-        message = await db.scalar(select(Message).where(Message.id == message_id,
+        # Read one requested attachment, not the task's duplicate upload bytes,
+        # other attachments, full message text or historical transcripts.
+        item = await db.scalar(select(Message.metadata_json['attachments'][index]).where(Message.id == message_id,
             Message.tenant_id == tenant, Message.conversation_id == task.conversation_id))
-        attachments = (message.metadata_json or {}).get('attachments', []) if message else []
-        if index >= len(attachments):
+        if not isinstance(item, dict):
             raise TableInputError('No upload at that attachment_index in this task.')
-        item = attachments[index]
         if item.get('mime') != 'text/plain' or not str(item.get('name', '')).lower().endswith(('.csv', '.tsv')):
             raise TableInputError('Choose an uploaded UTF-8 .csv or .tsv text file.')
         encoded = item.get('data', '')

@@ -131,7 +131,7 @@ async def test_original_upload_is_bound_to_active_task_tenant_and_conversation(w
     from app.models.task import Task
     from app.models.message import Message
     from app.models.conversation import Conversation
-    from sqlalchemy import select
+    from sqlalchemy import event, select
     client, sessions = workspace
     tasks = {}
     for tenant, amount in [('table-owner', 3), ('foreign-owner', 999)]:
@@ -146,9 +146,18 @@ async def test_original_upload_is_bound_to_active_task_tenant_and_conversation(w
     usage_token = active.set((tasks['table-owner'], sessions))
     tenant_token = current_tenant_id.set('table-owner')
     args = request(rows=None, attachment_index=0)
+    reads = []
+    def capture(connection, cursor, statement, parameters, context, many):
+        if statement.startswith('SELECT'):
+            reads.append(statement)
+    engine = sessions.kw['bind'].sync_engine
+    event.listen(engine, 'before_cursor_execute', capture)
     try:
         result = await analyze_table(args, 'analyst')
         assert result['success'] and result['groups'][0]['metrics']['total']['value'] == 3
+        assert len(reads) == 2
+        assert all('tasks.description' not in sql and 'messages.content' not in sql for sql in reads)
+        assert all('JSON_EXTRACT' in sql for sql in reads)
         active.set((tasks['foreign-owner'], sessions))
         assert (await analyze_table(args, 'analyst'))['success'] is False
         active.set((tasks['table-owner'], sessions))
@@ -164,6 +173,7 @@ async def test_original_upload_is_bound_to_active_task_tenant_and_conversation(w
             await db.commit()
         assert (await analyze_table(args, 'analyst'))['success'] is False
     finally:
+        event.remove(engine, 'before_cursor_execute', capture)
         active.reset(usage_token)
         current_tenant_id.reset(tenant_token)
 
