@@ -32,3 +32,9 @@ test('backend failure preserves the conversation and returns a failure without l
 test('malformed state cannot create an invalid response cookie or call the backend',async()=>{
   const handler=route(callback,async()=>{throw Error('No backend call permitted');});const response=await handler.GET(new next.NextRequest(origin+'/api/plugin-oauth/callback?state=bad%3Bvalue'));assert.equal(response.status,303);assert.equal(response.headers.has('set-cookie'),false);
 });
+
+test('Windsor consent returns to Meta permissions without leaking the OAuth response',async()=>{
+  const handler=route(callback,async()=>Response.json({status:'connected'}));
+  const response=await handler.GET(req('state='+id+'.synthetic-state&code=private-code','/connect/meta'));
+  const target=new URL(response.headers.get('location'));assert.equal(target.pathname,'/connect/meta');assert.equal(target.searchParams.get('plugins'),'connected');assert.equal(target.searchParams.has('code'),false);assert.equal(target.searchParams.has('state'),false);
+});
