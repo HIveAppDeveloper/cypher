@@ -1,0 +1,17 @@
+{
+  "mode": "offline_primary_evidence_validation",
+  "source_files": 58,
+  "source_blob_and_sha256_checks": "all_passed",
+  "license_blob_checks": 4,
+  "packaged_manifest_exact": true,
+  "packaged_licenses": 4,
+  "full_backend": {
+    "passed": 648,
+    "skipped": 4,
+    "skip_scope": "existing_disposable_postgresql_only"
+  },
+  "source_reference_cache": "/tmp/cypher-source-review-20261026.json",
+  "independent_review": "/Users/boaznovik/Documents/Codex/2026-10-24/cypher-reliability-audit/agent-source-manifest-independent-review.json",
+  "live_model_performance_verified": false,
+  "production_changed": false
+}

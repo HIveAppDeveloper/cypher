@@ -12,7 +12,7 @@ from sqlalchemy import select
 from app.db.tenancy import current_tenant_id
 from app.models.bot import Bot
 from app.models.workspace import WorkspaceSetting
-from app.services.specialist_catalog import CATALOG_SIZE, get_skill, search_skills
+from app.services.specialist_catalog import compact_skill_card, eligible_catalog_size, fallback_skill_ids, get_skill, search_skills
 
 SKILL_COUNT = 5
 MAX_PROMPT_CHARS = 6000
@@ -63,8 +63,9 @@ def _automatic_ids(bot):
     # A narrow query can return fewer than five combinations. Deterministic
     # general-work recipes fill the remainder without a model/provider call.
     candidates = [card['id'] for card in search_skills(query, limit=8)]
-    selected = list(dict.fromkeys([*candidates, *_FALLBACK_IDS]))[:SKILL_COUNT]
-    return _validate_ids(selected)
+    eligible = [item for item in [*candidates, *_FALLBACK_IDS] if get_skill(item) is not None]
+    selected = list(dict.fromkeys([*eligible, *fallback_skill_ids(10)]))[:SKILL_COUNT]
+    return _validate_ids(selected) if len(selected) == SKILL_COUNT else []
 
 
 def _profile(bot, ids, selected_by, persisted):
@@ -75,7 +76,7 @@ def _profile(bot, ids, selected_by, persisted):
         'selected_by': selected_by,
         'persisted': persisted,
         'selection_count': SKILL_COUNT,
-        'catalog_size': CATALOG_SIZE,
+        'catalog_size': eligible_catalog_size(),
         'permissions_unchanged': True,
     }
 
@@ -94,7 +95,13 @@ async def get_agent_skills(db, bot_or_id):
             pass  # Corrupt/retired selections recover to truthful automatic defaults.
         else:
             return _profile(bot, ids, value['selected_by'], True)
-    return _profile(bot, _automatic_ids(bot), 'automatic', False)
+    ids = _automatic_ids(bot)
+    if not ids:
+        return {'bot_id': str(bot.id), 'skill_ids': [], 'skills': [], 'selected_by': 'automatic',
+                'persisted': False, 'selection_count': 0, 'required_selection_count': SKILL_COUNT,
+                'catalog_size': eligible_catalog_size(), 'permissions_unchanged': True,
+                'availability': 'primary_agent_fallback'}
+    return _profile(bot, ids, 'automatic', False)
 
 
 async def select_agent_skills(db, bot_or_id, skill_ids, *, selected_by='agent'):
@@ -132,11 +139,14 @@ def skill_prompt(profile):
     """Bounded supplemental instructions; the bot's own system prompt stays intact."""
     if not profile:
         return ''
+    if not profile.get('skills'):
+        return '\nInternal skill recipes are unavailable. Complete the task with your own instructions, authorized tools and supplied evidence. Do not ask the customer to install or configure internal agents; never invent specialist findings.'
     automatic = profile.get('selected_by') == 'automatic'
     intro = (
         '\nYour five skill recipes (automatic initial choices, not a prior model decision). '
-        'Choose the five best-fitting catalog skills yourself with choose_agent_skills '
-        'at the start of substantive work; search_agent_skills can find exact IDs. '
+        'These are ready to use; do not delay customer work for skill setup. '
+        'Use choose_agent_skills only for a useful, authorized change of all five; '
+        'search_agent_skills can find exact IDs. '
         if automatic else
         '\nYour five selected skill recipes. Keep them when useful; use '
         'choose_agent_skills to replace all five when a different selection fits better. '
@@ -163,8 +173,8 @@ def register_agent_skill_tools(registry, session_factory):
         if not isinstance(query, str) or not query.strip():
             return {'error': 'Describe the skills you need to find.'}
         return {
-            'skills': search_skills(query[:2000], limit=8),
-            'catalog_size': CATALOG_SIZE,
+            'skills': [compact_skill_card(card) for card in search_skills(query[:2000], limit=5)],
+            'catalog_size': eligible_catalog_size(),
             'selection_count': SKILL_COUNT,
             'instruction': 'Choose exactly five distinct IDs with choose_agent_skills. Skills do not grant tools or account access.',
         }
@@ -174,7 +184,8 @@ def register_agent_skill_tools(registry, session_factory):
             if set(arguments) - {'skill_ids'}:
                 raise ValueError('Choose skills only for yourself; supply skill_ids without another agent ID.')
             async with session_factory() as db:
-                return await select_agent_skills(db, bot_id, arguments.get('skill_ids'))
+                profile = await select_agent_skills(db, bot_id, arguments.get('skill_ids'))
+                return {key: value for key, value in profile.items() if key != 'skills'}
         except ValueError as error:
             return {'error': str(error)}
 

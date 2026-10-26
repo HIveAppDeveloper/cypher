@@ -1,0 +1,33 @@
+{
+  "eligible_profiles": 10000,
+  "minimum_repository_stars": 10000,
+  "checked_at": "2026-10-26T15:52:33Z",
+  "reviewed_source_files": 58,
+  "repositories": [
+    {
+      "full_name": "msitarzewski/agency-agents",
+      "stars": 164173,
+      "license": "MIT",
+      "sha": "b37b5bb33b78f2c1d6567d98e25ca818e3259219"
+    },
+    {
+      "full_name": "obra/superpowers",
+      "stars": 305449,
+      "license": "MIT",
+      "sha": "2ce8aa15d05bd57213e6f746f953aafb7ded7a8b"
+    },
+    {
+      "full_name": "anthropics/knowledge-work-plugins",
+      "stars": 33150,
+      "license": "Apache-2.0",
+      "sha": "33d3dea41a341b341d4f5da2e8801ae0c89be2b8"
+    },
+    {
+      "full_name": "github/awesome-copilot",
+      "stars": 40433,
+      "license": "MIT",
+      "sha": "b1a00457c0b8794243883f387e7de71e88800e3e"
+    }
+  ],
+  "mode": "offline_snapshot_check"
+}

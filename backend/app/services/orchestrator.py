@@ -423,7 +423,7 @@ class AgentOrchestrator:
                 'Use the selected recipes yourself when sufficient. For useful independent checks, '
                 'search_specialist_skills discovers profiles and consult_specialists runs up to three '
                 'bounded tool-free assignments together. Gather live evidence with your own enabled tools first. '
-                'Do not ask the user to choose or manage specialists. Synthesize their advice into one answer; '
+                'Handle skill/model routing and advisor failures internally; never ask customers to install, choose or manage specialists. Ask only for missing decisions or required authorization that blocks the requested action. Synthesize their advice into one answer; '
                 'never treat advice as a receipt of an external action.'
             ) if not self.options.voice_mode else '\nFor routine spoken turns, answer directly; defer skill selection. Discover or consult specialists only when the user requests it or useful independent work requires it.'
 

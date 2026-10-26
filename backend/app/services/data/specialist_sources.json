@@ -1,0 +1,1563 @@
+{
+  "version": 1,
+  "minimum_stars": 10000,
+  "checked_at": "2026-10-26T15:52:33Z",
+  "repositories": {
+    "msitarzewski/agency-agents": {
+      "full_name": "msitarzewski/agency-agents",
+      "stars": 164173,
+      "default_branch": "main",
+      "archived": false,
+      "license": "MIT",
+      "sha": "b37b5bb33b78f2c1d6567d98e25ca818e3259219",
+      "tree": "ba83ec4db863b62032dcd8adb5cd4e7c854f2cd8",
+      "license_url": "https://github.com/msitarzewski/agency-agents/blob/b37b5bb33b78f2c1d6567d98e25ca818e3259219/LICENSE",
+      "license_blob_sha": "523078c01624b9b1b1c551e75054b9d3a9f953ab",
+      "license_sha256": "9a45258434d5cedf0af73c9ad4771373701225038d246c49219026c33677f66f"
+    },
+    "obra/superpowers": {
+      "full_name": "obra/superpowers",
+      "stars": 305449,
+      "default_branch": "main",
+      "archived": false,
+      "license": "MIT",
+      "sha": "2ce8aa15d05bd57213e6f746f953aafb7ded7a8b",
+      "tree": "5e3a3c9af45c3474506fb62a3ce664bd03a2cdc4",
+      "license_url": "https://github.com/obra/superpowers/blob/2ce8aa15d05bd57213e6f746f953aafb7ded7a8b/LICENSE",
+      "license_blob_sha": "abf0390320aa14406af7a520b9b0739fdda9bf08",
+      "license_sha256": "a37e0e9697144819e1d965176ac4ae5bc3fa02d11e7812036bbcadf6dafe2400"
+    },
+    "anthropics/knowledge-work-plugins": {
+      "full_name": "anthropics/knowledge-work-plugins",
+      "stars": 33150,
+      "default_branch": "main",
+      "archived": false,
+      "license": "Apache-2.0",
+      "sha": "33d3dea41a341b341d4f5da2e8801ae0c89be2b8",
+      "tree": "93f0ab55fb2a30d9eda981953292620b402b5026",
+      "license_url": "https://github.com/anthropics/knowledge-work-plugins/blob/33d3dea41a341b341d4f5da2e8801ae0c89be2b8/LICENSE",
+      "license_blob_sha": "f53c679acba79cbb292961fd9fb9e87ca20eab22",
+      "license_sha256": "a6946284993aeec75c7d75906064b66210c46051e562077efb30eb6dcfe72e26"
+    },
+    "github/awesome-copilot": {
+      "full_name": "github/awesome-copilot",
+      "stars": 40433,
+      "default_branch": "main",
+      "archived": false,
+      "license": "MIT",
+      "sha": "b1a00457c0b8794243883f387e7de71e88800e3e",
+      "tree": "35385148e9789cd409e8581c96f5fdc58ed3fde0",
+      "license_url": "https://github.com/github/awesome-copilot/blob/b1a00457c0b8794243883f387e7de71e88800e3e/LICENSE",
+      "license_blob_sha": "89bc5e962c9944cdb050887062afdaaf89be504a",
+      "license_sha256": "e32449d23085399adc1222f7a17408b730550258e51627c153cb108ca9955823"
+    }
+  },
+  "sources": {
+    "backend": {
+      "repository": "msitarzewski/agency-agents",
+      "commit": "b37b5bb33b78f2c1d6567d98e25ca818e3259219",
+      "path": "engineering/engineering-backend-architect.md",
+      "blob_sha": "f3731dd50da10c71d2c40a5ff319d7984afe7efd",
+      "content_sha256": "45d94306c8f0f4c51efb76066008297fa4e87ce5b69f509cfede224084b74dfb",
+      "url": "https://github.com/msitarzewski/agency-agents/blob/b37b5bb33b78f2c1d6567d98e25ca818e3259219/engineering/engineering-backend-architect.md",
+      "reviewed": true,
+      "guidance": "Specify contracts, compatibility, idempotency and failure isolation before choosing architecture.",
+      "adaptation": "Cypher-authored concise workflow adaptation; external scripts, personas, permissions and performance promises are not imported.",
+      "reviewed_at": "2026-10-26T17:46:39Z"
+    },
+    "frontend": {
+      "repository": "msitarzewski/agency-agents",
+      "commit": "b37b5bb33b78f2c1d6567d98e25ca818e3259219",
+      "path": "engineering/engineering-frontend-developer.md",
+      "blob_sha": "ef135b7b937c985449cb93115f8461ee7353b9f6",
+      "content_sha256": "71eeb60cbeedd94b41b2e5852d8986c909e8d150c324b4bb99e3b184ae202094",
+      "url": "https://github.com/msitarzewski/agency-agents/blob/b37b5bb33b78f2c1d6567d98e25ca818e3259219/engineering/engineering-frontend-developer.md",
+      "reviewed": true,
+      "guidance": "Use responsive accessible components, explicit state transitions and measured lazy loading.",
+      "adaptation": "Cypher-authored concise workflow adaptation; external scripts, personas, permissions and performance promises are not imported.",
+      "reviewed_at": "2026-10-26T17:46:39Z"
+    },
+    "devops": {
+      "repository": "msitarzewski/agency-agents",
+      "commit": "b37b5bb33b78f2c1d6567d98e25ca818e3259219",
+      "path": "engineering/engineering-devops-automator.md",
+      "blob_sha": "7fc31412e10eb5985e79cc3581ee1e42b5b6a7de",
+      "content_sha256": "1b67b3bdc6a076d42281e38bb811250eb04415bb241cdd4c3a7df38ecd20e88b",
+      "url": "https://github.com/msitarzewski/agency-agents/blob/b37b5bb33b78f2c1d6567d98e25ca818e3259219/engineering/engineering-devops-automator.md",
+      "reviewed": true,
+      "guidance": "Use reproducible infrastructure, staged releases, observability and tested rollback paths.",
+      "adaptation": "Cypher-authored concise workflow adaptation; external scripts, personas, permissions and performance promises are not imported.",
+      "reviewed_at": "2026-10-26T17:46:39Z"
+    },
+    "reliability": {
+      "repository": "msitarzewski/agency-agents",
+      "commit": "b37b5bb33b78f2c1d6567d98e25ca818e3259219",
+      "path": "engineering/engineering-sre.md",
+      "blob_sha": "592c7ab92f0fa5f56da735e65eba4c7c40231568",
+      "content_sha256": "85b305e495506913f50c7cb28de42444a85fbc4898cd3ad4e1dc9b358b4ab5e8",
+      "url": "https://github.com/msitarzewski/agency-agents/blob/b37b5bb33b78f2c1d6567d98e25ca818e3259219/engineering/engineering-sre.md",
+      "reviewed": true,
+      "guidance": "Use measured service indicators, error budgets, capacity evidence and progressive rollouts.",
+      "adaptation": "Cypher-authored concise workflow adaptation; external scripts, personas, permissions and performance promises are not imported.",
+      "reviewed_at": "2026-10-26T17:46:39Z"
+    },
+    "network": {
+      "repository": "msitarzewski/agency-agents",
+      "commit": "b37b5bb33b78f2c1d6567d98e25ca818e3259219",
+      "path": "engineering/engineering-network-engineer.md",
+      "blob_sha": "803d49403b0e20efb2e84b93a214b04390fc341d",
+      "content_sha256": "1400d7393e47b05c629d2902b2114911d6e55f34a703c2b77da24bd5f2b31576",
+      "url": "https://github.com/msitarzewski/agency-agents/blob/b37b5bb33b78f2c1d6567d98e25ca818e3259219/engineering/engineering-network-engineer.md",
+      "reviewed": true,
+      "guidance": "Separate control-plane configuration from data-plane evidence; preserve a verified rollback.",
+      "adaptation": "Cypher-authored concise workflow adaptation; external scripts, personas, permissions and performance promises are not imported.",
+      "reviewed_at": "2026-10-26T17:46:39Z"
+    },
+    "database": {
+      "repository": "msitarzewski/agency-agents",
+      "commit": "b37b5bb33b78f2c1d6567d98e25ca818e3259219",
+      "path": "engineering/engineering-database-optimizer.md",
+      "blob_sha": "d1c0198598a7ad154175cc3e5fbc2904bdb5cff4",
+      "content_sha256": "6d773003e3b9251068ab537be94d6827c118201e0e17c11d789cb29dc245bf99",
+      "url": "https://github.com/msitarzewski/agency-agents/blob/b37b5bb33b78f2c1d6567d98e25ca818e3259219/engineering/engineering-database-optimizer.md",
+      "reviewed": true,
+      "guidance": "Inspect query plans, indexing and migration reversibility before proposing database changes.",
+      "adaptation": "Cypher-authored concise workflow adaptation; external scripts, personas, permissions and performance promises are not imported.",
+      "reviewed_at": "2026-10-26T17:46:39Z"
+    },
+    "ai": {
+      "repository": "msitarzewski/agency-agents",
+      "commit": "b37b5bb33b78f2c1d6567d98e25ca818e3259219",
+      "path": "engineering/engineering-ai-engineer.md",
+      "blob_sha": "a4a8f6d548894bafaf1dfe651f44f3e7179bf569",
+      "content_sha256": "f25a69aad25acd35dd1d62e33d5a814f4a26b075d90f968b4d778452e53924d8",
+      "url": "https://github.com/msitarzewski/agency-agents/blob/b37b5bb33b78f2c1d6567d98e25ca818e3259219/engineering/engineering-ai-engineer.md",
+      "reviewed": true,
+      "guidance": "Evaluate practical model behavior, production monitoring, privacy and robustness together.",
+      "adaptation": "Cypher-authored concise workflow adaptation; external scripts, personas, permissions and performance promises are not imported.",
+      "reviewed_at": "2026-10-26T17:46:39Z"
+    },
+    "data-engineering": {
+      "repository": "msitarzewski/agency-agents",
+      "commit": "b37b5bb33b78f2c1d6567d98e25ca818e3259219",
+      "path": "engineering/engineering-data-engineer.md",
+      "blob_sha": "fd582528b6a64c30136d660c842df8808b0ed71a",
+      "content_sha256": "3f6f629f0e4e00a0010bcd98675cb5183cca89b29b6d3fe2f6db2db474c2d800",
+      "url": "https://github.com/msitarzewski/agency-agents/blob/b37b5bb33b78f2c1d6567d98e25ca818e3259219/engineering/engineering-data-engineer.md",
+      "reviewed": true,
+      "guidance": "Use idempotent incremental pipelines, producer contracts, lineage and freshness checks.",
+      "adaptation": "Cypher-authored concise workflow adaptation; external scripts, personas, permissions and performance promises are not imported.",
+      "reviewed_at": "2026-10-26T17:46:39Z"
+    },
+    "visualization": {
+      "repository": "msitarzewski/agency-agents",
+      "commit": "b37b5bb33b78f2c1d6567d98e25ca818e3259219",
+      "path": "engineering/engineering-data-visualization-engineer.md",
+      "blob_sha": "2cc24e7c0a91c7b132a9ce568983ebabda8a1e3d",
+      "content_sha256": "0f5b5391f82aa98ca489768d31024f7a5f840a8ee5fe968fe1499ed538948ce5",
+      "url": "https://github.com/msitarzewski/agency-agents/blob/b37b5bb33b78f2c1d6567d98e25ca818e3259219/engineering/engineering-data-visualization-engineer.md",
+      "reviewed": true,
+      "guidance": "Choose the chart from the question; preserve honest quantities, uncertainty and accessibility.",
+      "adaptation": "Cypher-authored concise workflow adaptation; external scripts, personas, permissions and performance promises are not imported.",
+      "reviewed_at": "2026-10-26T17:46:39Z"
+    },
+    "finops": {
+      "repository": "msitarzewski/agency-agents",
+      "commit": "b37b5bb33b78f2c1d6567d98e25ca818e3259219",
+      "path": "engineering/engineering-finops-engineer.md",
+      "blob_sha": "5565463b84066bac927a70af1f124cb6213a6b1b",
+      "content_sha256": "2971ce273c45e96002127fd8456cfcb3dce761595aab5b6428cd1f5036dc9cd1",
+      "url": "https://github.com/msitarzewski/agency-agents/blob/b37b5bb33b78f2c1d6567d98e25ca818e3259219/engineering/engineering-finops-engineer.md",
+      "reviewed": true,
+      "guidance": "Attribute spend first; eliminate waste before commitments, preserving reliability constraints.",
+      "adaptation": "Cypher-authored concise workflow adaptation; external scripts, personas, permissions and performance promises are not imported.",
+      "reviewed_at": "2026-10-26T17:46:39Z"
+    },
+    "technical-writing": {
+      "repository": "msitarzewski/agency-agents",
+      "commit": "b37b5bb33b78f2c1d6567d98e25ca818e3259219",
+      "path": "engineering/engineering-technical-writer.md",
+      "blob_sha": "e17f72e5c9b958e9550c976c082e05cf42fa01ff",
+      "content_sha256": "bf5c809977e10904b988ab8b218853ce8dfa38b2cbd89a7d2cfadba44ac25761",
+      "url": "https://github.com/msitarzewski/agency-agents/blob/b37b5bb33b78f2c1d6567d98e25ca818e3259219/engineering/engineering-technical-writer.md",
+      "reviewed": true,
+      "guidance": "Match documentation to real versions and verified examples; expose prerequisites and gaps.",
+      "adaptation": "Cypher-authored concise workflow adaptation; external scripts, personas, permissions and performance promises are not imported.",
+      "reviewed_at": "2026-10-26T17:46:39Z"
+    },
+    "ui": {
+      "repository": "msitarzewski/agency-agents",
+      "commit": "b37b5bb33b78f2c1d6567d98e25ca818e3259219",
+      "path": "design/design-ui-designer.md",
+      "blob_sha": "6744e81bf2d64a4b22881eace74d8438045dca6e",
+      "content_sha256": "4dc51255ffcb47e2bf4289a7d49a7cc224238af759f9e6e3c56771c698575d6d",
+      "url": "https://github.com/msitarzewski/agency-agents/blob/b37b5bb33b78f2c1d6567d98e25ca818e3259219/design/design-ui-designer.md",
+      "reviewed": true,
+      "guidance": "Build reusable hierarchy, tokens and responsive components with accessibility in the foundation.",
+      "adaptation": "Cypher-authored concise workflow adaptation; external scripts, personas, permissions and performance promises are not imported.",
+      "reviewed_at": "2026-10-26T17:46:39Z"
+    },
+    "ux": {
+      "repository": "msitarzewski/agency-agents",
+      "commit": "b37b5bb33b78f2c1d6567d98e25ca818e3259219",
+      "path": "design/design-ux-architect.md",
+      "blob_sha": "27a951fd63ef3981f54a3e35c64666e86ea901db",
+      "content_sha256": "7d373da3fd204db3c830f28e03cdf85bcacd3858e38fbdad58489953f811c296",
+      "url": "https://github.com/msitarzewski/agency-agents/blob/b37b5bb33b78f2c1d6567d98e25ca818e3259219/design/design-ux-architect.md",
+      "reviewed": true,
+      "guidance": "Translate requirements into information architecture, component contracts and implementable handoffs.",
+      "adaptation": "Cypher-authored concise workflow adaptation; external scripts, personas, permissions and performance promises are not imported.",
+      "reviewed_at": "2026-10-26T17:46:39Z"
+    },
+    "user-research": {
+      "repository": "msitarzewski/agency-agents",
+      "commit": "b37b5bb33b78f2c1d6567d98e25ca818e3259219",
+      "path": "design/design-ux-researcher.md",
+      "blob_sha": "0e8a2480dc9bb11a47c19621a9013bdc3466865a",
+      "content_sha256": "25f59c4333df2d0f1170ff7a1b11ea8415fd3d0ef80c3e0985209aeb4018680f",
+      "url": "https://github.com/msitarzewski/agency-agents/blob/b37b5bb33b78f2c1d6567d98e25ca818e3259219/design/design-ux-researcher.md",
+      "reviewed": true,
+      "guidance": "Start with research questions, reduce sampling bias and triangulate observed user evidence.",
+      "adaptation": "Cypher-authored concise workflow adaptation; external scripts, personas, permissions and performance promises are not imported.",
+      "reviewed_at": "2026-10-26T17:46:39Z"
+    },
+    "accessibility": {
+      "repository": "msitarzewski/agency-agents",
+      "commit": "b37b5bb33b78f2c1d6567d98e25ca818e3259219",
+      "path": "testing/testing-accessibility-auditor.md",
+      "blob_sha": "350dc3d468b96015a6b3cdefbb06f4a33f673cb1",
+      "content_sha256": "362935907af23839775b9c6162f38c0c5a740542ab4350cb5c5b5a0d9f9a4268",
+      "url": "https://github.com/msitarzewski/agency-agents/blob/b37b5bb33b78f2c1d6567d98e25ca818e3259219/testing/testing-accessibility-auditor.md",
+      "reviewed": true,
+      "guidance": "Separate automated findings from manual keyboard and assistive-technology evidence.",
+      "adaptation": "Cypher-authored concise workflow adaptation; external scripts, personas, permissions and performance promises are not imported.",
+      "reviewed_at": "2026-10-26T17:46:39Z"
+    },
+    "benchmark": {
+      "repository": "msitarzewski/agency-agents",
+      "commit": "b37b5bb33b78f2c1d6567d98e25ca818e3259219",
+      "path": "testing/testing-performance-benchmarker.md",
+      "blob_sha": "c9f58c4ec53a6ea0dbf598d83d78e0dd9dc52362",
+      "content_sha256": "736fd1538678af699220803c0f6a84e1626eaf9346c5af88a2290c075cd55fd5",
+      "url": "https://github.com/msitarzewski/agency-agents/blob/b37b5bb33b78f2c1d6567d98e25ca818e3259219/testing/testing-performance-benchmarker.md",
+      "reviewed": true,
+      "guidance": "Establish a comparable baseline, identify measured bottlenecks and validate changes at real load.",
+      "adaptation": "Cypher-authored concise workflow adaptation; external scripts, personas, permissions and performance promises are not imported.",
+      "reviewed_at": "2026-10-26T17:46:39Z"
+    },
+    "content": {
+      "repository": "msitarzewski/agency-agents",
+      "commit": "b37b5bb33b78f2c1d6567d98e25ca818e3259219",
+      "path": "marketing/marketing-content-creator.md",
+      "blob_sha": "4beedb05f5e4f8754c63125649ac8a9763609330",
+      "content_sha256": "26ddce44f057068a3935c13d53becd3c57385fb47fcdcfdd891b80269070b3d5",
+      "url": "https://github.com/msitarzewski/agency-agents/blob/b37b5bb33b78f2c1d6567d98e25ca818e3259219/marketing/marketing-content-creator.md",
+      "reviewed": true,
+      "guidance": "Adapt the content to its audience, channel and brand voice; use a coherent editorial structure.",
+      "adaptation": "Cypher-authored concise workflow adaptation; external scripts, personas, permissions and performance promises are not imported.",
+      "reviewed_at": "2026-10-26T17:46:39Z"
+    },
+    "growth": {
+      "repository": "msitarzewski/agency-agents",
+      "commit": "b37b5bb33b78f2c1d6567d98e25ca818e3259219",
+      "path": "marketing/marketing-growth-hacker.md",
+      "blob_sha": "b5c20e59d361b19f277ee1410ce4ec985edde4c7",
+      "content_sha256": "6938b4fccaf4447e8c4b8fd071ce383a484cd3fb72583d87ac9835fa9741a7c7",
+      "url": "https://github.com/msitarzewski/agency-agents/blob/b37b5bb33b78f2c1d6567d98e25ca818e3259219/marketing/marketing-growth-hacker.md",
+      "reviewed": true,
+      "guidance": "Use observable funnels, explicit experiments and retention/cohort evidence rather than growth promises.",
+      "adaptation": "Cypher-authored concise workflow adaptation; external scripts, personas, permissions and performance promises are not imported.",
+      "reviewed_at": "2026-10-26T17:46:39Z"
+    },
+    "social": {
+      "repository": "msitarzewski/agency-agents",
+      "commit": "b37b5bb33b78f2c1d6567d98e25ca818e3259219",
+      "path": "marketing/marketing-social-media-strategist.md",
+      "blob_sha": "fd39bfa5782fa36b862472e8a2b1cd3d517609e1",
+      "content_sha256": "7c698a9280872666b2726b7ca305c6d4890fcb95a098c7c316beb9bf5fdb4274",
+      "url": "https://github.com/msitarzewski/agency-agents/blob/b37b5bb33b78f2c1d6567d98e25ca818e3259219/marketing/marketing-social-media-strategist.md",
+      "reviewed": true,
+      "guidance": "Coordinate audience-specific content, channel calendars and attributable performance measurements.",
+      "adaptation": "Cypher-authored concise workflow adaptation; external scripts, personas, permissions and performance promises are not imported.",
+      "reviewed_at": "2026-10-26T17:46:39Z"
+    },
+    "strategy": {
+      "repository": "msitarzewski/agency-agents",
+      "commit": "b37b5bb33b78f2c1d6567d98e25ca818e3259219",
+      "path": "specialized/business-strategist.md",
+      "blob_sha": "21b0f276c29f19ecdf0d803f5141019a2d681381",
+      "content_sha256": "9314906805d8dee81c3e2d10cb93513a391731d9fceb2e4c936257005a144b92",
+      "url": "https://github.com/msitarzewski/agency-agents/blob/b37b5bb33b78f2c1d6567d98e25ca818e3259219/specialized/business-strategist.md",
+      "reviewed": true,
+      "guidance": "Frame the decision, compare realistic alternatives and state explicit tradeoffs and exclusions.",
+      "adaptation": "Cypher-authored concise workflow adaptation; external scripts, personas, permissions and performance promises are not imported.",
+      "reviewed_at": "2026-10-26T17:46:39Z"
+    },
+    "operations": {
+      "repository": "msitarzewski/agency-agents",
+      "commit": "b37b5bb33b78f2c1d6567d98e25ca818e3259219",
+      "path": "specialized/operations-manager.md",
+      "blob_sha": "c4ff42a209ca1e5ef4717bc1183a7e6fd3128fb7",
+      "content_sha256": "3c133a31ae1542922444d77d7c8f9964127704ba94638dde12e37a9ad0fd35bd",
+      "url": "https://github.com/msitarzewski/agency-agents/blob/b37b5bb33b78f2c1d6567d98e25ca818e3259219/specialized/operations-manager.md",
+      "reviewed": true,
+      "guidance": "Map inputs, handoffs and waiting; assign accountable owners and measurable process outcomes.",
+      "adaptation": "Cypher-authored concise workflow adaptation; external scripts, personas, permissions and performance promises are not imported.",
+      "reviewed_at": "2026-10-26T17:46:39Z"
+    },
+    "supply-chain": {
+      "repository": "msitarzewski/agency-agents",
+      "commit": "b37b5bb33b78f2c1d6567d98e25ca818e3259219",
+      "path": "specialized/supply-chain-strategist.md",
+      "blob_sha": "51eb455a59c0b197f454a9c47239e4d6d2912205",
+      "content_sha256": "aa6c0f0e7bfc7948a9ac5c76d3a0c140c54a59393eac54bdf15b12a9555662da",
+      "url": "https://github.com/msitarzewski/agency-agents/blob/b37b5bb33b78f2c1d6567d98e25ca818e3259219/specialized/supply-chain-strategist.md",
+      "reviewed": true,
+      "guidance": "Evaluate suppliers on quality, cost and delivery; connect qualification evidence to category strategy.",
+      "adaptation": "Cypher-authored concise workflow adaptation; external scripts, personas, permissions and performance promises are not imported.",
+      "reviewed_at": "2026-10-26T17:46:39Z"
+    },
+    "sustainability": {
+      "repository": "msitarzewski/agency-agents",
+      "commit": "b37b5bb33b78f2c1d6567d98e25ca818e3259219",
+      "path": "specialized/esg-sustainability-officer.md",
+      "blob_sha": "555c6873574d84ca49e54327b45f62388dfb7fcf",
+      "content_sha256": "a8feee4c7b9687ee89ec5ea0879ff98b4cc4451431052369bf00f90d9382b7dd",
+      "url": "https://github.com/msitarzewski/agency-agents/blob/b37b5bb33b78f2c1d6567d98e25ca818e3259219/specialized/esg-sustainability-officer.md",
+      "reviewed": true,
+      "guidance": "Separate emissions scopes, materiality and reporting frameworks; retain dated source evidence.",
+      "adaptation": "Cypher-authored concise workflow adaptation; external scripts, personas, permissions and performance promises are not imported.",
+      "reviewed_at": "2026-10-26T17:46:39Z"
+    },
+    "real-estate": {
+      "repository": "msitarzewski/agency-agents",
+      "commit": "b37b5bb33b78f2c1d6567d98e25ca818e3259219",
+      "path": "specialized/real-estate-buyer-seller.md",
+      "blob_sha": "57aaf3ab55610aa250b956ec7f984a5dda94b672",
+      "content_sha256": "00e2f54e76be38c85c4eb406135a0944a3f610d287e6747fbfac37a12c82920a",
+      "url": "https://github.com/msitarzewski/agency-agents/blob/b37b5bb33b78f2c1d6567d98e25ca818e3259219/specialized/real-estate-buyer-seller.md",
+      "reviewed": true,
+      "guidance": "Separate market comparables, client criteria, transaction contingencies and documented next actions.",
+      "adaptation": "Cypher-authored concise workflow adaptation; external scripts, personas, permissions and performance promises are not imported.",
+      "reviewed_at": "2026-10-26T17:46:39Z"
+    },
+    "grants": {
+      "repository": "msitarzewski/agency-agents",
+      "commit": "b37b5bb33b78f2c1d6567d98e25ca818e3259219",
+      "path": "specialized/grant-writer.md",
+      "blob_sha": "7b9b177e4317ad676b0b3a681b814d6cd132e40b",
+      "content_sha256": "6be5a68dc7628c8292253b60a2bfbc7f76053e9c32aae4d40ff341594534e67b",
+      "url": "https://github.com/msitarzewski/agency-agents/blob/b37b5bb33b78f2c1d6567d98e25ca818e3259219/specialized/grant-writer.md",
+      "reviewed": true,
+      "guidance": "Match funder criteria to truthful program evidence, budgets, outcomes and reporting obligations.",
+      "adaptation": "Cypher-authored concise workflow adaptation; external scripts, personas, permissions and performance promises are not imported.",
+      "reviewed_at": "2026-10-26T17:46:39Z"
+    },
+    "training": {
+      "repository": "msitarzewski/agency-agents",
+      "commit": "b37b5bb33b78f2c1d6567d98e25ca818e3259219",
+      "path": "specialized/corporate-training-designer.md",
+      "blob_sha": "d8191adbdaab0e671fc14c884879092147261e5a",
+      "content_sha256": "e70733229e87dde01bd404f502d2f5b491821f681d7230b314b18d98111b898c",
+      "url": "https://github.com/msitarzewski/agency-agents/blob/b37b5bb33b78f2c1d6567d98e25ca818e3259219/specialized/corporate-training-designer.md",
+      "reviewed": true,
+      "guidance": "Identify competency gaps; sequence learning objectives, practice, feedback and outcome evaluation.",
+      "adaptation": "Cypher-authored concise workflow adaptation; external scripts, personas, permissions and performance promises are not imported.",
+      "reviewed_at": "2026-10-26T17:46:39Z"
+    },
+    "translation": {
+      "repository": "msitarzewski/agency-agents",
+      "commit": "b37b5bb33b78f2c1d6567d98e25ca818e3259219",
+      "path": "specialized/language-translator.md",
+      "blob_sha": "a2bea23c4495bf17740e1e1613bc673cea550dd6",
+      "content_sha256": "afd1e4b5fb1bb8fa9b8b5770774e0d7b003722681f664147ce7b9dddbcd52a4c",
+      "url": "https://github.com/msitarzewski/agency-agents/blob/b37b5bb33b78f2c1d6567d98e25ca818e3259219/specialized/language-translator.md",
+      "reviewed": true,
+      "guidance": "Preserve intended meaning, register and cultural context rather than substituting words literally.",
+      "adaptation": "Cypher-authored concise workflow adaptation; external scripts, personas, permissions and performance promises are not imported.",
+      "reviewed_at": "2026-10-26T17:46:39Z"
+    },
+    "career": {
+      "repository": "msitarzewski/agency-agents",
+      "commit": "b37b5bb33b78f2c1d6567d98e25ca818e3259219",
+      "path": "specialized/resume-tailor.md",
+      "blob_sha": "5428a52180dda748b40ea787ac11cfb03fa3912b",
+      "content_sha256": "be3d173ce4807d49671c7956f107029a4cb4061651882a0a3ea8c4f20738273f",
+      "url": "https://github.com/msitarzewski/agency-agents/blob/b37b5bb33b78f2c1d6567d98e25ca818e3259219/specialized/resume-tailor.md",
+      "reviewed": true,
+      "guidance": "Use the actual resume and role requirements; emphasize supported achievements without invented experience.",
+      "adaptation": "Cypher-authored concise workflow adaptation; external scripts, personas, permissions and performance promises are not imported.",
+      "reviewed_at": "2026-10-26T17:46:39Z"
+    },
+    "history": {
+      "repository": "msitarzewski/agency-agents",
+      "commit": "b37b5bb33b78f2c1d6567d98e25ca818e3259219",
+      "path": "academic/academic-historian.md",
+      "blob_sha": "b67f5a5fcd6fb1b439a3044fcbc21e39fca2247a",
+      "content_sha256": "2c59c10dceec033d9e92990b6156553471b7b94dd8e0c64fe27148f612be8955",
+      "url": "https://github.com/msitarzewski/agency-agents/blob/b37b5bb33b78f2c1d6567d98e25ca818e3259219/academic/academic-historian.md",
+      "reviewed": true,
+      "guidance": "Distinguish primary evidence, scholarly consensus and disputed claims; check historical coherence.",
+      "adaptation": "Cypher-authored concise workflow adaptation; external scripts, personas, permissions and performance promises are not imported.",
+      "reviewed_at": "2026-10-26T17:46:39Z"
+    },
+    "story": {
+      "repository": "msitarzewski/agency-agents",
+      "commit": "b37b5bb33b78f2c1d6567d98e25ca818e3259219",
+      "path": "academic/academic-narratologist.md",
+      "blob_sha": "3976b6f63ac643fc8606cae701bf8e002056703b",
+      "content_sha256": "12d7a6fa6134c014e3734f8203f0b8634e627cffe5985fa1b69d25c4a69094b5",
+      "url": "https://github.com/msitarzewski/agency-agents/blob/b37b5bb33b78f2c1d6567d98e25ca818e3259219/academic/academic-narratologist.md",
+      "reviewed": true,
+      "guidance": "Check narrative structure, character arcs, pacing and whether promised story elements pay off.",
+      "adaptation": "Cypher-authored concise workflow adaptation; external scripts, personas, permissions and performance promises are not imported.",
+      "reviewed_at": "2026-10-26T17:46:39Z"
+    },
+    "statistics": {
+      "repository": "msitarzewski/agency-agents",
+      "commit": "b37b5bb33b78f2c1d6567d98e25ca818e3259219",
+      "path": "academic/academic-statistician.md",
+      "blob_sha": "f06e3a98781339b15daa525f43fa9e28f983e621",
+      "content_sha256": "4b023595c59becec2026cab38807f835e48e280885f9cd381bab7845cbf4280c",
+      "url": "https://github.com/msitarzewski/agency-agents/blob/b37b5bb33b78f2c1d6567d98e25ca818e3259219/academic/academic-statistician.md",
+      "reviewed": true,
+      "guidance": "Trace quantitative claims to study design; separate association from causation and communicate uncertainty.",
+      "adaptation": "Cypher-authored concise workflow adaptation; external scripts, personas, permissions and performance promises are not imported.",
+      "reviewed_at": "2026-10-26T17:46:39Z"
+    },
+    "finance": {
+      "repository": "msitarzewski/agency-agents",
+      "commit": "b37b5bb33b78f2c1d6567d98e25ca818e3259219",
+      "path": "finance/finance-financial-analyst.md",
+      "blob_sha": "8ec0dbcbcc77eda73e6ed680dc88762aad02b609",
+      "content_sha256": "3547907cd52e6108a4c666fd576d5e42715ac337586a3958a722deee4c1f77bb",
+      "url": "https://github.com/msitarzewski/agency-agents/blob/b37b5bb33b78f2c1d6567d98e25ca818e3259219/finance/finance-financial-analyst.md",
+      "reviewed": true,
+      "guidance": "Validate inputs and assumptions; distinguish historical facts from scenarios and sensitivity ranges.",
+      "adaptation": "Cypher-authored concise workflow adaptation; external scripts, personas, permissions and performance promises are not imported.",
+      "reviewed_at": "2026-10-26T17:46:39Z"
+    },
+    "accounting": {
+      "repository": "msitarzewski/agency-agents",
+      "commit": "b37b5bb33b78f2c1d6567d98e25ca818e3259219",
+      "path": "finance/finance-bookkeeper-controller.md",
+      "blob_sha": "ed28a7488aa98e5e70e71392368d5a010da7882a",
+      "content_sha256": "5510a24274d8f7897ca3f4df2c3318262138a2c82827b37dd2489dcfca8de75a",
+      "url": "https://github.com/msitarzewski/agency-agents/blob/b37b5bb33b78f2c1d6567d98e25ca818e3259219/finance/finance-bookkeeper-controller.md",
+      "reviewed": true,
+      "guidance": "Reconcile records to supporting documentation, materiality and appropriate review controls.",
+      "adaptation": "Cypher-authored concise workflow adaptation; external scripts, personas, permissions and performance promises are not imported.",
+      "reviewed_at": "2026-10-26T17:46:39Z"
+    },
+    "investment": {
+      "repository": "msitarzewski/agency-agents",
+      "commit": "b37b5bb33b78f2c1d6567d98e25ca818e3259219",
+      "path": "finance/finance-investment-researcher.md",
+      "blob_sha": "50ff87cf7f4571d7796c7a4c31352c0887cb3420",
+      "content_sha256": "4851318dcd82fdfd68403656450761b439a01c6071b8755e49dbd215149bc2c1",
+      "url": "https://github.com/msitarzewski/agency-agents/blob/b37b5bb33b78f2c1d6567d98e25ca818e3259219/finance/finance-investment-researcher.md",
+      "reviewed": true,
+      "guidance": "Use primary sources and a testable thesis, balanced scenarios, horizon and quantified downside assumptions.",
+      "adaptation": "Cypher-authored concise workflow adaptation; external scripts, personas, permissions and performance promises are not imported.",
+      "reviewed_at": "2026-10-26T17:46:39Z"
+    },
+    "project": {
+      "repository": "msitarzewski/agency-agents",
+      "commit": "b37b5bb33b78f2c1d6567d98e25ca818e3259219",
+      "path": "project-management/project-manager-senior.md",
+      "blob_sha": "52bb3a7012fb249e30a2d2f6ae3ed3287e6024d1",
+      "content_sha256": "70fb27cab174c97375293311211d5563c5ac257fba274450d1ca9c05b540ef2d",
+      "url": "https://github.com/msitarzewski/agency-agents/blob/b37b5bb33b78f2c1d6567d98e25ca818e3259219/project-management/project-manager-senior.md",
+      "reviewed": true,
+      "guidance": "Translate actual requirements into realistic tasks and acceptance checks without adding speculative scope.",
+      "adaptation": "Cypher-authored concise workflow adaptation; external scripts, personas, permissions and performance promises are not imported.",
+      "reviewed_at": "2026-10-26T17:46:39Z"
+    },
+    "meeting": {
+      "repository": "msitarzewski/agency-agents",
+      "commit": "b37b5bb33b78f2c1d6567d98e25ca818e3259219",
+      "path": "project-management/project-management-meeting-notes-specialist.md",
+      "blob_sha": "a02904f92594986147691e5aa69191b49d1e0060",
+      "content_sha256": "53a6efaa379b70cbc3276b44544ecf569789fffe892ba82eb68e8672407de91f",
+      "url": "https://github.com/msitarzewski/agency-agents/blob/b37b5bb33b78f2c1d6567d98e25ca818e3259219/project-management/project-management-meeting-notes-specialist.md",
+      "reviewed": true,
+      "guidance": "Extract recorded attendees, decisions, owned action items and open questions; never invent missing agreement.",
+      "adaptation": "Cypher-authored concise workflow adaptation; external scripts, personas, permissions and performance promises are not imported.",
+      "reviewed_at": "2026-10-26T17:46:39Z"
+    },
+    "search": {
+      "repository": "anthropics/knowledge-work-plugins",
+      "commit": "33d3dea41a341b341d4f5da2e8801ae0c89be2b8",
+      "path": "enterprise-search/skills/search-strategy/SKILL.md",
+      "blob_sha": "d42cddb978e6188bf5fd31af04c55bfd80bb4554",
+      "content_sha256": "71d5ba2d219a72d696e079885cba2fb5455ba5da6b1404491f8b945bdd8694c6",
+      "url": "https://github.com/anthropics/knowledge-work-plugins/blob/33d3dea41a341b341d4f5da2e8801ae0c89be2b8/enterprise-search/skills/search-strategy/SKILL.md",
+      "reviewed": true,
+      "guidance": "Decompose the question into targeted source-specific queries; rank and deduplicate relevant evidence.",
+      "adaptation": "Cypher-authored concise workflow adaptation; external scripts, personas, permissions and performance promises are not imported.",
+      "reviewed_at": "2026-10-26T17:46:39Z"
+    },
+    "synthesis": {
+      "repository": "anthropics/knowledge-work-plugins",
+      "commit": "33d3dea41a341b341d4f5da2e8801ae0c89be2b8",
+      "path": "enterprise-search/skills/knowledge-synthesis/SKILL.md",
+      "blob_sha": "a5e816fb52c4d2055513eeaea446e79b81aa54f2",
+      "content_sha256": "8dc66c66ef0004010bbf2d569251163e90a6675b982e0cb99ef26b4dd1c5a0f6",
+      "url": "https://github.com/anthropics/knowledge-work-plugins/blob/33d3dea41a341b341d4f5da2e8801ae0c89be2b8/enterprise-search/skills/knowledge-synthesis/SKILL.md",
+      "reviewed": true,
+      "guidance": "Combine results by authority and freshness, preserve source attribution and reconcile conflicting evidence.",
+      "adaptation": "Cypher-authored concise workflow adaptation; external scripts, personas, permissions and performance promises are not imported.",
+      "reviewed_at": "2026-10-26T17:46:39Z"
+    },
+    "sources": {
+      "repository": "anthropics/knowledge-work-plugins",
+      "commit": "33d3dea41a341b341d4f5da2e8801ae0c89be2b8",
+      "path": "enterprise-search/skills/source-management/SKILL.md",
+      "blob_sha": "8df82355b33469e034ad6db962ce0d5606314dd4",
+      "content_sha256": "221d8acdc5c686033bb073d2bba83841892f6b8be0888c0267247fd1dd34461d",
+      "url": "https://github.com/anthropics/knowledge-work-plugins/blob/33d3dea41a341b341d4f5da2e8801ae0c89be2b8/enterprise-search/skills/source-management/SKILL.md",
+      "reviewed": true,
+      "guidance": "Check available connected sources, batch targeted reads and avoid repeating fresh searches.",
+      "adaptation": "Cypher-authored concise workflow adaptation; external scripts, personas, permissions and performance promises are not imported.",
+      "reviewed_at": "2026-10-26T17:46:39Z"
+    },
+    "validation": {
+      "repository": "anthropics/knowledge-work-plugins",
+      "commit": "33d3dea41a341b341d4f5da2e8801ae0c89be2b8",
+      "path": "data/skills/validate-data/SKILL.md",
+      "blob_sha": "30a1bac41bf9679dc7d96b7ec59a116f03ec0575",
+      "content_sha256": "1e424822043480375b80aef9416227b1c8083af749ca536568716265f79ca54b",
+      "url": "https://github.com/anthropics/knowledge-work-plugins/blob/33d3dea41a341b341d4f5da2e8801ae0c89be2b8/data/skills/validate-data/SKILL.md",
+      "reviewed": true,
+      "guidance": "Check population, metric definitions, methodology and bias before validating an analytical conclusion.",
+      "adaptation": "Cypher-authored concise workflow adaptation; external scripts, personas, permissions and performance promises are not imported.",
+      "reviewed_at": "2026-10-26T17:46:39Z"
+    },
+    "product": {
+      "repository": "anthropics/knowledge-work-plugins",
+      "commit": "33d3dea41a341b341d4f5da2e8801ae0c89be2b8",
+      "path": "product-management/skills/write-spec/SKILL.md",
+      "blob_sha": "183cf053df391e761c21431bc0dfb791b6d52b80",
+      "content_sha256": "ca6670913878b4ac4582727562bfced5271492a5a800d934f68c9e7bc1cd4dcc",
+      "url": "https://github.com/anthropics/knowledge-work-plugins/blob/33d3dea41a341b341d4f5da2e8801ae0c89be2b8/product-management/skills/write-spec/SKILL.md",
+      "reviewed": true,
+      "guidance": "Connect the user problem to scoped requirements, constraints, success metrics and acceptance criteria.",
+      "adaptation": "Cypher-authored concise workflow adaptation; external scripts, personas, permissions and performance promises are not imported.",
+      "reviewed_at": "2026-10-26T17:46:39Z"
+    },
+    "risk": {
+      "repository": "anthropics/knowledge-work-plugins",
+      "commit": "33d3dea41a341b341d4f5da2e8801ae0c89be2b8",
+      "path": "operations/skills/risk-assessment/SKILL.md",
+      "blob_sha": "80518b6ce0c094debb53226df6188443ee61de0f",
+      "content_sha256": "82e29810a762c396a56f92bbd5c5afd252f7a07c6be69a246c28f7b82c4086d9",
+      "url": "https://github.com/anthropics/knowledge-work-plugins/blob/33d3dea41a341b341d4f5da2e8801ae0c89be2b8/operations/skills/risk-assessment/SKILL.md",
+      "reviewed": true,
+      "guidance": "Record risk scenario, supported likelihood, impact, mitigation, owner and remaining uncertainty.",
+      "adaptation": "Cypher-authored concise workflow adaptation; external scripts, personas, permissions and performance promises are not imported.",
+      "reviewed_at": "2026-10-26T17:46:39Z"
+    },
+    "process": {
+      "repository": "anthropics/knowledge-work-plugins",
+      "commit": "33d3dea41a341b341d4f5da2e8801ae0c89be2b8",
+      "path": "operations/skills/process-optimization/SKILL.md",
+      "blob_sha": "8d1f2c9b81ff9b6c6cb4d32fd2ee7df3e525fd31",
+      "content_sha256": "14099838fdbfca24057e934fc22ed17f94629c5e9c9cec470f32e3063d0575f9",
+      "url": "https://github.com/anthropics/knowledge-work-plugins/blob/33d3dea41a341b341d4f5da2e8801ae0c89be2b8/operations/skills/process-optimization/SKILL.md",
+      "reviewed": true,
+      "guidance": "Measure current steps and waiting; remove waste and parallelize only independent work.",
+      "adaptation": "Cypher-authored concise workflow adaptation; external scripts, personas, permissions and performance promises are not imported.",
+      "reviewed_at": "2026-10-26T17:46:39Z"
+    },
+    "company": {
+      "repository": "anthropics/knowledge-work-plugins",
+      "commit": "33d3dea41a341b341d4f5da2e8801ae0c89be2b8",
+      "path": "sales/skills/account-research/SKILL.md",
+      "blob_sha": "ea4335aaba62a2c4ffb4b1fcac7bfb0536679f5c",
+      "content_sha256": "1f5e40ac7cea793dff344f331be95bf2bd6fd8e03c6734aedae2d514707ec59b",
+      "url": "https://github.com/anthropics/knowledge-work-plugins/blob/33d3dea41a341b341d4f5da2e8801ae0c89be2b8/sales/skills/account-research/SKILL.md",
+      "reviewed": true,
+      "guidance": "Ground company context and priorities in dated evidence; batch research and preserve source links.",
+      "adaptation": "Cypher-authored concise workflow adaptation; external scripts, personas, permissions and performance promises are not imported.",
+      "reviewed_at": "2026-10-26T17:46:39Z"
+    },
+    "plan": {
+      "repository": "obra/superpowers",
+      "commit": "2ce8aa15d05bd57213e6f746f953aafb7ded7a8b",
+      "path": "skills/writing-plans/SKILL.md",
+      "blob_sha": "4cf0275d88d67aa4ef09f4bbca9970ed6ff74a00",
+      "content_sha256": "a6c67c1900064347c2a329990dd3c555657c51c3ec53b259a08aa01a2c26139a",
+      "url": "https://github.com/obra/superpowers/blob/2ce8aa15d05bd57213e6f746f953aafb7ded7a8b/skills/writing-plans/SKILL.md",
+      "reviewed": true,
+      "guidance": "Turn the agreed scope into precise interfaces, bounded steps and checks an implementer can follow.",
+      "adaptation": "Cypher-authored concise workflow adaptation; external scripts, personas, permissions and performance promises are not imported.",
+      "reviewed_at": "2026-10-26T17:46:39Z"
+    },
+    "debug": {
+      "repository": "obra/superpowers",
+      "commit": "2ce8aa15d05bd57213e6f746f953aafb7ded7a8b",
+      "path": "skills/systematic-debugging/SKILL.md",
+      "blob_sha": "62fc752aaef59a8bbed5d305f4cadc60f8ae07ed",
+      "content_sha256": "51c6435d98c83c42c96ba7c35725a0b2c376cd487fb1a4e6bd0ddbe7e33ef202",
+      "url": "https://github.com/obra/superpowers/blob/2ce8aa15d05bd57213e6f746f953aafb7ded7a8b/skills/systematic-debugging/SKILL.md",
+      "reviewed": true,
+      "guidance": "Reproduce the failure, investigate its cause, test a discriminating hypothesis and verify a focused fix.",
+      "adaptation": "Cypher-authored concise workflow adaptation; external scripts, personas, permissions and performance promises are not imported.",
+      "reviewed_at": "2026-10-26T17:46:39Z"
+    },
+    "verify": {
+      "repository": "obra/superpowers",
+      "commit": "2ce8aa15d05bd57213e6f746f953aafb7ded7a8b",
+      "path": "skills/verification-before-completion/SKILL.md",
+      "blob_sha": "7d45333cc4a49c57a80df6c1fe2fa777a207afbc",
+      "content_sha256": "2befe7fc55bcadaa3d97dd9e8efeb633d2561c0ebe74c5a8b17c4d9e7e4520b3",
+      "url": "https://github.com/obra/superpowers/blob/2ce8aa15d05bd57213e6f746f953aafb7ded7a8b/skills/verification-before-completion/SKILL.md",
+      "reviewed": true,
+      "guidance": "Require fresh relevant evidence before a completion claim; a proposed action is not a successful result.",
+      "adaptation": "Cypher-authored concise workflow adaptation; external scripts, personas, permissions and performance promises are not imported.",
+      "reviewed_at": "2026-10-26T17:46:39Z"
+    },
+    "parallel": {
+      "repository": "obra/superpowers",
+      "commit": "2ce8aa15d05bd57213e6f746f953aafb7ded7a8b",
+      "path": "skills/dispatching-parallel-agents/SKILL.md",
+      "blob_sha": "3fa091b348bbe0a18eaa0e17e9092c97f7005cbe",
+      "content_sha256": "1968923066f3b707eb01d1992cdf4c42284c3855f70253b9cd5000ff45fca13c",
+      "url": "https://github.com/obra/superpowers/blob/2ce8aa15d05bd57213e6f746f953aafb7ded7a8b/skills/dispatching-parallel-agents/SKILL.md",
+      "reviewed": true,
+      "guidance": "Split genuinely independent work into focused assignments with only the context each requires.",
+      "adaptation": "Cypher-authored concise workflow adaptation; external scripts, personas, permissions and performance promises are not imported.",
+      "reviewed_at": "2026-10-26T17:46:39Z"
+    },
+    "security": {
+      "repository": "github/awesome-copilot",
+      "commit": "b1a00457c0b8794243883f387e7de71e88800e3e",
+      "path": "skills/security-review/SKILL.md",
+      "blob_sha": "5281fa2f537eadca9e078a770ae129e81b759179",
+      "content_sha256": "002392d88637b89e4cbc409a0531834970937f3b57c0b448a17e04b5ca6d356c",
+      "url": "https://github.com/github/awesome-copilot/blob/b1a00457c0b8794243883f387e7de71e88800e3e/skills/security-review/SKILL.md",
+      "reviewed": true,
+      "guidance": "Trace untrusted input through data flow, trust boundaries and access controls before reporting a vulnerability.",
+      "adaptation": "Cypher-authored concise workflow adaptation; external scripts, personas, permissions and performance promises are not imported.",
+      "reviewed_at": "2026-10-26T17:46:39Z"
+    },
+    "recruiting": {
+      "repository": "msitarzewski/agency-agents",
+      "commit": "b37b5bb33b78f2c1d6567d98e25ca818e3259219",
+      "path": "specialized/recruitment-specialist.md",
+      "blob_sha": "4a2864a91f0092a6c944db7d27548d71d45d0f5f",
+      "content_sha256": "cf3d73aae046a12538f64bd67bc5def7946de070485c388ce467251ac8d1e892",
+      "url": "https://github.com/msitarzewski/agency-agents/blob/b37b5bb33b78f2c1d6567d98e25ca818e3259219/specialized/recruitment-specialist.md",
+      "reviewed": true,
+      "guidance": "Match stated role requirements to actual candidate evidence and separate pipeline signals from verified qualifications.",
+      "adaptation": "Cypher-authored concise workflow adaptation; external scripts, personas, permissions and performance promises are not imported.",
+      "reviewed_at": "2026-10-26T17:46:39Z"
+    },
+    "hr": {
+      "repository": "msitarzewski/agency-agents",
+      "commit": "b37b5bb33b78f2c1d6567d98e25ca818e3259219",
+      "path": "specialized/hr-onboarding.md",
+      "blob_sha": "15aa1ac614f31c1dd1c11256ce92f3191e04abfe",
+      "content_sha256": "28a52c26f27ab24d7fe11f5e48cfe712f6d27da142ec97911683b4a3ad92332c",
+      "url": "https://github.com/msitarzewski/agency-agents/blob/b37b5bb33b78f2c1d6567d98e25ca818e3259219/specialized/hr-onboarding.md",
+      "reviewed": true,
+      "guidance": "Separate onboarding stages, required documents, access needs and explicit 30/60/90-day outcomes.",
+      "adaptation": "Cypher-authored concise workflow adaptation; external scripts, personas, permissions and performance promises are not imported.",
+      "reviewed_at": "2026-10-26T17:46:39Z"
+    },
+    "hospitality": {
+      "repository": "msitarzewski/agency-agents",
+      "commit": "b37b5bb33b78f2c1d6567d98e25ca818e3259219",
+      "path": "specialized/hospitality-guest-services.md",
+      "blob_sha": "3b5bb06f8153057526fbf46b51d27200ecb118a8",
+      "content_sha256": "1c5819c560d3902eca44a4fb372bae9e882e5b9e8455e51aa3e8d9662a5d184a",
+      "url": "https://github.com/msitarzewski/agency-agents/blob/b37b5bb33b78f2c1d6567d98e25ca818e3259219/specialized/hospitality-guest-services.md",
+      "reviewed": true,
+      "guidance": "Use actual reservation details and guest preferences; protect privacy and verify every booking or service receipt.",
+      "adaptation": "Cypher-authored concise workflow adaptation; external scripts, personas, permissions and performance promises are not imported.",
+      "reviewed_at": "2026-10-26T17:46:39Z"
+    },
+    "geography": {
+      "repository": "msitarzewski/agency-agents",
+      "commit": "b37b5bb33b78f2c1d6567d98e25ca818e3259219",
+      "path": "academic/academic-geographer.md",
+      "blob_sha": "c02b43b609c2cceb8ee057bcda9fd104fca353af",
+      "content_sha256": "4acf4a6ee6ae96ce562323c8ce508db9f2eb0ece016fc754214be9587c071c0d",
+      "url": "https://github.com/msitarzewski/agency-agents/blob/b37b5bb33b78f2c1d6567d98e25ca818e3259219/academic/academic-geographer.md",
+      "reviewed": true,
+      "guidance": "Check physical processes, terrain, climate and resource constraints before judging geographic consistency.",
+      "adaptation": "Cypher-authored concise workflow adaptation; external scripts, personas, permissions and performance promises are not imported.",
+      "reviewed_at": "2026-10-26T17:46:39Z"
+    },
+    "compliance": {
+      "repository": "msitarzewski/agency-agents",
+      "commit": "b37b5bb33b78f2c1d6567d98e25ca818e3259219",
+      "path": "support/support-legal-compliance-checker.md",
+      "blob_sha": "d94914e128658abca8b997059ce3ab2a1a73e32f",
+      "content_sha256": "08d938c5666e41b3cf197c2f7b37070d7f39aca62b7147d157200eb6dbeeced6",
+      "url": "https://github.com/msitarzewski/agency-agents/blob/b37b5bb33b78f2c1d6567d98e25ca818e3259219/support/support-legal-compliance-checker.md",
+      "reviewed": true,
+      "guidance": "Identify jurisdiction, applicable requirements, evidence gaps and review ownership without claiming legal certification.",
+      "adaptation": "Cypher-authored concise workflow adaptation; external scripts, personas, permissions and performance promises are not imported.",
+      "reviewed_at": "2026-10-26T17:46:39Z"
+    },
+    "personal": {
+      "repository": "msitarzewski/agency-agents",
+      "commit": "b37b5bb33b78f2c1d6567d98e25ca818e3259219",
+      "path": "specialized/personal-growth-mentor.md",
+      "blob_sha": "6bc5d5cfc5623ce5f6b2e6ad1975f7fec488806a",
+      "content_sha256": "623c1ef061d98fedbb941245a39fa5b8c5236ef94194724bfe5c54b8050143d4",
+      "url": "https://github.com/msitarzewski/agency-agents/blob/b37b5bb33b78f2c1d6567d98e25ca818e3259219/specialized/personal-growth-mentor.md",
+      "reviewed": true,
+      "guidance": "Diagnose the real goal and bottlenecks; propose a small practical system with feedback and a concrete next action.",
+      "adaptation": "Cypher-authored concise workflow adaptation; external scripts, personas, permissions and performance promises are not imported.",
+      "reviewed_at": "2026-10-26T17:46:39Z"
+    },
+    "customer": {
+      "repository": "msitarzewski/agency-agents",
+      "commit": "b37b5bb33b78f2c1d6567d98e25ca818e3259219",
+      "path": "specialized/customer-success-manager.md",
+      "blob_sha": "a7e7fa4e44c26bd169e2c6f7fc1aef8b895049a8",
+      "content_sha256": "2fc5ebc10734a621d65d1bfe0a253158f0a7418ee39b7c93a18efe6b26661cfe",
+      "url": "https://github.com/msitarzewski/agency-agents/blob/b37b5bb33b78f2c1d6567d98e25ca818e3259219/specialized/customer-success-manager.md",
+      "reviewed": true,
+      "guidance": "Evaluate customer outcomes, onboarding progress and observed health signals before recommending an intervention.",
+      "adaptation": "Cypher-authored concise workflow adaptation; external scripts, personas, permissions and performance promises are not imported.",
+      "reviewed_at": "2026-10-26T17:46:39Z"
+    },
+    "procurement": {
+      "repository": "anthropics/knowledge-work-plugins",
+      "commit": "33d3dea41a341b341d4f5da2e8801ae0c89be2b8",
+      "path": "operations/skills/vendor-review/SKILL.md",
+      "blob_sha": "336f38316186a276fb130425fe6f19ea6d9488e5",
+      "content_sha256": "c2a959a7ed068e34a83984cf223754062e6819deb0ba1ca33eb747b4cc808d5e",
+      "url": "https://github.com/anthropics/knowledge-work-plugins/blob/33d3dea41a341b341d4f5da2e8801ae0c89be2b8/operations/skills/vendor-review/SKILL.md",
+      "reviewed": true,
+      "guidance": "Compare total ownership cost, implementation, ongoing support, exit cost and documented vendor risks.",
+      "adaptation": "Cypher-authored concise workflow adaptation; external scripts, personas, permissions and performance promises are not imported.",
+      "reviewed_at": "2026-10-26T17:46:39Z"
+    },
+    "science": {
+      "repository": "anthropics/knowledge-work-plugins",
+      "commit": "33d3dea41a341b341d4f5da2e8801ae0c89be2b8",
+      "path": "bio-research/skills/scientific-problem-selection/SKILL.md",
+      "blob_sha": "a139a4dbe32900d6d8860b6268c5c2effab6aef4",
+      "content_sha256": "9ec99e3e5b2f4cd7474ef2bb8a1b10ee1f97dbe688c7723c7ec0b18deb8ff0f4",
+      "url": "https://github.com/anthropics/knowledge-work-plugins/blob/33d3dea41a341b341d4f5da2e8801ae0c89be2b8/bio-research/skills/scientific-problem-selection/SKILL.md",
+      "reviewed": true,
+      "guidance": "Evaluate scientific problem choice by importance, feasibility, meaningful constraints and manageable uncertainty.",
+      "adaptation": "Cypher-authored concise workflow adaptation; external scripts, personas, permissions and performance promises are not imported.",
+      "reviewed_at": "2026-10-26T17:46:39Z"
+    }
+  },
+  "domain_sources": {
+    "python": {
+      "source_id": "backend",
+      "scope": "workflow_adaptation"
+    },
+    "rust": {
+      "source_id": "backend",
+      "scope": "workflow_adaptation"
+    },
+    "go": {
+      "source_id": "backend",
+      "scope": "workflow_adaptation"
+    },
+    "java": {
+      "source_id": "backend",
+      "scope": "workflow_adaptation"
+    },
+    "dotnet": {
+      "source_id": "backend",
+      "scope": "workflow_adaptation"
+    },
+    "swift": {
+      "source_id": "backend",
+      "scope": "workflow_adaptation"
+    },
+    "kotlin": {
+      "source_id": "backend",
+      "scope": "workflow_adaptation"
+    },
+    "ruby": {
+      "source_id": "backend",
+      "scope": "workflow_adaptation"
+    },
+    "api-design": {
+      "source_id": "backend",
+      "scope": "workflow_adaptation"
+    },
+    "javascript": {
+      "source_id": "frontend",
+      "scope": "workflow_adaptation"
+    },
+    "typescript": {
+      "source_id": "frontend",
+      "scope": "workflow_adaptation"
+    },
+    "web-products": {
+      "source_id": "frontend",
+      "scope": "workflow_adaptation"
+    },
+    "mobile-products": {
+      "source_id": "frontend",
+      "scope": "workflow_adaptation"
+    },
+    "cloud-infrastructure": {
+      "source_id": "devops",
+      "scope": "workflow_adaptation"
+    },
+    "containers": {
+      "source_id": "devops",
+      "scope": "workflow_adaptation"
+    },
+    "continuous-delivery": {
+      "source_id": "devops",
+      "scope": "workflow_adaptation"
+    },
+    "observability": {
+      "source_id": "reliability",
+      "scope": "workflow_adaptation"
+    },
+    "networking": {
+      "source_id": "network",
+      "scope": "workflow_adaptation"
+    },
+    "databases": {
+      "source_id": "database",
+      "scope": "workflow_adaptation"
+    },
+    "ai-systems": {
+      "source_id": "ai",
+      "scope": "workflow_adaptation"
+    },
+    "machine-learning": {
+      "source_id": "ai",
+      "scope": "workflow_adaptation"
+    },
+    "data-pipelines": {
+      "source_id": "data-engineering",
+      "scope": "workflow_adaptation"
+    },
+    "visualization": {
+      "source_id": "visualization",
+      "scope": "workflow_adaptation"
+    },
+    "cost-optimization": {
+      "source_id": "finops",
+      "scope": "workflow_adaptation"
+    },
+    "unit-economics": {
+      "source_id": "finops",
+      "scope": "workflow_adaptation"
+    },
+    "security": {
+      "source_id": "security",
+      "scope": "workflow_adaptation"
+    },
+    "data-cleaning": {
+      "source_id": "validation",
+      "scope": "workflow_adaptation"
+    },
+    "spreadsheets": {
+      "source_id": "validation",
+      "scope": "workflow_adaptation"
+    },
+    "data-governance": {
+      "source_id": "validation",
+      "scope": "workflow_adaptation"
+    },
+    "statistics": {
+      "source_id": "statistics",
+      "scope": "workflow_adaptation"
+    },
+    "experiments": {
+      "source_id": "statistics",
+      "scope": "workflow_adaptation"
+    },
+    "forecasting": {
+      "source_id": "statistics",
+      "scope": "workflow_adaptation"
+    },
+    "quantitative-reasoning": {
+      "source_id": "statistics",
+      "scope": "workflow_adaptation"
+    },
+    "analytics": {
+      "source_id": "growth",
+      "scope": "workflow_adaptation"
+    },
+    "growth": {
+      "source_id": "growth",
+      "scope": "workflow_adaptation"
+    },
+    "retail": {
+      "source_id": "growth",
+      "scope": "workflow_adaptation"
+    },
+    "market-research": {
+      "source_id": "strategy",
+      "scope": "workflow_adaptation"
+    },
+    "competitor-research": {
+      "source_id": "strategy",
+      "scope": "workflow_adaptation"
+    },
+    "partnerships": {
+      "source_id": "strategy",
+      "scope": "workflow_adaptation"
+    },
+    "strategy": {
+      "source_id": "strategy",
+      "scope": "workflow_adaptation"
+    },
+    "decision-making": {
+      "source_id": "strategy",
+      "scope": "workflow_adaptation"
+    },
+    "company-research": {
+      "source_id": "company",
+      "scope": "workflow_adaptation"
+    },
+    "sales": {
+      "source_id": "company",
+      "scope": "workflow_adaptation"
+    },
+    "customer-success": {
+      "source_id": "customer",
+      "scope": "workflow_adaptation"
+    },
+    "customer-support": {
+      "source_id": "customer",
+      "scope": "workflow_adaptation"
+    },
+    "marketing": {
+      "source_id": "content",
+      "scope": "workflow_adaptation"
+    },
+    "business-writing": {
+      "source_id": "content",
+      "scope": "workflow_adaptation"
+    },
+    "copywriting": {
+      "source_id": "content",
+      "scope": "workflow_adaptation"
+    },
+    "editing": {
+      "source_id": "content",
+      "scope": "workflow_adaptation"
+    },
+    "presentations": {
+      "source_id": "content",
+      "scope": "workflow_adaptation"
+    },
+    "email-writing": {
+      "source_id": "content",
+      "scope": "workflow_adaptation"
+    },
+    "media": {
+      "source_id": "content",
+      "scope": "workflow_adaptation"
+    },
+    "procurement": {
+      "source_id": "procurement",
+      "scope": "workflow_adaptation"
+    },
+    "product-management": {
+      "source_id": "product",
+      "scope": "workflow_adaptation"
+    },
+    "product-discovery": {
+      "source_id": "product",
+      "scope": "workflow_adaptation"
+    },
+    "product-pricing": {
+      "source_id": "product",
+      "scope": "workflow_adaptation"
+    },
+    "user-research": {
+      "source_id": "user-research",
+      "scope": "workflow_adaptation"
+    },
+    "interface-design": {
+      "source_id": "ui",
+      "scope": "workflow_adaptation"
+    },
+    "design-systems": {
+      "source_id": "ui",
+      "scope": "workflow_adaptation"
+    },
+    "interaction-design": {
+      "source_id": "ux",
+      "scope": "workflow_adaptation"
+    },
+    "accessibility": {
+      "source_id": "accessibility",
+      "scope": "workflow_adaptation"
+    },
+    "technical-writing": {
+      "source_id": "technical-writing",
+      "scope": "workflow_adaptation"
+    },
+    "translation": {
+      "source_id": "translation",
+      "scope": "workflow_adaptation"
+    },
+    "languages": {
+      "source_id": "translation",
+      "scope": "workflow_adaptation"
+    },
+    "social-content": {
+      "source_id": "social",
+      "scope": "workflow_adaptation"
+    },
+    "storytelling": {
+      "source_id": "story",
+      "scope": "workflow_adaptation"
+    },
+    "creative-projects": {
+      "source_id": "story",
+      "scope": "workflow_adaptation"
+    },
+    "meeting-communication": {
+      "source_id": "meeting",
+      "scope": "workflow_adaptation"
+    },
+    "project-management": {
+      "source_id": "project",
+      "scope": "workflow_adaptation"
+    },
+    "operations": {
+      "source_id": "operations",
+      "scope": "workflow_adaptation"
+    },
+    "event-planning": {
+      "source_id": "operations",
+      "scope": "workflow_adaptation"
+    },
+    "process-improvement": {
+      "source_id": "operations",
+      "scope": "workflow_adaptation"
+    },
+    "manufacturing": {
+      "source_id": "operations",
+      "scope": "workflow_adaptation"
+    },
+    "inventory": {
+      "source_id": "supply-chain",
+      "scope": "workflow_adaptation"
+    },
+    "hiring": {
+      "source_id": "recruiting",
+      "scope": "workflow_adaptation"
+    },
+    "people-operations": {
+      "source_id": "hr",
+      "scope": "workflow_adaptation"
+    },
+    "logistics": {
+      "source_id": "supply-chain",
+      "scope": "workflow_adaptation"
+    },
+    "travel-planning": {
+      "source_id": "hospitality",
+      "scope": "workflow_adaptation"
+    },
+    "budgeting": {
+      "source_id": "finance",
+      "scope": "workflow_adaptation"
+    },
+    "financial-modeling": {
+      "source_id": "finance",
+      "scope": "workflow_adaptation"
+    },
+    "cash-flow": {
+      "source_id": "finance",
+      "scope": "workflow_adaptation"
+    },
+    "revenue-operations": {
+      "source_id": "finance",
+      "scope": "workflow_adaptation"
+    },
+    "financial-reporting": {
+      "source_id": "finance",
+      "scope": "workflow_adaptation"
+    },
+    "fundraising": {
+      "source_id": "finance",
+      "scope": "workflow_adaptation"
+    },
+    "accounting": {
+      "source_id": "accounting",
+      "scope": "workflow_adaptation"
+    },
+    "venture-capital": {
+      "source_id": "investment",
+      "scope": "workflow_adaptation"
+    },
+    "climate": {
+      "source_id": "sustainability",
+      "scope": "workflow_adaptation"
+    },
+    "energy": {
+      "source_id": "sustainability",
+      "scope": "workflow_adaptation"
+    },
+    "geography": {
+      "source_id": "geography",
+      "scope": "workflow_adaptation"
+    },
+    "education": {
+      "source_id": "training",
+      "scope": "workflow_adaptation"
+    },
+    "learning": {
+      "source_id": "training",
+      "scope": "workflow_adaptation"
+    },
+    "real-estate": {
+      "source_id": "real-estate",
+      "scope": "workflow_adaptation"
+    },
+    "nonprofits": {
+      "source_id": "grants",
+      "scope": "workflow_adaptation"
+    },
+    "regulatory-compliance": {
+      "source_id": "compliance",
+      "scope": "workflow_adaptation"
+    },
+    "general-work": {
+      "source_id": "personal",
+      "scope": "workflow_adaptation"
+    },
+    "personal-productivity": {
+      "source_id": "personal",
+      "scope": "workflow_adaptation"
+    },
+    "science": {
+      "source_id": "science",
+      "scope": "workflow_adaptation"
+    },
+    "history": {
+      "source_id": "history",
+      "scope": "workflow_adaptation"
+    },
+    "career": {
+      "source_id": "career",
+      "scope": "workflow_adaptation"
+    },
+    "performance": {
+      "source_id": "benchmark",
+      "scope": "workflow_adaptation"
+    }
+  },
+  "procedure_sources": {
+    "source-map": {
+      "source_id": "search",
+      "scope": "workflow_adaptation"
+    },
+    "landscape": {
+      "source_id": "search",
+      "scope": "workflow_adaptation"
+    },
+    "evidence-gaps": {
+      "source_id": "search",
+      "scope": "workflow_adaptation"
+    },
+    "source-brief": {
+      "source_id": "synthesis",
+      "scope": "workflow_adaptation"
+    },
+    "source-conflicts": {
+      "source_id": "synthesis",
+      "scope": "workflow_adaptation"
+    },
+    "summary": {
+      "source_id": "synthesis",
+      "scope": "workflow_adaptation"
+    },
+    "executive-brief": {
+      "source_id": "synthesis",
+      "scope": "workflow_adaptation"
+    },
+    "status-report": {
+      "source_id": "synthesis",
+      "scope": "workflow_adaptation"
+    },
+    "fact-check": {
+      "source_id": "verify",
+      "scope": "workflow_adaptation"
+    },
+    "acceptance-review": {
+      "source_id": "verify",
+      "scope": "workflow_adaptation"
+    },
+    "verification-recipe": {
+      "source_id": "verify",
+      "scope": "workflow_adaptation"
+    },
+    "regression-check": {
+      "source_id": "verify",
+      "scope": "workflow_adaptation"
+    },
+    "delivery-check": {
+      "source_id": "verify",
+      "scope": "workflow_adaptation"
+    },
+    "timeline": {
+      "source_id": "history",
+      "scope": "workflow_adaptation"
+    },
+    "glossary": {
+      "source_id": "technical-writing",
+      "scope": "workflow_adaptation"
+    },
+    "instructions": {
+      "source_id": "technical-writing",
+      "scope": "workflow_adaptation"
+    },
+    "faq": {
+      "source_id": "technical-writing",
+      "scope": "workflow_adaptation"
+    },
+    "cheat-sheet": {
+      "source_id": "technical-writing",
+      "scope": "workflow_adaptation"
+    },
+    "structured-data": {
+      "source_id": "technical-writing",
+      "scope": "workflow_adaptation"
+    },
+    "interview-guide": {
+      "source_id": "user-research",
+      "scope": "workflow_adaptation"
+    },
+    "trend-brief": {
+      "source_id": "user-research",
+      "scope": "workflow_adaptation"
+    },
+    "segmentation": {
+      "source_id": "user-research",
+      "scope": "workflow_adaptation"
+    },
+    "comparison": {
+      "source_id": "strategy",
+      "scope": "workflow_adaptation"
+    },
+    "scenario-analysis": {
+      "source_id": "strategy",
+      "scope": "workflow_adaptation"
+    },
+    "constraint-map": {
+      "source_id": "strategy",
+      "scope": "workflow_adaptation"
+    },
+    "assumption-review": {
+      "source_id": "strategy",
+      "scope": "workflow_adaptation"
+    },
+    "opportunity-score": {
+      "source_id": "strategy",
+      "scope": "workflow_adaptation"
+    },
+    "benefit-review": {
+      "source_id": "strategy",
+      "scope": "workflow_adaptation"
+    },
+    "tradeoff-review": {
+      "source_id": "strategy",
+      "scope": "workflow_adaptation"
+    },
+    "feasibility": {
+      "source_id": "strategy",
+      "scope": "workflow_adaptation"
+    },
+    "decision-matrix": {
+      "source_id": "strategy",
+      "scope": "workflow_adaptation"
+    },
+    "root-cause": {
+      "source_id": "debug",
+      "scope": "workflow_adaptation"
+    },
+    "reproduction": {
+      "source_id": "debug",
+      "scope": "workflow_adaptation"
+    },
+    "failure-modes": {
+      "source_id": "debug",
+      "scope": "workflow_adaptation"
+    },
+    "incident-brief": {
+      "source_id": "debug",
+      "scope": "workflow_adaptation"
+    },
+    "sensitivity": {
+      "source_id": "statistics",
+      "scope": "workflow_adaptation"
+    },
+    "estimate": {
+      "source_id": "statistics",
+      "scope": "workflow_adaptation"
+    },
+    "experiment-design": {
+      "source_id": "statistics",
+      "scope": "workflow_adaptation"
+    },
+    "unit-check": {
+      "source_id": "validation",
+      "scope": "workflow_adaptation"
+    },
+    "outliers": {
+      "source_id": "validation",
+      "scope": "workflow_adaptation"
+    },
+    "data-dictionary": {
+      "source_id": "validation",
+      "scope": "workflow_adaptation"
+    },
+    "consistency-review": {
+      "source_id": "validation",
+      "scope": "workflow_adaptation"
+    },
+    "completeness-review": {
+      "source_id": "validation",
+      "scope": "workflow_adaptation"
+    },
+    "entity-extraction": {
+      "source_id": "validation",
+      "scope": "workflow_adaptation"
+    },
+    "normalization": {
+      "source_id": "validation",
+      "scope": "workflow_adaptation"
+    },
+    "table": {
+      "source_id": "validation",
+      "scope": "workflow_adaptation"
+    },
+    "execution-plan": {
+      "source_id": "plan",
+      "scope": "workflow_adaptation"
+    },
+    "milestones": {
+      "source_id": "plan",
+      "scope": "workflow_adaptation"
+    },
+    "resource-plan": {
+      "source_id": "plan",
+      "scope": "workflow_adaptation"
+    },
+    "migration-plan": {
+      "source_id": "plan",
+      "scope": "workflow_adaptation"
+    },
+    "launch-plan": {
+      "source_id": "plan",
+      "scope": "workflow_adaptation"
+    },
+    "discovery-plan": {
+      "source_id": "plan",
+      "scope": "workflow_adaptation"
+    },
+    "implementation-brief": {
+      "source_id": "plan",
+      "scope": "workflow_adaptation"
+    },
+    "contingency": {
+      "source_id": "risk",
+      "scope": "workflow_adaptation"
+    },
+    "risk-review": {
+      "source_id": "risk",
+      "scope": "workflow_adaptation"
+    },
+    "reversibility": {
+      "source_id": "risk",
+      "scope": "workflow_adaptation"
+    },
+    "measurement-plan": {
+      "source_id": "benchmark",
+      "scope": "workflow_adaptation"
+    },
+    "bottleneck-review": {
+      "source_id": "benchmark",
+      "scope": "workflow_adaptation"
+    },
+    "handoff-plan": {
+      "source_id": "project",
+      "scope": "workflow_adaptation"
+    },
+    "requirements-map": {
+      "source_id": "project",
+      "scope": "workflow_adaptation"
+    },
+    "dependency-map": {
+      "source_id": "project",
+      "scope": "workflow_adaptation"
+    },
+    "stakeholder-map": {
+      "source_id": "project",
+      "scope": "workflow_adaptation"
+    },
+    "decision-log": {
+      "source_id": "project",
+      "scope": "workflow_adaptation"
+    },
+    "action-items": {
+      "source_id": "project",
+      "scope": "workflow_adaptation"
+    },
+    "followup-brief": {
+      "source_id": "project",
+      "scope": "workflow_adaptation"
+    },
+    "proposal": {
+      "source_id": "content",
+      "scope": "workflow_adaptation"
+    },
+    "announcement": {
+      "source_id": "content",
+      "scope": "workflow_adaptation"
+    },
+    "rewrite": {
+      "source_id": "content",
+      "scope": "workflow_adaptation"
+    },
+    "outline": {
+      "source_id": "content",
+      "scope": "workflow_adaptation"
+    },
+    "audience-adaptation": {
+      "source_id": "content",
+      "scope": "workflow_adaptation"
+    },
+    "checklist": {
+      "source_id": "operations",
+      "scope": "workflow_adaptation"
+    },
+    "workflow-map": {
+      "source_id": "operations",
+      "scope": "workflow_adaptation"
+    },
+    "issue-triage": {
+      "source_id": "operations",
+      "scope": "workflow_adaptation"
+    },
+    "recovery-runbook": {
+      "source_id": "operations",
+      "scope": "workflow_adaptation"
+    },
+    "privacy-review": {
+      "source_id": "compliance",
+      "scope": "workflow_adaptation"
+    },
+    "security-review": {
+      "source_id": "security",
+      "scope": "workflow_adaptation"
+    },
+    "concurrency-review": {
+      "source_id": "backend",
+      "scope": "workflow_adaptation"
+    },
+    "accessibility-review": {
+      "source_id": "accessibility",
+      "scope": "workflow_adaptation"
+    },
+    "freshness-review": {
+      "source_id": "sources",
+      "scope": "workflow_adaptation"
+    },
+    "claim-review": {
+      "source_id": "compliance",
+      "scope": "workflow_adaptation"
+    },
+    "prioritization": {
+      "source_id": "process",
+      "scope": "workflow_adaptation"
+    },
+    "effort-estimate": {
+      "source_id": "process",
+      "scope": "workflow_adaptation"
+    },
+    "critical-path": {
+      "source_id": "parallel",
+      "scope": "workflow_adaptation"
+    },
+    "cost-review": {
+      "source_id": "finops",
+      "scope": "workflow_adaptation"
+    },
+    "boundary-cases": {
+      "source_id": "backend",
+      "scope": "workflow_adaptation"
+    },
+    "compatibility": {
+      "source_id": "backend",
+      "scope": "workflow_adaptation"
+    },
+    "plain-explanation": {
+      "source_id": "training",
+      "scope": "workflow_adaptation"
+    },
+    "worked-example": {
+      "source_id": "training",
+      "scope": "workflow_adaptation"
+    },
+    "tutorial": {
+      "source_id": "training",
+      "scope": "workflow_adaptation"
+    },
+    "analogy": {
+      "source_id": "training",
+      "scope": "workflow_adaptation"
+    },
+    "misconceptions": {
+      "source_id": "training",
+      "scope": "workflow_adaptation"
+    },
+    "practice": {
+      "source_id": "training",
+      "scope": "workflow_adaptation"
+    },
+    "learning-plan": {
+      "source_id": "training",
+      "scope": "workflow_adaptation"
+    },
+    "teach-back": {
+      "source_id": "training",
+      "scope": "workflow_adaptation"
+    },
+    "rubric": {
+      "source_id": "training",
+      "scope": "workflow_adaptation"
+    },
+    "acceptance-tests": {
+      "source_id": "product",
+      "scope": "workflow_adaptation"
+    },
+    "review-packet": {
+      "source_id": "product",
+      "scope": "workflow_adaptation"
+    },
+    "quality-review": {
+      "source_id": "product",
+      "scope": "workflow_adaptation"
+    },
+    "validation-plan": {
+      "source_id": "validation",
+      "scope": "workflow_adaptation"
+    },
+    "template": {
+      "source_id": "technical-writing",
+      "scope": "workflow_adaptation"
+    }
+  },
+  "retired_domains": {
+    "agriculture": "No reviewed agriculture-specific upstream skill; use the main agent without a specialist claim.",
+    "mathematics": "Replaced by explicitly scoped quantitative-reasoning from reviewed statistical-method guidance.",
+    "public-policy": "Replaced by regulatory-compliance; no unsupported public-policy expert claim."
+  },
+  "review_scope": "Reviewed concise workflow adaptations only; upstream scripts, executable prompts, invented experience, customer onboarding rituals and unmeasured performance promises are not imported."
+}
