@@ -5,7 +5,7 @@ const auth=load('../src/lib/pluginAuthorization.ts',{}, {URL,Date});
 const id='e52dad3f-b0db-4cf8-a0f0-f9b88c16f230';
 const item={id:'fixture',name:'Fixture Service',url:'https://provider.example/mcp',domains:['provider.example'],description:'Synthetic service',category:'Testing'};
 const pending={id,name:item.name,url:'https://provider.example/allow?state=synthetic',startedAt:0};
-function panel({saved={},popupBlocked=false,api:overrides={},embedded=false,runtimeConnected=false}={}){
+function panel({saved={},popupBlocked=false,api:overrides={},embedded=false,runtimeConnected=false,onManageSkills}={}){
   const session=storage(saved),env=environment(session),view=renderer(env);let opens=0,closed=0;
   const popup={closed:false,opener:{},document:{title:'',createElement:()=>({style:{}}),body:{appendChild(){}}},location:{replace(){}},focus(){},close(){this.closed=true;closed++;}};
   env.document.createElement=()=>({style:{}});
@@ -15,7 +15,7 @@ function panel({saved={},popupBlocked=false,api:overrides={},embedded=false,runt
   const api={getPluginCatalog:async()=>[item],getPlugins:async()=>[],deviceStatus:async()=>({enrolled:false}),getAvailableConnections:async()=>[],pluginSyncStatus:async()=>null,accountStatus:async()=>({}),authorizePlugin:async()=>({status:'awaiting_login',flow_id:id,authorization_url:pending.url,name:item.name}),pluginAuthStatus:async()=>({status:'awaiting_login',name:item.name}),cancelPluginAuth:async()=>({status:'cancelled'}),...overrides};
   const scopedAuth=load('../src/lib/pluginAuthorization.ts',{}, {URL,Date:env.globals.Date});
   const {PluginPanel}=load('../src/components/PluginPanel.tsx',{react:view.react,'./LoadingState':{LoadingState:'loading-state'},'../lib/api':{api},'../lib/plugin-status':load('../src/lib/plugin-status.ts',{}, {Date}),'../lib/canonical-app':load('../src/lib/canonical-app.ts',{}, {URL}),'../lib/device':{approveConnection:async()=>undefined,enrollDevice:async()=>{}},'../lib/pluginAuthorization':scopedAuth,'./McpDirectory':{McpDirectory:'mcp-directory'},'./cipher/CypherMark':{__esModule:true,default:'cypher-mark'},'./cipher/BinaryLens':{__esModule:true,default:'binary-lens'}},{...env.globals,URL,URLSearchParams,React:view.react.default,fetch:async()=>({ok:true,json:async()=>({connected:runtimeConnected,variables:[]})})});
-  view.mount(()=>PluginPanel({onClose(){},embedded}));
+  view.mount(()=>PluginPanel({onClose(){},onManageSkills,embedded}));
   return {env,view,api,session,popup,get opens(){return opens;},get closed(){return closed;}};
 }
 async function connect(p){await p.view.flush();button(p.view.tree,'Connect').props.onClick();await p.view.flush();await p.view.flush();}
@@ -156,6 +156,18 @@ test('connected runtime keeps the summary recovery notice when connections canno
   p.view.unmount();
 });
 
+test('Connected view opens saved skills separately from account connections',async()=>{
+  let opens=0;
+  const p=panel({onManageSkills:()=>{opens++;}});
+  await p.view.flush();
+  button(p.view.tree,'Connected').props.onClick();
+  await p.view.flush();
+  assert.match(textOf(p.view.tree),/Create and manage reusable skill recipes separately in your workspace library/);
+  button(p.view.tree,'Saved instructions').props.onClick();
+  assert.equal(opens,1);
+  p.view.unmount();
+});
+
 test('embedded app management opens the saved connection without reauthorizing or claiming a tool test',async()=>{
   let authorizations=0;
   const p=panel({embedded:true,api:{getPlugins:async()=>[{id:'linked-account',name:item.name,url:item.url,enabled:true,authenticated:true,tools:[{name:'read_source',description:'Read a source',enabled:true}]}],authorizePlugin:async()=>{authorizations++;throw Error('Management must not start authorization');}}});
@@ -239,7 +251,15 @@ test('restoring the callback conversation does not dismiss its plugin result pan
   imports['./PanelBoundary']={PanelBoundary:'panel-boundary'};
   imports['./cipher/CypherEntrance']={__esModule:true,default:'CypherEntrance'};
   const {default:WorkspaceApp}=load('../src/components/WorkspaceApp.tsx',{react:{...view.react,lazy:loader=>{const component={};loader().then(module=>{component.resolved=module.default;});return component;}},...imports},{...env.globals,URLSearchParams,setInterval:()=>1,clearInterval(){}});
-  view.mount(()=>WorkspaceApp({}));await view.flush();assert.ok(find(view.tree,n=>n.props?.embedded===true),'callback result remains visible after conversation restoration');view.unmount();
+  view.mount(()=>WorkspaceApp({}));await view.flush();
+  assert.ok(find(view.tree,n=>n.props?.embedded===true),'callback result remains visible after conversation restoration');
+  const pluginPanel=find(view.tree,n=>n.props?.embedded===true);
+  assert.equal(typeof pluginPanel.props.onManageSkills,'function','Connected tools expose a skills-management handoff');
+  pluginPanel.props.onManageSkills();
+  view.render();
+  const skillsHub=find(view.tree,n=>n.props?.initialTab==='Skills');
+  assert.ok(skillsHub,'the handoff opens the workspace Skills tab directly');
+  view.unmount();
 });
 
 test('provider registration errors open an actionable OAuth form without claiming connection',async()=>{
