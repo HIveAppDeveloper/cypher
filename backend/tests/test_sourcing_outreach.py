@@ -1,4 +1,5 @@
 """Authenticated Gmail-draft review flow with a synthetic provider boundary."""
+import asyncio
 import base64
 import json
 from email import policy
@@ -262,3 +263,60 @@ async def test_real_account_binding_change_blocks_confirmed_draft_before_gmail(s
     assert response.status_code==409, response.text
     assert 'Gmail account changed' in response.text
     assert calls==[], 'A changed Google binding must be rejected before Gmail is contacted.'
+
+
+@pytest.mark.asyncio
+async def test_concurrent_draft_retry_does_not_start_a_second_provider_attempt(stack, monkeypatch):
+    client, _sessions=stack
+    provider_calls=[]
+    access_calls=[]
+    provider_started=asyncio.Event()
+    allow_provider_to_finish=asyncio.Event()
+
+    async def connected_account(_db, provider, account_id):
+        assert provider=='gmail'
+        return SimpleNamespace(id=account_id), {'email':'investor@example.com','subject':'fixture-google-user'}, 'investor@example.com', 'fixture-binding'
+
+    async def access_token(_db, grant):
+        access_calls.append(grant.id)
+        provider_started.set()
+        await allow_provider_to_finish.wait()
+        return 'synthetic-access-token'
+
+    async def gmail_request(token, method, url, *, body=None):
+        assert token=='synthetic-access-token'
+        provider_calls.append((method,url,body))
+        return {'id':'single-concurrent-draft'}
+
+    monkeypatch.setattr(service,'account',connected_account)
+    monkeypatch.setattr(google,'access_token',access_token)
+    monkeypatch.setattr(google,'api_request',gmail_request)
+
+    payload=proposal_payload()
+    proposal,reviewed=await prepare_and_review(client,payload)
+    endpoint=f"/api/sourcing/outreach/{proposal['id']}/create-draft"
+    confirmation={
+        'digest':reviewed['digest'],
+        'review_token':reviewed['review_token'],
+        'confirmation':'create_gmail_draft_exact_message_and_account',
+    }
+    first=asyncio.create_task(client.post(endpoint,json=confirmation))
+    try:
+        await asyncio.wait_for(provider_started.wait(),timeout=3)
+        second=await client.post(endpoint,json=confirmation)
+        assert second.status_code==200, second.text
+        assert second.json()['status']=='creating_draft'
+        assert len(access_calls)==1,'the second request must observe the durable in-progress claim'
+        assert provider_calls==[],'only the first request may proceed to the Gmail API step'
+    finally:
+        allow_provider_to_finish.set()
+
+    first_response=await asyncio.wait_for(first,timeout=5)
+    assert first_response.status_code==200, first_response.text
+    assert first_response.json()['status']=='draft_created'
+    assert first_response.json()['gmail_draft_id']=='single-concurrent-draft'
+    assert len(provider_calls)==1
+    duplicate=await client.post(endpoint,json=confirmation)
+    assert duplicate.status_code==200, duplicate.text
+    assert duplicate.json()['status']=='draft_created'
+    assert len(provider_calls)==1,'a retry after completion must return the saved result without another provider attempt'
