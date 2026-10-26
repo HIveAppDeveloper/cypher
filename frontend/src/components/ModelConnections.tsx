@@ -18,7 +18,7 @@ function googleLink(value?: string | null) {
   try { const url = new URL(value || ''); return url.protocol === 'https:' && url.hostname === 'accounts.google.com' && !url.username && !url.password && (!url.port || url.port === '443') ? url.href : null; } catch { return null; }
 }
 
-export function ModelConnections({ items, canManage, workerReady, onQueued, omniroute, manageUrl }: {
+export function ModelConnections({ items, canManage, workerReady, onQueued, omniroute }: {
   items: ModelConnection[]; canManage: boolean; workerReady: boolean; onQueued: () => Promise<void>;
   omniroute: boolean; manageUrl?: string;
 }) {
@@ -67,16 +67,9 @@ export function ModelConnections({ items, canManage, workerReady, onQueued, omni
     event.preventDefault();
     if (key.trim()) void submit(provider, key.trim());
   }
-  const safeManageUrl = (() => {
-    try {
-      const url = new URL(manageUrl || '');
-      return (url.protocol === 'https:' || url.hostname === 'localhost' || url.hostname === '127.0.0.1') && !url.username && !url.password ? url.href : null;
-    } catch { return null; }
-  })();
   return <section className="model-connections" aria-labelledby="model-connections-title">
     <h3 id="model-connections-title">Model access</h3>
-    <p className="field-help">{omniroute ? 'Open provider setup, connect the access your provider supports, then check that account here. Subscription access, API keys and public model routes stay separate. Each check sends a short model request and can use provider quota.' : 'Check or add a provider connection for this workspace. Checks send a short model request and can use provider quota.'}</p>
-    {omniroute && canManage && safeManageUrl ? <p className="field-help"><a className="setup-doc-link" href={safeManageUrl} target="_blank" rel="noopener noreferrer">Connect accounts in OmniRoute</a></p> : null}
+    <p className="field-help">{omniroute ? 'Manage supported access here, then check the connected account. Subscription access, API keys and public model routes stay separate. Each check sends a short model request and can use provider quota.' : 'Check or add a provider connection for this workspace. Checks send a short model request and can use provider quota.'}</p>
     {!canManage ? <p className="field-help">The installation owner manages these shared provider connections.</p> : !items.length ? <p className="field-help" role="status">No provider connections are configured for this workspace.</p> : <ul className="model-connection-list">
       {items.map(item => {
         const locallyQueued = Object.hasOwn(queued, item.id);
@@ -90,18 +83,17 @@ export function ModelConnections({ items, canManage, workerReady, onQueued, omni
           {checkedAt ? <p className="model-connection-time">Last checked {checkedAt.toLocaleString()}</p> : null}
           <div className="model-connection-actions">
             {verification ? <a className="btn-primary" href={verification} target="_blank" rel="noopener noreferrer">Verify with Google</a> : null}
-            {omniroute && safeManageUrl ? <a className="setup-doc-link" href={safeManageUrl} target="_blank" rel="noopener noreferrer">{item.id === 'meta' ? 'Set up Meta model access' : 'Open provider setup'}</a> : null}
             {item.verification_supported === false ? <span className="field-help">Model verification is unavailable until provider setup is configured.</span> : !item.requires_api_key || item.key_configured ? <button className="btn-secondary" disabled={checking || !!busy || !workerReady} onClick={() => void submit(item.id, undefined, item.id === 'meta' ? 'current_route' : 'provider_account')}>{checking ? locallyQueued || item.job_status === 'pending' ? 'Queued…' : 'Checking…' : item.id === 'meta' ? 'Test Llama text route' : 'Check provider access'}</button> : <span className="field-help">Add an API key to connect</span>}
             {item.access_kind === 'public' && item.id !== 'meta' ? <button className="setup-doc-link" disabled={checking || !!busy || !workerReady} onClick={() => void submit(item.id, undefined, 'current_route')}>Test public route</button> : null}
-            {!omniroute || keyFor === item.id || item.id === 'meta' ? <a className="setup-doc-link" href={item.account_url} target="_blank" rel="noopener noreferrer">{item.id === 'meta' ? 'Meta Model API setup' : `Open ${item.name} account`}</a> : null}
+            <a className="setup-doc-link" href={item.account_url} target="_blank" rel="noopener noreferrer">{item.id === 'meta' ? 'Meta Model API setup' : `Open ${item.name} account`}</a>
             {item.can_add_api_key ? <button className="setup-doc-link" disabled={checking || !!busy} onClick={() => { setKeyFor(keyFor === item.id ? '' : item.id); setKey(''); setError(null); }}>{item.key_configured ? 'Replace API key' : omniroute ? 'Add API fallback' : 'Use API key'}</button> : null}
           </div>
           {item.state === 'verification_required' ? <p className="field-help">Finish the account check on Google’s page, then return here and choose Check again. Opening the link does not mark the connection verified.</p> : null}
           {keyFor === item.id ? <form className="model-key-form" onSubmit={event => saveKey(event, item.id)}>
             <label htmlFor={`provider-key-${item.id}`}>{item.name} API key</label>
             <input id={`provider-key-${item.id}`} type="password" value={key} autoComplete="off" spellCheck={false} autoFocus onChange={event => setKey(event.target.value)} />
-            <p className="field-help">{omniroute ? 'The key is sent to OmniRoute over the protected connection and encrypted there. It is saved only after a model response succeeds. Subscription access stays separate. Your current working key remains active if a replacement fails.' : 'The key is encrypted in the cloud and saved only after a model response succeeds. Your current working key stays saved if a replacement fails.'}</p>
-            <div className="model-connection-actions"><button className="btn-secondary" type="submit" disabled={!key.trim() || !!busy || !workerReady}>{omniroute ? 'Verify and add to OmniRoute' : 'Verify and save key'}</button><button type="button" className="setup-doc-link" onClick={() => { setKeyFor(''); setKey(''); }}>Cancel</button></div>
+            <p className="field-help">{omniroute ? 'The key is sent over the protected cloud connection and encrypted there. It is saved only after a model response succeeds. Subscription access stays separate. Your current working key remains active if a replacement fails.' : 'The key is encrypted in the cloud and saved only after a model response succeeds. Your current working key stays saved if a replacement fails.'}</p>
+            <div className="model-connection-actions"><button className="btn-secondary" type="submit" disabled={!key.trim() || !!busy || !workerReady}>Verify and save key</button><button type="button" className="setup-doc-link" onClick={() => { setKeyFor(''); setKey(''); }}>Cancel</button></div>
           </form> : null}
           {error?.provider === item.id ? <p role="alert" className="form-error">{error.text}</p> : null}
         </li>;
