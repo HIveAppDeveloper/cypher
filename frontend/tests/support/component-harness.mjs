@@ -59,6 +59,8 @@ function renderer(env) {
   const react = {
     Fragment: 'fragment',
     createElement(type, props, ...children) {
+      // Opt-in expansion for stateless presentation components, without adding hook slots.
+      if (type?.fixturePresentation) return type({ ...props, children });
       const node = { type, props: { ...props, children } };
       if (typeof type === 'string') {
         if (props?.ref && !props.ref.current) props.ref.current = env.element();
@@ -113,6 +115,11 @@ function load(path, imports = {}, globals = {}) {
   const exports = {};
   runInNewContext(compiled, { exports, Error, Map, ...globals,
     require: name => {
+      if (name === './PanelState') {
+        const presentation = load('../src/components/PanelState.tsx', { './PanelState.module.css': { default: {} } }, globals);
+        for (const component of Object.values(presentation)) if (typeof component === 'function') component.fixturePresentation = true;
+        return presentation;
+      }
       if (name === '../lib/canonical-app') return { CANONICAL_APP_ORIGIN: 'https://app.example', isOffCanonicalHost: () => false };
       if (name === '../lib/dates' || name === './dates') return load('../src/lib/dates.ts', {}, globals);
       if (!(name in imports)) throw new Error('Unexpected import: ' + name);
