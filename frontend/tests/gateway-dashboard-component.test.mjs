@@ -10,8 +10,9 @@ function mount({owner=true,hold=false,small=false}={}){
   const good={runtime:{connected:true,model_transport:'omniroute',database:true,worker:true,can_manage_model_connections:owner,configured_models:['example/route'],model_connections:[]},usage:{models:[],tokens:42,estimated_cost:.001},runs:[{id:'fixture-task',status:'completed',created_at:'2026-10-26T12:00:00Z',title:'private task title',result:'private output'}]};
   const fetch=async path=>{calls.push(path);const route=path.split('/').pop();if(hold){const value=deferred();pending.push({path,value});return value.promise}return{ok:true,json:async()=>good[route]};};
   const react={...view.react,useMemo:fn=>fn()};
-  const Component=load('../src/components/GatewayDashboard.tsx',{react,'./ModelConnections':{ModelConnections:'model-connections'},'./WorkspaceSetup':{WorkspaceSetup:'workspace-setup'},'../lib/gateway-dashboard.mjs':helpers},{...env.globals,React:view.react.default,URL,Intl,fetch,setInterval:fn=>{intervals.push(fn);return intervals.length},clearInterval:()=>{},navigator:{clipboard:{writeText:async()=>{}}}}).default;
+  const Component=load('../src/components/GatewayDashboard.tsx',{react,'./GatewayConnections':{GatewayConnections:'gateway-connections'},'./GatewayHosting':{GatewayHosting:'gateway-hosting'},'./GatewayProviderLogo':{GatewayProviderLogo:'provider-logo'},'../lib/gateway-connections.mjs':{providerConnectionLabel:()=>''},'../lib/gateway-dashboard.mjs':helpers},{...env.globals,React:view.react.default,URL,Intl,fetch,setInterval:fn=>{intervals.push(fn);return intervals.length},clearInterval:()=>{},navigator:{clipboard:{writeText:async()=>{}}}}).default;
   view.mount(()=>Component({accountId:account,approvedManageUrl:'https://omniroute-cloud-ten.vercel.app/dashboard/providers'}));
+  find(view.tree,n=>n.type==='button'&&textOf(n)==='Overview').props.onClick();view.render();
   return{view,calls,pending,good,intervals,env,account(value){account=value;view.rerender()}};
 }
 const resolve=(entry,data,ok=true)=>entry.value.resolve({ok,status:ok?200:503,json:async()=>data});
@@ -19,6 +20,7 @@ const resolve=(entry,data,ok=true)=>entry.value.resolve({ok,status:ok?200:503,js
 test('dashboard reads only existing authenticated APIs and omits sensitive task contents',async()=>{
   const app=mount();await app.view.flush();
   assert.deepEqual(app.calls.sort(),['/api/runtime','/api/workspace/runs','/api/workspace/usage']);
+  find(app.view.tree,n=>n.type==='button'&&textOf(n)==='Overview').props.onClick();await app.view.flush();
   const text=textOf(app.view.tree);assert.match(text,/42/);assert.ok(!text.includes('private task title'));assert.ok(!text.includes('private output'));
   app.view.unmount();assert.equal(app.view.updatesAfterUnmount,0);
 });
