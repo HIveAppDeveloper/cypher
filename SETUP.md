@@ -4,7 +4,7 @@ The managed deployment now uses the repository-root `vercel.json`. It is active 
 
 The authorized Atlas native PostgreSQL credential is configured as the primary state database, using the isolated `grokbot` schema. It is not automatic dual writing to Hive and Atlas. Use the unpooled native connection for the worker’s session-level advisory lock: a transaction-pooler URL cannot preserve the required session affinity. The replacement deployment is ready and its fresh worker heartbeat has been verified; longer-term stability remains under observation.
 
-The production app is https://open-grokbot-hiveapp.vercel.app. Sign in with your verified email or a configured Google account. Your Mac and browser can be closed after a job is queued: the Vercel daemon executes it and PostgreSQL retains the result. Sandboxes run in Vercel, without a local Docker daemon.
+The production app is https://cypher-agent.vercel.app. Sign in with your verified email or a configured Google account. Your Mac and browser can be closed after a job is queued: the Vercel daemon executes it and PostgreSQL retains the result. Sandboxes run in Vercel, without a local Docker daemon.
 
 ## Managed configuration
 
@@ -130,7 +130,7 @@ Start account setup queues a Luna-managed browser task with an explicit service 
 
 Lovable restricts automatic registration for hosted callbacks. Its advertised client-metadata flow also rejects unapproved client domains. Either request callback approval from Lovable or register a custom client in **Workspace settings → API keys & OAuth → OAuth clients** as a workspace owner/admin.
 
-Register each production callback, for example `https://open-grokbot-hiveapp.vercel.app/api/plugin-oauth/callback` and `https://open-grokbot.vercel.app/api/plugin-oauth/callback`. Select `offline`, `projects:read`, `projects:write`, `workspaces:read`, and `workspaces:write` for the MCP tools; project/workspace scopes require Business or Enterprise. Users still review and authorize access.
+Register each production callback, for example `https://cypher-agent.vercel.app/api/plugin-oauth/callback` and `https://open-grokbot.vercel.app/api/plugin-oauth/callback`. Select `offline`, `projects:read`, `projects:write`, `workspaces:read`, and `workspaces:write` for the MCP tools; project/workspace scopes require Business or Enterprise. Users still review and authorize access.
 
 Set `LOVABLE_OAUTH_CLIENT_ID` on the backend and worker. For a Web server client, also set the encrypted `LOVABLE_OAUTH_CLIENT_SECRET`; a public PKCE client uses only the ID. Redeploy, then reconnect Lovable. The SDK handles PKCE, token exchange and refresh; client credentials and tokens stay encrypted in storage. No client is registered automatically in the user's Lovable workspace.
 

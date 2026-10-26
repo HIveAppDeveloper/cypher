@@ -11,7 +11,7 @@ from app.models.context import DeviceCredential,DeviceChallenge
 from webauthn import generate_registration_options,generate_authentication_options,options_to_json,verify_registration_response,verify_authentication_response,base64url_to_bytes
 from webauthn.helpers.structs import AuthenticatorSelectionCriteria,AuthenticatorAttachment,UserVerificationRequirement,PublicKeyCredentialDescriptor
 router=APIRouter()
-ORIGIN=os.getenv('GROKBOT_PUBLIC_ORIGIN','https://open-grokbot-hiveapp.vercel.app').rstrip('/')
+ORIGIN=(os.getenv('GROKBOT_PUBLIC_ORIGIN') or os.getenv('GROKBOT_PUBLIC_URL') or 'https://cypher-agent.vercel.app').rstrip('/')
 RP_ID=urlsplit(ORIGIN).hostname
 def encode(value):return base64.urlsafe_b64encode(value).decode().rstrip('=')
 class ChallengeInput(BaseModel):

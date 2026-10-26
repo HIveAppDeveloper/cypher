@@ -145,8 +145,14 @@ def test_callback_origin_is_restricted_to_configured_app_domains(monkeypatch):
     monkeypatch.setenv('GROKBOT_OAUTH_ALLOWED_ORIGINS','https://alternate.example')
     assert plugin_auth.callback_url_for()=='https://canonical.example/api/plugin-oauth/callback'
     assert plugin_auth.callback_url_for('https://alternate.example')=='https://alternate.example/api/plugin-oauth/callback'
+    assert plugin_auth.callback_url_for('https://cypher-agent.vercel.app')=='https://cypher-agent.vercel.app/api/plugin-oauth/callback'
     for origin in ['https://attacker.example','https://canonical.example.attacker.example','https://canonical.example/path','http://canonical.example','https://canonical.example@attacker.example']:
         with pytest.raises(ValueError):plugin_auth.callback_url_for(origin)
+
+def test_callback_origin_defaults_to_canonical_cypher_host(monkeypatch):
+    monkeypatch.delenv('GROKBOT_PUBLIC_URL',raising=False)
+    monkeypatch.delenv('GROKBOT_OAUTH_ALLOWED_ORIGINS',raising=False)
+    assert plugin_auth.callback_url_for()=='https://cypher-agent.vercel.app/api/plugin-oauth/callback'
 
 @pytest.mark.asyncio
 async def test_authorize_uses_approved_request_origin_and_rejects_other_hosts(db,monkeypatch):
