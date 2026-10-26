@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type ReactNode } from 'react';
 import { request } from '../lib/api';
+import { LoadingState } from './LoadingState';
 import { SidebarShell } from './SidebarShell';
 import CypherMark from './cipher/CypherMark';
 import './workflow-shell.css';
@@ -45,7 +46,7 @@ export default function WorkflowShell({ children, section }: { children: ReactNo
         </a>)}</nav>
         <section className="workflow-recent" aria-labelledby="workflow-recent-title" aria-busy={loading}>
           <h2 id="workflow-recent-title">Recent tasks</h2>
-          {loading ? <p role="status">Loading recent tasks…</p> : failed ? <div className="workflow-recent-error"><p>Recent tasks couldn’t load.</p><button onClick={() => setRetry(value => value + 1)}>Retry</button></div> : recent.length ? recent.map(task => <a key={task.id} href={`/?conversation=${encodeURIComponent(task.conversation_id)}`} title={task.title}>{task.title || 'Untitled task'}</a>) : <p>Your recent tasks appear here.</p>}
+          {loading ? <LoadingState label="Loading recent tasks…" variant="recent" rows={3}/> : failed ? <div className="workflow-recent-error"><p>Recent tasks couldn’t load.</p><button onClick={() => setRetry(value => value + 1)}>Retry</button></div> : recent.length ? recent.map(task => <a key={task.id} href={`/?conversation=${encodeURIComponent(task.conversation_id)}`} title={task.title}>{task.title || 'Untitled task'}</a>) : <p>Your recent tasks appear here.</p>}
         </section>
       </aside>
     </SidebarShell>
