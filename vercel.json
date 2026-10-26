@@ -7,8 +7,12 @@
       "framework": "nextjs",
       "installCommand": "env -u npm_config_cache_dir -u NPM_CONFIG_CACHE_DIR npm ci",
       "buildCommand": "env -u npm_config_cache_dir -u NPM_CONFIG_CACHE_DIR npm run build",
-      "bindings": [{"type": "service", "service": "backend", "format": "url", "env": "BACKEND_INTERNAL_URL"}]
+      "bindings": [
+        {"type": "service", "service": "backend", "format": "url", "env": "BACKEND_INTERNAL_URL"},
+        {"type": "service", "service": "kokoro", "format": "url", "env": "KOKORO_INTERNAL_URL"}
+      ]
     },
+    "kokoro": {"root": "tts", "runtime": "container", "entrypoint": "Dockerfile"},
     "backend": {"root": "backend", "runtime": "container", "entrypoint": "Dockerfile"}
   },
   "daemons": {

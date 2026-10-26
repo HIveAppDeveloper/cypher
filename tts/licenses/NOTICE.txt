@@ -1,0 +1,7 @@
+Kokoro-82M model and voice weights: hexgrad, Apache-2.0
+Model card and attribution: https://huggingface.co/hexgrad/Kokoro-82M
+ONNX conversion / int8 quantization and voices bundle: thewh1teagle/kokoro-onnx, model-files-v1.0
+https://github.com/thewh1teagle/kokoro-onnx/releases/tag/model-files-v1.0
+The distributed ONNX file is the upstream quantized conversion; Cypher makes no further changes to its weights.
+kokoro-onnx wrapper: MIT, see kokoro-onnx-MIT.txt.
+Runtime dependency licenses, including ONNX Runtime (MIT), LAME/lameenc (LGPL), and espeak-ng/phonemizer (GPL), remain in the installed packages and Debian /usr/share/doc.

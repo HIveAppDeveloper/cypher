@@ -1,0 +1,190 @@
+{
+  "verified_at": "2026-10-26T15:19:22.078653+00:00",
+  "environment": {
+    "location": "local developer machine only",
+    "platform": "macOS-26.7-arm64-arm-64bit",
+    "architecture": "arm64",
+    "python": "3.12.15",
+    "runtime": "ONNX Runtime CPUExecutionProvider",
+    "model": "Kokoro-82M v1.0 upstream int8 export",
+    "database_access": false
+  },
+  "startup_seconds_with_three_real_warmups": 3.508,
+  "isolated_engine_peak_rss_bytes": 467369984,
+  "isolated_engine_first_audio_ms": [
+    1129.716,
+    1101.411,
+    1106.201
+  ],
+  "linux_container_build_verified": false,
+  "vercel_deployment_verified": false,
+  "gpu_verified": false,
+  "under_20ms_verified": false,
+  "limits": [
+    "Docker daemon unavailable; Linux image has not been built locally.",
+    "Local hardware/thread scheduling and simultaneous host work affect latency; these measurements do not predict Vercel latency.",
+    "Synthetic session signed with a local-only fixture; no production session, credentials or database used."
+  ],
+  "http_pcm": {
+    "warmups": [
+      {
+        "headers_ms": 2080.42,
+        "network_first_audio_ms": 2080.484,
+        "total_ms": 2080.609,
+        "audio_bytes": 46080,
+        "format": "audio/pcm",
+        "server_timing": "tts_first_audio;dur=2029.045"
+      },
+      {
+        "headers_ms": 2299.437,
+        "network_first_audio_ms": 2299.457,
+        "total_ms": 2299.512,
+        "audio_bytes": 46080,
+        "format": "audio/pcm",
+        "server_timing": "tts_first_audio;dur=2284.330"
+      },
+      {
+        "headers_ms": 1910.138,
+        "network_first_audio_ms": 1910.149,
+        "total_ms": 1910.228,
+        "audio_bytes": 46080,
+        "format": "audio/pcm",
+        "server_timing": "tts_first_audio;dur=1901.502"
+      }
+    ],
+    "samples": [
+      {
+        "headers_ms": 2679.727,
+        "network_first_audio_ms": 2679.778,
+        "total_ms": 2679.873,
+        "audio_bytes": 73728,
+        "format": "audio/pcm",
+        "server_timing": "tts_first_audio;dur=2669.748"
+      },
+      {
+        "headers_ms": 2300.889,
+        "network_first_audio_ms": 2300.915,
+        "total_ms": 2300.984,
+        "audio_bytes": 73728,
+        "format": "audio/pcm",
+        "server_timing": "tts_first_audio;dur=2289.029"
+      },
+      {
+        "headers_ms": 2363.244,
+        "network_first_audio_ms": 2363.255,
+        "total_ms": 2363.33,
+        "audio_bytes": 73728,
+        "format": "audio/pcm",
+        "server_timing": "tts_first_audio;dur=2353.881"
+      }
+    ],
+    "median_network_first_audio_ms": 2363.255,
+    "under_20ms_all_samples": false
+  },
+  "http_mp3": {
+    "warmups": [
+      {
+        "headers_ms": 1835.889,
+        "network_first_audio_ms": 1835.903,
+        "total_ms": 1837.418,
+        "audio_bytes": 8064,
+        "format": "audio/mpeg",
+        "server_timing": "tts_first_audio;dur=1818.670"
+      },
+      {
+        "headers_ms": 1467.515,
+        "network_first_audio_ms": 1467.537,
+        "total_ms": 1468.87,
+        "audio_bytes": 8064,
+        "format": "audio/mpeg",
+        "server_timing": "tts_first_audio;dur=1460.574"
+      },
+      {
+        "headers_ms": 1334.991,
+        "network_first_audio_ms": 1335.006,
+        "total_ms": 1336.607,
+        "audio_bytes": 8064,
+        "format": "audio/mpeg",
+        "server_timing": "tts_first_audio;dur=1328.808"
+      }
+    ],
+    "samples": [
+      {
+        "headers_ms": 2293.615,
+        "network_first_audio_ms": 2293.655,
+        "total_ms": 2297.601,
+        "audio_bytes": 12672,
+        "format": "audio/mpeg",
+        "server_timing": "tts_first_audio;dur=2285.954"
+      },
+      {
+        "headers_ms": 2773.129,
+        "network_first_audio_ms": 2773.15,
+        "total_ms": 2775.814,
+        "audio_bytes": 12672,
+        "format": "audio/mpeg",
+        "server_timing": "tts_first_audio;dur=2761.699"
+      },
+      {
+        "headers_ms": 2487.494,
+        "network_first_audio_ms": 2487.52,
+        "total_ms": 2490.134,
+        "audio_bytes": 12672,
+        "format": "audio/mpeg",
+        "server_timing": "tts_first_audio;dur=2478.025"
+      }
+    ],
+    "median_network_first_audio_ms": 2487.52,
+    "under_20ms_all_samples": false
+  },
+  "cypher_mp3_proxy": {
+    "local_only": true,
+    "synthetic_session": true,
+    "samples": [
+      {
+        "headers_ms": 1560.428,
+        "network_first_audio_ms": 1560.502,
+        "total_ms": 1560.867,
+        "audio_bytes": 12672,
+        "format": "audio/mpeg",
+        "server_timing": "voice_provider_headers;dur=1488.0, tts_first_audio;dur=1473.428"
+      },
+      {
+        "headers_ms": 3766.275,
+        "network_first_audio_ms": 3766.316,
+        "total_ms": 3767.528,
+        "audio_bytes": 12672,
+        "format": "audio/mpeg",
+        "server_timing": "voice_provider_headers;dur=3758.8, tts_first_audio;dur=3754.659"
+      },
+      {
+        "headers_ms": 2151.831,
+        "network_first_audio_ms": 2151.873,
+        "total_ms": 2153.011,
+        "audio_bytes": 12672,
+        "format": "audio/mpeg",
+        "server_timing": "voice_provider_headers;dur=2136.0, tts_first_audio;dur=2133.115"
+      }
+    ]
+  },
+  "local_socket_cancellation": {
+    "local_only": true,
+    "first_chunk_obtained_before_disconnect": true,
+    "followup_generation_succeeded": true,
+    "busy_429_count": 21,
+    "disconnect_to_followup_complete_ms": 2994.41,
+    "unsigned_next_route_status": 401
+  },
+  "linux_x86_64_dependency_resolution_verified": true,
+  "validation": {
+    "service_tests_passed": 17,
+    "focused_frontend_tests_passed": 17,
+    "frontend_production_build_passed": true,
+    "mp3_ffprobe": {
+      "codec": "mp3",
+      "sample_rate_hz": 24000,
+      "channels": 1,
+      "duration_seconds": 2.328
+    }
+  }
+}
