@@ -44,7 +44,7 @@ test('unavailable verification keeps provider setup available without sending a 
   let requests=0;
   const view=panel({items:[{...item,verification_supported:false}],omniroute:true,manageUrl:'https://gateway.example/dashboard/providers',fetcher:async()=>{requests++;throw Error('Unexpected provider call');}});
   assert.match(textOf(view.tree),/verification is unavailable/);
-  assert.ok(find(view.tree,node=>node.type==='a'&&textOf(node)==='Open provider setup'));
+  assert.ok(find(view.tree,node=>node.type==='a'&&textOf(node)==='Open xAI account'));
   assert.equal(button(view.tree,'Check provider access'),undefined);assert.equal(requests,0);
   view.unmount();
 });
@@ -78,4 +78,11 @@ test('failed API-key verification clears the key and leaves a recoverable error'
   assert.doesNotMatch(textOf(view.tree),/synthetic-secret/);
   assert.equal(find(view.tree,node=>node.type==='input'&&node.props?.type==='password'),undefined);
   view.unmount();
+});
+
+ test('provider actions never open a gateway dashboard or require a gateway login',()=>{
+  const view=panel({omniroute:true,manageUrl:'https://gateway.example/dashboard/providers'});
+  assert.equal(find(view.tree,node=>node.type==='a'&&node.props?.href?.includes('gateway.example')),undefined);
+  assert.ok(find(view.tree,node=>node.type==='a'&&node.props?.href==='https://x.ai'));
+  assert.doesNotMatch(textOf(view.tree),/Connect accounts in OmniRoute/);view.unmount();
 });

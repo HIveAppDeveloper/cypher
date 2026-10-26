@@ -51,3 +51,10 @@ test('deployment guide links directly to the canonical Cypher setup file',async(
   assert.equal(guide.props.href,'https://github.com/HIveAppDeveloper/cypher/blob/main/SETUP.md');
   view.unmount();
 });
+
+test('subscription guidance keeps setup in Cypher without fetching a dashboard link',async()=>{
+  const calls=[];const view=panel(async url=>{calls.push(url);return {ok:true,json:async()=>({connected:true,worker:true,model_transport:'omniroute',can_manage_model_connections:true})};});
+  await view.flush();assert.deepEqual(calls,['/api/runtime']);
+  assert.equal(find(view.tree,node=>node.type==='a'&&textOf(node).includes('OmniRoute')),undefined);
+  assert.match(textOf(view.tree),/Browser subscription sign-in is unavailable/);view.unmount();
+});
