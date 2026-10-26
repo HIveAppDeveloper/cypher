@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-10-25T01:39:22.543473+00:00",
+  "generatedAt": "2026-10-26T21:52:40.932515+00:00",
   "title": "Design System: Cypher",
   "extensions": {
     "colorMeta": {
@@ -321,6 +321,11 @@
         "name": "composer-state",
         "value": "border-color .2s ease,box-shadow .2s ease",
         "purpose": "Neutral home task hover and focus changes; motion settings take precedence."
+      },
+      {
+        "name": "saved-app-hover",
+        "value": "background 160ms ease-out",
+        "purpose": "Compact saved-account row feedback; disabled by OS or app reduced motion."
       }
     ],
     "breakpoints": [
@@ -335,24 +340,29 @@
       {
         "name": "mobile-connectors",
         "value": "600px"
+      },
+      {
+        "name": "apps-and-computer-single-column",
+        "value": "700px"
       }
     ],
     "assetProvenance": {
       "originalLogo": {
         "path": "frontend/public/cipher-logo.png",
-        "dimensions": "2000\u00d72000",
+        "dimensions": "2000×2000",
         "sha256": "11143e325ca3ac26ffd640e89a88fbf7fb0cd7a7a45b80a9bd7b6ced49351c69",
         "viewport": "188 597 1624 806",
         "rule": "Direct SVG image reference; no optimizer, redrawing, recompression, or lettering changes. The embedded Cipher spelling is preserved."
       }
     },
     "recordStatus": {
-      "status": "Refreshed from the existing DESIGN.md; normative frontmatter and product design were preserved.",
+      "status": "Sidecar-only refresh from the existing DESIGN.md; normative frontmatter and implementation are unchanged.",
       "currentAuthority": [
-        "Live binary and voice stage",
-        "Reference workspace integration"
+        "Everyday task flows — October 26, 2026",
+        "Purposeful app connections and Computer — October 26, 2026"
       ],
-      "verification": "Runtime and provider claims remain in release evidence, not this sidecar."
+      "verification": "The Apps and Computer implementation passed 323 frontend tests and local desktop/phone checks. Live release verification remains pending; this sidecar does not establish provider authorization.",
+      "sourceSha256": "f08cf0a0fd86327ac946390e1e20c5247b598d878600db1d8faaf941b7ffb21c"
     }
   },
   "components": [
@@ -400,7 +410,7 @@
       "name": "Connector card",
       "kind": "card",
       "refersTo": "connector-card",
-      "description": "Source-backed discovery entry; the preview does not imply an authorized connection.",
+      "description": "Advanced directory connection card. Ordinary app discovery and saved accounts use compact rows.",
       "html": "<article class=\"ds-card\"><h4>Service name</h4><p>Discovery information for a hosted connector.</p><button class=\"ds-card-action\">Connect</button></article>",
       "css": ".ds-card{font-family:-apple-system,BlinkMacSystemFont,\"SF Pro Text\",system-ui,\"Segoe UI\",sans-serif;max-width:260px;padding:16px;border:1px solid var(--cx-sep,#dedede);border-radius:10px;background:var(--cx-card,#fff);color:var(--cx-label,#171717);transition:border-color 150ms ease}.ds-card:hover{border-color:var(--cx-label-3,#737373)}.ds-card h4{margin:0;font-size:13px;font-weight:600;line-height:1.4}.ds-card p{margin:12px 0 15px;font-size:12px;line-height:1.6;color:var(--cx-label-2,#626262)}.ds-card-action{font-family:-apple-system,BlinkMacSystemFont,\"SF Pro Text\",system-ui,\"Segoe UI\",sans-serif;min-height:36px;padding:8px 12px;border:0;border-radius:7px;background:var(--brand-action,#171717);color:var(--brand-on-action,#fff);font-size:12px;cursor:pointer}.ds-card-action:hover{opacity:.84}.ds-card-action:active{opacity:.75}.ds-card-action:focus-visible{outline:2px solid var(--cx-label,#171717);outline-offset:3px}"
     },
@@ -409,7 +419,7 @@
       "kind": "custom",
       "refersTo": "task-composer",
       "description": "Desktop shape preview. The original canvas and actual backend request remain in the app.",
-      "html": "<form class=\"ds-task\"><textarea aria-label=\"Your task\" placeholder=\"Ask anything\u2026\"></textarea><div class=\"ds-task-controls\"><button type=\"button\" class=\"ds-task-choice\">Auto</button><button type=\"button\" class=\"ds-task-choice\">Text</button><button class=\"ds-task-send\" aria-label=\"Start task\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M5 12h14m-6-6 6 6-6 6\" /></svg></button></div></form>",
+      "html": "<form class=\"ds-task\"><textarea aria-label=\"Your task\" placeholder=\"Ask anything…\"></textarea><div class=\"ds-task-controls\"><button type=\"button\" class=\"ds-task-choice\">Auto</button><button type=\"button\" class=\"ds-task-choice\">Text</button><button class=\"ds-task-send\" aria-label=\"Start task\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M5 12h14m-6-6 6 6-6 6\" /></svg></button></div></form>",
       "css": ".ds-task{font-family:-apple-system,BlinkMacSystemFont,\"SF Pro Text\",system-ui,\"Segoe UI\",sans-serif;display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;max-width:660px;min-height:80px;padding:9px 14px;border:1px solid var(--cx-sep,#dedede);border-radius:14px;background:var(--cx-card,#fff);box-shadow:0 3px 12px rgba(0,0,0,.035);transition:border-color .2s ease,box-shadow .2s ease}.ds-task:hover{border-color:var(--cx-label-3,#737373)}.ds-task:focus-within{border-color:var(--cx-label,#171717);box-shadow:0 3px 16px rgba(0,0,0,.065)}.ds-task textarea{font-family:-apple-system,BlinkMacSystemFont,\"SF Pro Text\",system-ui,\"Segoe UI\",sans-serif;min-width:0;height:54px;padding:15px 4px 10px;resize:none;border:0;outline:none;background:transparent;color:var(--cx-label,#171717);font-size:15px}.ds-task textarea::placeholder{color:var(--cx-label-2,#626262)}.ds-task-controls{display:flex;align-items:center;gap:3px}.ds-task-choice{font-family:-apple-system,BlinkMacSystemFont,\"SF Pro Text\",system-ui,\"Segoe UI\",sans-serif;min-height:34px;padding:5px 8px;border:0;border-radius:7px;background:transparent;color:var(--cx-label-2,#626262);font-size:12px;cursor:pointer}.ds-task-choice:hover{background:var(--system-subtle,#e8e8e8)}.ds-task-send{display:grid;place-items:center;width:38px;height:38px;padding:8px;border:0;border-radius:50%;background:var(--brand-action,#171717);color:var(--brand-on-action,#fff);cursor:pointer}.ds-task-send svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.6;transform:rotate(-45deg)}.ds-task-send:hover{opacity:.84}.ds-task-send:active{opacity:.75}.ds-task-send:focus-visible,.ds-task-choice:focus-visible{outline:2px solid var(--cx-label,#171717);outline-offset:3px}@media(max-width:760px){.ds-task{grid-template-columns:minmax(0,1fr)}.ds-task textarea{height:68px;font-size:16px}.ds-task-controls{justify-content:flex-end}.ds-task-choice,.ds-task-send{min-height:44px}.ds-task-send{width:44px;height:44px}}"
     },
     {
@@ -418,16 +428,32 @@
       "description": "Actual standalone-template recovery controls on a scrollable page.",
       "html": "<main class=\"ds-template-page\"><section><h2>This link needs attention</h2><p>This shared template is no longer available. Ask the person who shared it for a new link.</p><div><button>Try again</button><a href=\"#workspace\">Back to Cypher</a></div></section></main>",
       "css": ".ds-template-page{height:100svh;min-height:100svh;overflow-x:hidden;overflow-y:auto;display:grid;place-items:center;padding:32px 20px;box-sizing:border-box;background:#f2f1ec;color:#171715;font-family:-apple-system,BlinkMacSystemFont,\"SF Pro Text\",system-ui,\"Segoe UI\",sans-serif}.ds-template-page section{width:min(560px,100%);text-align:center}.ds-template-page h2{font-size:clamp(32px,4vw,44px);font-weight:560;letter-spacing:-.035em;line-height:1.12}.ds-template-page p{color:#5d5b55;font-size:14px;line-height:1.65}.ds-template-page div{display:flex;justify-content:center;flex-wrap:wrap;gap:9px}.ds-template-page button,.ds-template-page a{box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center;min-height:42px;padding:0 16px;border:1px solid #171715;border-radius:8px;background:#171715;color:#fff;font:590 13px -apple-system,BlinkMacSystemFont,\"SF Pro Text\",system-ui,sans-serif;text-decoration:none}.ds-template-page a{border-color:#e5e3dc;background:#fcfbf8;color:#171715}.ds-template-page button:focus-visible,.ds-template-page a:focus-visible{outline:2px solid #706e67;outline-offset:3px}"
+    },
+    {
+      "name": "Saved app row",
+      "kind": "custom",
+      "refersTo": "nav-row",
+      "description": "Compact saved-account identity and current evidence. Account aliases remain visible; no initials stand in for a provider mark.",
+      "html": "<button class=\"ds-app-row\" type=\"button\"><svg class=\"ds-app-glyph\" viewBox=\"0 0 24 24\" aria-hidden=\"true\"><rect x=\"3\" y=\"3\" width=\"7\" height=\"7\" rx=\"2\"/><rect x=\"14\" y=\"3\" width=\"7\" height=\"7\" rx=\"2\"/><rect x=\"3\" y=\"14\" width=\"7\" height=\"7\" rx=\"2\"/><rect x=\"14\" y=\"14\" width=\"7\" height=\"7\" rx=\"2\"/></svg><span class=\"ds-app-copy\"><strong>Example app</strong><span>Not tested</span></span><svg class=\"ds-app-chevron\" viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"m9 5 7 7-7 7\"/></svg></button>",
+      "css": ".ds-app-row{display:flex;align-items:center;gap:12px;width:100%;min-height:72px;padding:12px 8px;border:0;border-bottom:1px solid var(--cx-sep,#e2e0d8);border-radius:0;background:transparent;color:var(--cx-label,#171717);font-family:-apple-system,BlinkMacSystemFont,system-ui,sans-serif;text-align:left;cursor:pointer;transition:background 160ms ease-out}.ds-app-row:hover,.ds-app-row:active{background:var(--cx-fill-2,rgba(0,0,0,.04))}.ds-app-row:focus-visible{outline:2px solid var(--cx-label,#171717);outline-offset:3px}.ds-app-glyph{width:25px;height:25px;flex:none;fill:none;stroke:var(--cx-label-2,#626262);stroke-width:1.3}.ds-app-copy{display:grid;flex:1;min-width:0;gap:3px}.ds-app-copy strong{font-size:14px;font-weight:550}.ds-app-copy>span{color:var(--cx-label-2,#626262);font-size:12px}.ds-app-chevron{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.6}@media(prefers-reduced-motion:reduce){.ds-app-row{transition:none}}"
+    },
+    {
+      "name": "Computer start state",
+      "kind": "custom",
+      "refersTo": "button-primary",
+      "description": "A control decision before browser commands are shown. A screen is never simulated while waiting for a real browser result.",
+      "html": "<section class=\"ds-computer-launch\"><svg viewBox=\"0 0 48 48\" aria-hidden=\"true\"><rect x=\"5\" y=\"7\" width=\"38\" height=\"27\" rx=\"4\"/><path d=\"M17 42h14M24 34v8\"/></svg><h3>Open a cloud browser</h3><button type=\"button\">Open browser</button><p>The assistant pauses after its current action. Closing this window returns control.</p></section>",
+      "css": ".ds-computer-launch{display:grid;justify-items:center;max-width:480px;padding:24px 12px;background:var(--cx-card,#fff);color:var(--cx-label,#171717);font-family:-apple-system,BlinkMacSystemFont,system-ui,sans-serif;text-align:center}.ds-computer-launch>svg{width:44px;height:44px;margin-bottom:18px;fill:none;stroke:var(--cx-label-2,#626262);stroke-width:1.5}.ds-computer-launch h3{margin:0 0 22px;font-size:20px;font-weight:550;letter-spacing:-.025em}.ds-computer-launch button{min-width:156px;min-height:44px;padding:10px 18px;border:0;border-radius:10px;background:var(--cx-label,#171717);color:var(--cx-inverse,#fff);font:inherit;cursor:pointer}.ds-computer-launch button:hover{opacity:.84}.ds-computer-launch button:active{opacity:.75}.ds-computer-launch button:focus-visible{outline:2px solid var(--cx-label,#171717);outline-offset:3px}.ds-computer-launch p{max-width:40ch;margin:16px 0 0;color:var(--cx-label-2,#626262);font-size:12px;line-height:1.6}"
     }
   ],
   "narrative": {
     "northStar": "A quiet workspace with an animated binary identity",
-    "overview": "Cypher follows the supplied workspace reference: warm ivory surfaces, an inset desktop frame with a narrow navigation rail, a readable animated binary mark, one task composer and four desktop shortcuts. Apps stays inside the workspace, with saved connections before the browsable catalog.\n\nVoice opens a large binary lens in the main conversation region, keeps the message list mounted, and restores it on Stop. All Cypher symbols use real animated zeros and ones; the uploaded artwork remains a reference. Hidden, offscreen and reduced-motion states pause animation. These design notes do not establish provider readiness or completed work.",
+    "overview": "Keep one clear starting action: describe a task. Use Apps for account connections, Library for retained information and reusable work, and Settings for everyday preferences. Do not send the primary Settings action to an installation console. Advanced setup stays reachable through a clearly named disclosure; retain all permission, cost and recovery information at the point where it matters.\n\nUse these display terms consistently: Memory → Notes; Skills → Saved instructions; Routines → Schedules; Activity → My work. Keep the original internal values and saved identities. Avoid requiring people to choose an AI model, conversation, server, scope or template parameters for ordinary default flows. Library tabs remain visible at narrow widths, each section starts at the top when chosen, and its body scrolls inside the available viewport. Preserve the fullscreen shell, original logo bytes, signature animation, monochrome palette, existing keyboard focus and permission checks.\n\nApps stays an Operate surface: one search, compact saved-account rows, and app discovery organized by what people use rather than authentication protocols. Sign-in opens the existing provider handoff and checks the returned connection. Keys, local servers, community listings and client registration remain available through explicit advanced disclosures; an unavailable provider never looks connected. Provider marks use the existing assets and matched service address; a neutral app glyph replaces arbitrary initials when no mark exists. Do not rename saved connection identities or treat a successful check of one tool as proof of every permission.\n\nComputer starts with one action and a short explanation of control. Show address, screen and browser input only after control is granted; reveal text-entry controls when there is an actual screen. Teaching, terminal, private files and device pairing remain reachable as secondary tools. Preserve takeover expiry, return-on-close, queued commands, secret handling and recovery. All current light/dark, keyboard, touch-target and reduced-motion behavior applies.\n\nThese refinements use the existing platform font stack. `Inter Variable` remains the pre-existing optional conversation typeface; it is not an Apps or Computer brand addition.",
     "keyCharacteristics": [
-      "Warm ivory light surfaces, a narrow desktop navigation rail, and existing dark appearance.",
-      "Real animated binary symbols with visibility and reduced-motion gates.",
-      "One calm task composer; four desktop shortcuts become two columns on mobile.",
-      "Main-chat Voice, native saved-audio playback, clear authorization recovery, and reachable controls in short windows."
+      "Preserve the fullscreen shell, original logo bytes, signature animation, monochrome palette, existing keyboard focus and permission checks.",
+      "Apps stays an Operate surface: one search, compact saved-account rows, and app discovery organized by what people use rather than authentication protocols.",
+      "Computer starts with one action and a short explanation of control.",
+      "All current light/dark, keyboard, touch-target and reduced-motion behavior applies."
     ],
     "rules": [
       {
@@ -456,8 +482,8 @@
       "Do use the existing binary animations with visibility and motion gates.",
       "Do keep keyboard focus, task errors, drafts, real run state, and provider authorization recovery visible.",
       "Do keep dialog actions reachable while long content scrolls.",
-      "Do use the supplied inset workspace composition and animated binary symbols.",
-      "Do give standalone template pages their own vertical scrolling so recovery and import controls remain reachable in short windows."
+      "Do give standalone template pages their own vertical scrolling so recovery and import controls remain reachable in short windows.",
+      "Preserve the fullscreen shell, original logo bytes, signature animation, monochrome palette, existing keyboard focus and permission checks."
     ],
     "donts": [
       "Don't restore blue, purple, lavender, or a user-selectable color accent to app-owned brand and controls.",
