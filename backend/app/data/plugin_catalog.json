@@ -52,12 +52,15 @@
     "id": "f85324490fd53a16",
     "name": "Windsor.ai",
     "url": "https://mcp.windsor.ai/",
-    "description": "Use your existing Windsor.ai accounts for Instagram, YouTube, LinkedIn, TikTok and other connected business sources. Sign in to Windsor once; existing source grants are reused.",
+    "description": "Connect Meta Facebook Pages and Instagram, plus YouTube, LinkedIn, TikTok and other supported sources through Windsor.ai. Sign in to Windsor and select the accounts you authorize; saved source grants are reused. Meta model access is separate.",
     "category": "Business",
     "domains": [
       "windsor.ai",
       "onboard.windsor.ai",
-      "mcp.windsor.ai"
+      "mcp.windsor.ai",
+      "facebook.com",
+      "business.facebook.com",
+      "instagram.com"
     ],
     "source": "https://github.com/windsor-ai/windsor_mcp",
     "auth": "auto",

@@ -235,7 +235,7 @@ export function PluginPanel({onClose,onExploreConnection,embedded=false}:{onClos
   }
   async function begin(item:CatalogEntry,reconnect=false,oauth_client?:{client_id:string;client_secret?:string;scope?:string}){
     const existing=plugins.find(plugin=>plugin.url===item.url && (!item.connection_id||plugin.connection_id===item.connection_id));
-    if(existing && !reconnect){setBusy(false);setView('connected');setNotice(`${existing.name} is already in your workspace. ${existing.enabled?'Its enabled tools are available to agents.':'Enable it below to let agents use its tools.'}`);popup.current?.close();return;}
+    if(existing && !reconnect){setBusy(false);setView('connected');setSearch(existing.name);setNotice(`${existing.name} is already in your workspace. ${existing.enabled?'Its enabled tools are available to agents.':'Enable it below to let agents use its tools.'}`);popup.current?.close();return;}
     if(item.setup_note){popup.current?.close();setBusy(false);setNotice(item.setup_note+' Source: '+(item.source||item.url));return;}
     if(item.auth==='api_key'){popup.current?.close();setView('custom');setUrl(item.url);setName(item.name);setAuthHeader(item.auth_header||'Authorization');setNotice(`${item.name} uses an API key. Get it from the service, then paste it below.`);setBusy(false);return;}
     setNotice(item.name.toLocaleLowerCase()==='lovable'?'':`Checking ${item.name}…`);
@@ -326,7 +326,7 @@ export function PluginPanel({onClose,onExploreConnection,embedded=false}:{onClos
   async function verifyConnection(id:string|undefined,name:string,justConnected=false){
     if(testing.current)return;
     testing.current=true;setBusy(true);setTestingId(id||'');setError('');setRefreshableError(false);
-    if(justConnected)setView('connected');
+    if(justConnected){setView('connected');setSearch(name);}
     setNotice(id?`${name}: checking its tools…`:`${name} connected. Tools were discovered; choose Test tools to verify access.`);
     try{
       if(id){

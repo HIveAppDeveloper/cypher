@@ -92,6 +92,20 @@ test('catalog request failures show recovery instead of a valid empty catalog',a
   p.view.unmount();
 });
 
+test('connecting from a website search reveals the saved connection instead of filtering it out',async()=>{
+  let saved=[];
+  const p=panel({api:{getPlugins:async()=>saved,authorizePlugin:async()=>{saved=[linkedPlugin()];return{status:'connected',plugin_id:'linked-account',name:item.name};},testPlugin:async()=>({status:'discovered',message:'Tools found; execution not tested.'})}});
+  await p.view.flush();
+  const search=find(p.view.tree,n=>n.type==='input'&&n.props?.type==='search');
+  search.props.onChange({target:{value:'provider.example'}});await p.view.flush();
+  find(p.view.tree,n=>n.type==='form').props.onSubmit({preventDefault(){}});await p.view.flush();await p.view.flush();
+  assert.match(textOf(p.view.tree),/Account or API access linked/);
+  assert.doesNotMatch(textOf(p.view.tree),/No connected services match/);
+  const connectedSearch=find(p.view.tree,n=>n.props?.['aria-label']==='Search connected plugins');
+  assert.equal(connectedSearch.props.value,item.name);
+  p.view.unmount();
+});
+
 test('connection request failures do not claim there are no saved tools and retry recovers',async()=>{
   let calls=0;
   const p=panel({api:{getPlugins:async()=>{if(++calls===1)throw Error('Synthetic offline');return [];}}});
