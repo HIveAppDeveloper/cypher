@@ -24,9 +24,9 @@ async def test_google_tool_failures_keep_safe_actionable_classification(workspac
         monkeypatch.setattr(google_workspace,'invoke',reject)
         result=await plugins.invoke(pid,'gmail_users_getProfile',{})
         assert result['success'] is False
-        assert result['code']==('sign_in_required' if status in {401,403} else 'google_unavailable')
+        assert result['code']==('sign_in_required' if status==401 else 'google_access_denied' if status==403 else 'google_unavailable')
         assert 'secret' not in str(result) and 'user data' not in str(result)
-        if status in {401,403}:assert 'Reconnect Google' in result['error']
+        if status==401:assert 'Reconnect Google' in result['error']
     finally:current_tenant_id.reset(tenant)
 
 

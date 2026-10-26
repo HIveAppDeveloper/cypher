@@ -194,8 +194,15 @@ async def invoke(plugin_id, tool_name, arguments):
         if is_google_workspace(plugin):
             try:return await google_workspace.invoke(db,tool_name,arguments)
             except Exception as error:
-                if authentication_failure(error):
+                detail=getattr(error,'detail',None)
+                code=detail.get('code') if isinstance(detail,dict) else None
+                status=provider_status(error)
+                if status==429 or code=='rate_limited':
+                    return {'success':False,'error':'Google usage or rate limits were reached. Wait before retrying; your saved connection is unchanged.','code':'rate_limited','provider_status':429,'retryable':True}
+                if status==401 or code=='permission_required':
                     return {'success':False,'error':'Google access needs sign-in or updated permissions. Reconnect Google in Apps.','code':'sign_in_required'}
+                if status==403:
+                    return {'success':False,'error':'Google denied this operation. Check API and organization settings; your saved connection is unchanged.','code':'google_access_denied'}
                 return {'success':False,'error':'Google did not complete this operation. Retry or check its connection.','code':'google_unavailable'}
         from jsonschema import Draft202012Validator, ValidationError, SchemaError
         try:

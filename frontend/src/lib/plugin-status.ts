@@ -20,7 +20,7 @@ export function pluginStatus(plugin: PluginEvidence, now = Date.now()) {
   }
   const check = plugin.verification;
   if (check?.status === 'failed') return {
-    label: check.detail?.code === 'sign_in_required' ? 'Sign in again' : 'Needs attention',
+    label: check.detail?.code === 'sign_in_required' ? 'Sign in again' : check.detail?.code === 'rate_limited' ? 'Rate limited' : 'Needs attention',
     tone: 'warning', detail: check.detail?.message || 'The last check failed. Retry or reconnect this app.',
   };
   if (!plugin.tools.some(tool => tool.enabled !== false)) return { label: 'No tools enabled', tone: 'neutral', detail: 'Enable a tool in Manage to use this connection.' };
