@@ -80,3 +80,23 @@ test('global appearance sync follows device and cross-tab changes, then removes 
  view.unmount();saved.setItem('grokbot-appearance','{"theme":"light"}');scheme.dispatchEvent(new Event('change'));env.window.dispatchEvent(changed);
  assert.equal(env.document.documentElement.dataset.theme,'dark');
 });
+
+test('an open Settings switch reflects cross-tab preferences and preserves the connection setup action',async()=>{
+ const {environment,renderer,load,storage,find,button}=await import('./support/component-harness.mjs');
+ const env=environment(),view=renderer(env),saved=storage({'grokbot-appearance':'{"theme":"light","width":79,"motion":false}'});
+ env.document.documentElement.style={setProperty(){},removeProperty(){}};
+ const scheme=Object.assign(new EventTarget(),{matches:false});env.window.matchMedia=()=>scheme;
+ const globals={...env.globals,localStorage:saved,React:view.react.default};
+ const appearance=load('../src/lib/appearance.ts',{},globals);
+ const {PreferencesPanel}=load('../src/components/PreferencesPanel.tsx',{
+  react:view.react,'../lib/appearance':appearance,'./GlassSelect':{GlassSelect:'select'},'./PreferencesPanel.module.css':{},
+ },globals);
+ let setups=0;view.mount(()=>PreferencesPanel({onClose(){},onSetup(){setups++;}}));await view.flush();
+ assert.equal(find(view.tree,n=>n.props?.role==='switch').props.checked,false);
+ saved.setItem('grokbot-appearance','{"theme":"dark","width":79,"motion":false}');
+ const event=new Event('storage');Object.defineProperty(event,'key',{value:'grokbot-appearance'});env.window.dispatchEvent(event);await view.flush();
+ assert.equal(find(view.tree,n=>n.props?.role==='switch').props.checked,true);
+ assert.equal(find(view.tree,n=>n.props?.['aria-label']==='Message width').props.value,79);
+ button(view.tree,'Connection and AI settings').props.onClick();assert.equal(setups,1);
+ view.unmount();env.window.dispatchEvent(event);assert.equal(view.updatesAfterUnmount,0);
+});

@@ -7,7 +7,7 @@ import styles from './PreferencesPanel.module.css';
 export function PreferencesPanel({onClose,onSetup}:{onClose:()=>void;onSetup?:()=>void}){
  const dialog=useRef<HTMLDialogElement>(null);const [value,setValue]=useState(DEFAULT_APPEARANCE);const [systemDark,setSystemDark]=useState(false);
  useEffect(()=>{const previous=document.activeElement as HTMLElement;dialog.current?.showModal();setValue(readAppearance());return()=>{dialog.current?.close();previous?.focus();};},[]);
- useEffect(()=>{const scheme=window.matchMedia('(prefers-color-scheme: dark)');const change=()=>setSystemDark(scheme.matches);change();scheme.addEventListener('change',change);return()=>scheme.removeEventListener('change',change);},[]);
+ useEffect(()=>{const scheme=window.matchMedia('(prefers-color-scheme: dark)');const change=()=>setSystemDark(scheme.matches);const storage=(event:StorageEvent)=>{if(event.key===null||event.key==='grokbot-appearance')setValue(readAppearance());};change();scheme.addEventListener('change',change);window.addEventListener('storage',storage);return()=>{scheme.removeEventListener('change',change);window.removeEventListener('storage',storage);};},[]);
  function update(next:Appearance){setValue(next);applyAppearance(next);try{localStorage.setItem('grokbot-appearance',JSON.stringify(next));}catch{}}
  const textSize=value.fontSize<16?'Small':value.fontSize===16?'Default':value.fontSize<20?'Large':'Extra large';
  return <dialog ref={dialog} className={`bot-dialog preferences-dialog ${styles.panel}`} onCancel={onClose} aria-labelledby="appearance-title">
