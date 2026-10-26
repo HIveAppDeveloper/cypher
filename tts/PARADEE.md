@@ -49,6 +49,11 @@ https://vercel.com/kb/guide/vercel-services-fluid-compute
 The existing server-only backend bearer token authenticates health and speech.
 The public frontend route remains `POST /api/voice {"text":"..."}`, with existing
 signed app-session checks, streaming cancellation and bounded request/timeout.
+Its default is MP3 for browser playback. With the private voice service enabled,
+`{"text":"...","response_format":"pcm"}` streams raw PCM through the same app
+authentication. PCM responses identify 24 kHz, mono, signed little-endian 16-bit
+samples in `X-Audio-*` headers. Invalid formats and upstream format mismatches
+fail closed. PCM is unavailable through the existing ElevenLabs configuration.
 There is no public rewrite to the private model service. Its private contract is:
 
 ```json
@@ -98,6 +103,7 @@ PYTHONPATH=tts python -m pytest tts/tests -q
 # Authenticate via environment; never paste credentials into the command.
 python tts/benchmark.py https://REVIEWED-ENDPOINT/v1/audio/speech --mode service --model paradee-8m-v1.1 --format pcm
 python tts/benchmark.py https://REVIEWED-CYPHER/api/voice --mode cypher --format mp3
+python tts/benchmark.py https://REVIEWED-CYPHER/api/voice --mode cypher --format pcm
 ```
 
 ## Metered base cost

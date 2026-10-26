@@ -14,7 +14,7 @@ def measure(url, mode, text, audio_format, model="kokoro"):
         cookie = os.environ.get("CYPHER_BENCH_COOKIE")
         if cookie:
             headers["Cookie"] = cookie
-        payload = {"text": text}
+        payload = {"text": text, "response_format": audio_format}
     else:
         key = os.environ.get("GROKBOT_BACKEND_API_TOKEN") or os.environ.get("BACKEND_API_TOKEN")
         if not key:
@@ -30,8 +30,9 @@ def measure(url, mode, text, audio_format, model="kokoro"):
     with urllib.request.build_opener(NoRedirect).open(request, timeout=60) as response:
         headers_ms = (time.perf_counter() - start) * 1000
         content_type = response.headers.get("Content-Type", "").split(";")[0]
-        if content_type not in {"audio/pcm", "audio/mpeg"}:
-            raise RuntimeError("The endpoint returned something other than audio.")
+        expected_type = "audio/pcm" if audio_format == "pcm" else "audio/mpeg"
+        if content_type != expected_type:
+            raise RuntimeError("The endpoint did not return the requested audio format.")
         first = response.read(2 if content_type == "audio/pcm" else 1)
         if not first:
             raise RuntimeError("The endpoint returned no audio.")
