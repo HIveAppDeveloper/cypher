@@ -10,7 +10,7 @@ export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
   title: 'Cypher Prospecting',
-  description: 'Research companies and find contacts with Cypher.',
+  description: 'Research companies and review prospects with Cypher.',
   icons: { icon: '/cypher-mark.svg', apple: '/cypher-mark.svg' },
 };
 
