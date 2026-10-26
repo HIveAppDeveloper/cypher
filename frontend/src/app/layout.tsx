@@ -16,6 +16,7 @@ import './cypher-loading.css';
 import './cypher-reference.css';
 import './cypher-simple.css';
 import './agent-identity.css';
+import './cypher-purposeful.css';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {

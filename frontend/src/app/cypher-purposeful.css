@@ -1,0 +1,140 @@
+/* Apps and Computer: ordinary actions first, optional setup in context. */
+.app-store-dialog .connectors-body > :is(section, article, details, .connector-error, .connector-notice) { width:100%; max-width:1000px; margin-inline:auto; }
+.app-store-dialog .store-search { padding-bottom:20px; border:0; }
+.app-store-dialog .website-connect { margin:0; padding:0; border:0; }
+.app-store-dialog .website-search input { min-height:52px; border-radius:12px; font-size:15px; }
+.app-store-dialog .apps-connected { margin-block:12px 28px; }
+.app-store-dialog .apps-section-heading { margin-bottom:4px; }
+.app-store-dialog .apps-section-heading h3 { font-size:14px; font-weight:600; }
+.app-store-dialog .apps-section-heading button { display:inline-flex; min-height:36px; align-items:center; gap:6px; }
+.app-store-dialog .apps-section-heading button svg { width:13px; height:13px; fill:none; stroke:currentColor; stroke-width:1.5; }
+.app-store-dialog .apps-connected-grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:0 28px; }
+.app-store-dialog .apps-account-card { align-items:center; min-height:72px; gap:12px; padding:12px 8px; border:0; border-bottom:1px solid var(--cx-sep); border-radius:0; background:transparent; transition:background 160ms ease-out; }
+.app-store-dialog .apps-account-card:hover { background:var(--cx-fill-2); }
+.app-store-dialog .apps-account-copy { flex:1; gap:3px; }
+.app-store-dialog .apps-account-copy strong { font-size:14px; font-weight:550; }
+.app-store-dialog .apps-account-copy > span { font-size:12px; }
+.app-store-dialog .app-connection-indicator { display:grid; width:24px; height:24px; flex:none; place-items:center; color:var(--cx-label-2); }
+.app-store-dialog .app-connection-indicator svg { width:16px; height:16px; fill:none; stroke:currentColor; stroke-width:1.6; stroke-linecap:round; stroke-linejoin:round; }
+.app-store-dialog .connector-logo { background:transparent; border-radius:0; color:var(--cx-label-2); }
+.app-store-dialog .connector-logo .app-fallback-icon { width:25px; height:25px; fill:none; stroke:currentColor; stroke-width:1.3; }
+.app-store-dialog .connector-logo .google-brand-mark { width:28px; height:28px; }
+.app-store-dialog .apps-google-connect { display:grid; grid-template-columns:36px minmax(0,1fr) auto; align-items:center; gap:16px; margin-block:20px 28px; padding:18px 0; border-block:1px solid var(--cx-sep); }
+.app-store-dialog .apps-google-connect h3 { margin:0; color:var(--cx-label); font-size:15px; font-weight:550; }
+.app-store-dialog .apps-google-connect p { margin:4px 0 0; color:var(--cx-label-2); font-size:13px; line-height:1.5; }
+.app-store-dialog .store-browse { padding-top:8px; }
+.app-store-dialog .store-browse-heading h3 { font-size:17px; letter-spacing:-.02em; }
+.app-store-dialog .store-categories { flex-wrap:nowrap; gap:16px; overflow-x:auto; margin:12px 0 0; padding:0 0 8px; scrollbar-width:thin; }
+.app-store-dialog .store-categories button { min-height:36px; padding:7px 0; border:0; border-bottom:2px solid transparent; border-radius:0; background:transparent; color:var(--cx-label-2); font-size:12px; }
+.app-store-dialog .store-categories button[aria-pressed="true"] { border-color:var(--cx-label); background:transparent; color:var(--cx-label); }
+.app-store-dialog .connector-catalog { grid-template-columns:repeat(2,minmax(0,1fr)); gap:0 28px; }
+.app-store-dialog .connector-entry { display:grid; grid-template-columns:32px minmax(0,1fr) auto; align-items:start; gap:12px; min-height:0; padding:20px 0; border:0; border-bottom:1px solid var(--cx-sep); border-radius:0; background:transparent; transform:none; }
+.app-store-dialog .connector-entry:hover { border-color:var(--cx-sep); transform:none; }
+.app-store-dialog .connector-entry > .connector-logo { width:32px; height:32px; border-radius:0; background:transparent; }
+.app-store-dialog .connector-entry .connector-logo img { width:28px; height:28px; }
+.app-store-dialog .app-entry-copy { min-width:0; overflow-wrap:anywhere; }
+.app-store-dialog .connector-entry h4 { margin:0; font-size:14px; line-height:1.5; }
+.app-store-dialog .app-entry-copy > p { display:-webkit-box; overflow:hidden; -webkit-box-orient:vertical; -webkit-line-clamp:2; margin:5px 0 0; color:var(--cx-label-2); font-size:12px; line-height:1.6; }
+.app-store-dialog .connector-access-hint { display:block; margin-top:6px; color:var(--cx-label-2); font-size:11px; line-height:1.5; }
+.app-store-dialog .app-provider-details { margin-top:8px; color:var(--cx-label-2); font-size:11px; line-height:1.6; }
+.app-store-dialog .app-provider-details summary { cursor:pointer; }
+.app-store-dialog .app-provider-details p { margin:6px 0; }
+.app-store-dialog .app-provider-details a { display:inline-flex; align-items:center; min-height:32px; text-underline-offset:3px; }
+.app-store-dialog .connector-entry > .connector-connect { align-self:start; min-height:36px; padding:7px 12px; border-radius:9px; }
+.app-store-dialog .connector-entry > .connector-connect svg { display:none; }
+.app-store-dialog .apps-load-more { display:flex; min-height:44px; align-items:center; gap:8px; margin-top:12px; padding:8px 0; border:0; background:transparent; color:var(--cx-label); font-size:13px; }
+.app-store-dialog .apps-load-more svg { width:15px; height:15px; fill:none; stroke:currentColor; stroke-width:1.5; }
+.app-store-dialog .apps-advanced-list { margin-top:24px; padding-top:16px; border-top:1px solid var(--cx-sep); color:var(--cx-label-2); }
+.app-store-dialog .apps-advanced-list > summary { min-height:36px; cursor:pointer; font-size:13px; line-height:1.6; }
+.app-store-dialog .apps-advanced-list > summary span { margin-left:5px; font-size:12px; }
+.app-store-dialog .apps-advanced-list > p { max-width:65ch; margin:8px 0 16px; font-size:12px; line-height:1.6; }
+.app-store-dialog .plugin-registration .apps-advanced-list { margin-top:16px; }
+.app-store-dialog .connected-service-header { gap:12px; }
+.app-store-dialog .connected-service-header > div { min-width:0; }
+.app-store-dialog .connected-service-header h3 { font-size:15px; }
+.app-store-dialog .connected-service-header p { color:var(--cx-label-2); font-size:12px; line-height:1.6; }
+.app-store-dialog :is(button, summary, input, a):focus-visible,
+.computer-panel :is(button, summary, input, textarea):focus-visible { outline:2px solid var(--cx-label); outline-offset:3px; }
+
+.computer-panel.workspace-hub { width:min(1040px,calc(100vw - 40px)); max-width:none; max-height:calc(100dvh - 40px); flex-direction:column; padding:0; background:var(--cx-card); color:var(--cx-label); }
+.computer-panel.workspace-hub[open] { display:flex; }
+.computer-panel .hub-header { padding:22px 26px 18px; }
+.computer-panel .hub-header h2 { font-size:21px; }
+.computer-panel .hub-header p { max-width:65ch; margin-top:5px; font-size:13px; line-height:1.6; }
+.computer-panel .computer-tabs { align-items:center; gap:12px; overflow:visible; padding:0 26px 8px; border-bottom:1px solid var(--cx-sep); }
+.computer-panel .computer-tabs > button { min-height:40px; padding:7px 10px; border-radius:8px; font-size:13px; }
+.computer-panel .computer-tabs > button[aria-pressed="true"] { background:var(--system-selected); color:var(--cx-label); }
+.computer-panel .computer-more { position:relative; margin-left:auto; }
+.computer-panel .computer-more > summary { display:flex; min-height:40px; align-items:center; padding:7px 0 7px 10px; list-style:none; cursor:pointer; color:var(--cx-label-2); font-size:13px; }
+.computer-panel .computer-more > summary::-webkit-details-marker { display:none; }
+.computer-panel .computer-more > summary::after { width:6px; height:6px; margin:-3px 2px 0 9px; border-right:1px solid currentColor; border-bottom:1px solid currentColor; content:""; transform:rotate(45deg); }
+.computer-panel .computer-more > div { position:absolute; top:100%; right:0; z-index:3; display:grid; min-width:180px; padding:6px; border:1px solid var(--cx-sep); border-radius:12px; background:var(--cx-card); }
+.computer-panel .computer-more button { min-height:40px; padding:8px 10px; border:0; border-radius:7px; background:transparent; color:var(--cx-label); text-align:left; }
+.computer-panel .computer-more button:hover { background:var(--cx-fill-2); }
+.computer-panel .hub-body { min-height:0; padding:20px 26px 26px; overflow:auto; }
+.computer-panel .computer-session-bar { display:flex; align-items:center; flex-wrap:wrap; gap:12px; }
+.computer-panel .computer-session-bar label { display:flex; min-width:0; align-items:center; gap:12px; color:var(--cx-label-2); font-size:12px; }
+.computer-panel .computer-session-bar .glass-select { width:min(260px,50vw); }
+.computer-panel .computer-session-bar .glass-select-trigger { min-height:40px; border-color:var(--cx-sep); background:var(--cx-card); color:var(--cx-label); }
+.computer-panel .computer-control-state { margin-left:auto; color:var(--cx-label-2); font-size:12px; }
+.computer-panel .computer-session-bar > button { min-height:36px; font-size:12px; }
+.computer-panel .computer-launch { display:grid; justify-items:center; max-width:480px; margin:28px auto 12px; padding:24px 12px; text-align:center; }
+.computer-panel .computer-launch > svg { width:44px; height:44px; margin-bottom:18px; fill:none; stroke:var(--cx-label-2); stroke-width:1.5; stroke-linecap:round; }
+.computer-panel .computer-launch h3 { margin:0; font-size:20px; font-weight:550; letter-spacing:-.025em; }
+.computer-panel .computer-launch > p { margin:10px 0 22px; color:var(--cx-label-2); font-size:13px; line-height:1.6; }
+.computer-panel .computer-launch > .btn-primary { min-width:156px; min-height:44px; border-radius:10px; }
+.computer-panel .computer-launch > .field-help { max-width:40ch; margin:16px 0 0; font-size:12px; }
+.computer-panel .computer-session-details { margin-top:12px; color:var(--cx-label-2); font-size:12px; line-height:1.6; }
+.computer-panel .computer-session-details summary { cursor:pointer; }
+.computer-panel .computer-session-help { margin:12px 0 18px; color:var(--cx-label-2); font-size:12px; line-height:1.6; }
+.computer-panel .computer-address-bar { display:grid; grid-template-columns:minmax(0,1fr) auto 40px; align-items:center; gap:8px; margin:16px 0; }
+.computer-panel .computer-address-bar input { min-width:0; min-height:44px; border:1px solid var(--cx-sep); border-radius:10px; background:var(--cx-bg); color:var(--cx-label); font-size:14px; }
+.computer-panel .computer-address-bar button { min-height:44px; }
+.computer-panel .computer-refresh { display:grid; width:40px; place-items:center; border:0; border-radius:8px; background:transparent; color:var(--cx-label-2); }
+.computer-panel .computer-refresh svg { width:20px; height:20px; fill:none; stroke:currentColor; stroke-width:1.5; stroke-linecap:round; stroke-linejoin:round; }
+.computer-panel .computer-browser-info { display:flex; gap:12px; align-items:center; margin:12px 0; color:var(--cx-label-2); font-size:12px; }
+.computer-panel .computer-browser-info strong { color:var(--cx-label); font-weight:500; }
+.computer-panel .computer-browser-info span { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.computer-panel .computer-screen { display:block; width:100%; overflow:hidden; padding:0; border:1px solid var(--cx-sep); border-radius:10px; background:var(--cx-bg); }
+.computer-panel .computer-screen img { display:block; width:100%; height:auto; }
+.computer-panel .computer-browser-empty { padding:24px 0; }
+.computer-panel .computer-browser-input { margin-top:14px; }
+.computer-panel .computer-browser-input form { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:8px; }
+.computer-panel .computer-browser-input input { min-width:0; min-height:44px; border-color:var(--cx-sep); background:var(--cx-bg); color:var(--cx-label); }
+.computer-panel .computer-keyboard { display:flex; align-items:center; flex-wrap:wrap; gap:8px; margin-top:10px; }
+.computer-panel .computer-keyboard button { min-height:36px; padding:6px 12px; border:1px solid var(--cx-sep); border-radius:8px; background:var(--cx-bg); color:var(--cx-label); font-size:12px; }
+.computer-panel .computer-keyboard details summary { padding:8px; cursor:pointer; font-size:12px; }
+.computer-panel .computer-keyboard details > div { display:flex; flex-wrap:wrap; gap:8px; padding:8px; }
+.computer-panel .computer-browser-input .field-help { margin:10px 0; color:var(--cx-label-2); font-size:12px; line-height:1.6; }
+.computer-panel .computer-teaching { margin-top:20px; padding-top:16px; border-top:1px solid var(--cx-sep); }
+.computer-panel .computer-teaching > summary { min-height:36px; cursor:pointer; color:var(--cx-label-2); font-size:13px; }
+.computer-panel .computer-teaching > .hub-row { margin:12px 0; }
+
+@media(max-width:700px) {
+  .app-store-dialog .apps-connected-grid,.app-store-dialog .connector-catalog { grid-template-columns:minmax(0,1fr); }
+  .app-store-dialog .apps-google-connect { grid-template-columns:32px minmax(0,1fr); gap:12px; }
+  .app-store-dialog .apps-google-connect > .connector-connect { grid-column:2; justify-self:start; min-height:44px; }
+  .app-store-dialog .connector-entry { gap:10px; padding-block:18px; }
+  .app-store-dialog .connector-entry > .connector-connect { min-height:44px; padding-inline:12px; }
+  .app-store-dialog .apps-section-heading button,.app-store-dialog .store-categories button,.app-store-dialog .app-provider-details summary,.app-store-dialog .apps-advanced-list > summary { min-height:44px; }
+  .app-store-dialog .app-provider-details summary { display:flex; align-items:center; }
+  .app-store-dialog .website-search input { font-size:16px; }
+  .computer-panel.workspace-hub { width:calc(100vw - 24px); max-height:calc(100dvh - 24px); border-radius:16px; }
+  .computer-panel .hub-header { padding:18px 16px 14px; }
+  .computer-panel .computer-tabs { gap:4px; padding-inline:16px; }
+  .computer-panel .computer-tabs > button,.computer-panel .computer-more > summary,.computer-panel .computer-more button { min-height:44px; font-size:12px; }
+  .computer-panel .hub-body { padding:16px; }
+  .computer-panel .computer-session-bar { gap:8px; }
+  .computer-panel .computer-session-bar label { flex:1 1 100%; justify-content:space-between; }
+  .computer-panel .computer-session-bar .glass-select { width:min(230px,65vw); }
+  .computer-panel .computer-control-state { margin-left:0; }
+  .computer-panel .computer-session-bar > button { margin-left:auto; min-height:44px; }
+  .computer-panel .computer-launch { margin-top:16px; padding-inline:4px; }
+  .computer-panel .computer-launch h3 { font-size:19px; }
+  .computer-panel .computer-address-bar { grid-template-columns:minmax(0,1fr) auto 44px; gap:6px; }
+  .computer-panel .computer-refresh { width:44px; }
+  .computer-panel .computer-address-bar input,.computer-panel .computer-browser-input input { font-size:16px; }
+  .computer-panel .computer-keyboard button,.computer-panel .computer-keyboard details summary { min-height:44px; }
+}
+@media(prefers-reduced-motion:reduce) { .app-store-dialog .apps-account-card { transition:none; } }
+html[data-motion="false"] .app-store-dialog .apps-account-card { transition:none; }

@@ -64,13 +64,14 @@ test('Computer shows real startup feedback without presenting an empty browser a
   },{...env.globals,React:view.react.default});
   const bot={id:'fixture-agent',name:'Research agent',containerId:null};
   view.mount(()=>ComputerPanel({bots:[bot],onClose(){}}));
-  assert.match(textOf(view.tree),/Your agent’s cloud browser/);
-  button(view.tree,'Start computer & take control').props.onClick();await view.flush();
+  assert.match(textOf(view.tree),/Open a cloud browser/);
+  button(view.tree,'Open browser').props.onClick();await view.flush();
   assert.match(textOf(find(view.tree,n=>n.props?.role==='status')),/Starting your cloud computer/);
-  assert.ok(find(view.tree,n=>n.type==='loading-state'));
+  assert.equal(button(view.tree,'Starting your cloud computer…').props['aria-busy'],true);
+  assert.equal(find(view.tree,n=>n.props?.className==='computer-screen'),undefined);
   starting.reject(Error('Synthetic startup unavailable'));await view.flush();
   assert.equal(find(view.tree,n=>n.type==='loading-state'),undefined);
   assert.match(textOf(view.tree),/Synthetic startup unavailable/);
-  assert.equal(button(view.tree,'Start computer & take control').props.disabled,false);
+  assert.equal(button(view.tree,'Open browser').props.disabled,false);
   view.unmount();
 });

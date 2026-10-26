@@ -18,7 +18,7 @@ function panel({saved={},popupBlocked=false,api:overrides={},embedded=false,runt
   view.mount(()=>PluginPanel({onClose(){},onManageSkills,embedded}));
   return {env,view,api,session,popup,get opens(){return opens;},get closed(){return closed;}};
 }
-async function connect(p){await p.view.flush();button(p.view.tree,'Connect').props.onClick();await p.view.flush();await p.view.flush();}
+async function connect(p){await p.view.flush();find(p.view.tree,n=>n.type==='button'&&n.props?.['aria-label']===`Connect ${item.name}`).props.onClick();await p.view.flush();await p.view.flush();}
 
 const linkedPlugin=(verification={status:'not_tested'})=>({id:'linked-account',name:item.name,url:item.url,enabled:true,authenticated:true,tools:[{name:'read_profile',description:'Read an authorized profile',enabled:true}],verification});
 
@@ -26,7 +26,7 @@ test('explicit connection checks its exact returned plugin once and shows verifi
   const check=deferred();let saved=[],calls=0,authorizations=0;
   const p=panel({api:{getPlugins:async()=>saved,authorizePlugin:async()=>{authorizations++;saved=[linkedPlugin()];return{status:'connected',plugin_id:'linked-account',name:item.name};},testPlugin:async pid=>{assert.equal(pid,'linked-account');calls++;return check.promise;}}});
   await p.view.flush();assert.equal(calls,0,'opening Apps never executes a provider tool');
-  const start=button(p.view.tree,'Connect');start.props.onClick();start.props.onClick();
+  const start=find(p.view.tree,n=>n.type==='button'&&n.props?.['aria-label']===`Connect ${item.name}`);start.props.onClick();start.props.onClick();
   await p.view.flush();
   assert.equal(authorizations,1);assert.equal(calls,1);
   assert.match(textOf(p.view.tree),/checking its tools/);
@@ -51,7 +51,7 @@ test('Allow completion verifies the returned plugin instead of guessing a matchi
 test('a failed HTTP tool check refreshes persisted sign-in evidence and preserves the saved connection',async()=>{
   let verification={status:'passed',checked_at:new Date().toISOString()},loads=0;
   const p=panel({api:{getPlugins:async()=>{loads++;return[linkedPlugin(verification)];},testPlugin:async()=>{verification={status:'failed',detail:{code:'sign_in_required',message:'Reconnect this account.'}};throw Error('Reconnect this account.');}}});
-  await p.view.flush();button(p.view.tree,'Manage').props.onClick();await p.view.flush();
+  await p.view.flush();find(p.view.tree,n=>n.type==='button'&&n.props?.['aria-label']===`Manage ${item.name}`).props.onClick();await p.view.flush();
   button(p.view.tree,'Test again').props.onClick();await p.view.flush();await p.view.flush();
   assert.equal(loads,2);
   assert.match(textOf(p.view.tree),/Sign in again/);
@@ -73,7 +73,7 @@ test('successful sign-in stays saved when execution fails and never claims a suc
 test('a failed evidence refresh stays retryable rather than silently leaving a stale pass',async()=>{
   let loads=0;
   const p=panel({api:{getPlugins:async()=>{if(++loads>1)throw Error('Synthetic offline');return[linkedPlugin()];},testPlugin:async()=>({status:'passed',message:'A read-only tool returned successfully.'})}});
-  await p.view.flush();button(p.view.tree,'Manage').props.onClick();await p.view.flush();
+  await p.view.flush();find(p.view.tree,n=>n.type==='button'&&n.props?.['aria-label']===`Manage ${item.name}`).props.onClick();await p.view.flush();
   button(p.view.tree,'Test tools').props.onClick();await p.view.flush();await p.view.flush();
   assert.match(textOf(p.view.tree),/Could not refresh connection status/);
   assert.ok(button(p.view.tree,'Refresh connections'));p.view.unmount();
@@ -139,7 +139,7 @@ test('offline app errors stay focused on each section instead of repeating a sum
 test('offline status does not hide an individual tool test failure',async()=>{
   const p=panel({runtimeConnected:false,api:{getPlugins:async()=>[{id:'linked-account',name:item.name,url:item.url,enabled:true,authenticated:true,tools:[]}],testPlugin:async()=>{throw Error('Synthetic tool access denied');}}});
   await p.view.flush();
-  button(p.view.tree,'Manage').props.onClick();
+  find(p.view.tree,n=>n.type==='button'&&n.props?.['aria-label']===`Manage ${item.name}`).props.onClick();
   await p.view.flush();
   button(p.view.tree,'Test tools').props.onClick();
   await p.view.flush();
@@ -226,7 +226,7 @@ test('focus checks coalesce with an in-flight status request and recover after r
   wait.resolve({status:'connected',name:item.name});await p.view.flush();assert.match(textOf(p.view.tree),/Fixture Service connected/);p.view.unmount();assert.equal(p.env.time.pending,0);
 });
 test('rapid Connect clicks start only one approval and authorization',async()=>{
-  const wait=deferred();let starts=0;const p=panel({api:{authorizePlugin:()=>{starts++;return wait.promise;}}});await p.view.flush();const connect=button(p.view.tree,'Connect');connect.props.onClick();connect.props.onClick();await p.view.flush();assert.equal(starts,1);
+  const wait=deferred();let starts=0;const p=panel({api:{authorizePlugin:()=>{starts++;return wait.promise;}}});await p.view.flush();const connect=find(p.view.tree,n=>n.type==='button'&&n.props?.['aria-label']===`Connect ${item.name}`);connect.props.onClick();connect.props.onClick();await p.view.flush();assert.equal(starts,1);
   wait.resolve({status:'connected',name:item.name});await p.view.flush();p.view.unmount();
 });
 test('failed cancellation keeps a resumable flow; successful cancellation clears it',async()=>{
@@ -266,7 +266,7 @@ test('provider registration errors open an actionable OAuth form without claimin
   let calls=0,input;
   const p=panel({api:{authorizePlugin:async data=>{input=data;if(++calls===1)throw Object.assign(Error('Registered client required'),{details:{code:'oauth_registration_required',callback_url:'https://app.example/api/plugin-oauth/callback'}});return {status:'awaiting_login',flow_id:id,authorization_url:pending.url,name:'Lovable'};}}});
   await p.view.flush();find(p.view.tree,n=>n.type==='button'&&n.props?.['aria-label']==='Connect Lovable').props.onClick();await p.view.flush();
-  assert.match(textOf(p.view.tree),/Finish Lovable setup/);
+  assert.match(textOf(p.view.tree),/Sign-in isn’t ready for Lovable yet/);
   assert.equal(find(p.view.tree,n=>n.props?.role==='alert'),undefined);
   const field=label=>find(find(p.view.tree,n=>n.type==='label'&&textOf(n).startsWith(label)),n=>n.type==='input');
   field('Client ID').props.onChange({target:{value:'fixture-own-client'}});
@@ -308,4 +308,69 @@ test('legacy Gmail entries use native Google recovery instead of invalid website
   assert.equal(button(p.view.tree,'Reconnect'),undefined);
   assert.equal(p.opens,0);
   p.view.unmount();
+});
+
+test('an app needing a key never starts sign-in or sends a new user straight to a key form',async()=>{
+  let authorizations=0;
+  const manual={...item,name:'Private Reports',auth:'api_key'};
+  const p=panel({api:{getPluginCatalog:async()=>[manual],authorizePlugin:async()=>{authorizations++;throw Error('Unexpected authorization');}}});
+  await p.view.flush();
+  assert.equal(find(p.view.tree,n=>n.props?.id==='plugin-setup-filter'),undefined,'authentication protocols are not a browsing filter');
+  const options=find(p.view.tree,n=>n.type==='details'&&textOf(n).startsWith('Apps that need additional setup'));
+  assert.equal(options.props.open,false,'manual setup stays outside the ordinary path');
+  find(p.view.tree,n=>n.props?.id==='plugin-search').props.onChange({target:{value:'Private Reports'}});
+  await p.view.flush();
+  await find(p.view.tree,n=>n.type==='form'&&n.props?.className==='website-connect').props.onSubmit({preventDefault(){}});
+  await p.view.flush();
+  assert.equal(authorizations,0);
+  assert.equal(p.opens,0);
+  assert.equal(find(p.view.tree,n=>n.props?.id==='plugin-token'),undefined,'no key form appears automatically');
+  assert.equal(find(p.view.tree,n=>n.type==='details'&&textOf(n).startsWith('Apps that need additional setup')).props.open,true);
+  assert.match(textOf(p.view.tree),/your account has not been connected/);
+  p.view.unmount();
+});
+
+test('ordinary app search stays local until the user asks for community connections',async()=>{
+  let lookups=0;
+  const p=panel({api:{searchMcpRegistry:async()=>{lookups++;return {items:[],next_cursor:null};}}});
+  await p.view.flush();
+  find(p.view.tree,n=>n.props?.id==='plugin-search').props.onChange({target:{value:'Fixture'}});
+  await p.view.flush();p.env.time.advance(300);await p.view.flush();
+  assert.equal(lookups,0);
+  find(p.view.tree,n=>n.type==='details'&&textOf(n).startsWith('Search more connections')).props.onToggle({currentTarget:{open:true}});
+  await p.view.flush();p.env.time.advance(300);await p.view.flush();
+  assert.equal(lookups,1);
+  assert.equal(p.opens,0);
+  p.view.unmount();
+});
+
+test('a saved HTTPS root connection is managed without signing in again for a root-slash catalog URL',async()=>{
+  let authorizations=0;
+  const rootItem={...item,url:'https://provider.example/'};
+  const p=panel({api:{getPluginCatalog:async()=>[rootItem],getPlugins:async()=>[{...linkedPlugin(),url:'https://provider.example'}],authorizePlugin:async()=>{authorizations++;throw Error('Must reuse the saved connection');}}});
+  await p.view.flush();
+  find(p.view.tree,n=>n.props?.id==='plugin-search').props.onChange({target:{value:item.name}});await p.view.flush();
+  const entry=find(p.view.tree,n=>n.type==='article'&&n.props?.className==='connector-entry'&&textOf(n).includes(item.name));
+  const manage=find(entry,n=>n.type==='button');
+  assert.equal(manage.props['aria-label'],`Manage ${item.name}`);
+  manage.props.onClick();await p.view.flush();
+  assert.equal(authorizations,0);
+  assert.equal(p.opens,0,'managing saved access does not open another sign-in window');
+  assert.match(textOf(p.view.tree),/already in your workspace/);
+  assert.ok(find(p.view.tree,n=>n.props?.['aria-label']==='Search my apps'));
+  p.view.unmount();
+});
+
+test('saved-connection matching preserves endpoint queries and explicit connection IDs',async()=>{
+  for(const [candidate,saved] of [
+    [{...item,url:'https://provider.example/?account=one'},{...linkedPlugin(),url:'https://provider.example/?account=two'}],
+    [{...item,connection_id:'new-account'},{...linkedPlugin(),connection_id:'saved-account'}],
+  ]){
+    const p=panel({api:{getPluginCatalog:async()=>[candidate],getPlugins:async()=>[saved]}});
+    await p.view.flush();
+    find(p.view.tree,n=>n.props?.id==='plugin-search').props.onChange({target:{value:item.name}});await p.view.flush();
+    const entry=find(p.view.tree,n=>n.type==='article'&&n.props?.className==='connector-entry'&&textOf(n).includes(item.name));
+    assert.equal(find(entry,n=>n.type==='button').props['aria-label'],`Connect ${item.name}`,'another account must not be treated as the selected connection');
+    p.view.unmount();
+  }
 });

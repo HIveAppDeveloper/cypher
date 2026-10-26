@@ -586,3 +586,12 @@ Keep the expanded main-chat binary Voice stage and reduced-motion controls. Save
 Keep one clear starting action: describe a task. Use Apps for account connections, Library for retained information and reusable work, and Settings for everyday preferences. Do not send the primary Settings action to an installation console. Advanced setup stays reachable through a clearly named disclosure; retain all permission, cost and recovery information at the point where it matters.
 
 Use these display terms consistently: Memory → Notes; Skills → Saved instructions; Routines → Schedules; Activity → My work. Keep the original internal values and saved identities. Avoid requiring people to choose an AI model, conversation, server, scope or template parameters for ordinary default flows. Library tabs remain visible at narrow widths, each section starts at the top when chosen, and its body scrolls inside the available viewport. Preserve the fullscreen shell, original logo bytes, signature animation, monochrome palette, existing keyboard focus and permission checks.
+
+
+## Purposeful app connections and Computer — October 26, 2026
+
+Apps stays an Operate surface: one search, compact saved-account rows, and app discovery organized by what people use rather than authentication protocols. Sign-in opens the existing provider handoff and checks the returned connection. Keys, local servers, community listings and client registration remain available through explicit advanced disclosures; an unavailable provider never looks connected. Provider marks use the existing assets and matched service address; a neutral app glyph replaces arbitrary initials when no mark exists. Do not rename saved connection identities or treat a successful check of one tool as proof of every permission.
+
+Computer starts with one action and a short explanation of control. Show address, screen and browser input only after control is granted; reveal text-entry controls when there is an actual screen. Teaching, terminal, private files and device pairing remain reachable as secondary tools. Preserve takeover expiry, return-on-close, queued commands, secret handling and recovery. All current light/dark, keyboard, touch-target and reduced-motion behavior applies.
+
+These refinements use the existing platform font stack. `Inter Variable` remains the pre-existing optional conversation typeface; it is not an Apps or Computer brand addition.

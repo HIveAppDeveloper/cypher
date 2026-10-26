@@ -1,5 +1,13 @@
 # Cypher for Hive and Atlas
 
+## Finding and connecting apps
+
+Apps opens a searchable discovery view. Existing account connections appear as compact rows, with the full list in My apps; connected apps remain searchable without repeating them in default discovery. The native Google chooser lets users choose services before the provider consent screen. Supported sign-in connections open the existing browser-bound authorization flow, then check the exact returned connection. A catalog listing alone does not establish sign-in support, a valid grant, or successful tool execution.
+
+Authentication protocols are not browsing filters. Connections requiring keys or administrator setup, community-directory searches, custom links and client registration remain optional advanced paths. Provider-side registration requirements are shown as unavailable sign-in with administrator recovery, rather than asking a new user to configure OAuth. No provider registration, scopes, grants or runtime settings are changed by this presentation update.
+
+Computer starts with an explicit control action. Address and browser controls appear after control is granted; masked typing controls appear when an actual screenshot is available. Closing returns control through the existing API. Teaching, terminal, private files, shared files and device pairing remain available, with the original command and permission behavior.
+
 An owner-operated agent workspace with persistent shared conversations, a cloud worker, configurable models, media tools, and remote MCP connections. Cypher uses the original monochrome logo and binary-lens animation while retaining the Open GrokBot backend and capabilities. Earlier Grok screenshot directions are historical; example conversations and local fixtures are not real product data or authorization to send messages. No pixel-exact or xAI feature-parity claim is made.
 
 ## Current product
