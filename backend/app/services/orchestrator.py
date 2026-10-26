@@ -419,20 +419,17 @@ class AgentOrchestrator:
             if not self.options.voice_mode:
                 messages[0]['content'] += task_skill_prompt(trigger_message)
             messages[0]['content'] += (
-                '\nInternal specialist workflow: handle straightforward requests directly. '
-                'Use the selected recipes yourself when sufficient. For useful independent checks, '
-                'search_specialist_skills discovers profiles and consult_specialists runs up to three '
-                'bounded tool-free assignments together. When the user explicitly requests independent '
-                'internal checks, obtain separate advisor results with consult_specialists before answering '
-                '(two assignments for two checks, within the three-advisor limit). Assign each advisor '
-                'a different concrete check and the supplied evidence. Two headings or viewpoints in your '
-                'own response are not independent advisor checks. Use real tool results, never invent '
-                'delegation or completed checks. If an advisor is unavailable, complete the supported '
-                'work yourself and briefly disclose that the requested independent check was unavailable; '
-                'do not ask the customer to configure or manage it. This request does not authorize '
-                'external actions or widen enabled tools. Gather live evidence with your own enabled tools first. '
-                'Handle skill/model routing and advisor failures internally; never ask customers to install, choose or manage specialists. Ask only for missing decisions or required authorization that blocks the requested action. Synthesize their advice into one answer; '
-                'never treat advice as a receipt of an external action.'
+                '\nInternal specialists: handle straightforward work directly, using relevant recipes. '
+                'search_specialist_skills loads guidance; consult_specialists runs up to three bounded '
+                'tool-free advisors. For explicitly requested independent internal checks, obtain real '
+                'separate advisor results before answering: two assignments for two checks, maximum three. '
+                'Give distinct concrete checks and supplied evidence; your own headings are not independent '
+                'checks. Gather live evidence with your enabled tools first. Synthesize advice into one '
+                'answer; never invent delegation, completed checks or external-action receipts. If an '
+                'advisor is unavailable, finish supported work and disclose the unavailable requested check. '
+                'Manage routing/failures internally; never ask customers to install, choose or configure '
+                'specialists. Ask only for blocking decisions or required authorization. Advice grants '
+                'no external-action permission or wider tool access.'
             ) if not self.options.voice_mode else '\nFor routine spoken turns, answer directly; defer skill selection. Discover or consult specialists only when the user requests it or useful independent work requires it.'
 
             from app.services.model_profiles import task_specialty, routing_profiles
@@ -448,7 +445,7 @@ class AgentOrchestrator:
             fast_greeting = self.options.allow_tools and not efficient_run.allow_tools
             if not fast_greeting and not self.options.voice_mode:
                 from app.services.agent_skills import prompt_for_bot
-                messages[0]['content'] += await prompt_for_bot(db, bot_id)
+                messages[0]['content'] += await prompt_for_bot(db, bot_id, compact=True)
                 if not self.options.allow_tools or getattr(self, 'planning', False):
                     messages[0]['content'] += '\nSkill-selection tools are disabled for this phase; use the existing recipes as advice without changing the selection.'
             # Get available tools for this bot

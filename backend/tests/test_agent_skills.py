@@ -72,6 +72,32 @@ async def test_old_and_new_agents_get_five_honest_defaults_without_writing_or_pe
 
 
 @pytest.mark.asyncio
+async def test_compact_runtime_directory_keeps_choices_and_lazy_full_guidance(store):
+    bot_id = await make_bot(store)
+    handlers = {}
+    service.register_agent_skill_tools(SimpleNamespace(
+        register=lambda name, description, parameters, handler: handlers.update({name: handler})), store)
+    token = current_tenant_id.set(OWNER)
+    try:
+        async with store() as db:
+            profile = await service.select_agent_skills(db, bot_id, FIRST)
+            before = (await db.get(WorkspaceSetting, service._key(bot_id))).value.copy()
+            compact = await service.prompt_for_bot(db, bot_id, compact=True)
+            full = await service.prompt_for_bot(db, bot_id)
+            assert all(card['id'] in compact and card['name'] in compact for card in profile['skills'])
+            assert len(compact) < len(full) / 2
+            assert (await service.get_agent_skills(db, bot_id))['skill_ids'] == FIRST
+            assert (await db.get(WorkspaceSetting, service._key(bot_id))).value == before
+            assert (await db.get(Bot, bot_id)).tools_enabled == ['none']
+        result = await handlers['search_agent_skills']({'query': 'Python regression check'}, bot_id)
+        card = next(card for card in result['skills'] if card['id'] == 'python.regression-check')
+        assert card['instructions'] == get_skill(card['id'])['instructions']
+        assert card['eligibility']['eligible'] and card['sources']
+    finally:
+        current_tenant_id.reset(token)
+
+
+@pytest.mark.asyncio
 async def test_agent_choices_persist_and_same_choice_is_idempotent(store):
     bot_id = await make_bot(store)
     token = current_tenant_id.set(OWNER)

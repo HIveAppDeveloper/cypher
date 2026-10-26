@@ -135,7 +135,7 @@ async def select_agent_skills(db, bot_or_id, skill_ids, *, selected_by='agent'):
     return _profile(bot, ids, selected_by, True)
 
 
-def skill_prompt(profile):
+def skill_prompt(profile, *, compact=False):
     """Bounded supplemental instructions; the bot's own system prompt stays intact."""
     if not profile:
         return ''
@@ -158,12 +158,19 @@ def skill_prompt(profile):
         'You remain the full agent: references in a recipe to the main agent mean you, '
         'not a reason to defer work you can perform with your own authorized tools.\n'
     )
-    text += '\n'.join(f"{card['id']}: {card['instructions']}" for card in profile['skills'])
+    if compact:
+        # Keep all five choices visible without resending every generic recipe
+        # on every turn. Full eligible guidance remains in both discovery tools
+        # and the API; task_skill_prompt separately supplies relevant recipes.
+        text += 'Ready profile directory (load guidance with search_agent_skills only when useful; no setup round is required):\n'
+        text += '\n'.join(f"{card['id']}: {card['name']}" for card in profile['skills'])
+    else:
+        text += '\n'.join(f"{card['id']}: {card['instructions']}" for card in profile['skills'])
     return text[:MAX_PROMPT_CHARS]
 
 
-async def prompt_for_bot(db, bot_id):
-    return skill_prompt(await get_agent_skills(db, bot_id))
+async def prompt_for_bot(db, bot_id, *, compact=False):
+    return skill_prompt(await get_agent_skills(db, bot_id), compact=compact)
 
 
 def register_agent_skill_tools(registry, session_factory):

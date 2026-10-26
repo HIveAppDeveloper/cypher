@@ -1,0 +1,48 @@
+{
+  "base": "2874bfcfde03a8966dde37a964b649456a2eaa58",
+  "mode": "offline_synthetic_gateway_stub",
+  "provider_calls": 0,
+  "observations": [
+    {
+      "case": "greeting",
+      "before_bytes": 9040,
+      "after_bytes": 8628,
+      "before_approximate_tokens": 1626,
+      "after_approximate_tokens": 1557,
+      "payload_bytes_reduction_percent": 4.56,
+      "approximate_tokens_reduction_percent": 4.24,
+      "tool_names_unchanged": true,
+      "local_model_unchanged": true
+    },
+    {
+      "case": "supplied_evidence",
+      "before_bytes": 20868,
+      "after_bytes": 17475,
+      "before_approximate_tokens": 3935,
+      "after_approximate_tokens": 3324,
+      "payload_bytes_reduction_percent": 16.26,
+      "approximate_tokens_reduction_percent": 15.53,
+      "tool_names_unchanged": true,
+      "local_model_unchanged": true
+    },
+    {
+      "case": "independent_checks",
+      "before_bytes": 21078,
+      "after_bytes": 17685,
+      "before_approximate_tokens": 3978,
+      "after_approximate_tokens": 3367,
+      "payload_bytes_reduction_percent": 16.1,
+      "approximate_tokens_reduction_percent": 15.36,
+      "tool_names_unchanged": true,
+      "local_model_unchanged": true
+    }
+  ],
+  "limits": [
+    "Same synthetic bot instructions, task text, tool set and local model before/after.",
+    "Local default routing policy, not a production model-route attestation.",
+    "cl100k approximates serialized payload size; actual provider token counts, cache accounting, latency and billing remain unverified.",
+    "Five eligible profiles remain in API/storage; full guidance remains in discovery tools and relevant automatic recipes.",
+    "This reduces the287regression; it does not prove savings versus original9c."
+  ],
+  "validation": "47 focused skill persistence/discovery, efficiency, consultation, durable recovery and source eligibility tests pass; offline composition probe passes before and after."
+}
