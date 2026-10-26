@@ -18,6 +18,7 @@ PROVIDERS = {
     'claude': ('Claude', 'anthropic/claude-sonnet-5.5', 'https://platform.claude.com/settings/keys'),
     'xai': ('Grok (xAI)', 'xai/grok-4.5', 'https://console.x.ai/'),
     'meta': ('Meta / Llama', 'auto/free-cf-meta-llama-llama-3-3-70b-instruct-fp8-fast', 'https://dev.meta.ai/'),
+    'openrouter': ('OpenRouter (optional)', '', 'https://openrouter.ai/settings/keys'),
 }
 LOCAL_KEY_PROVIDERS = {'gemini', 'xai'}
 PREFIX = 'model_connection:'
@@ -94,6 +95,9 @@ def public_connections(records):
             item['verification_target'] = 'current_route'
             if state == 'not_checked':
                 item['message'] = 'Test the existing public Llama text route. This does not connect a Meta AI subscription, Facebook Page, or Instagram account. Meta Model API access needs separate provider setup.'
+        if provider == 'openrouter':
+            item.update(verification_supported=False,account_connected=state=='connected' and detail.get('account_connected') is True,model_access_verified=False)
+            if state == 'not_checked':item['message'] = 'Optional consent connection using separate OpenRouter credits. This does not transfer your OpenAI, Anthropic, Google, Meta or Grok subscriptions.'
         expires = detail.get('verification_expires_at')
         try:
             if provider not in LOCAL_KEY_PROVIDERS and state == 'verification_required' and expires and datetime.fromisoformat(expires.rstrip('Z')) > datetime.utcnow():
@@ -111,8 +115,10 @@ def public_connections(records):
 
 async def queue_check(db, provider, api_key=None, verification_target='current_route'):
     require_owner()
-    if provider not in PROVIDERS or (api_key is not None and provider not in {'gemini', 'claude', 'xai'}):
+    if provider not in PROVIDERS or (api_key is not None and provider not in {'gemini', 'claude', 'xai', 'openrouter'}):
         raise HTTPException(422, 'Choose a supported model connection.')
+    if provider == 'openrouter' and api_key is None:
+        raise HTTPException(422, 'Use the OpenRouter consent connection. Account enrollment does not test model access.')
     if verification_target not in {'provider_account', 'current_route'}:
         raise HTTPException(422, 'Choose a provider account or the current model route.')
     if provider == 'meta' and (not settings.OMNIROUTE_URL or not settings.OMNIROUTE_API_KEY or verification_target != 'current_route'):
@@ -192,6 +198,14 @@ async def control_check(payload):
         response = await client.post(url, headers=headers, json=payload)
     if response.status_code != 200: raise RuntimeError('Provider check could not complete.')
     result = response.json()
+    if payload['provider'] == 'openrouter':
+        if not isinstance(result,dict) or result.get('state') not in {'connected','access_denied','rate_limited','unavailable'}:
+            raise RuntimeError('OpenRouter account enrollment returned no verified state.')
+        if result['state'] == 'connected':
+            if result.get('account_connected') is not True or result.get('model_access_verified') is not False or result.get('provider') != 'openrouter' or result.get('verification_scope') != 'provider_account':
+                raise RuntimeError('OpenRouter account evidence was incomplete.')
+            return {'state':'connected','account_connected':True,'message':'OpenRouter account connected. Model access has not been tested; OpenRouter credits are separate from provider subscriptions.'}
+        return {'state':result['state'],'message':'OpenRouter account access could not be saved. Your previous provider access is unchanged.'}
     if not isinstance(result, dict) or result.get('state') not in {'ready', 'verification_required', 'sign_in_required', 'billing_required', 'access_denied', 'rate_limited', 'unavailable'}:
         raise RuntimeError('Provider check returned no verified state.')
     expected = PROVIDER_MODELS[payload['provider']]
@@ -311,6 +325,8 @@ async def run_requested_check(sessions, pulse):
         # Whitelist fields: neither provider errors nor raw credentials reach UI.
         updated = {key: value for key, value in detail.items() if key not in {'credentials_encrypted', 'previous_credentials_encrypted', 'previous_key_state', 'previous_key_message', 'previous_key_checked_at', 'verification_encrypted'}}
         updated.update(state=result['state'], message=str(result.get('message', 'Check finished.'))[:500], checked_at=datetime.utcnow().isoformat()+'Z')
+        if detail['provider'] == 'openrouter' and result['state'] == 'connected' and result.get('account_connected') is True:
+            updated['account_connected'] = True
         public = PROVIDERS[detail['provider']][1]
         if result['state'] == 'ready' and result.get('public_model') in PROVIDER_MODELS[detail['provider']] and result.get('transport_model') in ROUTES.get(result['public_model'],set()):
             active_public = result['public_model']

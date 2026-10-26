@@ -113,7 +113,7 @@ function load(path, imports = {}, globals = {}) {
   const exports = {};
   runInNewContext(compiled, { exports, Error, Map, ...globals,
     require: name => {
-      if (name === '../lib/canonical-app') return { CANONICAL_APP_ORIGIN: 'https://app.example', isOffCanonicalHost: () => false };
+      if (name === '../lib/canonical-app') return imports[name] || { CANONICAL_APP_ORIGIN: 'https://app.example', isOffCanonicalHost: () => false };
       if (name === '../lib/dates' || name === './dates') return load('../src/lib/dates.ts', {}, globals);
       if (!(name in imports)) throw new Error('Unexpected import: ' + name);
       return imports[name];

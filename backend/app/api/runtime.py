@@ -1,7 +1,7 @@
 import asyncio
 from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from sqlalchemy import text
 from app.db.session import get_db
 from app.models.runtime import RuntimeHeartbeat, RuntimeCheck
@@ -10,6 +10,7 @@ from app.services.runtime_identity import runtime_identity, same_release
 router=APIRouter()
 from typing import Literal
 from pydantic import SecretStr
+from uuid import UUID
 Provider = Literal['openai', 'gemini', 'claude', 'xai', 'meta']
 
 class ProviderVerification(BaseModel):
@@ -22,6 +23,30 @@ async def queue_model_verification(provider: Provider, body: ProviderVerificatio
 
 class ProviderKey(BaseModel):
     api_key: SecretStr
+
+class ConsentBegin(BaseModel):
+    binding: str = Field(pattern=r'^[A-Za-z0-9_-]{43}$')
+
+class ConsentFinish(ConsentBegin):
+    flow_id: UUID
+    state: str = Field(default='',max_length=128)
+    code: SecretStr = SecretStr('')
+    denied: bool = False
+
+@router.post('/model-connections/openrouter/consent/start')
+async def start_provider_consent(body: ConsentBegin, db=Depends(get_db)):
+    from app.services.provider_consent import begin
+    return await begin(db,body.binding)
+
+@router.post('/model-connections/openrouter/consent/finish')
+async def finish_provider_consent(body: ConsentFinish, db=Depends(get_db)):
+    from app.services.provider_consent import finish
+    return await finish(db,str(body.flow_id),body.binding,body.state,body.code.get_secret_value(),body.denied)
+
+@router.get('/model-connections/openrouter/consent/{flow_id}')
+async def provider_consent_status(flow_id: UUID, db=Depends(get_db)):
+    from app.services.provider_consent import status
+    return await status(db,str(flow_id))
 
 @router.post('/model-connections/{provider}/api-key', status_code=202)
 async def connect_model_key(provider: Provider, body: ProviderKey, db=Depends(get_db)):

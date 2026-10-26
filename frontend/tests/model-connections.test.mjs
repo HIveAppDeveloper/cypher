@@ -5,7 +5,7 @@ import {environment,renderer,load,deferred,find,textOf,button} from './support/c
 const item={id:'xai',name:'xAI',model:'grok',state:'not_checked',message:'Not checked',account_url:'https://x.ai',can_add_api_key:true,requires_api_key:true};
 function panel({items=[item],canManage=true,fetcher=async()=>({ok:true,json:async()=>({})}),onQueued=async()=>{},omniroute=false,manageUrl}={}){
   const env=environment(),view=renderer(env);
-  const {ModelConnections}=load('../src/components/ModelConnections.tsx',{react:view.react},{...env.globals,React:view.react.default,fetch:fetcher,AbortSignal,URL,encodeURIComponent});
+  const {ModelConnections}=load('../src/components/ModelConnections.tsx',{react:view.react,'./ProviderConsent':{ProviderConsentButton:'provider-consent-button'}},{...env.globals,React:view.react.default,fetch:fetcher,AbortSignal,URL,encodeURIComponent});
   view.mount(()=>ModelConnections({items,canManage,workerReady:true,onQueued,omniroute,manageUrl}));
   return view;
 }
