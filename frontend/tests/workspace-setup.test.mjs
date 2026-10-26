@@ -42,3 +42,12 @@ test('connection-settings request failures do not mark a healthy runtime disconn
   assert.equal(find(view.tree,node=>node.props?.role==='alert'),undefined);
   view.unmount();
 });
+
+test('deployment guide links directly to the canonical Cypher setup file',async()=>{
+  const view=panel(async()=>({ok:true,json:async()=>({})}));
+  await view.flush();
+  const guide=find(view.tree,node=>node.type==='a'&&textOf(node)==='Open setup instructions');
+  assert.ok(guide);
+  assert.equal(guide.props.href,'https://github.com/HIveAppDeveloper/cypher/blob/main/SETUP.md');
+  view.unmount();
+});
