@@ -198,7 +198,7 @@ class ToolRegistry:
         if name == 'plugin_call':
             return any(t['plugin_id'] == arguments.get('plugin_id') and t['name'] == arguments.get('tool_name') and t.get('read_only') for t in getattr(self, '_plugin_manifest', []))
         return name in {'read_file', 'list_directory', 'search_files', 'search_web',
-                        'search_chat_history', 'list_context', 'forget_context', 'consult_specialist', 'plugin_search', 'publish_file',
+                        'search_chat_history', 'list_context', 'forget_context', 'consult_specialist', 'consult_specialists', 'search_specialist_skills', 'plugin_search', 'publish_file',
                         'complete_goal', 'remember_context', 'get_vc_investor_match', 'prepare_vc_outreach', 'search_vc_founders', 'create_chart'}
 
     def register_default_tools(self):
@@ -546,7 +546,7 @@ class ToolRegistry:
             "filesystem": ["local_device", "workspace_files", "publish_file", "read_file", "write_file", "list_directory", "search_files"],
         }
 
-        enabled_tool_names = {"consult_specialist", "set_goal", "complete_goal", "remember_context", "list_context", "forget_context", "search_chat_history"}
+        enabled_tool_names = {"consult_specialist", "consult_specialists", "search_specialist_skills", "set_goal", "complete_goal", "remember_context", "list_context", "forget_context", "search_chat_history"}
         for category in bot.tools_enabled:
             category_lower = category.lower()
             if category_lower in category_map:
