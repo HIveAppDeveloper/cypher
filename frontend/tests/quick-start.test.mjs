@@ -55,7 +55,7 @@ function quickStart(onStart, initialOptions = { routing: 'auto', provider: 'open
     './cipher/CypherMark': { __esModule: true, default: 'cypher-mark' },
     './cipher/RecentWork': { RecentWork: 'recent-work' },
     '../lib/attachments': { readTaskAttachments: async files => files.map(file => ({ name: file.name, mime: 'text/plain', data: 'Zml4dHVyZQ==' })) },
-  }, { React: runtime.react, localStorage: { setItem() {} } });
+  }, { React: runtime.react, localStorage: { setItem() {} }, document: { getElementById: () => ({ focus() {} }) } });
   return () => runtime.render(() => QuickStart({
     options, onOptions: next => { options = next; }, onStart,
     onCreateBot() {}, onCreateRoom() {},
@@ -101,6 +101,16 @@ test('the calmer home keeps the task composer and model choice together', () => 
   assert.ok(manager(tree));
   assert.ok(find(tree, node => node.type === 'button' && node.props['aria-label'] === 'Start task'));
   assert.equal(find(tree, node => node.type === 'button' && node.props['aria-label'] === 'Connect models'), undefined);
+});
+test('company starter card makes a truthful promise and fills a useful research prompt', () => {
+  const render = quickStart(async () => {});
+  const tree = render();
+  const starter = find(tree, node => node.type === 'button' && node.props?.className === 'starter-card');
+  assert.ok(starter);
+  assert.equal(starter.props.children[1].props.children[0], 'Research companies');
+  assert.equal(starter.props.children[2].props.children[0], 'Build a company shortlist and review the sources.');
+  starter.props.onClick();
+  assert.equal(task(render()).props.value, 'Research companies for: ');
 });
 test('same-tick double submission starts once and an interruption retains the task for retry', async () => {
   const calls = [];
