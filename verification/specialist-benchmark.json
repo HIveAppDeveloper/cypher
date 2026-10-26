@@ -1,0 +1,28 @@
+{
+  "mode": "offline_local_only",
+  "catalog_profiles": 10000,
+  "domain_count": 100,
+  "procedure_count": 100,
+  "queries": 1200,
+  "retrieval_ms": {
+    "median": 0.0085,
+    "p90": 0.0096,
+    "p95": 0.0097,
+    "p99": 0.0128,
+    "max": 0.0227
+  },
+  "full_catalog_instruction_chars_never_sent": 3993300,
+  "selected_instruction_chars_max_in_fixture": 981,
+  "automatic_recipe_char_cap": 2400,
+  "specialist_output_token_cap": {
+    "before": 1024,
+    "after": 768
+  },
+  "fresh_greeting_output_token_cap": {
+    "before": 2048,
+    "after": 256
+  },
+  "specialist_call_cap": 3,
+  "parallel_call_cap": 2,
+  "limits": "Caps are ceilings, not measured billed-token savings. Retrieval timings exclude providers, workers and browser. No live performance claim."
+}

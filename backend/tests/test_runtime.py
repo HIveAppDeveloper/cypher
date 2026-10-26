@@ -512,19 +512,18 @@ async def test_fleet_bounds_cache_and_no_recursive_tools(monkeypatch):
     from app.services.fleet import ModelFleet
     from app.services import fleet
     from types import SimpleNamespace
-    monkeypatch.setattr(fleet, 'completion_options', lambda *a, **kw: {'model':'test'})
     calls=[]
     async def complete(**kw):
         calls.append(kw)
         return SimpleNamespace(choices=[SimpleNamespace(message=SimpleNamespace(content='Finding'))],usage=None)
-    monkeypatch.setattr(fleet.litellm, 'acompletion', complete)
+    monkeypatch.setattr(fleet.LLMGateway, 'complete', complete)
     manager=ModelFleet()
     first=await manager.consult({'specialty':'research','task':'Test'},'bot')
     assert first == await manager.consult({'specialty':'research','task':'Test'},'bot')
     for role in ['writing','analysis']:
         assert 'findings' in await manager.consult({'specialty':role,'task':'Test'},'bot')
     assert 'error' in await manager.consult({'specialty':'research','task':'Another'},'bot')
-    assert len(calls)==3 and all('tools' not in c and c['max_tokens']==1024 and c['num_retries']==0 for c in calls)
+    assert len(calls)==3 and all(c['tools'] is None and c['options'].max_tokens==768 and c['options'].allow_tools is False for c in calls)
 
 
 def test_recovered_internal_failure_does_not_fail_final_answer():
