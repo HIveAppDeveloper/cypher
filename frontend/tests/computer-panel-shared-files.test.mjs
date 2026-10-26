@@ -11,7 +11,7 @@ test('a failed old shared-files read cannot hide a successful retry',async()=>{
     throw new Error('Unexpected request: '+path);
   };
   const {ComputerPanel}=load('../src/components/ComputerPanel.tsx',{
-    react:view.react,'./GlassSelect':{GlassSelect:'select'},'../lib/api':{api:{},request},
+    react:view.react,'./LoadingState':{LoadingState:'loading-state'},'./PanelState':{PanelState:'panel-state',ActionStatus:'action-status',panelClassName:'panel'},'./GlassSelect':{GlassSelect:'select'},'../lib/api':{api:{},request},
   },{...env.globals,React:view.react.default});
   view.mount(()=>ComputerPanel({bots:[],onClose(){}}));
 

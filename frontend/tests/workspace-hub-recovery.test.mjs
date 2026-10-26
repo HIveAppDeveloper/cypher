@@ -193,7 +193,7 @@ test('a saved memory remains visible when the initial knowledge request finishes
 
   const nameLabel=find(view.tree,node=>node.type==='label'&&textOf(node).startsWith('Name'));
   find(nameLabel,node=>node.type==='input').props.onChange({target:{value:saved.name}});
-  const contentLabel=find(view.tree,node=>node.type==='label'&&textOf(node).startsWith('Content'));
+  const contentLabel=find(view.tree,node=>node.type==='label'&&textOf(node).startsWith('What should Cypher remember?'));
   find(contentLabel,node=>node.type==='textarea').props.onChange({target:{value:saved.content}});
   await view.flush();
   const saving=submit(view.tree);

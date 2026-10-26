@@ -101,7 +101,7 @@ test('connecting from a website search reveals the saved connection instead of f
   find(p.view.tree,n=>n.type==='form').props.onSubmit({preventDefault(){}});await p.view.flush();await p.view.flush();
   assert.match(textOf(p.view.tree),/Account or API access linked/);
   assert.doesNotMatch(textOf(p.view.tree),/No connected services match/);
-  const connectedSearch=find(p.view.tree,n=>n.props?.['aria-label']==='Search connected plugins');
+  const connectedSearch=find(p.view.tree,n=>n.props?.['aria-label']==='Search my apps');
   assert.equal(connectedSearch.props.value,item.name);
   p.view.unmount();
 });
@@ -160,7 +160,7 @@ test('Connected view opens saved skills separately from account connections',asy
   let opens=0;
   const p=panel({onManageSkills:()=>{opens++;}});
   await p.view.flush();
-  button(p.view.tree,'Connected').props.onClick();
+  button(p.view.tree,'My apps').props.onClick();
   await p.view.flush();
   assert.match(textOf(p.view.tree),/Create and manage reusable skill recipes separately in your workspace library/);
   button(p.view.tree,'Saved instructions').props.onClick();
