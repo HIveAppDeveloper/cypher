@@ -1,0 +1,81 @@
+/* Small, static emblems keep large agent teams identifiable without animation work. */
+.bot-avatar.agent-emblem {
+  display: inline-grid;
+  position: relative;
+  place-items: center;
+  flex-shrink: 0;
+  color: var(--cx-label) !important;
+  background: var(--system-subtle) !important;
+  border-radius: 28%;
+  font-size: 0;
+  overflow: visible;
+}
+.bot-avatar.agent-emblem .agent-emblem-art {
+  display: block;
+  width: 68%;
+  height: 68%;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.bot-avatar.agent-emblem .agent-emblem-signature { opacity: .45; }
+.cypher-team-disclosure .bot-avatar.agent-emblem[data-agent-kind] .agent-emblem-art {
+  width: 68%;
+  height: 68%;
+  fill: none;
+}
+.team-room-dialog { width: min(560px, calc(100vw - 32px)); }
+.team-room-dialog form { min-height: 0; }
+.team-agent-picker { min-width: 0; }
+.team-agent-picker .team-agent-search {
+  display: block;
+  padding: 0;
+  margin: 0 0 6px;
+  background: none;
+  color: var(--cx-label-2);
+  font-size: 12px;
+}
+.team-agent-picker > input[type="search"] { width: 100%; margin: 0; }
+.team-selection-tools { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 12px 0 8px; }
+.team-selection-tools > span { flex: 1 1 130px; font-size: 12px; color: var(--cx-label-2); }
+.team-selection-tools button { min-height: 36px; font-size: 12px; padding: 6px 10px; }
+.team-agent-list { max-height: min(360px, 38dvh); overflow-y: auto; overscroll-behavior: contain; padding: 3px; margin-inline: -3px; }
+.team-agent-picker .team-agent-option {
+  min-height: 58px;
+  display: flex;
+  gap: 12px;
+  padding: 10px 12px;
+  margin: 4px 0;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  background: var(--cx-fill-2);
+  cursor: pointer;
+}
+.team-agent-picker .team-agent-option[data-selected="true"] { border-color: var(--cx-sep); background: var(--system-selected); }
+.team-agent-picker .team-agent-option > span:not(.bot-avatar) { min-width: 0; overflow-wrap: anywhere; color: var(--cx-label); }
+.team-agent-picker .team-agent-option .bot-avatar { flex: 0 0 34px; width: 34px; height: 34px; }
+.team-agent-picker .team-agent-option small { color: var(--cx-label-2); }
+.team-agent-picker .team-agent-option > input { flex: 0 0 18px; }
+.team-agent-picker .team-agent-option:focus-within { outline: 2px solid var(--focus-color); outline-offset: 1px; }
+@media (max-width: 600px) {
+  .team-selection-tools button { min-height: 44px; }
+  .team-agent-list { max-height: 24dvh; }
+}
+.team-room-dialog .dialog-intro,
+.team-room-dialog .field-help,
+.team-agent-picker legend { color: var(--cx-label-2); }
+.team-room-dialog input:not([type="checkbox"]) {
+  min-height: 44px;
+  padding: 10px 12px;
+  color: var(--cx-label);
+  background: var(--cx-card);
+  border: 1px solid var(--cx-sep);
+  border-radius: 10px;
+}
+.team-room-dialog input::placeholder { color: var(--cx-label-2); opacity: 1; }
+.team-room-dialog .dialog-actions { background: var(--cx-card); border-top-color: var(--cx-sep); }
+.team-room-dialog .btn-primary { background: var(--brand-action); color: var(--brand-on-action); border-color: transparent; }
+.team-room-dialog .btn-secondary { min-height: 44px; background: var(--cx-card); border-color: var(--cx-sep); color: var(--cx-label); }
+.bot-avatar.agent-emblem .agent-emblem-art { position: absolute; inset: 16%; max-width: none; max-height: none; }
