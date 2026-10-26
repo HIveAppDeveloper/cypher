@@ -5,7 +5,7 @@ import styles from './AccountMenu.module.css';
 const person = <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M5 21v-2a7 7 0 0 1 14 0v2"/></svg>;
 const settings = <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v3m0 12v3M3 12h3m12 0h3M5.6 5.6l2.1 2.1m8.6 8.6 2.1 2.1M5.6 18.4l2.1-2.1m8.6-8.6 2.1-2.1"/><circle cx="12" cy="12" r="5"/></svg>;
 
-export function AccountMenu({ accountEmail, onSetup }: { accountEmail?: string; onSetup: () => void }) {
+export function AccountMenu({ accountEmail, onSetup, placement = 'top' }: { accountEmail?: string; onSetup: () => void; placement?: 'top' | 'bottom' }) {
   if (!accountEmail) return <div className={`${styles.account} ${styles.guest}`}>
     <a className={styles.signIn} href="/login" title="Sign in to Cypher">
       <span className={styles.avatar}>{person}</span><span className={styles.label}>Sign in</span>
@@ -19,16 +19,24 @@ export function AccountMenu({ accountEmail, onSetup }: { accountEmail?: string; 
     const menu = details.querySelector<HTMLElement>('nav');
     if (!details.open) { menu?.hidePopover(); return; }
     const rect = details.getBoundingClientRect();
-    const width = Math.min(280, window.innerWidth - 24);
-    details.style.setProperty('--account-menu-left', `${Math.max(12, Math.min(rect.left, window.innerWidth - width - 12))}px`);
-    details.style.setProperty('--account-menu-bottom', `${Math.max(12, window.innerHeight - rect.top + 8)}px`);
+    const width = Math.min(280, window.innerWidth - 32);
+    const left = placement === 'bottom' ? rect.right - width : rect.left;
+    details.style.setProperty('--account-menu-left', `${Math.max(12, Math.min(left, window.innerWidth - width - 12))}px`);
+    if (placement === 'bottom') {
+      const top = Math.max(12, Math.min(rect.bottom + 8, window.innerHeight - 84));
+      details.style.setProperty('--account-menu-top', `${top}px`);
+      details.style.removeProperty('--account-menu-bottom');
+    } else {
+      details.style.setProperty('--account-menu-bottom', `${Math.max(12, window.innerHeight - rect.top + 8)}px`);
+      details.style.removeProperty('--account-menu-top');
+    }
     menu?.showPopover();
   }} onKeyDown={event => {
     if (event.key === 'Escape') {
       event.preventDefault(); event.currentTarget.open = false;
       event.currentTarget.querySelector('summary')?.focus();
     }
-  }}>
+  }} data-menu-placement={placement}>
     <summary className={styles.trigger} aria-label={`Account: ${accountEmail}`} title={accountEmail}>
       <span className={styles.avatar} aria-hidden="true">{accountEmail.slice(0, 1).toUpperCase()}</span>
       <span className={styles.label}><strong>Account</strong><small>{accountEmail}</small></span>

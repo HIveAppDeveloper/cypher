@@ -39,3 +39,16 @@ test('recent work lists the latest runs and opens the selected conversation', as
   rows[0].props.onClick();
   assert.deepEqual(opened, ['conversation-1']);
 });
+
+test('recent work marks only explicit task states', () => {
+  const env = environment(), view = renderer(env);
+  const { statusKind } = load('../src/components/cipher/RecentWork.tsx', {
+    react: view.react,
+    '../LoadingState': { LoadingState: 'loading-state' },
+    '../../lib/api': { request: async () => [] },
+    '../../lib/dates': load('../src/lib/dates.ts'),
+    './RecentWork.module.css': {},
+  }, { ...env.globals, React: view.react.default });
+  const statuses = ['pending', 'running', 'cancel_requested', 'completed', 'failed', 'cancelled', 'interrupted', 'unknown_success', 'queued'];
+  assert.deepEqual(statuses.map(statusKind), ['active', 'active', 'active', 'complete', 'error', 'error', 'error', 'neutral', 'neutral']);
+});

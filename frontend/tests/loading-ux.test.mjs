@@ -6,7 +6,7 @@ function workspace(search = '') {
   const env = environment(), view = renderer(env), pending = deferred();
   env.window.location = { search };
   let bots = [], loadingBots = true;
-  const names = ['BotRoster','SidebarShell','ChatPanel','BotCreator','PluginPanel','GoalsPanel','ChannelsPanel','WorkspaceSetup','RoomCreator','CommandPalette','WorkspaceHub','ComputerPanel'];
+  const names = ['BotRoster','SidebarShell','ChatPanel','BotCreator','PluginPanel','GoalsPanel','ChannelsPanel','WorkspaceSetup','RoomCreator','CommandPalette','WorkspaceHub','ComputerPanel','AccountMenu'];
   const imports = Object.fromEntries(names.flatMap(name => [['../components/'+name, {[name]:name}], ['./'+name, {[name]:name}]]));
   imports['./PanelBoundary'] = { PanelBoundary:'panel-boundary' };
   imports['../hooks/useBots'] = { useBots:()=>{

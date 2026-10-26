@@ -27,11 +27,11 @@ function relativeDate(value: string) {
   return days < 7 ? `${days}d ago` : new Date(timestamp).toLocaleDateString();
 }
 
-function statusKind(status: string) {
-  const value = status.toLowerCase().replaceAll('_', ' ');
-  if (/complete|succeed|success|done/.test(value)) return 'complete';
-  if (/fail|error|cancel/.test(value)) return 'error';
-  if (/run|progress|queue|pending|working/.test(value)) return 'active';
+export function statusKind(status: string) {
+  const value = status.trim().toLowerCase();
+  if (['pending', 'running', 'cancel_requested'].includes(value)) return 'active';
+  if (value === 'completed') return 'complete';
+  if (['failed', 'cancelled', 'canceled', 'interrupted'].includes(value)) return 'error';
   return 'neutral';
 }
 

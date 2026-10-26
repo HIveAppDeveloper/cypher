@@ -2,12 +2,14 @@ import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {environment, renderer, load, find, textOf} from './support/component-harness.mjs';
 
-function fixture(accountEmail) {
+function fixture(accountEmail, placement = 'top') {
   const env = environment(), view = renderer(env);
+  env.window.innerWidth = 1536;
+  env.window.innerHeight = 800;
   let setupCalls = 0;
-  const {AccountMenu} = load('../src/components/AccountMenu.tsx', {'./AccountMenu.module.css': {}}, {React: view.react.default});
-  view.mount(() => AccountMenu({accountEmail, onSetup: () => setupCalls++}));
-  return {view, get setupCalls() {return setupCalls;}};
+  const {AccountMenu} = load('../src/components/AccountMenu.tsx', {'./AccountMenu.module.css': {}}, {React: view.react.default, window: env.window});
+  view.mount(() => AccountMenu({accountEmail, onSetup: () => setupCalls++, placement}));
+  return {view, env, get setupCalls() {return setupCalls;}};
 }
 test('guest has a direct sign-in link and retains workspace settings', () => {
   const app = fixture();
@@ -36,4 +38,24 @@ test('Escape closes account disclosure and restores keyboard focus', () => {
   assert.equal(details.open, false);
   assert.equal(prevented, true);
   assert.equal(focused, true);
+});
+
+test('signed-in header menu opens below its avatar and clamps its position', () => {
+  const app = fixture('person@example.test', 'bottom');
+  const details = app.view.tree;
+  const values = new Map();
+  let shown = false;
+  const menu = {showPopover: () => { shown = true; }, hidePopover() {}};
+  const currentTarget = {
+    open: true,
+    getBoundingClientRect: () => ({left: 1278, right: 1306, top: 24, bottom: 52}),
+    querySelector: selector => { assert.equal(selector, 'nav'); return menu; },
+    style: {setProperty: (name, value) => values.set(name, value), removeProperty: name => values.delete(name)},
+  };
+  details.props.onToggle({target: currentTarget, currentTarget});
+  assert.equal(details.props['data-menu-placement'], 'bottom');
+  assert.equal(values.get('--account-menu-top'), '60px');
+  assert.equal(values.get('--account-menu-left'), '1026px');
+  assert.equal(values.has('--account-menu-bottom'), false);
+  assert.equal(shown, true);
 });

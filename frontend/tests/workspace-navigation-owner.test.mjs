@@ -7,7 +7,7 @@ const otherRoom={id:'other-room',title:'Other team',is_group:true,bot_ids:[]};
 function workspace({search='',getConversations=async()=>[],getBots=async()=>[]}={}){
   const env=environment(),view=renderer(env);
   env.window.location={search};
-  const names=['BotRoster','SidebarShell','ChatPanel','CommandPalette'];
+  const names=['BotRoster','SidebarShell','ChatPanel','CommandPalette','AccountMenu'];
   const imports=Object.fromEntries(names.flatMap(name=>[['../components/'+name,{[name]:name}],['./'+name,{[name]:name}]]));
   imports['./PanelBoundary']={PanelBoundary:'panel-boundary',RetryablePanel:'retryable-panel'};
   imports['../hooks/useBots']={useBots:()=>{const [selectedBot,setSelectedBot]=view.react.useState(null);return {bots:[],selectedBot,setSelectedBot,createBot(){},refreshBots:async()=>{},loading:false};}};
@@ -19,6 +19,13 @@ function workspace({search='',getConversations=async()=>[],getBots=async()=>[]}=
   view.mount(()=>WorkspaceApp({}));
   return {view,roster:()=>find(view.tree,node=>node.type==='BotRoster').props,chat:()=>find(view.tree,node=>node.type==='ChatPanel').props,commands:()=>find(view.tree,node=>node.type==='CommandPalette').props.commands};
 }
+
+test('workspace header uses viewport-safe placement for the account menu',()=>{
+  const app=workspace();
+  const account=find(app.view.tree,node=>node.type==='AccountMenu');
+  assert.equal(account.props.placement,'bottom');
+  app.view.unmount();
+});
 
 for(const destination of ['home','apps','settings','room'])test(`a delayed saved link cannot replace later ${destination} navigation`,async()=>{
   const pending=deferred(),app=workspace({search:'?conversation=saved-room',getConversations:()=>pending.promise});
