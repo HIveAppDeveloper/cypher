@@ -1,7 +1,8 @@
 from uuid import UUID
+from typing import Literal
 from cryptography.fernet import InvalidToken
 from pydantic import BaseModel, Field
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Response
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.session import get_db
@@ -17,6 +18,22 @@ class ConnectPlugin(BaseModel):
     auth_header: str = Field(default='Authorization',pattern=r'^[A-Za-z][A-Za-z0-9-]{0,63}$')
 class TogglePlugin(BaseModel):
     enabled: bool
+class MetaSocialAuthorization(BaseModel):
+    service: Literal['facebook_organic','instagram']
+
+@router.post('/{id}/meta/inspect')
+async def inspect_meta_permissions(id:UUID,response:Response,db:AsyncSession=Depends(get_db)):
+    from app.services.meta_social import connection_details
+    response.headers['Cache-Control']='private, no-store'
+    response.headers['Referrer-Policy']='no-referrer'
+    return await connection_details(db,await db.get(Plugin,str(id)))
+
+@router.post('/{id}/meta/authorize')
+async def authorize_meta_permissions(id:UUID,body:MetaSocialAuthorization,response:Response,db:AsyncSession=Depends(get_db)):
+    from app.services.meta_social import connection_details
+    response.headers['Cache-Control']='private, no-store'
+    response.headers['Referrer-Policy']='no-referrer'
+    return await connection_details(db,await db.get(Plugin,str(id)),body.service)
 
 def public(plugin):
     from app.services.plugins import reveal
