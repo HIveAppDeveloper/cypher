@@ -1,0 +1,411 @@
+{
+  "recorded_at": "2026-10-26T15:56:34.989203+00:00",
+  "environment": {
+    "host": "macOS-26.7-arm64-arm-64bit",
+    "architecture": "arm64",
+    "container_platform": "linux/amd64 under local Docker Desktop emulation",
+    "container_limits": {
+      "cpu": 1,
+      "memory_bytes": 2147483648
+    },
+    "vercel_function_deployed": false,
+    "database_access": false
+  },
+  "profiling": {
+    "profiled_request_wall_ms": 1573.51,
+    "onnx_inference_ms_rounded": 1573,
+    "finding": "Over99percent of warm generation time was inside ONNX session.run."
+  },
+  "shipped_change": "Replace three identical startup warmups with one; firstphrase60characters, later180characters, model and CPUthreads unchanged.",
+  "linux_cold_samples": [
+    {
+      "image": "baseline",
+      "repeat": 0,
+      "process_start_to_ready_ms": 12695.588,
+      "process_start_to_first_audio_ms": 17201.791,
+      "request": {
+        "headers_ms": 4503.697,
+        "network_first_audio_ms": 4506.203,
+        "total_ms": 4506.296,
+        "audio_bytes": 12672,
+        "format": "audio/mpeg",
+        "server_timing": "tts_first_audio;dur=4485.567"
+      }
+    },
+    {
+      "image": "cold-fix",
+      "repeat": 0,
+      "process_start_to_ready_ms": 4418.531,
+      "process_start_to_first_audio_ms": 9179.834,
+      "request": {
+        "headers_ms": 4761.28,
+        "network_first_audio_ms": 4761.303,
+        "total_ms": 4762.419,
+        "audio_bytes": 12672,
+        "format": "audio/mpeg",
+        "server_timing": "tts_first_audio;dur=4746.156"
+      }
+    },
+    {
+      "image": "baseline",
+      "repeat": 1,
+      "process_start_to_ready_ms": 12494.457,
+      "process_start_to_first_audio_ms": 17573.761,
+      "request": {
+        "headers_ms": 5079.153,
+        "network_first_audio_ms": 5079.304,
+        "total_ms": 5080.462,
+        "audio_bytes": 12672,
+        "format": "audio/mpeg",
+        "server_timing": "tts_first_audio;dur=5049.359"
+      }
+    },
+    {
+      "image": "cold-fix",
+      "repeat": 1,
+      "process_start_to_ready_ms": 5650.054,
+      "process_start_to_first_audio_ms": 11085.438,
+      "request": {
+        "headers_ms": 5435.347,
+        "network_first_audio_ms": 5435.384,
+        "total_ms": 5436.815,
+        "audio_bytes": 12672,
+        "format": "audio/mpeg",
+        "server_timing": "tts_first_audio;dur=5408.234"
+      }
+    }
+  ],
+  "cold_summary": {
+    "baseline_median_start_to_first_audio_ms": 17387.775999999998,
+    "fixed_median_start_to_first_audio_ms": 10132.636,
+    "reduction_percent": 41.73
+  },
+  "short_first_phrase_rejected": {
+    "baseline": {
+      "warmups": [
+        {
+          "headers_ms": 4068.641,
+          "network_first_audio_ms": 4068.656,
+          "total_ms": 4069.204,
+          "audio_bytes": 8064,
+          "format": "audio/mpeg",
+          "server_timing": "tts_first_audio;dur=4036.126"
+        },
+        {
+          "headers_ms": 4476.649,
+          "network_first_audio_ms": 4476.706,
+          "total_ms": 4476.836,
+          "audio_bytes": 8064,
+          "format": "audio/mpeg",
+          "server_timing": "tts_first_audio;dur=4465.850"
+        },
+        {
+          "headers_ms": 3609.614,
+          "network_first_audio_ms": 3609.624,
+          "total_ms": 3609.884,
+          "audio_bytes": 8064,
+          "format": "audio/mpeg",
+          "server_timing": "tts_first_audio;dur=3595.390"
+        }
+      ],
+      "samples": [
+        {
+          "headers_ms": 4724.627,
+          "network_first_audio_ms": 4724.669,
+          "total_ms": 4725.011,
+          "audio_bytes": 12672,
+          "format": "audio/mpeg",
+          "server_timing": "tts_first_audio;dur=4717.466"
+        },
+        {
+          "headers_ms": 4783.946,
+          "network_first_audio_ms": 4783.966,
+          "total_ms": 4784.125,
+          "audio_bytes": 12672,
+          "format": "audio/mpeg",
+          "server_timing": "tts_first_audio;dur=4773.012"
+        },
+        {
+          "headers_ms": 4596.479,
+          "network_first_audio_ms": 4596.488,
+          "total_ms": 4596.686,
+          "audio_bytes": 12672,
+          "format": "audio/mpeg",
+          "server_timing": "tts_first_audio;dur=4584.230"
+        }
+      ],
+      "median_network_first_audio_ms": 4724.669,
+      "under_20ms_all_samples": false
+    },
+    "short_first_phrase": {
+      "warmups": [
+        {
+          "headers_ms": 3790.766,
+          "network_first_audio_ms": 3790.788,
+          "total_ms": 3791.851,
+          "audio_bytes": 8064,
+          "format": "audio/mpeg",
+          "server_timing": "tts_first_audio;dur=3761.963"
+        },
+        {
+          "headers_ms": 3987.843,
+          "network_first_audio_ms": 3987.851,
+          "total_ms": 3988.177,
+          "audio_bytes": 8064,
+          "format": "audio/mpeg",
+          "server_timing": "tts_first_audio;dur=3980.827"
+        },
+        {
+          "headers_ms": 3864.985,
+          "network_first_audio_ms": 3864.994,
+          "total_ms": 3865.191,
+          "audio_bytes": 8064,
+          "format": "audio/mpeg",
+          "server_timing": "tts_first_audio;dur=3857.070"
+        }
+      ],
+      "samples": [
+        {
+          "headers_ms": 3733.391,
+          "network_first_audio_ms": 3733.419,
+          "total_ms": 6845.256,
+          "audio_bytes": 14784,
+          "format": "audio/mpeg",
+          "server_timing": "tts_first_audio;dur=3725.649"
+        },
+        {
+          "headers_ms": 3411.143,
+          "network_first_audio_ms": 3411.153,
+          "total_ms": 6622.055,
+          "audio_bytes": 14784,
+          "format": "audio/mpeg",
+          "server_timing": "tts_first_audio;dur=3395.919"
+        },
+        {
+          "headers_ms": 4078.299,
+          "network_first_audio_ms": 4078.327,
+          "total_ms": 8620.052,
+          "audio_bytes": 14784,
+          "format": "audio/mpeg",
+          "server_timing": "tts_first_audio;dur=4063.311"
+        }
+      ],
+      "median_network_first_audio_ms": 3733.419,
+      "under_20ms_all_samples": false
+    },
+    "reason": "Earlier firstaudio increased completeclip generationtime; rejectcost/continuity regression instead of claiming target success."
+  },
+  "model_thread_sweep": [
+    {
+      "model": "kokoro-v1.0.int8.onnx",
+      "threads": 1,
+      "input": "Ready.",
+      "wall_ms": 1205.04,
+      "cpu_ms": 753.37,
+      "audio_samples": 13312
+    },
+    {
+      "model": "kokoro-v1.0.int8.onnx",
+      "threads": 1,
+      "input": "Check pipeline latency.",
+      "wall_ms": 1535.96,
+      "cpu_ms": 1412.07,
+      "audio_samples": 36864
+    },
+    {
+      "model": "kokoro-v1.0.int8.onnx",
+      "threads": 1,
+      "input": "Check pipeline latency.",
+      "wall_ms": 1164.58,
+      "cpu_ms": 1163.53,
+      "audio_samples": 36864
+    },
+    {
+      "model": "kokoro-v1.0.int8.onnx",
+      "threads": 1,
+      "input": "Check pipeline",
+      "wall_ms": 868.82,
+      "cpu_ms": 868.06,
+      "audio_samples": 24576
+    },
+    {
+      "model": "kokoro-v1.0.int8.onnx",
+      "threads": 2,
+      "input": "Ready.",
+      "wall_ms": 597.6,
+      "cpu_ms": 853.88,
+      "audio_samples": 13312
+    },
+    {
+      "model": "kokoro-v1.0.int8.onnx",
+      "threads": 2,
+      "input": "Check pipeline latency.",
+      "wall_ms": 1001.15,
+      "cpu_ms": 1366.68,
+      "audio_samples": 36864
+    },
+    {
+      "model": "kokoro-v1.0.int8.onnx",
+      "threads": 2,
+      "input": "Check pipeline latency.",
+      "wall_ms": 1004.17,
+      "cpu_ms": 1376.4,
+      "audio_samples": 36864
+    },
+    {
+      "model": "kokoro-v1.0.int8.onnx",
+      "threads": 2,
+      "input": "Check pipeline",
+      "wall_ms": 765.03,
+      "cpu_ms": 1065.18,
+      "audio_samples": 24576
+    },
+    {
+      "model": "kokoro-v1.0.int8.onnx",
+      "threads": 4,
+      "input": "Ready.",
+      "wall_ms": 607.32,
+      "cpu_ms": 1299.0,
+      "audio_samples": 13312
+    },
+    {
+      "model": "kokoro-v1.0.int8.onnx",
+      "threads": 4,
+      "input": "Check pipeline latency.",
+      "wall_ms": 994.12,
+      "cpu_ms": 1928.72,
+      "audio_samples": 36864
+    },
+    {
+      "model": "kokoro-v1.0.int8.onnx",
+      "threads": 4,
+      "input": "Check pipeline latency.",
+      "wall_ms": 1002.8,
+      "cpu_ms": 1944.47,
+      "audio_samples": 36864
+    },
+    {
+      "model": "kokoro-v1.0.int8.onnx",
+      "threads": 4,
+      "input": "Check pipeline",
+      "wall_ms": 744.47,
+      "cpu_ms": 1537.03,
+      "audio_samples": 24576
+    },
+    {
+      "model": "kokoro-v1.0.onnx",
+      "threads": 1,
+      "input": "Ready.",
+      "wall_ms": 729.06,
+      "cpu_ms": 728.23,
+      "audio_samples": 13312
+    },
+    {
+      "model": "kokoro-v1.0.onnx",
+      "threads": 1,
+      "input": "Check pipeline latency.",
+      "wall_ms": 1206.59,
+      "cpu_ms": 1205.14,
+      "audio_samples": 36864
+    },
+    {
+      "model": "kokoro-v1.0.onnx",
+      "threads": 1,
+      "input": "Check pipeline latency.",
+      "wall_ms": 1219.57,
+      "cpu_ms": 1218.65,
+      "audio_samples": 36864
+    },
+    {
+      "model": "kokoro-v1.0.onnx",
+      "threads": 1,
+      "input": "Check pipeline",
+      "wall_ms": 979.92,
+      "cpu_ms": 975.33,
+      "audio_samples": 25600
+    },
+    {
+      "model": "kokoro-v1.0.onnx",
+      "threads": 2,
+      "input": "Ready.",
+      "wall_ms": 421.21,
+      "cpu_ms": 827.42,
+      "audio_samples": 13312
+    },
+    {
+      "model": "kokoro-v1.0.onnx",
+      "threads": 2,
+      "input": "Check pipeline latency.",
+      "wall_ms": 706.84,
+      "cpu_ms": 1392.14,
+      "audio_samples": 36864
+    },
+    {
+      "model": "kokoro-v1.0.onnx",
+      "threads": 2,
+      "input": "Check pipeline latency.",
+      "wall_ms": 709.19,
+      "cpu_ms": 1403.36,
+      "audio_samples": 36864
+    },
+    {
+      "model": "kokoro-v1.0.onnx",
+      "threads": 2,
+      "input": "Check pipeline",
+      "wall_ms": 557.87,
+      "cpu_ms": 1096.9,
+      "audio_samples": 25600
+    },
+    {
+      "model": "kokoro-v1.0.onnx",
+      "threads": 4,
+      "input": "Ready.",
+      "wall_ms": 264.72,
+      "cpu_ms": 1021.8,
+      "audio_samples": 13312
+    },
+    {
+      "model": "kokoro-v1.0.onnx",
+      "threads": 4,
+      "input": "Check pipeline latency.",
+      "wall_ms": 453.1,
+      "cpu_ms": 1748.62,
+      "audio_samples": 36864
+    },
+    {
+      "model": "kokoro-v1.0.onnx",
+      "threads": 4,
+      "input": "Check pipeline latency.",
+      "wall_ms": 479.03,
+      "cpu_ms": 1842.11,
+      "audio_samples": 36864
+    },
+    {
+      "model": "kokoro-v1.0.onnx",
+      "threads": 4,
+      "input": "Check pipeline",
+      "wall_ms": 375.86,
+      "cpu_ms": 1446.05,
+      "audio_samples": 25600
+    }
+  ],
+  "newer_export_rejected": {
+    "release": "model-files-v1.1",
+    "model": "kokoro-v1.0.int8.onnx",
+    "sha256": "ae315a79b623f244700e4afb9246c46a26066782e049ba174bf3ba433970ee9c",
+    "reason": "Installed ONNX Runtime lacked a ConvInteger implementation on this host; not shipped."
+  },
+  "validation": {
+    "actual_linux_amd64_docker_build_passed": true,
+    "real_authenticated_http_mp3_passed": true,
+    "service_tests_passed": 17,
+    "under_20ms_verified": false,
+    "live_vercel_latency_verified": false
+  },
+  "limits": [
+    "Local x86emulation is not the Vercel function runtime; timings do not predict deployed performance.",
+    "Two freshcontainers pervariant are diagnostic samples, not percentile/SLA evidence.",
+    "Neuralinference continues to exceed20ms. No GPU,benchmarkphrasecache,silentprefix or fakeheader success claim.",
+    "Existing Prisma/database/projectenvironment/providerdefault and productionaliases remain unchanged."
+  ]
+}
