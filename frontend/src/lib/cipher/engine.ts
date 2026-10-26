@@ -9,7 +9,7 @@ export interface Touch { day: number; channel: 'Email' | 'LinkedIn' | 'Call'; ac
 export interface Lead {
   id: string; company: Company; signals: Signal[]; score: number; tier: 'Hot' | 'Warm' | 'Watch';
   why: string; buyer: { persona: string; linkedin: string; apollo: string; name?: string; title?: string; source?: string };
-  email: { subject: string; body: string }; sequence: Touch[]; stage: Stage; sentAt?: string;
+  email: { subject: string; body: string }; sequence: Touch[]; stage: Stage; sentAt?: string; manualSentAt?: string;
   ai?: { model: string; web: boolean; at: string };
 }
 export interface RunConfig { marketId: string; offering: string; persona: string; senderName: string; tickers?: string[] }

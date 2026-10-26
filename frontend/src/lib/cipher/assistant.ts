@@ -64,7 +64,7 @@ export function localReply(question: string, leads: Lead[], ctx: { offering: str
   if (/\b(today|next|to ?do|should i do|action|follow ?up|due)\b/.test(q)) {
     const ready = hot.filter(l => l.stage === 'drafted');
     const today = new Date().toISOString().slice(0, 10);
-    const due = leads.filter(l => l.stage === 'sent' && l.sequence.some(t => t.day > 0 && t.due <= today));
+    const due = leads.filter(l => (l.stage === 'sent' || l.stage === 'manual-sent') && l.sequence.some(t => t.day > 0 && t.due <= today));
     const replied = leads.filter(l => l.stage === 'replied');
     const steps = [
       ready.length ? `start sequences for ${list(ready.slice(0, 3).map(l => l.company.name))}${ready.length > 3 ? ` and ${ready.length - 3} more hot accounts` : ''}` : '',

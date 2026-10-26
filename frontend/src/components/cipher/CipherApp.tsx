@@ -99,6 +99,7 @@ export default function CipherApp() {
   const lead = selected ? byId.get(selected) ?? null : null;
   const count = (t: Tier) => leads.filter(l => l.tier === t).length;
   const launched = leads.filter(l => l.stage === 'sent').length;
+  const hotHandoffs = leads.some(l => l.tier === 'Hot' && l.stage === 'sent');
   const meetings = leads.filter(l => l.stage === 'meeting').length;
   const readyHot = leads.filter(l => l.tier === 'Hot' && l.stage === 'drafted');
 
@@ -124,7 +125,7 @@ export default function CipherApp() {
           if (!res.ok || !data.lead) { if (res.status === 401 || res.status === 402) stop = data.detail || 'The AI key was rejected.'; throw new Error(data.detail || `Research answered ${res.status}.`); }
           const next = data.lead;
           if (!live()) return;
-          setLeads(ls => ls.map(l => (l.id === next.id ? { ...next, stage: l.stage, sentAt: l.sentAt, email: l.stage === 'drafted' ? next.email : l.email } : l)));
+          setLeads(ls => ls.map(l => (l.id === next.id ? { ...next, stage: l.stage, sentAt: l.sentAt, manualSentAt: l.manualSentAt, email: l.stage === 'drafted' ? next.email : l.email } : l)));
           log(`${next.company.name}: score ${current.score} → ${next.score} (${next.tier}) from ${shortModel(data.model || '')}${data.web ? ' with web search' : ''}. ${next.why}`, next.tier === 'Hot' ? 'good' : 'info', next.id);
         } catch (e) {
           if (live()) log(`${target.company.name}: AI research failed. ${e instanceof Error ? e.message : ''}`, 'warn', target.id);
@@ -206,7 +207,9 @@ export default function CipherApp() {
 
   const update = (id: string, patch: Partial<Lead>) => setLeads(ls => ls.map(l => (l.id === id ? { ...l, ...patch } : l)));
   function move(l: Lead, stage: Stage) {
-    update(l.id, { stage, sentAt: stage === 'sent' || stage === 'manual-sent' ? new Date().toISOString() : l.sentAt });
+    const now = new Date().toISOString();
+    const manualSentAt = stage === 'manual-sent' ? now : l.manualSentAt || (l.stage === 'manual-sent' ? l.sentAt || now : undefined);
+    update(l.id, { stage, sentAt: stage === 'sent' || stage === 'manual-sent' ? now : l.sentAt, manualSentAt });
     log(`${l.company.name} moved to ${stageLabel(stage)}`, stage === 'meeting' ? 'good' : 'info', l.id);
   }
 
@@ -321,7 +324,7 @@ export default function CipherApp() {
                     {aiProgress ? `Researching ${aiProgress.done}/${aiProgress.total}…` : 'Research with AI'}
                   </button>
                   <button type="button" className="cx-act" disabled={running || !readyHot.length} onClick={() => void launch(readyHot)}>
-                    {readyHot.length ? `Start ${readyHot.length} hot sequence${readyHot.length > 1 ? 's' : ''}` : count('Hot') ? 'Hot sequences started' : 'Start hot sequences'}
+                    {readyHot.length ? `Start ${readyHot.length} hot sequence${readyHot.length > 1 ? 's' : ''}` : hotHandoffs ? 'Hot sequences handed off' : count('Hot') ? 'No hot sequences ready' : 'Start hot sequences'}
                   </button>
                 </div>
               </div>
@@ -517,7 +520,7 @@ export default function CipherApp() {
             <h3 className="cx-label">Sequence</h3>
             <ol className="cx-seq">
               {lead.sequence.map(t => (
-                <li key={t.day} className={lead.stage !== 'drafted' && t.day === 0 ? 'done' : ''}>
+                <li key={t.day} className={(lead.stage === 'manual-sent' || lead.manualSentAt) && t.day === 0 ? 'done' : ''}>
                   <span className="d num">Day {t.day}</span><span className="ch">{t.channel}</span><span className="a">{t.action}</span><time className="num">{t.due}</time>
                 </li>
               ))}
@@ -530,7 +533,7 @@ export default function CipherApp() {
               <button type="button" className="cx-btn" onClick={() => void copyEmail(lead)}>Copy email</button>
               {lead.stage === 'sent' || lead.stage === 'manual-sent' ? <button type="button" className="cx-btn" onClick={() => move(lead, 'replied')}>Mark replied</button> : null}
               {lead.stage === 'sent' || lead.stage === 'manual-sent' || lead.stage === 'replied' ? <button type="button" className="cx-act" onClick={() => move(lead, 'meeting')}>Meeting booked</button> : null}
-              {lead.sentAt ? <span className="cx-status">Started {new Date(lead.sentAt).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span> : null}
+              {lead.sentAt ? <span className="cx-status">{lead.manualSentAt || lead.stage === 'manual-sent' ? 'Sent manually' : 'Handoff accepted'} {new Date(lead.manualSentAt || lead.sentAt).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span> : null}
             </footer>
           </article>
         </div>

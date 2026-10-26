@@ -9,7 +9,7 @@ function setup({ webhook = '' } = {}) {
     signals: [], score: 88, tier: 'Hot', why: 'A strong buying signal',
     buyer: { persona: 'CFO', linkedin: 'https://linkedin.example/acme', apollo: 'https://apollo.example/acme' },
     email: { subject: 'A better workflow', body: 'A short introduction.' },
-    sequence: [{ day: 0, channel: 'Email', action: 'Send note', due: '2026-10-25' }, { day: 2, channel: 'LinkedIn', action: 'Follow up', due: '2026-10-27' }],
+    sequence: [{ day: 0, channel: 'Email', action: 'Send note', due: '2026-10-25' }, { day: 2, channel: 'LinkedIn', action: 'Follow up', due: '2000-01-01' }],
     stage: 'drafted',
   };
   env.globals.localStorage.setItem('cipher-territory-v2', JSON.stringify({
@@ -70,8 +70,13 @@ test('missing sequence sender opens Setup and leaves the lead ready to send', as
   const context={offering:saved.offering,persona:saved.persona};
   assert.match(assistant.localReply('pipeline',saved.leads,context).text,/1 sent manually/);
   assert.doesNotMatch(assistant.localReply('who should we call first?',saved.leads,context).text,/Sequences are already running/);
+  assert.match(assistant.localReply('What should I do today?',saved.leads,context).text,/send follow-ups to Acme/);
   assert.ok(find(view.tree,node=>node.type==='div'&&textOf(node)==='In sequence0'));
+  assert.doesNotMatch(textOf(view.tree),/Hot sequences started|Hot sequences handed off/);
   assert.ok(find(view.tree, node => node.type === 'button' && textOf(node) === 'Mark replied'));
+  find(view.tree,node=>node.type==='button'&&textOf(node)==='Mark replied').props.onClick();
+  await view.flush();
+  assert.equal(find(view.tree,node=>node.type==='li'&&textOf(node).startsWith('Day 0')).props.className,'done','manual-send evidence survives a later reply');
   view.unmount();
 });
 
@@ -89,5 +94,9 @@ test('an accepted webhook handoff stays in sequence until email delivery is conf
   assert.equal(textOf(sequenceStatus), 'In sequence');
   assert.ok(find(view.tree, node => node.type === 'div' && textOf(node) === 'In sequence1'));
   assert.match(textOf(view.tree), /1 sequence handoff accepted/);
+  assert.match(textOf(view.tree),/Hot sequences handed off/);
+  find(view.tree,node=>node.type==='button'&&node.props.role==='row'&&textOf(node).includes('Acme')).props.onClick();
+  view.rerender();
+  assert.notEqual(find(view.tree,node=>node.type==='li'&&textOf(node).startsWith('Day 0')).props.className,'done','a webhook handoff does not confirm that Send note completed');
   view.unmount();
 });
