@@ -20,6 +20,10 @@ PROVIDERS = {
     'meta': ('Meta / Llama', 'auto/free-cf-meta-llama-llama-3-3-70b-instruct-fp8-fast', 'https://dev.meta.ai/'),
 }
 LOCAL_KEY_PROVIDERS = {'gemini', 'xai'}
+API_ACCOUNT_CONTRACTS = {
+    'gemini': ('gemini_api_account_check', 'grokbot-gemini-existing-api', 'google/gemini-3.8-flash', 'gemini/gemini-3.8-flash'),
+    'xai': ('xai_api_account_check', 'grokbot-xai-existing-api', 'xai/grok-4.5', 'xai/grok-4.5'),
+}
 PREFIX = 'model_connection:'
 ROUTES = {
     'openai/gpt-6.1-sol': {'cx/gpt-6.1-sol'},
@@ -52,6 +56,22 @@ async def anthropic_account_support():
         data = response.json() if response.status_code == 200 else {}
         capabilities = data.get('capabilities',{})
         return data.get('provider') == 'claude' and data.get('state') == 'supported' and capabilities.get('anthropic_api_account_check') is True and type(capabilities.get('version')) is int and capabilities['version'] == 1
+    except Exception:
+        return False
+
+async def direct_api_account_support(provider):
+    """Read only the paired worker's explicit direct-API capability; never send a key."""
+    from app.services import omniroute
+    if provider not in API_ACCOUNT_CONTRACTS or not remote_control_available(): return False
+    try:
+        url = omniroute.endpoint().removesuffix('/v1') + '/api/internal/connections/check'
+        headers = omniroute.headers()
+        headers['Authorization'] = 'Bearer ' + settings.OMNIROUTE_CONTROL_KEY
+        async with httpx.AsyncClient(timeout=20, follow_redirects=False) as client:
+            response = await client.post(url,headers=headers,json={'provider':provider,'action':'capabilities'})
+        data = response.json() if response.status_code == 200 else {}
+        capabilities = data.get('capabilities',{})
+        return data.get('provider') == provider and data.get('state') == 'supported' and capabilities.get(API_ACCOUNT_CONTRACTS[provider][0]) is True and type(capabilities.get('version')) is int and capabilities['version'] == 1
     except Exception:
         return False
 
@@ -146,6 +166,8 @@ async def queue_check(db, provider, api_key=None, verification_target='current_r
     except ValueError: raise HTTPException(503, 'Secure credential storage must be configured before managing model connections.')
     if provider == 'claude' and (api_key is not None or verification_target == 'provider_account') and not await anthropic_account_support():
         raise HTTPException(503, 'Anthropic API account checks are not available on this gateway release yet. Your saved connection is unchanged.')
+    if provider in API_ACCOUNT_CONTRACTS and remote_control_available() and (api_key is not None or verification_target == 'provider_account') and not await direct_api_account_support(provider):
+        raise HTTPException(503, f'{PROVIDERS[provider][0]} API account checks are not available on this gateway release yet. Your saved connection is unchanged.')
     if db.bind.dialect.name == 'postgresql': await db.execute(text('SELECT pg_advisory_xact_lock(1763000276)'))
     row = await db.get(RuntimeCheck, PREFIX + provider)
     if row and row.status in {'pending', 'running'}:
@@ -231,6 +253,19 @@ async def control_check(payload):
                 raise RuntimeError('Anthropic API account identity was not verified.')
             return {key:result[key] for key in ('state','provider','verification_scope','connection_provider','connection_ref','public_model','transport_model','model_access_verified')} | {'message':'Anthropic API account verified with a model response. API billing is separate from Claude subscriptions.'}
         return {'state':result['state'],'message':'Anthropic API access could not be verified. Your existing connection is preserved; review the API key, access and billing.'}
+    if payload['provider'] in API_ACCOUNT_CONTRACTS and (payload.get('verification_target') == 'provider_account' or payload['action'] == 'connect_api_key'):
+        provider = payload['provider']
+        _, slot, public, transport = API_ACCOUNT_CONTRACTS[provider]
+        if result['state'] == 'verification_required':
+            raise RuntimeError('Browser account verification cannot verify this direct API credential.')
+        if result['state'] == 'ready':
+            if (result.get('provider') != provider or result.get('verification_scope') != 'provider_account'
+                    or result.get('connection_provider') != provider or result.get('connection_ref') != slot
+                    or result.get('model_access_verified') is not True
+                    or result.get('public_model') != public or result.get('transport_model') != transport):
+                raise RuntimeError('The requested API credential and model were not verified.')
+            return {key:result[key] for key in ('state','provider','verification_scope','connection_provider','connection_ref','public_model','transport_model','model_access_verified')} | {'message':f'{PROVIDERS[provider][0]} API access verified with the expected model. API billing is separate from subscriptions.'}
+        return {'state':result['state'],'message':f'{PROVIDERS[provider][0]} API access could not be verified. Your existing connection is preserved; review the API key, access and billing.'}
     return result
 
 
