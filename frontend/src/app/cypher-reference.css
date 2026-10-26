@@ -145,7 +145,7 @@ body:has(.app-layout) { display: flow-root; }
   font-size: 12px;
   font-weight: 550;
   text-align: left;
-  transition: background .18s ease, transform .18s cubic-bezier(.2,.8,.2,1), border-color .18s ease;
+  transition: background .18s ease, border-color .18s ease;
 }
 .sidebar-shell .new-task-button svg {
   width: 23px;
@@ -157,7 +157,7 @@ body:has(.app-layout) { display: flow-root; }
   stroke: currentColor;
   stroke-width: 1.7;
 }
-.sidebar-shell .new-task-button:hover { background: #e4e0d8; transform: translateY(-1px); }
+.sidebar-shell .new-task-button:hover { background: #e4e0d8; transform: none; }
 .cypher-primary-nav { display: grid; gap: 2px; margin: 0 0 12px; }
 .cypher-primary-nav button {
   display: flex;
@@ -171,9 +171,9 @@ body:has(.app-layout) { display: flow-root; }
   color: var(--cx-label);
   font-size: 12px;
   text-align: left;
-  transition: background .18s ease, transform .18s cubic-bezier(.2,.8,.2,1);
+  transition: background .18s ease;
 }
-.cypher-primary-nav button:hover { background: var(--system-hover); transform: translateX(2px); }
+.cypher-primary-nav button:hover { background: var(--system-hover); transform: none; }
 .cypher-primary-nav svg {
   width: 16px;
   height: 16px;
@@ -186,8 +186,8 @@ body:has(.app-layout) { display: flow-root; }
 }
 .cypher-recent-tasks { display: grid; gap: 2px; margin: 0 0 9px; }
 .cypher-recent-tasks h2 { margin: 0 0 5px; color: var(--cx-label-2); font-size: 10px; font-weight: 500; }
-.cypher-recent-tasks > button { display: flex; min-width: 0; min-height: 30px; align-items: center; gap: 7px; padding: 4px 3px; border-radius: 6px; background: transparent; color: var(--cx-label); text-align: left; transition: background .16s ease, transform .16s ease; }
-.cypher-recent-tasks > button:hover { background: var(--system-hover); transform: translateX(2px); }
+.cypher-recent-tasks > button { display: flex; min-width: 0; min-height: 30px; align-items: center; gap: 7px; padding: 4px 3px; border-radius: 6px; background: transparent; color: var(--cx-label); text-align: left; transition: background .16s ease; }
+.cypher-recent-tasks > button:hover { background: var(--system-hover); transform: none; }
 .cypher-recent-tasks > button > span:last-child { overflow: hidden; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
 .cypher-recent-tasks > p { margin: 3px 0; color: var(--cx-label-2); font-size: 10px; }
 .cypher-recent-tasks-error { display: flex; align-items: center; gap: 6px; }
@@ -312,7 +312,17 @@ body:has(.app-layout) { display: flow-root; }
 .sidebar-shell .sidebar-more > summary { min-height: 31px; color: var(--cx-label-2); font-size: 11px; }
 .sidebar-shell .sidebar-more-content { display: grid; gap: 7px; }
 .sidebar-shell .preferences-nav, .sidebar-shell .plugins-nav { min-height: 34px; padding: 6px 8px; border-radius: 8px; font-size: 11px; }
-.sidebar-shell .roster-footer { min-height: 44px; margin-top: 1px; padding: 8px 2px 0; border-top: 0; }
+.sidebar-shell .roster-footer { display: none; }
+.app-account { position: absolute; z-index: 50; top: 17px; right: 18px; width: 28px; height: 28px; }
+.app-account .account { width: 28px; height: 28px; flex: 0 0 28px; }
+.app-account details > summary,
+.app-account a[href="/login"] { display: grid; width: 28px; min-height: 28px; height: 28px; place-items: center; padding: 0; border: 1px solid var(--cx-sep); border-radius: 50%; background: #e9e4da; color: var(--cx-label); }
+.app-account details > summary > span:nth-child(2),
+.app-account details > summary > svg,
+.app-account a[href="/login"] > span:last-child,
+.app-account > div > button { display: none; }
+.app-account details > summary > span:first-child,
+.app-account a[href="/login"] > span:first-child { width: 26px; height: 26px; flex-basis: 26px; background: transparent; color: var(--cx-label); font-size: 10px; }
 .sidebar-shell .owner-avatar { width: 27px; height: 27px; flex: 0 0 27px; border: 1px solid var(--cx-sep); background: #e9e4da; color: var(--cx-label); font-size: 11px; }
 .sidebar-shell .workspace-label { min-width: 0; padding: 4px; overflow: hidden; border: 0; background: transparent; color: var(--cx-label-2); font-size: 10px; text-align: left; text-overflow: ellipsis; }
 .sidebar-shell .workspace-label > span { display: none; }
@@ -396,7 +406,7 @@ body:has(.app-layout) { display: flow-root; }
   position: relative;
   display: grid;
   width: min(740px, 100%);
-  min-height: 56px;
+  min-height: 54px;
   grid-template-columns: minmax(0, 1fr) auto;
   grid-template-rows: 1fr;
   align-items: center;
@@ -406,9 +416,9 @@ body:has(.app-layout) { display: flow-root; }
   border-radius: 999px;
   background: #fbf8f3;
   box-shadow: 0 5px 18px rgba(34, 28, 17, .025);
-  transition: border-color .2s ease, box-shadow .2s ease, transform .2s cubic-bezier(.2,.8,.2,1);
+  transition: border-color .2s ease, box-shadow .2s ease;
 }
-.quickstart .task-composer:hover { transform: translateY(-1px); }
+.quickstart .task-composer:hover { transform: none; }
 .quickstart .task-composer:focus-within { border-color: #aaa398; box-shadow: 0 0 0 3px rgba(75, 68, 54, .055); }
 .quickstart .task-composer textarea {
   width: 100%;
@@ -426,7 +436,7 @@ body:has(.app-layout) { display: flow-root; }
   line-height: 22px;
   resize: none;
 }
-.quickstart .task-composer textarea::placeholder { color: #89857e; }
+.quickstart .task-composer textarea::placeholder { color: #6f6c65; }
 .quickstart .task-composer-footer {
   display: flex;
   min-height: 40px;
@@ -449,12 +459,24 @@ body:has(.app-layout) { display: flow-root; }
   border-radius: 50%;
   background: #f8f6f1;
   color: var(--cx-label);
-  transition: background .18s ease, transform .18s cubic-bezier(.2,.8,.2,1);
+  transition: background .18s ease;
 }
-.task-dictate-button:hover:not(:disabled), .quickstart-options > summary:hover { background: #eeeae1; transform: scale(1.045); }
+.task-dictate-button:hover:not(:disabled), .quickstart-options > summary:hover { background: #eeeae1; transform: none; }
 .task-dictate-button svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
 .task-dictate-button[aria-pressed="true"] { color: #90493c; animation: cypher-mic-pulse 1.4s ease-in-out infinite; }
-.quickstart-options { position: relative; }
+.quickstart-options {
+  position: absolute;
+  z-index: 4;
+  top: 50%;
+  right: 92px;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-50%);
+  transition: opacity .16s ease;
+}
+.task-composer:hover .quickstart-options,
+.task-composer:focus-within .quickstart-options,
+.quickstart-options:focus-within { opacity: 1; pointer-events: auto; }
 .quickstart-options > summary { cursor: pointer; list-style: none; }
 .quickstart-options > summary::-webkit-details-marker { display: none; }
 .quickstart-options > summary svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.55; stroke-linecap: round; stroke-linejoin: round; }
@@ -498,7 +520,7 @@ body:has(.app-layout) { display: flow-root; }
   width: min(840px, 100%);
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 10px;
-  margin: 18px 0 20px;
+  margin: 16px 0 14px;
 }
 .quickstart .starter-prompts .starter-card {
   display: grid;
@@ -507,16 +529,16 @@ body:has(.app-layout) { display: flow-root; }
   grid-template-rows: 21px auto 1fr;
   align-content: start;
   justify-items: start;
-  gap: 6px;
-  padding: 14px 15px 13px;
+  gap: 5px;
+  padding: 12px 15px;
   border: 1px solid #eee9e0;
   border-radius: 13px;
   background: #fffefa;
   color: var(--cx-label);
   text-align: left;
-  transition: border-color .2s ease, background .2s ease, transform .2s cubic-bezier(.2,.8,.2,1), box-shadow .2s ease;
+  transition: border-color .18s ease, background .18s ease;
 }
-.quickstart .starter-prompts .starter-card:hover:not(:disabled) { border-color: #d6cfc1; background: #fffdf8; box-shadow: 0 7px 18px rgba(34, 28, 17, .045); transform: translateY(-2px); }
+.quickstart .starter-prompts .starter-card:hover:not(:disabled) { border-color: #d6cfc1; background: #fffdf8; box-shadow: none; transform: none; }
 .starter-card svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
 .starter-card strong { font-size: 12px; font-weight: 560; line-height: 1.35; }
 .starter-card span { color: var(--cx-label-2); font-size: 11px; line-height: 1.4; }
@@ -535,9 +557,9 @@ body:has(.app-layout) { display: flow-root; }
   color: var(--cx-label);
   font-size: 0;
   font-weight: 500;
-  transition: color .16s ease, background .16s ease, transform .16s ease;
+  transition: color .16s ease, background .16s ease;
 }
-.quickstart .quickstart-voice:hover:not(:disabled) { background: #eeeae1; color: var(--cx-label); transform: scale(1.045); }
+.quickstart .quickstart-voice:hover:not(:disabled) { background: #eeeae1; color: var(--cx-label); transform: none; }
 .quickstart .quickstart-voice svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
 .quickstart .quickstart-voice:disabled { opacity: .62; }
 .quickstart [aria-labelledby="recent-work-heading"] { width: min(840px, 100%); margin: 0; }
@@ -579,6 +601,7 @@ body:has(.app-layout) { display: flow-root; }
   body { overflow: auto; }
   .app-layout { width: 100vw; height: 100dvh; min-height: 0; margin: 0; padding: 0; border: 0; border-radius: 0; box-shadow: none; }
   .app-layout::before, .app-layout::after { display: none; }
+  .app-account { display: none; }
   .workspace-main { width: 100%; }
   .quickstart { min-height: 100%; padding: 52px 18px max(22px, env(safe-area-inset-bottom)); }
   .quickstart-panel { width: min(100%, 560px); justify-content: flex-start; }
@@ -586,6 +609,7 @@ body:has(.app-layout) { display: flow-root; }
   .quickstart h1 { max-width: 360px; font-size: clamp(24px, 7vw, 30px); }
   .quickstart .quickstart-intro { max-width: 34ch; margin-bottom: 19px; font-size: 12px; }
   .quickstart .task-composer { min-height: 54px; padding-left: 13px; }
+  .quickstart-options { right: 88px; }
   .quickstart .task-composer textarea { font-size: 12px; }
   .task-dictate-button, .quickstart-options > summary { width: 32px; min-width: 32px; height: 32px; min-height: 32px; }
   .quickstart .quickstart-submit { width: 36px; min-width: 36px; height: 36px; min-height: 36px; }
@@ -593,7 +617,7 @@ body:has(.app-layout) { display: flow-root; }
   .quickstart .starter-prompts .starter-card { min-height: 96px; padding: 12px; }
   .starter-card strong { font-size: 11px; }
   .starter-card span { font-size: 10px; }
-  .quickstart .quickstart-voice { margin-top: -11px; }
+  .quickstart .quickstart-voice { margin-top: 0; }
   .sidebar-shell .sidebar-brand .brand-symbol { width: 52px; }
 }
 @media (max-width: 380px) {

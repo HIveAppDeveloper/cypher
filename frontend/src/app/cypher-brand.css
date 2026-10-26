@@ -118,10 +118,9 @@ body :is(.app-layout,.login-page,dialog) a {color:var(--cx-label);text-decoratio
 .quickstart .task-composer-footer .glass-select-trigger {max-width:min(180px,38vw);min-width:0;min-height:40px;height:40px;padding:8px 10px;border:0;box-shadow:none;background:transparent;color:var(--cx-label-2);font-size:12px}
 .quickstart .task-composer-footer .glass-select-trigger > span {overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .quickstart .task-composer-footer .glass-select-trigger:hover {background:var(--cx-fill-2);color:var(--cx-label)}
-.quickstart .task-composer-footer .quickstart-submit {display:flex;flex:0 0 auto;align-items:center;justify-content:center;gap:8px;width:auto;height:40px;min-height:40px;margin:0 0 0 auto;padding:10px 14px;border:0;border-radius:10px;background:var(--cx-label);color:var(--cx-inverse);font-size:12px;font-weight:550}
-.quickstart .task-composer-footer .quickstart-submit > span {position:static;display:inline;width:auto;height:auto;overflow:visible;clip-path:none;white-space:nowrap}
+.quickstart .task-composer-footer .quickstart-submit {display:grid;flex:0 0 40px;place-items:center;width:40px;height:40px;min-height:40px;margin:0 0 0 auto;padding:0;border:0;border-radius:50%;background:var(--cx-label);color:var(--cx-inverse);font-size:12px;font-weight:550;transition:background .16s ease,transform .16s ease}
 .quickstart-submit svg {width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.6}
-.quickstart .task-composer-footer .quickstart-submit:disabled {background:var(--cx-fill);color:var(--cx-label-2);opacity:1;cursor:default}
+.quickstart .task-composer-footer .quickstart-submit:disabled {background:var(--cx-label);color:var(--cx-inverse);opacity:.78;cursor:default}
 .quickstart-voice {display:inline-flex;align-items:center;justify-content:center;gap:8px;width:auto;min-height:44px;margin:14px 0 0;padding:10px 14px;border:0;border-radius:8px;background:transparent;color:var(--cx-label-2);font:inherit;font-size:13px;font-weight:500;cursor:pointer}
 .quickstart-voice svg {width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round}
 .quickstart-voice:hover:not(:disabled) {background:var(--cx-fill-2);color:var(--cx-label)}

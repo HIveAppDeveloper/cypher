@@ -27,6 +27,24 @@ function relativeDate(value: string) {
   return days < 7 ? `${days}d ago` : new Date(timestamp).toLocaleDateString();
 }
 
+function statusKind(status: string) {
+  const value = status.toLowerCase().replaceAll('_', ' ');
+  if (/complete|succeed|success|done/.test(value)) return 'complete';
+  if (/fail|error|cancel/.test(value)) return 'error';
+  if (/run|progress|queue|pending|working/.test(value)) return 'active';
+  return 'neutral';
+}
+
+function StatusMark({ status }: { status: string }) {
+  const kind = statusKind(status);
+  return <span className={styles.statusMark} data-state={kind} aria-hidden="true">
+    {kind === 'complete' ? <svg viewBox="0 0 20 20"><circle cx="10" cy="10" r="7.5"/><path d="m6.5 10 2.2 2.2 4.8-5"/></svg> :
+      kind === 'error' ? <svg viewBox="0 0 20 20"><circle cx="10" cy="10" r="7.5"/><path d="m7.5 7.5 5 5m0-5-5 5"/></svg> :
+        kind === 'active' ? <svg viewBox="0 0 20 20"><circle cx="8.5" cy="8.5" r="5.5"/><path d="m12.5 12.5 4 4"/></svg> :
+          <svg viewBox="0 0 20 20"><circle cx="10" cy="10" r="5.5"/></svg>}
+  </span>;
+}
+
 export function RecentWork({ onOpen }: { onOpen: (conversationId: string) => void }) {
   const [runs, setRuns] = useState<RecentRun[]>([]);
   const [error, setError] = useState('');
@@ -51,8 +69,8 @@ export function RecentWork({ onOpen }: { onOpen: (conversationId: string) => voi
     <section className={styles.recentWork} aria-labelledby="recent-work-heading" aria-busy={loading}>
       <div className={styles.headingRow}>
         <h2 id="recent-work-heading">Recent work</h2>
-        <a className={styles.viewAll} href="?view=work">
-          View all
+        <a className={styles.viewAll} href="?view=work" aria-label="View all recent work">
+          <span className="visually-hidden">View all</span>
           <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10h11m-4-4 4 4-4 4" /></svg>
         </a>
       </div>
@@ -63,16 +81,18 @@ export function RecentWork({ onOpen }: { onOpen: (conversationId: string) => voi
         </div>
       ) : !runs.length ? <p className={styles.empty}>Your recent tasks will appear here.</p> : (
         <div className={styles.runList}>
-          {runs.map((run, index) => (
+          {runs.map(run => (
             <button
               key={run.id}
               type="button"
               className={styles.run}
-              style={{ animationDelay: `${index * 45}ms` }}
               onClick={() => onOpen(run.conversation_id)}
             >
-              <span className={styles.runTitle}>{run.title || 'Untitled task'}</span>
-              <span className={styles.runMeta}>{run.status.replaceAll('_', ' ')} · {relativeDate(run.created_at)}</span>
+              <StatusMark status={run.status}/>
+              <span className={styles.runCopy}>
+                <span className={styles.runTitle}>{run.title || 'Untitled task'}</span>
+                <span className={styles.runMeta}>{run.status.replaceAll('_', ' ')} · {relativeDate(run.created_at)}</span>
+              </span>
               <svg className={styles.arrow} viewBox="0 0 20 20" aria-hidden="true"><path d="M5 10h10m-4-4 4 4-4 4" /></svg>
             </button>
           ))}

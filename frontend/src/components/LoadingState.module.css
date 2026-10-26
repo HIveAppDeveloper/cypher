@@ -16,8 +16,8 @@
 .loading[data-loading-variant="messages"] .line + .line { width: 64%; }
 .loading[data-loading-variant="roster"] .shapes { gap: 0; }
 .loading[data-loading-variant="roster"] .row { min-height: 54px; }
-.loading[data-loading-variant="recent"] .shapes { gap: 0; }
-.loading[data-loading-variant="recent"] .row { min-height: 52px; box-sizing: border-box; border-bottom: 1px solid var(--border-light); }
+.loading[data-loading-variant="recent"] .shapes { overflow: hidden; gap: 0; border: 1px solid var(--border-light); border-radius: 12px; background: var(--bg-panel); }
+.loading[data-loading-variant="recent"] .row { min-height: 44px; box-sizing: border-box; padding: 7px 12px; border-bottom: 1px solid var(--border-light); }
 .loading[data-loading-variant="recent"] .line { height: 9px; }
 @keyframes breathe { 0%, 100% { opacity: 1; } 50% { opacity: .5; } }
 @media (prefers-reduced-motion: reduce) { .shapes { animation: none; } }

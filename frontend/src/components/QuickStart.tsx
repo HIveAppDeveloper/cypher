@@ -7,7 +7,7 @@ import { RunOptions, Attachment } from '../lib/types';
 import { readTaskAttachments } from '../lib/attachments';
 
 const STARTER_PROMPTS = [
-  { text: 'Research companies', description: 'Build a company shortlist and review the sources.', prompt: 'Research companies for: ', icon: 'search' },
+  { text: 'Find people or companies', description: 'Build lists, research, and find the right contacts.', prompt: 'Research companies for: ', icon: 'search' },
   { text: 'Prepare for a meeting', description: 'Get briefs, background research, and talking points.', prompt: 'Prepare a meeting brief for: ', icon: 'calendar' },
   { text: 'Research a topic', description: 'Deep research with sources and clear summaries.', prompt: 'Research this topic and give me a clear, sourced brief: ', icon: 'document' },
   { text: 'Create something', description: 'Draft emails, documents, presentations, or more.', prompt: 'Create a first draft of: ', icon: 'sparkles' },
@@ -121,7 +121,7 @@ export function QuickStart({ onStart, onOpenRecent, onVoiceStart, options, onOpt
         <BinaryLens className="quickstart-real-lens" active={logoMotionActive} label="Cypher binary lens" />
       </div>
       <h1>What would you like to get done?</h1>
-      <p className="quickstart-intro">Describe a task. The right tools come together automatically.</p>
+      <p className="quickstart-intro">Describe a task. Cypher will bring the right tools together.</p>
 
       <form onSubmit={start} className="task-composer" aria-busy={busy || readingFiles} data-motion-active={logoMotionActive}>
         <input ref={fileInput} className="visually-hidden" type="file" multiple aria-label="Choose task files" accept=".png,.jpg,.jpeg,.webp,.pdf,.txt,.md,.csv,.json,.mp3,.wav,.m4a,.ogg,.flac,.mp4,.webm,.mov" onChange={event => void addFiles(event.target.files)}/>
@@ -140,7 +140,7 @@ export function QuickStart({ onStart, onOpenRecent, onVoiceStart, options, onOpt
               event.currentTarget.form?.requestSubmit();
             }
           }}
-          placeholder={output === 'image' ? 'Describe the image you have in mind…' : 'Ask anything…'}
+          placeholder={output === 'image' ? 'Describe the image you have in mind…' : 'Ask anything or describe a task...'}
           rows={1}
           maxLength={20000}
         />
