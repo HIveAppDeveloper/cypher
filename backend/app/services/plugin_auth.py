@@ -15,6 +15,7 @@ from app.services.plugins import seal, reveal, validate_endpoint
 
 FLOW_TTL = 600
 CLIENT_METADATA_PATH = '/api/plugin-oauth/client-metadata'
+CANONICAL_APP_ORIGIN = 'https://cypher-agent.vercel.app'
 
 async def configure_client(storage, callback_url, client_id, client_secret=None, scope=None):
     """Store this user's registered client, never a token from another app."""
@@ -29,13 +30,13 @@ async def configure_client(storage, callback_url, client_id, client_secret=None,
 
 
 def callback_url_for(origin=None):
-    configured = os.getenv('GROKBOT_PUBLIC_URL', 'https://open-grokbot-hiveapp.vercel.app').rstrip('/')
-    allowed = {configured, *(value.strip().rstrip('/') for value in os.getenv('GROKBOT_OAUTH_ALLOWED_ORIGINS', '').split(',') if value.strip())}
+    configured = os.getenv('GROKBOT_PUBLIC_URL', CANONICAL_APP_ORIGIN).rstrip('/')
+    allowed = {CANONICAL_APP_ORIGIN, configured, *(value.strip().rstrip('/') for value in os.getenv('GROKBOT_OAUTH_ALLOWED_ORIGINS', '').split(',') if value.strip())}
     chosen = origin if origin is not None else configured
     parsed = urlsplit(chosen)
     local = parsed.scheme == 'http' and parsed.hostname in {'localhost', '127.0.0.1'}
     if chosen not in allowed or (parsed.scheme != 'https' and not local) or not parsed.hostname or parsed.username or parsed.password or parsed.path or parsed.query or parsed.fragment:
-        raise ValueError('The sign-in origin must be an approved app domain.')
+        raise ValueError(f'The sign-in origin must be an approved app domain. Use {CANONICAL_APP_ORIGIN} or ask an administrator to approve this exact domain.')
     return chosen + '/api/plugin-oauth/callback'
 
 class SignInRequired(ValueError):
