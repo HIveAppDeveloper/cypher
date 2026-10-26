@@ -1,9 +1,12 @@
+import asyncio
+import os
 from datetime import datetime, timedelta
 from decimal import Decimal
 from uuid import uuid4
 import pytest
 import pytest_asyncio
-from sqlalchemy import func, select
+from sqlalchemy import func, select, text
+from sqlalchemy.engine import make_url
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 from app.db.session import Base
 from app.db.tenancy import current_tenant_id
@@ -17,9 +20,15 @@ from app.config import settings
 
 @pytest_asyncio.fixture
 async def workspace(tmp_path, monkeypatch):
-    engine = create_async_engine(f'sqlite+aiosqlite:///{tmp_path}/apple.db')
+    test_url = os.getenv('CYPHER_APPLE_TEST_POSTGRES_URL')
+    if test_url and make_url(test_url).database != 'cypher_apple_msp_test':
+        pytest.fail('Apple-core PostgreSQL tests require the dedicated disposable test database.')
+    schema = 'e2e_apple_' + uuid4().hex if test_url else None
+    engine = create_async_engine(test_url, connect_args={'server_settings': {'search_path': schema}}) if test_url else create_async_engine(f'sqlite+aiosqlite:///{tmp_path}/apple.db')
     sessions = async_sessionmaker(engine, expire_on_commit=False)
-    async with engine.begin() as c: await c.run_sync(Base.metadata.create_all)
+    async with engine.begin() as c:
+        if schema: await c.execute(text(f'CREATE SCHEMA "{schema}"'))
+        await c.run_sync(Base.metadata.create_all)
     monkeypatch.setattr(settings, 'SECRET_KEY', 'isolated-apple-test-key-longer-than-thirty-two-characters')
     rooms = {}
     for owner in ['owner-a', 'owner-b']:
@@ -28,8 +37,12 @@ async def workspace(tmp_path, monkeypatch):
                 bot = Bot(name='Manager', role='Assistant', system_prompt='Assist', llm_provider='openai', llm_model='gpt-6.1-sol', tools_enabled=[])
                 room = Conversation(title='Private workspace'); db.add_all([bot, room]); await db.flush()
                 db.add(ConversationParticipant(conversation_id=room.id, bot_id=bot.id)); await db.commit(); rooms[owner] = room.id
-    yield sessions, rooms
-    await engine.dispose()
+    try:
+        yield sessions, rooms
+    finally:
+        if schema:
+            async with engine.begin() as c: await c.execute(text(f'DROP SCHEMA "{schema}" CASCADE'))
+        await engine.dispose()
 
 async def linked(sessions, rooms, owner='owner-a', opaque='opaque-a', updates=False):
     with service.tenant_scope(owner):
@@ -215,3 +228,55 @@ async def test_explicit_unlink_releases_identity_without_moving_old_history(work
             assert await db.scalar(select(func.count()).select_from(Task)) == 0
             assert await db.scalar(select(Task.id).where(Task.id == first['task_id'])) is None
             assert (await db.get(AppleThread, new_id)).conversation_id == rooms['owner-b']
+
+
+pg_only = pytest.mark.skipif(not os.getenv('CYPHER_APPLE_TEST_POSTGRES_URL'), reason='Requires disposable Apple-core PostgreSQL')
+
+@pytest.mark.asyncio
+@pg_only
+async def test_concurrent_native_replays_queue_exactly_one_task_on_postgres(workspace):
+    sessions, rooms = workspace; await linked(sessions, rooms)
+    results = await asyncio.gather(incoming(sessions, 'Concurrent task', event='pg-replay'), incoming(sessions, 'Concurrent task', event='pg-replay'), return_exceptions=True)
+    assert all(isinstance(result, dict) for result in results), results
+    assert results[0]['task_id'] == results[1]['task_id']
+    assert sum(bool(r['duplicate']) for r in results) == 1
+    with service.tenant_scope('owner-a'):
+        async with sessions() as db: assert await db.scalar(select(func.count()).select_from(Task)) == 1
+
+@pytest.mark.asyncio
+@pg_only
+async def test_concurrent_dispatch_claims_once_and_optout_cannot_requeue_it(workspace):
+    sessions, rooms = workspace; await linked(sessions, rooms)
+    async def claim():
+        with service.tenant_scope(None):
+            async with sessions() as db:
+                row = await service.claim_outbound(db, apple_transport_approved=True)
+                await db.commit(); return row.id if row else None
+    claims = await asyncio.gather(claim(), claim())
+    assert sum(value is not None for value in claims) == 1
+    await incoming(sessions, 'STOP')
+    assert await claim() is None
+    with service.tenant_scope('owner-a'):
+        async with sessions() as db:
+            rows = (await db.scalars(select(AppleOutbox))).all()
+            assert len(rows) == 1 and rows[0].status == 'sending'
+
+@pytest.mark.asyncio
+@pg_only
+async def test_concurrent_cross_tenant_identity_links_cannot_take_over_history(workspace):
+    sessions, rooms = workspace
+    codes = []
+    for owner in ['owner-a','owner-b']:
+        with service.tenant_scope(owner):
+            async with sessions() as db:
+                code = await service.create_link_challenge(db, rooms[owner]); await db.commit(); codes.append(code)
+    async def link(code):
+        with service.tenant_scope(None):
+            async with sessions() as db:
+                thread = await service.link_verified_customer(db, code=code, business_id='business-id', opaque_id='same-opaque')
+                await db.commit(); return thread.tenant_id
+    results = await asyncio.gather(*(link(code) for code in codes), return_exceptions=True)
+    assert sum(isinstance(result, str) for result in results) == 1
+    assert sum(isinstance(result, ValueError) for result in results) == 1
+    with service.tenant_scope(None):
+        async with sessions() as db: assert await db.scalar(select(func.count()).select_from(AppleThread)) == 1
