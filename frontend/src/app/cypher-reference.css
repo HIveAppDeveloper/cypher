@@ -37,9 +37,9 @@ body:has(.app-layout) { display: flow-root; }
   isolation: isolate;
   display: flex;
   width: min(1114px, calc(100vw - 40px));
-  height: min(622px, calc(100dvh - 12px));
-  min-height: min(560px, calc(100dvh - 12px));
-  margin: 6px auto;
+  height: calc(100dvh - 24px);
+  min-height: min(560px, calc(100dvh - 24px));
+  margin: 12px auto;
   padding-top: 34px;
   overflow: hidden;
   border: 1px solid #e4ded2;
@@ -690,3 +690,62 @@ html[data-motion="false"] .new-task-button { animation: none !important; transit
 .apps-workspace .store-search {padding-bottom:12px}
 .apps-workspace .store-featured-grid {margin-block:16px}
 .apps-workspace .mcp-registry-results:empty {display:none}
+
+/* Keep the default rail compact; a wider rail gives the agent roster the
+   generous icon tiles and clear names from the supplied Cypher reference. */
+.sidebar-shell { container: cypher-sidebar / inline-size; }
+@media (min-width: 761px) {
+  .sidebar-shell:not([data-collapsed="true"]) {
+    width: clamp(176px, var(--sidebar-width, 184px), 320px);
+    flex-basis: clamp(176px, var(--sidebar-width, 184px), 320px);
+  }
+  .sidebar-shell .sidebar-resize-handle { display: block; }
+}
+.cypher-team-disclosure .agent-roster-item > .bot-row {
+  min-height: 52px;
+  padding: 7px 30px 7px 9px;
+  gap: 11px;
+  border-radius: 11px;
+}
+.cypher-team-disclosure .bot-avatar.agent-glyph {
+  width: 36px;
+  height: 36px;
+  flex-basis: 36px;
+  border-color: transparent;
+  border-radius: 11px;
+  background: var(--system-subtle) !important;
+  color: var(--cx-label) !important;
+}
+.cypher-team-disclosure .bot-avatar.agent-glyph svg { width: 18px; height: 18px; }
+.cypher-team-disclosure .bot-row-text strong { font-size: 13px; }
+.cypher-team-disclosure .bot-row-text > span { font-size: 10px; }
+.cypher-team-disclosure .roster-show-all { font-size: 12px; }
+
+@container cypher-sidebar (min-width: 280px) {
+  .cypher-team-disclosure .agent-roster-item > .bot-row {
+    min-height: 72px;
+    padding: 8px 30px 8px 11px;
+    gap: 15px;
+    border-radius: 13px;
+  }
+  .cypher-team-disclosure .bot-avatar.agent-glyph {
+    width: 56px;
+    height: 56px;
+    flex-basis: 56px;
+    border-radius: 16px;
+  }
+  .cypher-team-disclosure .bot-avatar.agent-glyph svg { width: 23px; height: 23px; }
+  .cypher-team-disclosure .bot-row-text strong {
+    font-size: 19px;
+    font-weight: 500;
+    letter-spacing: -.02em;
+  }
+  .cypher-team-disclosure .bot-row-text > span { display: none; }
+  .cypher-team-disclosure .roster-list { max-height: 50dvh; }
+  .cypher-team-disclosure .roster-show-all {
+    min-height: 40px;
+    margin-top: 5px;
+    padding-inline: 11px;
+    font-size: 14px;
+  }
+}

@@ -99,7 +99,7 @@ async def begin(db,groups,approval_id=None,origin=None):
  db.add(row);await db.flush();state=row.id+'.'+secrets.token_urlsafe(32);row.state_hash=hashlib.sha256(state.encode()).hexdigest()
  from app.services.plugin_auth import callback_url_for
  try:callback=callback_url_for(origin).replace('/api/plugin-oauth/callback','/api/auth/google/callback')
- except ValueError:raise HTTPException(422,'Use an approved Cypher domain to connect Google.')
+ except ValueError:raise HTTPException(422,'Use the main Cypher app domain to connect Google, or ask an administrator to approve this exact domain.')
  row.payload=seal(json.dumps({'verifier':verifier,'groups':groups,'requested_scopes':scopes,'redirect_uri':callback}));await db.commit()
  query={'client_id':cid,'redirect_uri':callback,'response_type':'code','scope':' '.join(scopes),'state':state,'access_type':'offline','prompt':'consent','include_granted_scopes':'true','code_challenge':base64.urlsafe_b64encode(hashlib.sha256(verifier.encode()).digest()).rstrip(b'=').decode(),'code_challenge_method':'S256'}
  return {'flow_id':row.id,'binding':binding,'authorization_url':'https://accounts.google.com/o/oauth2/v2/auth?'+urlencode(query)}

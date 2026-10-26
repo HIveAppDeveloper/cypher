@@ -37,7 +37,7 @@ def perform(job,folders,allow_shell):
 
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--server',default='https://open-grokbot-hiveapp.vercel.app')
+    parser.add_argument('--server',default='https://cypher-agent.vercel.app')
     parser.add_argument('--allow-folder',action='append',default=[],help='Folder the agent may request access to. Repeat for multiple folders.')
     parser.add_argument('--allow-shell',action='store_true',help='Permit shell requests, with local approval for each command.')
     args=parser.parse_args();origin=args.server.rstrip('/')

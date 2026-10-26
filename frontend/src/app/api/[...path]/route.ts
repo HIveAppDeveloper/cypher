@@ -8,8 +8,9 @@ async function proxy(request: NextRequest, { params }: { params: Promise<{ path:
   const path = pathSegments.join('/');
   if (request.method==='GET' && path==='plugin-oauth/client-metadata') {
     const origin=request.nextUrl.origin;
-    const configured=(process.env.GROKBOT_PUBLIC_URL||'https://open-grokbot-hiveapp.vercel.app').replace(/\/$/,'');
-    const origins=Array.from(new Set([configured,...(process.env.GROKBOT_OAUTH_ALLOWED_ORIGINS||'').split(',').map(value=>value.trim().replace(/\/$/,'')).filter(Boolean)]));
+    const canonical='https://cypher-agent.vercel.app';
+    const configured=(process.env.GROKBOT_PUBLIC_URL||canonical).replace(/\/$/,'');
+    const origins=Array.from(new Set([canonical,configured,...(process.env.GROKBOT_OAUTH_ALLOWED_ORIGINS||'').split(',').map(value=>value.trim().replace(/\/$/,'')).filter(Boolean)]));
     if(!origins.includes(origin))return NextResponse.json({detail:'Unknown app origin.'},{status:404});
     return NextResponse.json({client_id:origin+'/api/plugin-oauth/client-metadata',client_name:'Cypher',client_uri:origin,redirect_uris:origins.map(value=>value+'/api/plugin-oauth/callback'),grant_types:['authorization_code','refresh_token'],response_types:['code'],token_endpoint_auth_method:'none'},{headers:{'Cache-Control':'public, max-age=300','X-Content-Type-Options':'nosniff'}});
   }

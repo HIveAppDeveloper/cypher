@@ -16,3 +16,5 @@ from app.db.session import Base
 
 from .prospecting import ProspectingRun
 from .investor_funnel import InvestorMatchRun, InvestorUniverseSnapshot, InvestorMatchLabel, FounderLead, FounderArchiveBackfill
+
+from .sourcing_outreach import SourcingOutreach, SourcingMailPolicy
