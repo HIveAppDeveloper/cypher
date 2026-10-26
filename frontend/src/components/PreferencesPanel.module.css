@@ -1,0 +1,16 @@
+.panel:global(.bot-dialog) { background:var(--cx-card); color:var(--cx-label); }
+.theme { display:grid; grid-template-columns:1fr auto; align-items:center; gap:8px 20px; padding:4px 0 24px; margin-bottom:24px; border-bottom:1px solid var(--cx-sep); }
+.theme strong { font-size:15px; font-weight:600; }
+.theme p { margin:6px 0 0; color:var(--cx-label-2); font-size:13px; line-height:1.5; }
+.switchArea { display:grid; place-items:center; min-width:56px; min-height:44px; cursor:pointer; }
+.theme input[role="switch"] { appearance:none; width:48px; height:28px; min-height:28px; border:1px solid var(--cx-label-2); border-radius:20px; background:var(--cx-fill); padding:3px; cursor:pointer; margin:0; }
+.theme input[role="switch"]::before { content:""; display:block; width:20px; height:20px; border-radius:50%; background:var(--cx-label); transition:transform 150ms ease-out; }
+.theme input[role="switch"]:checked { background:var(--cx-label); }
+.theme input[role="switch"]:checked::before { background:var(--cx-card); transform:translateX(20px); }
+.theme .system { grid-column:1/-1; justify-self:start; min-height:44px; padding:4px 0; font-size:13px; color:var(--cx-label-2); text-decoration:underline; text-underline-offset:3px; }
+.panel:global(.bot-dialog) :is(:global(.dialog-intro),label) { color:var(--cx-label-2); }
+.panel:global(.bot-dialog) :global(.glass-select-trigger),.panel:global(.bot-dialog) :global(.dialog-actions) { background:var(--cx-card); color:var(--cx-label); border-color:var(--cx-sep); }
+.panel:global(.bot-dialog) :global(.btn-secondary) { background:var(--cx-fill); color:var(--cx-label); }
+.panel:global(.bot-dialog) :global(.btn-primary) { background:var(--cx-label); color:var(--cx-inverse); }
+@media(prefers-reduced-motion:reduce) { .theme input[role="switch"]::before { transition:none; } }
+:global(html[data-motion="false"]) .theme input[role="switch"]::before { transition:none; }
