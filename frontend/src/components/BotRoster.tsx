@@ -92,7 +92,7 @@ export function BotRoster({ bots, selectedBot, onSelectBot, onCreateNew, rooms, 
 
     <section className="cypher-recent-tasks" aria-labelledby="cypher-recent-tasks-title" aria-busy={recentRunsLoading}>
       <h2 id="cypher-recent-tasks-title">Recent tasks</h2>
-      {recentRunsLoading ? <p role="status">Loading recent tasks…</p> : recentRunsUnavailable ? <p className="cypher-recent-tasks-error" role="status"><span>Recent tasks are unavailable.</span><button type="button" onClick={() => setRecentRunsAttempt(value => value + 1)}>Retry</button></p> : recentRuns.length ? recentRuns.map(run => <button key={run.id} title={run.title || 'Untitled task'} onClick={() => onOpenRecent(run.conversation_id)}><span className="cypher-task-dot" aria-hidden="true"/><span>{run.title || 'Untitled task'}</span></button>) : <p>No recent tasks yet.</p>}
+      {recentRunsLoading ? <LoadingState label="Loading recent tasks…" variant="recent" rows={3}/> : recentRunsUnavailable ? <p className="cypher-recent-tasks-error" role="status"><span>Recent tasks are unavailable.</span><button type="button" onClick={() => setRecentRunsAttempt(value => value + 1)}>Retry</button></p> : recentRuns.length ? recentRuns.map(run => <button key={run.id} title={run.title || 'Untitled task'} onClick={() => onOpenRecent(run.conversation_id)}><span className="cypher-task-dot" aria-hidden="true"/><span>{run.title || 'Untitled task'}</span></button>) : <p>No recent tasks yet.</p>}
     </section>
 
     <details className="cypher-team-disclosure">
