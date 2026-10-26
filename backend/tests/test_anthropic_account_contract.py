@@ -9,7 +9,7 @@ from app.services import model_connections as service
 from app.services.model_connections import anthropic_account_support as actual_support
 from .test_model_connections import setup
 
-READY={'state':'ready','provider':'claude','verification_scope':'provider_account','connection_provider':'anthropic','connection_ref':'synthetic-anthropic-api','public_model':'anthropic/claude-sonnet-5.5','transport_model':'anthropic/claude-sonnet-5-5'}
+READY={'state':'ready','provider':'claude','verification_scope':'provider_account','connection_provider':'anthropic','connection_ref':'grokbot-anthropic-existing-api','public_model':'anthropic/claude-sonnet-5.5','transport_model':'anthropic/claude-sonnet-5-5','model_access_verified':True}
 
 @pytest.mark.asyncio
 async def test_unpaired_gateway_rejects_new_check_and_key_without_changing_saved_access(setup,monkeypatch):
@@ -52,6 +52,8 @@ async def test_preflight_requires_actual_deployed_worker_version_and_never_sends
     {'connection_provider':'claude'},
     {'connection_ref':''},
     {'connection_ref':'https://not-an-account.example/'},
+    {'connection_ref':'another-anthropic-api'},
+    {'model_access_verified':False},
     {'verification_scope':'current_route'},
     {'provider':'gemini'},
 ])
@@ -73,3 +75,12 @@ async def test_google_verification_link_cannot_finish_an_anthropic_api_check(set
     real=httpx.AsyncClient;monkeypatch.setattr(httpx,'AsyncClient',lambda **kwargs:real(transport=httpx.MockTransport(lambda _:httpx.Response(200,json={'state':'verification_required','verification_url':'https://accounts.google.com/private'})),**kwargs))
     with pytest.raises(RuntimeError,match='Google verification'):
         await service.control_check({'provider':'claude','action':'check','verification_target':'provider_account'})
+
+@pytest.mark.asyncio
+async def test_cli_setup_token_is_rejected_before_preflight_or_queueing(setup,monkeypatch):
+    client,sessions,owner,_=setup
+    probe=AsyncMock(return_value=True);monkeypatch.setattr(service,'anthropic_account_support',probe)
+    response=await client.post('/api/runtime/model-connections/claude/api-key',headers=owner,json={'api_key':'sk-ant-oat-synthetic-subscription-token'})
+    assert response.status_code==422 and 'Console API key' in response.json()['detail']
+    assert probe.await_count==0
+    async with sessions() as db:assert await db.get(RuntimeCheck,service.PREFIX+'claude') is None
