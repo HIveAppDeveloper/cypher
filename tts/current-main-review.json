@@ -1,0 +1,89 @@
+{
+  "observed_at_utc": "2026-10-26T21:36:50.569535+00:00",
+  "branch": "codex/cypher-paradee-review-20261026",
+  "canonical_base": "e6f6fcfd475f9c017497816d26fd443288c1dfa4",
+  "feature_source": "20066c0e73debc906755a1a2114c62b291a622c3",
+  "ported_tip_before_this_evidence_commit": "ae0912b1a158498ae78dac81d48eebe2c68cdcb6",
+  "ported_paths": [
+    "frontend/src/app/api/voice/route.ts",
+    "frontend/tests/voice-route.test.mjs",
+    "tts/.dockerignore",
+    "tts/Dockerfile",
+    "tts/Dockerfile.paradee",
+    "tts/PARADEE.md",
+    "tts/README.md",
+    "tts/benchmark.py",
+    "tts/download_models.py",
+    "tts/download_paradee.py",
+    "tts/evidence/derivative-proxy-verification.json",
+    "tts/evidence/deterministic-audio-equivalence.json",
+    "tts/evidence/deterministic-runtime-proof.json",
+    "tts/evidence/native-cancellation.json",
+    "tts/evidence/native-vercel-baseline.json",
+    "tts/evidence/native-vercel-runtimes.json",
+    "tts/evidence/paradee-audio-intelligibility.json",
+    "tts/evidence/paradee-http-bench.json",
+    "tts/evidence/paradee-native-one-cpu.json",
+    "tts/evidence/pcm-proxy-integration.json",
+    "tts/fft_custom_graph.py",
+    "tts/kokoro_service.py",
+    "tts/latency-investigation.json",
+    "tts/licenses/Apache-2.0.txt",
+    "tts/licenses/NOTICE.txt",
+    "tts/licenses/kokoro-onnx-MIT.txt",
+    "tts/licenses/onnxruntime-MIT.txt",
+    "tts/licenses/paradee-Apache-2.0.txt",
+    "tts/licenses/pocketfft-BSD-3-Clause.txt",
+    "tts/local-verification.json",
+    "tts/native/paradee_fft.cc",
+    "tts/optimize_paradee.py",
+    "tts/paradee-requirements.lock.txt",
+    "tts/paradee-requirements.txt",
+    "tts/paradee-verification.json",
+    "tts/paradee_engine.py",
+    "tts/requirements.lock.txt",
+    "tts/requirements.txt",
+    "tts/tests/test_optimizer.py",
+    "tts/tests/test_service.py",
+    "vercel.json"
+  ],
+  "all_ported_paths_byte_identical_to_tested_feature_source": true,
+  "backend_including_worker_tree_matches_base": true,
+  "backend_tree": "7fcc7a9fabc3cbcc6681ca3b499cea00e66d2756",
+  "checks": {
+    "frontend_tests_passed": 327,
+    "frontend_tests_failed": 0,
+    "tts_service_optimizer_tests_passed": 19,
+    "production_frontend_build": "passed",
+    "standalone_proxy_real_pcm_mp3": "passed; see evidence/current-main-proxy-integration.json",
+    "model_artifact_sha256": "6ab18cb6a4712a17061dea9e1a208da0554d9922c5fd93e1ccc932c3abd2d9f8",
+    "new_cloud_latency_claim": false
+  },
+  "logs": {
+    "frontend-install": {
+      "sha256": "724c04b5215106b1f8131596f42da77ea9506c0ee9e676b12517a8577d58076a",
+      "local_log_path": "/Users/boaznovik/Documents/Codex/2026-10-26/cypher-kokoro-modal/.private/current-main-frontend-install.log"
+    },
+    "frontend-tests": {
+      "sha256": "aaf9a390d89fa11a2d0e92b85490d44ae8179543077aff4524ad2309fa18b908",
+      "local_log_path": "/Users/boaznovik/Documents/Codex/2026-10-26/cypher-kokoro-modal/.private/current-main-frontend-tests.log"
+    },
+    "frontend-build": {
+      "sha256": "901d620dba048e8babb5970b6753a200257f3edea7a1893dc5833bc7124bf811",
+      "local_log_path": "/Users/boaznovik/Documents/Codex/2026-10-26/cypher-kokoro-modal/.private/current-main-frontend-build.log"
+    }
+  },
+  "production": {
+    "merged_to_main": false,
+    "deployed": false,
+    "environment_changed": false,
+    "database_or_schema_changed": false,
+    "service_cpu_sizing_changed": false,
+    "aliases_changed": false,
+    "release_owner_chat": "01a16f1c-f827-7ab0-ae4a-6bccbbb7eed2"
+  },
+  "cleanup": {
+    "owned_standalone_server_stopped": true,
+    "owned_model_container_stopped": true
+  }
+}
