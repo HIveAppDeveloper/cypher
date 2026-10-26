@@ -1,5 +1,6 @@
 """Owner-managed model verification, durably queued without browser liveness."""
 import asyncio
+import re
 from contextlib import suppress
 from datetime import datetime, timedelta
 from urllib.parse import urlsplit
@@ -38,6 +39,22 @@ PROVIDER_MODELS['claude'].add('anthropic/claude-haiku-4.5')
 
 def remote_control_available():
     return bool(settings.OMNIROUTE_URL and settings.OMNIROUTE_CONTROL_KEY)
+
+async def anthropic_account_support():
+    """Explicit-submit preflight through the actual deployed gateway worker."""
+    from app.services import omniroute
+    if not remote_control_available(): return False
+    try:
+        url = omniroute.endpoint().removesuffix('/v1') + '/api/internal/connections/check'
+        headers = omniroute.headers()
+        headers['Authorization'] = 'Bearer ' + settings.OMNIROUTE_CONTROL_KEY
+        async with httpx.AsyncClient(timeout=20, follow_redirects=False) as client:
+            response = await client.post(url,headers=headers,json={'provider':'claude','action':'capabilities'})
+        data = response.json() if response.status_code == 200 else {}
+        capabilities = data.get('capabilities',{})
+        return data.get('provider') == 'claude' and data.get('state') == 'supported' and capabilities.get('anthropic_api_account_check') is True and type(capabilities.get('version')) is int and capabilities['version'] == 1
+    except Exception:
+        return False
 
 def can_manage():
     from app.services.managed_connections import installation_owner
@@ -126,6 +143,8 @@ async def queue_check(db, provider, api_key=None, verification_target='current_r
     from app.services.plugins import cipher
     try: cipher()
     except ValueError: raise HTTPException(503, 'Secure credential storage must be configured before managing model connections.')
+    if provider == 'claude' and (api_key is not None or verification_target == 'provider_account') and not await anthropic_account_support():
+        raise HTTPException(503, 'Anthropic API account checks are not available on this gateway release yet. Your saved connection is unchanged.')
     if db.bind.dialect.name == 'postgresql': await db.execute(text('SELECT pg_advisory_xact_lock(1763000276)'))
     row = await db.get(RuntimeCheck, PREFIX + provider)
     if row and row.status in {'pending', 'running'}:
@@ -199,6 +218,18 @@ async def control_check(payload):
         raise RuntimeError('Provider check did not verify the requested model.')
     if result['state'] == 'ready' and payload.get('verification_target') == 'provider_account' and result['transport_model'].startswith(('ddgw/', 'cfp/')):
         raise RuntimeError('A public model route does not verify a provider account.')
+    if payload['provider'] == 'claude' and (payload.get('verification_target') == 'provider_account' or payload['action'] == 'connect_api_key'):
+        if result['state'] == 'verification_required':
+            raise RuntimeError('A Google verification link cannot verify an Anthropic API account.')
+        if result['state'] == 'ready':
+            if (result.get('provider') != 'claude' or result.get('verification_scope') != 'provider_account'
+                    or result.get('connection_provider') != 'anthropic'
+                    or not isinstance(result.get('connection_ref'),str)
+                    or not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9._:-]{0,127}',result['connection_ref'])
+                    or result.get('transport_model') != 'anthropic/claude-sonnet-5-5'):
+                raise RuntimeError('Anthropic API account identity was not verified.')
+            return {key:result[key] for key in ('state','provider','verification_scope','connection_provider','connection_ref','public_model','transport_model')} | {'message':'Anthropic API account verified with a model response. API billing is separate from Claude subscriptions.'}
+        return {'state':result['state'],'message':'Anthropic API access could not be verified. Your existing connection is preserved; review the API key, access and billing.'}
     return result
 
 
