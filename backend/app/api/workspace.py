@@ -126,7 +126,7 @@ async def skill_draft(id:UUID,db:AsyncSession=Depends(get_db)):
     task=await db.get(Task,str(id))
     if not task or task.status!='completed':raise HTTPException(404,'Choose a completed run from your workspace.')
     steps=(await db.execute(select(ExecutionStep.name).where(ExecutionStep.task_id==task.id,ExecutionStep.status=='completed').order_by(ExecutionStep.updated_at))).scalars().all()
-    tools=list(dict.fromkeys(name for name in steps if name not in {'model','context summary'}))
+    tools=list(dict.fromkeys(name for name in steps if name not in {'model','context summary','specialist_consultation_v1'}))
     objective=service.SECRET.sub('[credential omitted]',task.description or task.title)[:4000]
     content='Repeat this verified workflow with the current inputs.\nObjective to adapt: '+objective+'\n'
     if tools:content+='Previously used tools (choose current equivalents and re-check permissions): '+', '.join(tools[:30])+'.\n'

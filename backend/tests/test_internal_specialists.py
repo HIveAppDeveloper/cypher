@@ -83,14 +83,12 @@ async def test_tenant_task_and_bot_do_not_share_findings(monkeypatch):
     fleet = ModelFleet()
     args = {'specialty': 'research', 'task': 'Same task text'}
     tenant = current_tenant_id.set('owner-a')
-    task = active.set(('task-a', None))
     try:
         assert (await fleet.consult(args, 'bot-a'))['findings'] == 'owner-a'
         current_tenant_id.set('owner-b')
         assert (await fleet.consult(args, 'bot-a'))['findings'] == 'owner-b'
         assert (await fleet.consult(args, 'bot-b'))['findings'] == 'owner-b'
     finally:
-        active.reset(task)
         current_tenant_id.reset(tenant)
     assert calls == ['owner-a', 'owner-b', 'owner-b']
 

@@ -1,6 +1,7 @@
 """Task-local, bounded internal specialists. The main agent owns all actions."""
 import asyncio
 import copy
+import logging
 
 from app.db.tenancy import current_tenant_id
 from app.schemas.input import RunOptions
@@ -8,6 +9,9 @@ from app.services.llm_gateway import LLMGateway
 from app.services.model_profiles import PROFILES, routing_profiles
 from app.services.specialist_catalog import CATALOG_SIZE, get_skill, search_skills
 from app.services.usage import active
+from app.services import specialist_budget
+
+logger = logging.getLogger(__name__)
 
 SPECIALISTS = {name: (profile.provider, profile.model) for name, profile in PROFILES.items()
                if name not in {'general', 'vision'}}
@@ -71,53 +75,82 @@ class ModelFleet:
         self.pending[key] = future
         profile = routing_profiles()[role]
         provider, model = profile.provider, profile.model
+        ledger_key = specialist_budget.request_key(role, skill['id'] if skill else None, task, bot_id)
+        durable = usage if usage and usage[0] else None
+        reserved = False
+        expires = asyncio.get_running_loop().time() + CONSULTATION_SECONDS
         try:
-            async with asyncio.timeout(CONSULTATION_SECONDS):
-                async with self.slots:
-                    instructions = SPECIALIST_INSTRUCTIONS
-                    if skill:
-                        instructions += '\nSelected internal recipe:\n' + skill['instructions']
-                    # Gateway preserves existing transport, fallback, capability
-                    # checks, per-owner allowances and usage accounting.
-                    result = await LLMGateway.complete(
-                        messages=[{'role': 'system', 'content': instructions}, {'role': 'user', 'content': task}],
-                        tools=None, model=model, provider=provider, fallback=profile.fallback,
-                        options=RunOptions(max_tokens=SPECIALIST_TOKENS, reasoning_effort='low', allow_tools=False),
-                    )
-                    item = result.choices[0].message
-                    text = item.content
-                    if getattr(item, 'tool_calls', None) or not isinstance(text, str) or not text.strip():
-                        raise ValueError('Specialist did not return a tool-free finding')
-                    route = (getattr(result, '_hidden_params', None) or {}).get('grokbot_route', {})
-                    answer = {
-                        'specialty': role, 'model': route.get('model', model),
-                        'provider': route.get('provider', provider), 'findings': text,
-                        'mode': 'tool_free_advice',
-                        'usage': result.usage.model_dump() if getattr(result, 'usage', None) else {},
-                    }
-                    if skill:
-                        answer['skill_id'] = skill['id']
-                    if route:
-                        answer.update(requested_model=model, fallback=route.get('fallback', False),
-                                      transport=route.get('transport'), transport_model=route.get('transport_model'))
+            async with asyncio.timeout_at(expires):
+                prior = await specialist_budget.reserve(durable, ledger_key) if durable else None
+                if prior is not None:
+                    answer = prior
+                else:
+                    reserved = bool(durable)
+                    answer = await self._complete(role, task, skill, profile)
         except asyncio.CancelledError:
-            # Caller cancellation also cancels the provider call. Wake duplicate
-            # waiters without an orphaned task or unhandled Future exception.
+            # The committed ledger reservation remains spent/uncertain on a
+            # cancelled provider call; a restarted worker cannot issue it again.
             answer = {'specialty': role, 'error': 'Specialist consultation cancelled.',
                       'instruction': 'Continue with the primary agent; do not retry this consultation.'}
             self.results[key] = answer
-            future.set_result(answer)
+            self.pending.pop(key, None)
+            if not future.done():
+                future.set_result(answer)
             raise
         except Exception as error:
             from app.services.model_routing import public_model_error
             answer = {'specialty': role, 'model': model, 'error': public_model_error(error),
                       'instruction': 'Continue with the primary agent; do not retry this consultation.'}
-        finally:
-            self.pending.pop(key, None)
+        if reserved and asyncio.get_running_loop().time() < expires:
+            try:
+                async with asyncio.timeout_at(min(expires, asyncio.get_running_loop().time()+3)):
+                    await specialist_budget.finish(durable, ledger_key, answer)
+            except asyncio.CancelledError:
+                self.pending.pop(key, None)
+                self.results[key] = copy.deepcopy(answer)
+                if not future.done():
+                    future.set_result(copy.deepcopy(answer))
+                raise
+            except Exception:
+                # The reservation is already durable. Do not turn a lost
+                # receipt write into another paid request or log private data.
+                logger.warning('Specialist result receipt unavailable; reservation remains spent')
+        self.pending.pop(key, None)
         self.results[key] = copy.deepcopy(answer)
         if not future.done():
             future.set_result(copy.deepcopy(answer))
         return answer
+
+    async def _complete(self, role, task, skill, profile):
+        provider, model = profile.provider, profile.model
+        async with self.slots:
+            instructions = SPECIALIST_INSTRUCTIONS
+            if skill:
+                instructions += '\nSelected internal recipe:\n' + skill['instructions']
+            # Gateway preserves existing transport, fallback, capability
+            # checks, per-owner allowances and usage accounting.
+            result = await LLMGateway.complete(
+                messages=[{'role': 'system', 'content': instructions}, {'role': 'user', 'content': task}],
+                tools=None, model=model, provider=provider, fallback=profile.fallback,
+                options=RunOptions(max_tokens=SPECIALIST_TOKENS, reasoning_effort='low', allow_tools=False),
+            )
+            item = result.choices[0].message
+            text = item.content
+            if getattr(item, 'tool_calls', None) or not isinstance(text, str) or not text.strip():
+                raise ValueError('Specialist did not return a tool-free finding')
+            route = (getattr(result, '_hidden_params', None) or {}).get('grokbot_route', {})
+            answer = {
+                'specialty': role, 'model': route.get('model', model),
+                'provider': route.get('provider', provider), 'findings': text,
+                'mode': 'tool_free_advice',
+                'usage': result.usage.model_dump() if getattr(result, 'usage', None) else {},
+            }
+            if skill:
+                answer['skill_id'] = skill['id']
+            if route:
+                answer.update(requested_model=model, fallback=route.get('fallback', False),
+                              transport=route.get('transport'), transport_model=route.get('transport_model'))
+            return answer
 
     async def consult_many(self, args, bot_id):
         requests = args.get('assignments') if isinstance(args, dict) else None

@@ -29,6 +29,13 @@ existing gateway, allowance, usage accounting and configured fallback policy.
 Failures return a safe limitation for the main agent to handle; there is no
 recursive delegation or background retry loop.
 
+Queued tasks reserve each unique consultation in the existing execution-step
+ledger before inference. Reservations and completed results survive worker
+retries. A lost or running receipt consumes its slot and is not reissued; the
+main agent continues with its other evidence. Three reservations exhaust the
+task's budget even after outer tool steps replay on a fresh worker. Uncertain
+external-write recovery checks remain unchanged.
+
 Routine automatic routes use low reasoning when no effort was selected.
 Complex analysis, coding, planning and review retain their existing defaults.
 Only a closed-set greeting in a fresh text-only conversation gets the existing
