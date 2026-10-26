@@ -85,3 +85,19 @@ test('unmount invalidates a pending saved conversation without later state write
   app.view.unmount();pending.resolve([savedRoom]);await app.view.flush();
   assert.equal(app.view.updatesAfterUnmount,0);
 });
+
+test('opening a conversation from a modal exposes its pending and retry controls',async()=>{
+  const pending=deferred();let calls=0;
+  const app=workspace({getConversations:()=>++calls===1?Promise.resolve([]):calls===2?pending.promise:Promise.resolve([savedRoom])});
+  await app.view.flush();app.roster().onMyWork();await app.view.flush();
+  const panel=find(app.view.tree,node=>node.type==='panel-boundary');assert.ok(panel);
+  find(panel,node=>typeof node.props?.onOpenWorkspace==='function').props.onOpenWorkspace(savedRoom.id);
+  await app.view.flush();
+  assert.equal(find(app.view.tree,node=>node.type==='panel-boundary'),undefined,'the modal must not make external recovery controls inert');
+  assert.match(textOf(app.view.tree),/Opening saved conversation/);
+  pending.reject(Error('Synthetic modal-open failure'));await app.view.flush();
+  assert.match(textOf(app.view.tree),/saved conversation could not be opened/);
+  button(app.view.tree,'Retry').props.onClick();await app.view.flush();
+  assert.equal(app.chat().room?.id,savedRoom.id);
+  app.view.unmount();
+});

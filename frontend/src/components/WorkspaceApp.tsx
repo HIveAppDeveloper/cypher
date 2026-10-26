@@ -63,6 +63,7 @@ export default function WorkspaceApp({ accountEmail, accountId }: { accountEmail
   async function openGoalWorkspace(id:string,closePanel=true) {
     const generation = beginNavigation();
     setSavedOpen({id,closePanel,pending:true,error:''});
+    if (closePanel) setCreatorState(null);
     try {
       const conversations = await api.getConversations();
       if (generation !== navigationGeneration.current) return;
@@ -72,7 +73,6 @@ export default function WorkspaceApp({ accountEmail, accountId }: { accountEmail
       if (generation !== navigationGeneration.current) return;
       setRooms(conversations.filter(item => item.is_group));
       setSelectedRoom(room); setSelectedBot(agent);
-      if (closePanel) setCreatorState(null);
       setRoomError(''); setSavedOpen(null);
     } catch (failure) {
       if (generation !== navigationGeneration.current) return;
