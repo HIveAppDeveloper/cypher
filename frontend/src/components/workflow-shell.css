@@ -1,7 +1,5 @@
-/* Research uses the same quiet desktop frame and task navigation as Cypher home. */
-.workflow-shell { position:relative; width:min(1114px,calc(100% - 48px)); height:min(622px,calc(100dvh - 48px)); min-height:520px; margin:24px auto; padding:24px 0 0; gap:0; overflow:hidden; border:1px solid var(--cx-sep); border-radius:20px; background:var(--cx-bg); box-shadow:0 16px 48px rgba(36,30,20,.08); }
-.workflow-window-chrome { position:absolute; inset:0 0 auto; display:flex; align-items:center; gap:6px; height:24px; padding-inline:14px; background:var(--cx-bg); }
-.workflow-window-chrome span { width:6px; height:6px; border-radius:50%; background:var(--cx-label-3); opacity:.35; }
+/* Research shares Cypher's full-viewport workspace and task navigation. */
+.workflow-shell { position:relative; width:100%; max-width:none; height:100dvh; min-height:0; margin:0; padding:0; gap:0; overflow:hidden; border:0; border-radius:0; background:var(--cx-bg); box-shadow:none; }
 .app-layout.workflow-shell::before,.app-layout.workflow-shell::after { content:none; }
 .workflow-shell .sidebar-shell { width:clamp(176px,var(--sidebar-width,184px),184px); border:0; background:var(--system-sidebar); }
 .workflow-shell .sidebar-shell[data-collapsed=true] { width:64px; }
@@ -51,7 +49,6 @@
 @media(max-width:1000px) { .workflow-content .cx-results-area { grid-template-columns:minmax(0,1fr); } .workflow-content .cx-log { display:grid; grid-template-columns:1fr 1fr; gap:16px; } .workflow-content .cx-log>.cx-log-head,.workflow-content .cx-history { grid-column:1/-1; } }
 @media(max-width:760px) {
   .workflow-shell { width:100%; height:100dvh; min-height:0; margin:0; padding:0; border:0; border-radius:0; box-shadow:none; }
-  .workflow-window-chrome { display:none; }
   .workflow-mobile-brand { display:flex; align-items:center; justify-content:center; min-height:56px; padding:8px 56px; border-bottom:1px solid var(--cx-sep); }
   .workflow-mobile-brand a { display:flex; align-items:center; gap:8px; color:var(--cx-label); font-size:14px; font-weight:500; text-decoration:none; }
   .workflow-mobile-brand .cypher-mark { width:36px; }

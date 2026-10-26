@@ -38,7 +38,6 @@ export default function WorkflowShell({ children, section }: { children: ReactNo
   }, [retry]);
 
   return <div className="app-layout workflow-shell">
-    <div className="workflow-window-chrome" aria-hidden="true"><span/><span/><span/></div>
     <SidebarShell>
       <aside className="sidebar workflow-navigation">
         <nav aria-label="Main navigation">{destinations.map(item => <a key={item.label} className="workflow-nav-link" href={item.href} onClick={() => window.dispatchEvent(new Event('grokbot:navigate'))}>
