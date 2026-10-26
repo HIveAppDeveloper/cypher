@@ -126,6 +126,8 @@ async def test_agent_skill_api_exposes_only_its_own_five_and_actual_persisted_ch
     profile = response.json()
     assert profile['bot_id'] == bots[0]
     assert len(set(profile['skill_ids'])) == len(profile['skills']) == 5
+    assert all(card['eligibility']['eligible'] and card['sources'] for card in profile['skills'])
+    assert all(source['stars'] >= 10000 and source['checked_at'] for card in profile['skills'] for source in card['sources'])
     assert profile['selected_by'] == 'automatic'
     assert profile['persisted'] is False
     from app.services.agent_skills import select_agent_skills
@@ -138,3 +140,22 @@ async def test_agent_skill_api_exposes_only_its_own_five_and_actual_persisted_ch
     assert (await client.get(path, headers={'x-grokbot-user-id':'other-owner'})).status_code == 404
     for unavailable in [foreign, deleted]:
         assert (await client.get('/api/bots/'+unavailable+'/skills')).status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_missing_source_manifest_returns_primary_agent_fallback_not_a_broken_api(workspace, monkeypatch, tmp_path):
+    client, _, _, bots, _, _ = workspace
+    from app.services import specialist_sources
+    try:
+        with monkeypatch.context() as patch:
+            patch.setattr(specialist_sources, 'MANIFEST_PATH', tmp_path/'missing-source-manifest.json')
+            specialist_sources.clear_source_caches()
+            response = await client.get('/api/bots/'+bots[0]+'/skills')
+            assert response.status_code == 200, response.text
+            profile = response.json()
+            assert profile['selected_by'] == 'automatic'
+            assert profile['availability'] == 'primary_agent_fallback'
+            assert profile['skills'] == profile['skill_ids'] == []
+            assert profile['selection_count'] == 0 and profile['required_selection_count'] == 5
+    finally:
+        specialist_sources.clear_source_caches()
