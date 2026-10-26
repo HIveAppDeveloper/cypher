@@ -98,8 +98,9 @@ class Engine:
         # Never log prompts, phonemes, audio, auth headers, or environment values.
         logging.getLogger("kokoro_onnx").disabled = True
         logging.getLogger("phonemizer").disabled = True
-        for _ in range(3):
-            self.synthesize("Ready.", "af_bella", 1.0)
+        # A single real inference initializes the CPU graph. Repeating the same
+        # warmup three times delays cold starts without compiling a new graph.
+        self.synthesize("Ready.", "af_bella", 1.0)
 
     def synthesize(self, text, voice, speed):
         try:

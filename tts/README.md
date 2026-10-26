@@ -37,9 +37,10 @@ browser bundles, API response bodies or logs.
 
 Weights are downloaded during image build, not per request, and verified against
 the SHA-256 values in `download_models.py`. Model + voices total 120,575,669 bytes.
-The model/session initializes once per container, followed by three nonblank
-warmup inferences. Dependencies and upstream licenses are recorded alongside the
-service; the Docker image carries the license notices.
+The model/session initializes once per container, followed by one nonblank
+warmup inference. Repeating an identical CPU warmup three times delayed cold
+starts without compiling a different graph. Dependencies and licenses are
+recorded alongside the service; the Docker image carries the license notices.
 
 ## Opt-in and release
 
@@ -79,14 +80,30 @@ including the server's first-audio measurement. For `/api/voice`, use the defaul
 app session. Redirects are refused to avoid forwarding authentication elsewhere.
 Do not publish tokens or session cookies in commands, reports or screenshots.
 
-`local-verification.json` records local measurements only. Isolated synthesis of
+`local-verification.json` records the initial candidate's local measurements only. Isolated synthesis of
 the benchmark sentence took 1101–1130 ms, with 3.508 seconds of initialization and
 warmup and 467,369,984 bytes peak process RSS. Actual local HTTP medians were
 2363.255 ms PCM and 2487.520 ms MP3. The built Next.js proxy also returned valid
 MP3 through a synthetic signed session. These results **do not meet 20 ms** and
-are not measurements of the Vercel runtime. The Linux Docker build and deployed
-Vercel service remain unverified because the local Docker daemon was unavailable
-and production deployment belongs to the canonical release owner.
+are not measurements of the Vercel runtime. The follow-up
+`latency-investigation.json` records actual Linux/amd64 container builds and CPU
+experiments. Docker Desktop was started for these disposable tests; its image
+builds and real HTTP MP3 output now pass locally. Deployed Vercel binding,
+playback and latency remain unverified; release belongs to the canonical owner.
+
+Two fresh-container runs per variant, each limited to one CPU and 2 GB, measured
+median container-start-to-first-audio of 17,387.776 ms before and 10,132.636 ms
+after the warmup fix (41.73% less). These include process startup and actual
+MP3 generation under local AMD64 emulation. They are diagnostic samples, not a
+Vercel benchmark or percentile estimate; warm inference still exceeds 20 ms.
+
+Profiling put more than 99% of warm synthesis time inside ONNX inference.
+Neither HTTP nor JSON processing explained the delay. A shorter first chunk
+reduced first-audio time in local emulation but made complete-clip generation
+slower, so it was rejected. Increasing thread count helped FP32 on the Mac, but
+Vercel's standard instance has one vCPU; these results do not justify increasing
+the entire project's CPU/memory allocation. No benchmark-only phrase, silence,
+fake audio header or cache-hit-only result is used to claim a 20 ms success.
 
 ## Cost and scaling
 
