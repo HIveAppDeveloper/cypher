@@ -10,12 +10,15 @@ from app.services.runtime_identity import runtime_identity, same_release
 router=APIRouter()
 from typing import Literal
 from pydantic import SecretStr
-Provider = Literal['openai', 'gemini', 'claude', 'xai']
+Provider = Literal['openai', 'gemini', 'claude', 'xai', 'meta']
+
+class ProviderVerification(BaseModel):
+    target: Literal['provider_account', 'current_route'] = 'current_route'
 
 @router.post('/model-connections/{provider}/verify', status_code=202)
-async def queue_model_verification(provider: Provider, db=Depends(get_db)):
+async def queue_model_verification(provider: Provider, body: ProviderVerification | None = None, db=Depends(get_db)):
     from app.services.model_connections import queue_check
-    return await queue_check(db, provider)
+    return await queue_check(db, provider, verification_target=body.target if body else 'current_route')
 
 class ProviderKey(BaseModel):
     api_key: SecretStr
