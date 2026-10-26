@@ -26,6 +26,11 @@ provider credentials. An older gateway fails before a provider page is opened.
 - `POST /api/model-connections/openrouter/begin` with `{returnTo:"/..."}` requires
   an existing Cypher session and canonical same-origin request. Response contains
   only `authorization_url`, pointing directly to `https://openrouter.ai/auth`.
+- The owner-only runtime row advertises this internal `connect_url` and
+  `can_connect` when the existing control connection is configured. This means
+  the app entry exists; the explicit begin preflight still proves the deployed
+  worker supports enrollment before opening the provider page. Reading runtime
+  metadata never invokes that preflight or any provider.
 - A signed, expiring HttpOnly cookie binds the flow, session subject and browser.
   The encrypted PKCE verifier and state/binding hashes live in existing
   `RuntimeCheck` rows. These rows are global, so explicit installation-owner and
@@ -76,3 +81,11 @@ access or frontend/API/worker release parity. Production verification belongs to
 the canonical release owner using the existing shared database.
 
 Provider reference: [OpenRouter OAuth PKCE](https://openrouter.ai/docs/guides/overview/auth/oauth).
+
+Current hosted ChatGPT integration requires Cypher's own approved client and
+registered callback: [Sign in with ChatGPT on a website](https://developers.openai.com/siwc/website).
+The separate [open-source registration](https://developers.openai.com/siwc/token-sharing-open-source/sign-in)
+uses an app-named registration and a loopback callback. It does not authorize
+reusing another application's fixed client registration as a hosted Cypher
+callback. [Anthropic's developer guidance](https://support.claude.com/en/articles/13189465-log-in-to-your-claude-account)
+directs apps for other users to API-key or supported cloud authentication.

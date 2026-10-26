@@ -8,6 +8,7 @@ export type ModelConnection = {
   account_url: string; can_add_api_key: boolean; key_configured?: boolean; requires_api_key?: boolean;
   verified_model?: string; access_kind?: 'account' | 'api_key' | 'public'; access_label?: string;
   verification_supported?: boolean; verification_target?: 'provider_account' | 'current_route';
+  can_connect?: boolean; connect_url?: string | null; connect_method?: string;
 };
 const labels: Record<string, string> = {
   not_checked: 'Not checked', ready: 'Verified', connected: 'Account connected · model unverified', checking: 'Checking',
@@ -83,7 +84,7 @@ export function ModelConnections({ items, canManage, workerReady, onQueued, omni
           {item.verified_model ? <p className="model-connection-time">{item.access_label || 'Model route'} · {item.verified_model}{item.access_kind === 'public' ? ' · Does not verify a subscription or provider account' : ''}</p> : null}
           {checkedAt ? <p className="model-connection-time">Last checked {checkedAt.toLocaleString()}</p> : null}
           <div className="model-connection-actions">
-            {item.id === 'openrouter' && omniroute ? <ProviderConsentButton disabled={checking || !!busy || !workerReady}/> : null}
+            {item.id === 'openrouter' && omniroute && item.can_connect ? <ProviderConsentButton disabled={checking || !!busy || !workerReady}/> : null}
             {verification ? <a className="btn-primary" href={verification} target="_blank" rel="noopener noreferrer">Verify with Google</a> : null}
             {item.verification_supported === false ? <span className="field-help">{item.id==='openrouter'?'Model access is separate and has not been tested.':'Model verification is unavailable until provider setup is configured.'}</span> : !item.requires_api_key || item.key_configured ? <button className="btn-secondary" disabled={checking || !!busy || !workerReady} onClick={() => void submit(item.id, undefined, item.id === 'meta' ? 'current_route' : 'provider_account')}>{checking ? locallyQueued || item.job_status === 'pending' ? 'Queued…' : 'Checking…' : item.id === 'meta' ? 'Test Llama text route' : 'Check provider access'}</button> : <span className="field-help">Add an API key to connect</span>}
             {item.access_kind === 'public' && item.id !== 'meta' ? <button className="setup-doc-link" disabled={checking || !!busy || !workerReady} onClick={() => void submit(item.id, undefined, 'current_route')}>Test public route</button> : null}

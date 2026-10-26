@@ -156,3 +156,18 @@ async def test_failed_key_exchange_cannot_change_existing_account_or_queue_a_che
     assert result.json()=={'status':'failed'}
     async with sessions() as db:
         row=await db.get(RuntimeCheck,models.PREFIX+'openrouter');assert row.detail['request_id']=='prior' and row.detail['account_connected'] is True
+
+@pytest.mark.asyncio
+async def test_runtime_exposes_only_the_internal_explicit_connection_entry_without_provider_io(setup,monkeypatch):
+    client,_,owner,other=setup
+    probe=AsyncMock(side_effect=AssertionError('Runtime reads cannot preflight or enroll'))
+    monkeypatch.setattr(consent,'gateway_support',probe)
+    data=(await client.get('/api/runtime',headers=owner)).json()
+    item=next(item for item in data['model_connections'] if item['id']=='openrouter')
+    assert item['can_connect'] is True and item['connect_url']=='/api/model-connections/openrouter/begin'
+    assert item['connect_method']=='authorization_code_pkce' and item['model_access_verified'] is False
+    assert probe.await_count==0
+    assert (await client.get('/api/runtime',headers=other)).json()['model_connections']==[]
+    monkeypatch.setattr(models,'remote_control_available',lambda:False)
+    item=next(item for item in models.public_connections([]) if item['id']=='openrouter')
+    assert item['can_connect'] is False and item['connect_url'] is None

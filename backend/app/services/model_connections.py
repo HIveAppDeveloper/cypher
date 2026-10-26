@@ -96,7 +96,8 @@ def public_connections(records):
             if state == 'not_checked':
                 item['message'] = 'Test the existing public Llama text route. This does not connect a Meta AI subscription, Facebook Page, or Instagram account. Meta Model API access needs separate provider setup.'
         if provider == 'openrouter':
-            item.update(verification_supported=False,account_connected=state=='connected' and detail.get('account_connected') is True,model_access_verified=False)
+            item.update(verification_supported=False,account_connected=state=='connected' and detail.get('account_connected') is True,model_access_verified=False,
+                        can_connect=remote_control_available(),connect_url='/api/model-connections/openrouter/begin' if remote_control_available() else None,connect_method='authorization_code_pkce')
             if state == 'not_checked':item['message'] = 'Optional consent connection using separate OpenRouter credits. This does not transfer your OpenAI, Anthropic, Google, Meta or Grok subscriptions.'
         expires = detail.get('verification_expires_at')
         try:
