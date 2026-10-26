@@ -85,9 +85,19 @@ Before activating this foundation:
 Eleven synthetic core tests cover linking/expiry, tenant isolation, replay safety,
 opt-out/end, human handoff, update consent/privacy, disabled dispatch, uncertain
 sends, costs, rate bounds and unlink/relink history isolation. They use temporary
-SQLite files, mocked identities and no real messaging or paid model calls.
+SQLite files, mocked identities and no real messaging or paid model calls. All eleven
+also pass on a new Unix-socket-only PostgreSQL instance and a dedicated test database.
+Three additional actual PostgreSQL cases pass for concurrent duplicate events,
+exclusive delivery claims, and cross-tenant identity-link races. Test schemas and
+the owned server/data directory are removed after execution.
 
-The full backend suite passed 558 tests with four existing PostgreSQL-gated skips
-before the final unlink refinement; the final eleven focused tests pass after it.
-PostgreSQL concurrency and Apple transport/device proof are still required and
-must not be inferred from these synthetic tests.
+The final backend suite passes 559 tests with seven PostgreSQL-gated skips. The
+three new PostgreSQL-only cases are independently exercised in the fourteen-case
+native-core PostgreSQL pass; four older PostgreSQL-gated cases are outside this
+change. The task is explicitly flushed before an existing inbound event obtains
+its immediate foreign-key reference, within the same transaction.
+
+Apple transport/device proof is still required; it must not be inferred from
+these local database/domain tests. The future operator API must verify business
+staff authorization in addition to the core's tenant boundary; account ownership
+alone is not a provider-staff role.
