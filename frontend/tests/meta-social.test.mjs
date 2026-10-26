@@ -48,7 +48,7 @@ test('a new user starts the existing Windsor OAuth path with a safe return to Me
   const url='https://mcp.windsor.ai/authorize?state=synthetic';
   const {view,calls,destinations}=panel(async()=>({ok:true,json:async()=>({status:'awaiting_login',authorization_url:url})}),[]);await view.flush();
   button(view.tree,'Continue with Windsor').props.onClick();await view.flush();
-  assert.equal(calls[1].path,'/api/plugins/authorize');assert.equal(calls[1].options.referrer,'https://app.example/connect/meta');assert.deepEqual(destinations,[url]);view.unmount();
+  assert.equal(calls[1].path,'/api/plugins/authorize');assert.equal(calls[1].options.referrer,'https://app.example/connect/meta');assert.equal(calls[1].options.referrerPolicy,'same-origin');assert.deepEqual(destinations,[url]);view.unmount();
 });
 test('an already saved OAuth grant refreshes local connections without probing Meta on return',async()=>{
   const {view,calls,destinations}=panel(async()=>({ok:true,json:async()=>({status:'connected'})}),[]);await view.flush();
