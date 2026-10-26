@@ -1,10 +1,12 @@
-import { FormEvent, useState } from 'react';
+import { FormEvent, useEffect, useRef, useState } from 'react';
 import { dateFromApi } from '../lib/dates';
 
 export type ModelConnection = {
   id: string; name: string; model: string; state: string; message: string;
   job_status?: string; checked_at?: string; verification_url?: string | null;
   account_url: string; can_add_api_key: boolean; key_configured?: boolean; requires_api_key?: boolean;
+  verified_model?: string; access_kind?: 'account' | 'api_key' | 'public'; access_label?: string;
+  verification_supported?: boolean; verification_target?: 'provider_account' | 'current_route';
 };
 const labels: Record<string, string> = {
   not_checked: 'Not checked', ready: 'Verified', checking: 'Checking',
@@ -24,21 +26,42 @@ export function ModelConnections({ items, canManage, workerReady, onQueued, omni
   const [error, setError] = useState<{ provider: string; text: string } | null>(null);
   const [keyFor, setKeyFor] = useState('');
   const [key, setKey] = useState('');
-  async function submit(provider: string, apiKey?: string) {
-    if (busy) return;
+  const busyRef = useRef(false);
+  const mounted = useRef(false);
+  const [queued, setQueued] = useState<Record<string, string | undefined>>({});
+  useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
+  useEffect(() => {
+    setQueued(current => {
+      const next = { ...current }; let changed = false;
+      for (const [provider, checkedAt] of Object.entries(current)) {
+        const item = items.find(item => item.id === provider);
+        if (item && (item.state === 'checking' || item.checked_at !== checkedAt)) { delete next[provider]; changed = true; }
+      }
+      return changed ? next : current;
+    });
+  }, [items]);
+  async function submit(provider: string, apiKey?: string, target: 'provider_account' | 'current_route' = 'provider_account') {
+    if (busyRef.current) return;
+    busyRef.current = true;
     setBusy(provider); setError(null);
     // Keep keys out of drafts, URLs, browser storage and subsequent renders.
     if (apiKey !== undefined) { setKey(''); setKeyFor(''); }
     try {
-      const response = await fetch(`/api/runtime/model-connections/${provider}/${apiKey === undefined ? 'verify' : 'api-key'}`, {
+      const response = await fetch(`/api/runtime/model-connections/${encodeURIComponent(provider)}/${apiKey === undefined ? 'verify' : 'api-key'}`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        ...(apiKey === undefined ? {} : { body: JSON.stringify({ api_key: apiKey }) }),
+        signal: AbortSignal.timeout(35000),
+        body: JSON.stringify(apiKey === undefined ? { target } : { api_key: apiKey }),
       });
       const data = await response.json();
       if (!response.ok) throw new Error(typeof data.detail === 'string' ? data.detail : 'The check could not start. Try again.');
-      await onQueued();
-    } catch (failure) { setError({ provider, text: failure instanceof Error ? failure.message : 'The check could not start. Try again.' }); }
-    finally { setBusy(''); }
+      if (!['pending', 'running'].includes(data.status)) throw new Error('The server did not confirm a queued check. Refresh status before trying again.');
+      if (apiKey === undefined && data.verification_target !== target) throw new Error('The server did not confirm this type of check. Refresh status before trying again.');
+      if (!mounted.current) return;
+      setQueued(current => ({ ...current, [provider]: items.find(item => item.id === provider)?.checked_at }));
+      try { await onQueued(); }
+      catch { if (mounted.current) setError({ provider, text: 'The check is queued in the cloud, but its status could not refresh. Your check continues; reopen setup to see the result.' }); }
+    } catch (failure) { if (mounted.current) setError({ provider, text: failure instanceof Error && failure.name !== 'AbortError' && failure.name !== 'TimeoutError' ? failure.message : 'Could not confirm whether the check was queued. Refresh status before trying again.' }); }
+    finally { busyRef.current = false; if (mounted.current) setBusy(''); }
   }
   function saveKey(event: FormEvent, provider: string) {
     event.preventDefault();
@@ -52,21 +75,25 @@ export function ModelConnections({ items, canManage, workerReady, onQueued, omni
   })();
   return <section className="model-connections" aria-labelledby="model-connections-title">
     <h3 id="model-connections-title">Model access</h3>
-    <p className="field-help">{omniroute ? 'Model requests go through OmniRoute. Connect eligible accounts in OmniRoute, then check them here. Provider sign-ins stay in OmniRoute; Requests use the existing gateway key. Checks send a short model request.' : 'Check or add a provider connection for this workspace. Checks send a short model request.'}</p>
+    <p className="field-help">{omniroute ? 'Open provider setup, connect the access your provider supports, then check that account here. Subscription access, API keys and public model routes stay separate. Each check sends a short model request and can use provider quota.' : 'Check or add a provider connection for this workspace. Checks send a short model request and can use provider quota.'}</p>
     {omniroute && canManage && safeManageUrl ? <p className="field-help"><a className="setup-doc-link" href={safeManageUrl} target="_blank" rel="noopener noreferrer">Connect accounts in OmniRoute</a></p> : null}
     {!canManage ? <p className="field-help">The installation owner manages these shared provider connections.</p> : !items.length ? <p className="field-help" role="status">No provider connections are configured for this workspace.</p> : <ul className="model-connection-list">
       {items.map(item => {
-        const checking = item.state === 'checking' || busy === item.id;
+        const locallyQueued = Object.hasOwn(queued, item.id);
+        const checking = item.state === 'checking' || busy === item.id || locallyQueued;
         const verification = googleLink(item.verification_url);
         const checkedAt = dateFromApi(item.checked_at);
         return <li key={item.id} className="model-connection-row">
-          <div className="model-connection-title"><strong>{item.name}</strong><span className="model-connection-status" data-state={item.state}>{checking ? item.job_status === 'pending' ? 'Queued' : 'Checking…' : labels[item.state] || 'Not checked'}</span></div>
-          <p className="field-help" role={checking ? 'status' : undefined}>{item.message}</p>
+          <div className="model-connection-title"><strong>{item.name}</strong><span className="model-connection-status" data-state={item.state}>{checking ? locallyQueued || item.job_status === 'pending' ? 'Queued' : 'Checking…' : labels[item.state] || 'Not checked'}</span></div>
+          <p className="field-help" role={checking ? 'status' : undefined}>{locallyQueued ? 'Queued in the cloud. You can close setup while the check runs.' : item.message}</p>
+          {item.verified_model ? <p className="model-connection-time">{item.access_label || 'Model route'} · {item.verified_model}{item.access_kind === 'public' ? ' · Does not verify a subscription or provider account' : ''}</p> : null}
           {checkedAt ? <p className="model-connection-time">Last checked {checkedAt.toLocaleString()}</p> : null}
           <div className="model-connection-actions">
             {verification ? <a className="btn-primary" href={verification} target="_blank" rel="noopener noreferrer">Verify with Google</a> : null}
-            {!item.requires_api_key || item.key_configured ? <button className="btn-secondary" disabled={checking || !!busy || !workerReady} onClick={() => void submit(item.id)}>{checking ? 'Checking…' : item.state === 'not_checked' ? 'Check access' : 'Check again'}</button> : <span className="field-help">Add an API key to connect</span>}
-            {!omniroute || keyFor === item.id ? <a className="setup-doc-link" href={item.account_url} target="_blank" rel="noopener noreferrer">Open {item.name} account</a> : null}
+            {omniroute && safeManageUrl ? <a className="setup-doc-link" href={safeManageUrl} target="_blank" rel="noopener noreferrer">{item.id === 'meta' ? 'Set up Meta model access' : 'Open provider setup'}</a> : null}
+            {item.verification_supported === false ? <span className="field-help">Model verification is unavailable until provider setup is configured.</span> : !item.requires_api_key || item.key_configured ? <button className="btn-secondary" disabled={checking || !!busy || !workerReady} onClick={() => void submit(item.id, undefined, item.id === 'meta' ? 'current_route' : 'provider_account')}>{checking ? locallyQueued || item.job_status === 'pending' ? 'Queued…' : 'Checking…' : item.id === 'meta' ? 'Test Llama text route' : 'Check provider access'}</button> : <span className="field-help">Add an API key to connect</span>}
+            {item.access_kind === 'public' && item.id !== 'meta' ? <button className="setup-doc-link" disabled={checking || !!busy || !workerReady} onClick={() => void submit(item.id, undefined, 'current_route')}>Test public route</button> : null}
+            {!omniroute || keyFor === item.id || item.id === 'meta' ? <a className="setup-doc-link" href={item.account_url} target="_blank" rel="noopener noreferrer">{item.id === 'meta' ? 'Meta Model API setup' : `Open ${item.name} account`}</a> : null}
             {item.can_add_api_key ? <button className="setup-doc-link" disabled={checking || !!busy} onClick={() => { setKeyFor(keyFor === item.id ? '' : item.id); setKey(''); setError(null); }}>{item.key_configured ? 'Replace API key' : omniroute ? 'Add API fallback' : 'Use API key'}</button> : null}
           </div>
           {item.state === 'verification_required' ? <p className="field-help">Finish the account check on Google’s page, then return here and choose Check again. Opening the link does not mark the connection verified.</p> : null}

@@ -146,6 +146,93 @@ async def test_included_claude_check_uses_free_route_and_preserves_model_identit
     monkeypatch.setattr(omniroute,'request',wrong_model)
     assert (await service.control_check({'provider':'claude','action':'check'}))['state']=='unavailable'
 
+
+@pytest.mark.asyncio
+async def test_explicit_provider_account_check_cannot_silently_use_included_claude(setup,monkeypatch):
+    client,sessions,owner,_=setup
+    monkeypatch.setattr(settings,'MODEL_ROUTING_POLICY','codex_and_free')
+    async def no_public_fallback(*_):raise AssertionError('An account check must not execute the public route')
+    monkeypatch.setattr(omniroute,'request',no_public_fallback)
+    seen=[]
+    def respond(request):
+        seen.append(json.loads(request.content))
+        return httpx.Response(200,json={'state':'ready','public_model':'anthropic/claude-sonnet-5.5','transport_model':'anthropic/claude-sonnet-5-5','message':'Synthetic provider response verified.'})
+    real=httpx.AsyncClient
+    monkeypatch.setattr(httpx,'AsyncClient',lambda **kwargs:real(transport=httpx.MockTransport(respond),**kwargs))
+    queued=await client.post('/api/runtime/model-connections/claude/verify',headers=owner,json={'target':'provider_account'})
+    assert queued.status_code==202 and queued.json()['verification_target']=='provider_account'
+    assert await service.run_requested_check(sessions,AsyncMock())
+    assert len(seen)==1 and seen[0]['verification_target']=='provider_account'
+    status=(await client.get('/api/runtime',headers=owner)).json()
+    item=next(item for item in status['model_connections'] if item['id']=='claude')
+    assert item['state']=='ready' and item['access_kind']=='api_key'
+    assert item['verified_model']=='claude-sonnet-5-5'
+    assert item['verification_target']=='provider_account'
+
+
+@pytest.mark.asyncio
+async def test_public_claude_response_cannot_certify_a_provider_account(setup,monkeypatch):
+    real=httpx.AsyncClient
+    monkeypatch.setattr(httpx,'AsyncClient',lambda **kwargs:real(transport=httpx.MockTransport(lambda _:httpx.Response(200,json={'state':'ready','public_model':'anthropic/claude-haiku-4.5','transport_model':'ddgw/claude-haiku-4-5'})),**kwargs))
+    with pytest.raises(RuntimeError,match='public model route'):
+        await service.control_check({'provider':'claude','action':'check','verification_target':'provider_account'})
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize('valid_model',[True,False])
+async def test_meta_checks_only_the_existing_llama_route_and_keeps_other_accounts_unchanged(setup,monkeypatch,valid_model):
+    client,sessions,owner,other=setup
+    monkeypatch.setattr(settings,'OMNIROUTE_CONTROL_KEY','')
+    before={'state':'ready','active_route':{'public_model':'openai/gpt-6.1-sol','transport_model':'cx/gpt-6.1-sol'}}
+    from app.db.tenancy import current_tenant_id
+    tenant=current_tenant_id.set(account_id_for('owner@example.test'))
+    try:
+        async with sessions() as db:
+            db.add(RuntimeCheck(name=service.PREFIX+'openai',status='completed',detail=before,updated_at=datetime.utcnow()));await db.commit()
+    finally:current_tenant_id.reset(tenant)
+    calls=[]
+    async def request(path,payload):
+        calls.append((path,payload))
+        return {'model':'meta-llama/llama-3.3-70b-instruct-fp8-fast' if valid_model else 'another-model','choices':[{'message':{'content':'Synthetic connection response'}}]}
+    monkeypatch.setattr(omniroute,'request',request)
+    assert (await client.post('/api/runtime/model-connections/meta/verify',headers=other,json={'target':'current_route'})).status_code==403
+    assert (await client.post('/api/runtime/model-connections/meta/verify',headers=owner,json={'target':'provider_account'})).status_code==422
+    assert (await client.post('/api/runtime/model-connections/meta/api-key',headers=owner,json={'api_key':'synthetic-meta-key-more-than-20-characters'})).status_code==422
+    assert not calls
+    queued=await client.post('/api/runtime/model-connections/meta/verify',headers=owner,json={'target':'current_route'})
+    assert queued.status_code==202
+    assert await service.run_requested_check(sessions,AsyncMock())
+    assert len(calls)==1 and calls[0][1]['model']=='cfp/meta-llama/llama-3.3-70b-instruct-fp8-fast'
+    status=(await client.get('/api/runtime',headers=owner)).json()
+    meta=next(item for item in status['model_connections'] if item['id']=='meta')
+    assert meta['state']==('ready' if valid_model else 'unavailable')
+    assert not meta['can_add_api_key'] and meta['verification_target']=='current_route'
+    if valid_model:assert meta['access_kind']=='public' and 'subscription access were not tested' in meta['message']
+    openai=next(item for item in status['model_connections'] if item['id']=='openai')
+    assert openai['state']=='ready' and openai['access_kind']=='account'
+    tenant=current_tenant_id.set(account_id_for('owner@example.test'))
+    try:
+        async with sessions() as db:assert (await db.get(RuntimeCheck,service.PREFIX+'openai')).detail==before
+    finally:current_tenant_id.reset(tenant)
+
+
+@pytest.mark.asyncio
+async def test_a_running_route_check_cannot_claim_a_new_account_or_replacement_key_was_queued(setup):
+    client,sessions,owner,_=setup
+    queued=await client.post('/api/runtime/model-connections/claude/verify',headers=owner,json={'target':'current_route'})
+    assert queued.status_code==202
+    conflict=await client.post('/api/runtime/model-connections/claude/verify',headers=owner,json={'target':'provider_account'})
+    assert conflict.status_code==409
+    key=await client.post('/api/runtime/model-connections/claude/api-key',headers=owner,json={'api_key':'synthetic-new-key-not-accepted-12345'})
+    assert key.status_code==409 and 'not accepted' in key.json()['detail']
+    from app.db.tenancy import current_tenant_id
+    tenant=current_tenant_id.set(account_id_for('owner@example.test'))
+    try:
+        async with sessions() as db:
+            row=await db.get(RuntimeCheck,service.PREFIX+'claude')
+            assert row.detail['verification_target']=='current_route' and 'credentials_encrypted' not in row.detail
+    finally:current_tenant_id.reset(tenant)
+
 def test_automatic_included_profiles_use_codex_and_free_routes(monkeypatch):
     from app.services.model_profiles import routing_profiles,INCLUDED_ROUTES
     monkeypatch.setattr(settings,'OMNIROUTE_URL','https://router.example')
