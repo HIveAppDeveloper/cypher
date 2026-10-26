@@ -1,8 +1,8 @@
 """Same-runtime MSP core, NOT an Apple wire protocol or approved MSP.
 
 Only a future authenticated, reviewed Apple transport may call the *_verified
-functions. Nothing here registers an HTTP route, worker hook, model import,
-scheduler, or outbound transport. Callers own transaction commit/rollback.
+functions. The account API never calls them. No worker hook, scheduler or
+outbound transport is enabled. Callers own transaction commit/rollback.
 """
 import hashlib
 import json
@@ -227,7 +227,27 @@ async def queue_task_result(db, task):
         body += '\n' + '\n'.join(public)[:1800]
     for thread in threads:
         if thread.id == origin or thread.updates_opt_in:
-            await _queue(db, thread, 'task:' + task.id, body)
+            source = ('task:' if thread.id == origin else 'update:') + task.id
+            await _queue(db, thread, source, body)
+
+
+async def set_updates_opt_in(db, thread_id, enabled):
+    if not isinstance(enabled, bool):
+        raise ValueError('Update notifications require an explicit true or false choice.')
+    thread = await _owned_thread(db, thread_id)
+    if not thread:
+        raise LookupError('Messaging conversation not found.')
+    if enabled and thread.state != 'active':
+        raise ValueError('Link an active conversation before enabling task updates.')
+    thread.updates_opt_in = enabled
+    if not enabled:
+        # Consent withdrawal cancels unsent proactive updates, preserving replies
+        # to customer-initiated chats. Claims use the same thread-first lock.
+        await db.execute(update(AppleOutbox).where(
+            AppleOutbox.thread_id == thread.id, AppleOutbox.tenant_id == _owner(),
+            AppleOutbox.status == 'pending', AppleOutbox.source_id.startswith('update:')
+        ).values(status='suppressed'))
+    return thread
 
 
 async def queue_human_reply(db, thread_id, *, body, client_message_id):

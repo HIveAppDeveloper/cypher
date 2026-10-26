@@ -52,3 +52,6 @@ router.include_router(investor_funnel_router, prefix='/prospecting/investors', t
 
 from .sourcing_outreach import router as sourcing_outreach_router
 router.include_router(sourcing_outreach_router, prefix='/sourcing/outreach', tags=['sourcing-outreach'])
+
+from .apple_messages import router as apple_messages_router
+router.include_router(apple_messages_router, prefix='/apple-messages', tags=['apple-messages'])
