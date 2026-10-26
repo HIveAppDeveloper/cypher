@@ -76,3 +76,33 @@ test('legacy Cipher route keeps saved conversation links when it redirects to th
     }
   );
 });
+
+test('workspace route metadata uses the Cypher product name', () => {
+  const mocks = {
+    'next/headers': { cookies: async () => ({ get: () => undefined }) },
+    'next/navigation': { redirect: () => {} },
+    '../../lib/auth-server': { readSignedPayload: () => null },
+    '../../lib/canonical-app': { internalPathWithSearch: path => path },
+    '../../components/WorkspaceApp': { __esModule: true, default: 'workspace-app' },
+    '../cipher/cipher.css': {},
+  };
+  const { metadata } = load('../src/app/workspace/page.tsx', mocks, { process: { env: {} } });
+  assert.equal(metadata.title, 'Cypher Workspace');
+  assert.match(metadata.description, /Cypher/);
+  assert.doesNotMatch(metadata.description, /Open GrokBot/i);
+});
+
+test('prospecting route metadata uses the Cypher product name', () => {
+  const mocks = {
+    'next/headers': { cookies: async () => ({ get: () => undefined }) },
+    'next/navigation': { redirect: () => {} },
+    '../../lib/auth-server': { readSignedPayload: () => null },
+    '../../lib/canonical-app': { internalPathWithSearch: path => path },
+    '../../components/ProspectingWorkspace': { __esModule: true, default: 'prospecting-workspace' },
+    '../cipher/cipher.css': {},
+  };
+  const { metadata } = load('../src/app/prospecting/page.tsx', mocks, { process: { env: {} } });
+  assert.equal(metadata.title, 'Cypher Prospecting');
+  assert.match(metadata.description, /Cypher/);
+  assert.doesNotMatch(metadata.description, /Open GrokBot/i);
+});
