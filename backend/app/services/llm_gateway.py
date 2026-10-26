@@ -122,12 +122,13 @@ class LLMGateway:
             try:
                 managed_key = omniroute.managed_api_key(route_provider) if route_provider in {'gemini', 'xai'} else None
                 direct_managed = bool(managed_key)
+                validated_model = None
                 connection = completion_options(route_model, route_provider, direct=direct_managed, api_key_override=managed_key)
                 if direct_managed:
                     from app.services.model_routing import validate_direct_capabilities
                     await validate_direct_capabilities(messages, tools, route_provider, route_model)
                 else:
-                    await validate_capabilities(messages, tools, route_provider, route_model)
+                    validated_model = await validate_capabilities(messages, tools, route_provider, route_model)
             except (ModelConfigurationError, ModelCapabilityError) as error:
                 # Missing route configuration or an unsupported capability may
                 # select a declared backup. Invalid selections and catalog
@@ -143,9 +144,13 @@ class LLMGateway:
                 # Avoid forwarding sampling controls to models that only accept
                 # reasoning. Preserve the provider's supported effort levels.
                 if omniroute.enabled() and not direct_managed:
-                    from app.services.model_routing import route_catalog
-                    from app.services.model_profiles import model_route_id
-                    meta = (await route_catalog())[model_route_id(route_provider,route_model)]
+                    # Reuse this route's verified entry: catalog() refreshes SQL
+                    # route rows even on a cache hit. Do not repeat that read.
+                    meta = validated_model
+                    if meta is None:  # Preserve validators that return no entry.
+                        from app.services.model_routing import route_catalog
+                        from app.services.model_profiles import model_route_id
+                        meta = (await route_catalog())[model_route_id(route_provider,route_model)]
                     supported = meta.get('supported_parameters', [])
                     if 'temperature' not in supported:
                         generation.pop('temperature',None)
