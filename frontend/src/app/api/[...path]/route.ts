@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSessionFromCookieHeader } from '../../../lib/auth-server';
 import { pluginReturnPath } from '../../../lib/pluginAuthorization';
+import { proxyServerTiming } from '../../../lib/server-timing';
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
 async function proxy(request: NextRequest, { params }: { params: Promise<{ path: string[] }> }) {
+  const proxyStarted = performance.now();
   const { path: pathSegments } = await params;
   const path = pathSegments.join('/');
   if (request.method==='GET' && path==='plugin-oauth/client-metadata') {
@@ -31,8 +33,20 @@ async function proxy(request: NextRequest, { params }: { params: Promise<{ path:
   const channelKey=request.headers.get('x-grokbot-channel-key');
   if(channelKey) headers['x-grokbot-channel-key']=channelKey;
   let response: Response;
+  let upstreamStarted: number | undefined;
+  let upstreamHeadersMs: number | undefined;
   const timeout = path === 'runtime/models/test' || pathSegments[0] === 'plugins' ? 60000 : 25000;
-  try { response = await fetch(url, { method: request.method, headers, body: ['GET', 'HEAD'].includes(request.method) ? undefined : await request.text(), cache: 'no-store', signal: AbortSignal.timeout(timeout) }); } catch { return NextResponse.json({ detail: 'The cloud API is starting or unavailable. Try again shortly.' }, { status: 503 }); }
+  try {
+    const body = ['GET', 'HEAD'].includes(request.method) ? undefined : await request.text();
+    upstreamStarted = performance.now();
+    response = await fetch(url, { method: request.method, headers, body, cache: 'no-store', signal: AbortSignal.timeout(timeout) });
+    upstreamHeadersMs = performance.now() - upstreamStarted;
+  } catch {
+    const upstreamMs = upstreamStarted === undefined ? undefined : performance.now() - upstreamStarted;
+    return NextResponse.json({ detail: 'The cloud API is starting or unavailable. Try again shortly.' }, {
+      status: 503, headers: { 'Server-Timing': proxyServerTiming(upstreamMs, performance.now() - proxyStarted) },
+    });
+  }
   if (path === 'plugins/authorize' && response.ok) {
     const data=await response.json();
     const binding=data.binding; delete data.binding;
@@ -42,6 +56,7 @@ async function proxy(request: NextRequest, { params }: { params: Promise<{ path:
       result.cookies.set('grokbot-oauth-'+data.flow_id,binding,options);
       result.cookies.set('grokbot-oauth-return-'+data.flow_id,pluginReturnPath(request.headers.get('referer'),request.nextUrl.origin),options);
     }
+    result.headers.set('Server-Timing', proxyServerTiming(upstreamHeadersMs, performance.now() - proxyStarted, response.headers.get('x-cypher-app-headers-ms')));
     return result;
   }
   const responseHeaders: Record<string, string> = { 'Content-Type': response.headers.get('content-type') || 'application/json', 'Cache-Control': 'private, no-store', 'X-Content-Type-Options': 'nosniff' };
@@ -49,6 +64,7 @@ async function proxy(request: NextRequest, { params }: { params: Promise<{ path:
   if(retryAfter)responseHeaders['Retry-After']=retryAfter;
   const disposition = response.headers.get('content-disposition');
   if (disposition) responseHeaders['Content-Disposition'] = disposition;
+  responseHeaders['Server-Timing'] = proxyServerTiming(upstreamHeadersMs, performance.now() - proxyStarted, response.headers.get('x-cypher-app-headers-ms'));
   return new NextResponse(response.body, { status: response.status, headers: responseHeaders });
 }
 export { proxy as GET, proxy as POST, proxy as PUT, proxy as PATCH, proxy as DELETE };

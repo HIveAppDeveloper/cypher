@@ -6,7 +6,7 @@ const require=createRequire(import.meta.url),next=require('next/server');
 const origin='https://app.example',id='e52dad3f-b0db-4cf8-a0f0-f9b88c16f230';
 const helper=load('../src/lib/pluginAuthorization.ts',{}, {URL,Date});
 const env={BACKEND_INTERNAL_URL:'http://backend.fixture',GROKBOT_BACKEND_API_TOKEN:'synthetic-service-token'};
-function route(file,fetch){return load(file,{'next/server':next,'../../../lib/auth-server':{getSessionFromCookieHeader:()=>null},'../../../../lib/auth-server':{getSessionFromCookieHeader:()=>null},'../../../lib/pluginAuthorization':helper,'../../../../lib/pluginAuthorization':helper},{URL,AbortSignal,process:{env},fetch});}
+function route(file,fetch){return load(file,{'next/server':next,'../../../lib/auth-server':{getSessionFromCookieHeader:()=>null},'../../../../lib/auth-server':{getSessionFromCookieHeader:()=>null},'../../../lib/pluginAuthorization':helper,'../../../../lib/pluginAuthorization':helper,'../../../lib/server-timing':load('../src/lib/server-timing.ts')},{URL,AbortSignal,performance,process:{env},fetch});}
 const callback='../src/app/api/plugin-oauth/callback/route.ts';
 function req(query,returnTo='/?workspace=1&conversation=123',binding=true){return new next.NextRequest(origin+'/api/plugin-oauth/callback?'+query,{headers:{cookie:(binding?'grokbot-oauth-'+id+'=browser-binding; ':'')+'grokbot-oauth-return-'+id+'='+encodeURIComponent(returnTo)}});}
 test('authorization proxy keeps the browser binding private and saves a same-origin return',async()=>{
