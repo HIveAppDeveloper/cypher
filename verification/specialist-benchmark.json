@@ -5,14 +5,14 @@
   "procedure_count": 100,
   "queries": 1200,
   "retrieval_ms": {
-    "median": 0.0085,
-    "p90": 0.0096,
-    "p95": 0.0097,
-    "p99": 0.0128,
-    "max": 0.0227
+    "median": 0.021,
+    "p90": 0.0239,
+    "p95": 0.0245,
+    "p99": 0.0382,
+    "max": 1.4867
   },
-  "full_catalog_instruction_chars_never_sent": 3993300,
-  "selected_instruction_chars_max_in_fixture": 981,
+  "full_catalog_instruction_chars_never_sent": 6254406,
+  "selected_instruction_chars_max_in_fixture": 1442,
   "automatic_recipe_char_cap": 2400,
   "specialist_output_token_cap": {
     "before": 1024,
