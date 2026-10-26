@@ -150,7 +150,7 @@ function quickStart(env, onStart, initialScope = 'local') {
 const { ApiError } = load('../src/lib/api.ts', { './conversations': {} }, { process: { env: {} } });
 const bot = { id: 'synthetic-agent', name: 'Coordinator', llmProvider: 'openai', llmModel: 'gpt-6.1-sol' };
 const message = { id: 'source-message', content: 'Existing synthetic response', senderType: 'bot', messageType: 'text', createdAt: '2026-10-22T00:00:00Z' };
-function chat(env, api) {
+function chat(env, api, choices = presets.MODEL_CHOICES) {
   const view = renderer(env);
   const stubs = { './LoadingState': { LoadingState: 'loading-state' }, './cipher/BinaryLens': { __esModule: true, default: 'binary-lens' }, '../lib/presets': presets, './ContextPanel': { ContextPanel: 'context-panel' },
     './WorkPanel': { WorkPanel: 'work-panel' }, './GlassSelect': { GlassSelect: 'select' },
@@ -163,12 +163,40 @@ function chat(env, api) {
     '../lib/modelPolicy': { modelPolicy: value => value }, '../lib/attachments': { readAttachment: async () => ({ name: 'fixture.txt', mime: 'text/plain', data: 'eA==' }) } };
   stubs['./AgentConversationActivity']={...load('../src/lib/agent-conversation.ts'),AgentConversationActivity:'agent-conversation-activity'};
   const { ChatPanel } = load('../src/components/ChatPanel.tsx', { react: view.react, ...stubs,
-    '../hooks/useModelChoices': { useModelChoices: () => ({ choices: presets.MODEL_CHOICES, nicrronChoices: [], nicrronStatus: 'not_configured' }) },
+    '../hooks/useModelChoices': { useModelChoices: () => ({ choices, nicrronChoices: choices.filter(choice => choice.provider === 'nicrron'), nicrronStatus: 'ready' }) },
     '../lib/dates': load('../src/lib/dates.ts') }, env.globals);
   view.mount(() => ChatPanel({ bot, room: null, bots: [bot], onCreateBot() {}, onCreateRoom() {},
     onQuickStart: async () => {}, onOpenLounge: async () => {} }));
   return view;
 }
+
+test('conversation manager preserves an unavailable saved Nicrron model until it is replaced', async () => {
+  const env = environment();
+  const missingModel = 'anthropic/claude-haiku-4-5';
+  env.globals.localStorage.setItem('grokbot-options-synthetic-agent', JSON.stringify({
+    routing: 'manual', provider: 'nicrron', model: missingModel,
+  }));
+  const choices = [...presets.MODEL_CHOICES, {
+    id: 'nicrron-sonnet', label: 'Nicrron · Claude Sonnet 5.5', provider: 'nicrron', model: 'anthropic/claude-sonnet-5-5',
+  }];
+  const view = chat(env, {
+    conversationForBot: async () => 'synthetic-conversation',
+    syncConversation: async () => ({ messages: [], tasks: [] }),
+  }, choices);
+  await view.flush();
+
+  const manager = () => find(view.tree, node => node.props?.['aria-label'] === 'Manager model');
+  assert.equal(manager().props.value, missingModel);
+  assert.ok(find(manager(), node => node.props?.value === missingModel
+    && node.props?.disabled === true
+    && textOf(node) === `${missingModel} (currently unavailable)`));
+
+  manager().props.onChange({ target: { value: 'anthropic/claude-sonnet-5-5' } });
+  await view.flush();
+  assert.equal(manager().props.value, 'anthropic/claude-sonnet-5-5');
+  assert.ok(!find(manager(), node => node.props?.value === missingModel));
+  view.unmount();
+});
 
 test('command search ignores composing and 229 Enter, but normal Enter chooses the command', async () => {
   const env = environment(), view = renderer(env); let chosen = 0, prevented = 0;
