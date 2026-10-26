@@ -18,14 +18,14 @@ test('runtime probe failures stay unknown and retry without claiming the cloud i
     return {ok:true,json:async()=>({connected:true,worker:false,database:true,model_configured:true,model_transport:'direct'})};
   });
   await view.flush();
-  assert.match(textOf(view.tree),/Cloud status unavailable/);
-  assert.match(textOf(view.tree),/Could not check the cloud runtime/);
-  assert.doesNotMatch(textOf(view.tree),/Cloud runtime not connected|Connect your database|Connect Gemini|Test Gemini connection|Get a Gemini API key/);
+  assert.match(textOf(view.tree),/Connection status unavailable/);
+  assert.match(textOf(view.tree),/Could not check Cypher’s connection/);
+  assert.doesNotMatch(textOf(view.tree),/Cypher is not connected|Saved work needs attention|Connect Gemini|Test Gemini connection|Get a Gemini API key/);
   button(view.tree,'Refresh').props.onClick();
   await view.flush();
-  assert.match(textOf(view.tree),/Cloud API connected · worker not ready/);
-  assert.doesNotMatch(textOf(view.tree),/Could not check the cloud runtime/);
-  assert.match(textOf(view.tree),/Model route not confirmed/);
+  assert.match(textOf(view.tree),/Background work needs attention/);
+  assert.doesNotMatch(textOf(view.tree),/Could not check Cypher’s connection/);
+  assert.match(textOf(view.tree),/AI connection not confirmed/);
   assert.doesNotMatch(textOf(view.tree),/Connect Gemini|Test Gemini connection|Get a Gemini API key/);
   button(view.tree,'Refresh').props.onClick();
   await view.flush();
@@ -37,8 +37,8 @@ test('runtime probe failures stay unknown and retry without claiming the cloud i
 test('connection-settings request failures do not mark a healthy runtime disconnected',async()=>{
   const view=panel(async url=>url==='/api/connections'?Promise.reject(Error('Settings service offline')):{ok:true,json:async()=>({connected:true,worker:true,database:true})});
   await view.flush();
-  assert.match(textOf(view.tree),/Cloud workspace connected/);
-  assert.doesNotMatch(textOf(view.tree),/Cloud runtime not connected|Could not check the cloud runtime/);
+  assert.match(textOf(view.tree),/Cypher is connected/);
+  assert.doesNotMatch(textOf(view.tree),/Cypher is not connected|Could not check Cypher’s connection/);
   assert.equal(find(view.tree,node=>node.props?.role==='alert'),undefined);
   view.unmount();
 });

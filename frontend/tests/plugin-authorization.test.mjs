@@ -39,7 +39,7 @@ test('connection request failures do not claim there are no saved tools and retr
   await p.view.flush();
   assert.match(textOf(p.view.tree),/Could not load your saved connections/);
   assert.doesNotMatch(textOf(p.view.tree),/Connect an app below/);
-  button(p.view.tree,'Connected').props.onClick();
+  button(p.view.tree,'My apps').props.onClick();
   await p.view.flush();
   assert.match(textOf(p.view.tree),/Connections unavailable/);
   assert.doesNotMatch(textOf(p.view.tree),/No tools connected yet/);
@@ -191,10 +191,10 @@ test('provider registration errors open an actionable OAuth form without claimin
 test('connected tool descriptions are searchable and public tools have a separate view',async()=>{
   const connections=[{id:'account',name:'Account fixture',url:'https://account.example/mcp',authenticated:true,enabled:true,tools:[{name:'lookup',description:'Find invoices'}]},{id:'public',name:'Public fixture',url:'https://public.example/mcp',authenticated:false,enabled:true,tools:[{name:'public_read',description:'Public documentation'}]}];
   const p=panel({api:{getPlugins:async()=>connections}});await p.view.flush();
-  button(p.view.tree,'Connected · 2').props.onClick();await p.view.flush();
+  button(p.view.tree,'My apps · 2').props.onClick();await p.view.flush();
   assert.match(textOf(p.view.tree),/Account fixture/);assert.doesNotMatch(textOf(p.view.tree),/Public fixture/);
   button(p.view.tree,'Public tools · 1').props.onClick();await p.view.flush();assert.match(textOf(p.view.tree),/Public fixture/);
-  find(p.view.tree,n=>n.props?.['aria-label']==='Search connected plugins').props.onChange({target:{value:'invoices'}});await p.view.flush();
+  find(p.view.tree,n=>n.props?.['aria-label']==='Search my apps').props.onChange({target:{value:'invoices'}});await p.view.flush();
   assert.match(textOf(p.view.tree),/Account fixture/);assert.doesNotMatch(textOf(p.view.tree),/Public fixture/);
   p.view.unmount();
 });
