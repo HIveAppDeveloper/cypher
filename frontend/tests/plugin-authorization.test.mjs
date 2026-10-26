@@ -83,13 +83,14 @@ test('connected runtime keeps the summary recovery notice when connections canno
   p.view.unmount();
 });
 
-test('Connected view sends Add or manage skills to the workspace skills editor',async()=>{
+test('Connected view opens saved skills separately from account connections',async()=>{
   let opens=0;
   const p=panel({onManageSkills:()=>{opens++;}});
   await p.view.flush();
   button(p.view.tree,'Connected').props.onClick();
   await p.view.flush();
-  button(p.view.tree,'Add or manage skills').props.onClick();
+  assert.match(textOf(p.view.tree),/Create and manage reusable skill recipes separately in your workspace library/);
+  button(p.view.tree,'Saved instructions').props.onClick();
   assert.equal(opens,1);
   p.view.unmount();
 });
