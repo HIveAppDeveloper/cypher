@@ -38,6 +38,7 @@ test('team-room creation cannot be dismissed or submitted twice while the save i
   const pending = submit(view.tree);
   await view.flush();
   assert.equal(requests.length, 1);
+  assert.deepEqual(find(view.tree, node => node.props?.role === 'status').props.children, ['Creating your team room…']);
   assert.equal(requests[0].name, 'Launch planning');
   assert.equal(requests[0].ids.join(','), 'bot-a,bot-b');
 
