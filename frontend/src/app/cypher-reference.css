@@ -517,6 +517,7 @@ body:has(.app-layout) { display: flow-root; }
 }
 .quickstart .quickstart-voice:hover:not(:disabled) { background: #eeeae1; color: var(--cx-label); transform: scale(1.045); }
 .quickstart .quickstart-voice svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.quickstart .quickstart-voice > span { display: none; }
 .quickstart .quickstart-voice:disabled { opacity: .62; }
 .quickstart [aria-labelledby="recent-work-heading"] { width: min(840px, 100%); margin: 0; }
 .quickstart [aria-labelledby="recent-work-heading"] h2 { display: flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 560; }
@@ -569,7 +570,6 @@ body:has(.app-layout) { display: flow-root; }
   .quickstart .starter-prompts .starter-card { min-height: 96px; padding: 12px; }
   .starter-card strong { font-size: 11px; }
   .starter-card span { font-size: 10px; }
-  .quickstart .quickstart-voice { margin-top: -11px; }
   .sidebar-shell .sidebar-brand .brand-symbol { width: 52px; }
 }
 @media (max-width: 380px) {
