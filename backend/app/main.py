@@ -120,6 +120,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Register outermost without changing the relative auth/CORS/tenant order.
+# call_next returns at response headers, so this is not streaming/body timing.
+from app.services.request_timing import app_header_timing
+app.middleware('http')(app_header_timing)
+
 from sqlalchemy.exc import SQLAlchemyError
 
 @app.exception_handler(SQLAlchemyError)
