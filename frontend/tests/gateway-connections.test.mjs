@@ -7,13 +7,13 @@ function mount({preview=false,owner=true,items=[],fetchImpl}={}){
   const env=environment(),view=renderer(env),calls=[],destinations=[];
   env.window.location={assign:value=>destinations.push(value)};
   const baseElement=env.element;env.element=props=>baseElement({closest:()=>null,...props});
-  const Component=load('../src/components/GatewayConnections.tsx',{react:view.react,'./GatewayProviderLogo':{GatewayProviderLogo:'provider-logo'},'../lib/gateway-connections.mjs':catalog},{...env.globals,React:view.react.default,fetch:async(path,options)=>{calls.push({path,...options});return fetchImpl?fetchImpl(path,options):{ok:true,json:async()=>({status:'pending'})}},setInterval:()=>1,clearInterval:()=>{}}).GatewayConnections;
+  const Component=load('../src/components/GatewayConnections.tsx',{react:view.react,'./GatewayProviderLogo':{GatewayProviderLogo:'provider-logo'},'../lib/gateway-connections.mjs':catalog},{...env.globals,React:view.react.default,AbortSignal,fetch:async(path,options)=>{calls.push({path,...options});return fetchImpl?fetchImpl(path,options):{ok:true,json:async()=>({status:'pending'})}},setInterval:()=>1,clearInterval:()=>{}}).GatewayConnections;
   view.mount(()=>Component({items,canManage:owner,workerReady:true,preview,onRefresh:async()=>{}}));
-  return {view,calls,destinations,env,select:async id=>{find(view.tree,n=>n.type==='button'&&n.props['data-provider']===catalog.gatewayProviders.find(p=>p.name===id).id).props.onClick();await view.flush();}};
+  return {view,calls,destinations,env,updateItems(value){items=value;view.rerender()},select:async id=>{find(view.tree,n=>n.type==='button'&&n.props['data-provider']===catalog.gatewayProviders.find(p=>p.name===id).id).props.onClick();await view.flush();}};
 }
 test('catalog connects internally, and a preview never claims real account verification',async()=>{
   const app=mount({preview:true,items:[{id:'openai',state:'ready',account_connected:true}]});await app.view.flush();
-  assert.ok(!textOf(app.view.tree).includes('Account connected'));assert.match(textOf(app.view.tree),/Account sign-in unavailable/);assert.ok(find(app.view.tree,n=>n.type==='button'&&n.props['aria-label']==='View setup for ChatGPT'));assert.match(textOf(app.view.tree),/Preview/);
+  assert.ok(!textOf(app.view.tree).includes('Account connected'));assert.match(textOf(app.view.tree),/ChatGPT approval required/);assert.ok(find(app.view.tree,n=>n.type==='button'&&n.props['aria-label']==='View setup for ChatGPT'));assert.match(textOf(app.view.tree),/Preview/);
   assert.equal(find(app.view.tree,n=>n.type==='a'&&String(n.props.href).includes('omniroute')),undefined);
   await app.select('ChatGPT');assert.match(textOf(app.view.tree),/local preview/);assert.equal(app.calls.length,0);
   app.view.unmount();
@@ -42,4 +42,15 @@ test('a late begin response after leaving the provider cannot navigate',async()=
 });
 test('saved route readiness is not presented as a connected subscription',()=>{
   assert.equal(catalog.providerConnectionLabel({state:'ready'}),'Route available');assert.equal(catalog.providerConnectionLabel({state:'ready',account_connected:true}),'Account connected');assert.equal(catalog.providerConnectionLabel({state:'ready',account_connected:true},true),'Preview');
+});
+
+ test('connected filter includes verified API access and excludes public fallback routes',async()=>{
+  const app=mount({items:[{id:'claude',state:'ready',can_add_api_key:true,access_kind:'api_key',verification_target:'provider_account'},{id:'openai',state:'ready',access_kind:'public',verification_target:'current_route'}]});await app.view.flush();button(app.view.tree,'Connected').props.onClick();await app.view.flush();assert.match(textOf(app.view.tree),/API key verified/);assert.ok(find(app.view.tree,n=>n.type==='button'&&n.props['aria-label']==='Manage for Claude'));assert.equal(find(app.view.tree,n=>n.type==='button'&&n.props['data-provider']==='openai'),undefined);app.view.unmount();
+});
+ test('provider-account verification cannot accept a public-route acknowledgment',async()=>{
+ const app=mount({items:[{id:'openai',state:'not_checked',verification_supported:true}],fetchImpl:async()=>({ok:true,json:async()=>({status:'pending',verification_target:'current_route'})})});await app.select('ChatGPT');button(app.view.tree,'Check model access').props.onClick();await app.view.flush();assert.deepEqual(JSON.parse(app.calls[0].body),{target:'provider_account'});assert.match(textOf(app.view.tree),/did not confirm the requested access check/);assert.ok(!textOf(app.view.tree).includes('Checking in the cloud'));app.view.unmount();
+});
+
+test('queued progress waits for a new server result and then reports completion',async()=>{
+const before={id:'claude',state:'ready',can_add_api_key:true,checked_at:'2026-10-26T10:00:00Z',message:'Previous key remains saved.'};const app=mount({items:[before]});await app.select('Claude');field(app.view.tree,'gc-provider-key').props.onChange({target:{value:'fixture-api-key-for-replacement'}});await app.view.flush();find(app.view.tree,n=>n.type==='form').props.onSubmit({preventDefault(){}});await app.view.flush();assert.match(textOf(app.view.tree),/Checking in the cloud/);app.updateItems([{...before}]);await app.view.flush();assert.match(textOf(app.view.tree),/Checking in the cloud/);app.updateItems([{...before,state:'checking'}]);await app.view.flush();app.updateItems([{...before,checked_at:'2026-10-26T11:00:00Z',message:'Replacement failed. Your previous verified key remains active.'}]);await app.view.flush();assert.ok(!textOf(app.view.tree).includes('Checking in the cloud'));assert.match(textOf(app.view.tree),/Replacement failed/);app.view.unmount();
 });

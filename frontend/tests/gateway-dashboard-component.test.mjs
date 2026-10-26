@@ -61,3 +61,7 @@ test('closed mobile navigation is inert and Escape restores the opener',async()=
   assert.equal(sidebar().props.inert,true);assert.equal(opener().props['aria-expanded'],false);assert.equal(restored,1);
   app.view.unmount();
 });
+
+test('owner views never send connection or policy actions to a separate gateway password page',async()=>{
+const app=mount();await app.view.flush();for(const label of ['Overview','Gateway controls','Models','Activity','Connect tools']){find(app.view.tree,n=>n.type==='button'&&textOf(n).startsWith(label)).props.onClick();await app.view.flush();assert.equal(find(app.view.tree,n=>n.type==='a'&&String(n.props.href).startsWith('https://omniroute-cloud-ten.vercel.app')),undefined);}app.view.unmount();
+});
