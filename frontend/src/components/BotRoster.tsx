@@ -86,8 +86,8 @@ export function BotRoster({ bots, selectedBot, onSelectBot, onCreateNew, rooms, 
     <nav className="cypher-primary-nav" aria-label="Main navigation">
       <button aria-current={activeView === 'work' ? 'page' : undefined} onClick={onMyWork}><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8 9h8M8 13h8m-8 4h5"/></svg><span>My work</span></button>
       <button aria-current={activeView === 'apps' ? 'page' : undefined} onClick={onPlugins}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3v5m8-5v5M6 8h12v4a6 6 0 0 1-12 0V8Zm6 10v3"/></svg><span>Apps</span></button>
-      <button aria-current={activeView === 'saved' ? 'page' : undefined} onClick={onWorkspace}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4.5A2.5 2.5 0 0 1 8.5 2H19v18H8.5A2.5 2.5 0 0 0 6 22V4.5Zm0 0A2.5 2.5 0 0 0 3.5 2H3v18h5.5A2.5 2.5 0 0 1 11 22"/></svg><span>Saved</span></button>
-      <button aria-current={activeView === 'settings' ? 'page' : undefined} onClick={onSetup}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5 14 5l2.5-.2.9 2.3 2.1 1.4-.6 2.5.6 2.5-2.1 1.4-.9 2.3L14 17l-2 1.5L10 17l-2.5.2-.9-2.3-2.1-1.4.6-2.5-.6-2.5 2.1-1.4.9-2.3L10 5l2-1.5Z"/><circle cx="12" cy="11.5" r="2.5"/></svg><span>Settings</span></button>
+      <button aria-current={activeView === 'saved' ? 'page' : undefined} onClick={onWorkspace}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4.5A2.5 2.5 0 0 1 8.5 2H19v18H8.5A2.5 2.5 0 0 0 6 22V4.5Zm0 0A2.5 2.5 0 0 0 3.5 2H3v18h5.5A2.5 2.5 0 0 1 11 22"/></svg><span>Library</span></button>
+      <button aria-current={activeView === 'settings' ? 'page' : undefined} onClick={onPreferences}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5 14 5l2.5-.2.9 2.3 2.1 1.4-.6 2.5.6 2.5-2.1 1.4-.9 2.3L14 17l-2 1.5L10 17l-2.5.2-.9-2.3-2.1-1.4.6-2.5-.6-2.5 2.1-1.4.9-2.3L10 5l2-1.5Z"/><circle cx="12" cy="11.5" r="2.5"/></svg><span>Settings</span></button>
     </nav>
 
     <section className="cypher-recent-tasks" aria-labelledby="cypher-recent-tasks-title" aria-busy={recentRunsLoading}>
@@ -152,15 +152,14 @@ export function BotRoster({ bots, selectedBot, onSelectBot, onCreateNew, rooms, 
       <summary>More</summary>
       <div className="sidebar-more-content">
         <nav className="workspace-destinations" aria-label="Workspace tools">
-          <a className="preferences-nav" href="/prospecting" aria-label="Prospecting"><svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4 4M8 10.5h5m-2.5-2.5v5"/></svg><span>Prospecting</span></a>
+          <a className="preferences-nav" href="/prospecting" aria-label="Company research"><svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4 4M8 10.5h5m-2.5-2.5v5"/></svg><span>Company research</span></a>
           <button className="preferences-nav" onClick={onComputer} aria-label="Computer"><svg viewBox="0 0 24 24"><path d="M3 4h18v13H3zM8 21h8m-4-4v4"/></svg><span>Computer</span></button>
-          <button className="preferences-nav" onClick={onSetup} aria-label="Connection setup"><svg viewBox="0 0 24 24"><path d="M12 3v3m0 12v3M3 12h3m12 0h3M5.6 5.6l2.1 2.1m8.6 8.6 2.1 2.1m0-12.8-2.1 2.1m-8.6 8.6-2.1 2.1"/><circle cx="12" cy="12" r="4"/></svg><span>Connection setup</span></button>
-          <button className="preferences-nav" onClick={onWorkspace} aria-label="Workspace library"><svg viewBox="0 0 24 24"><path d="M4 4h6v16H4zM14 4h6v16h-6z"/></svg><span>Memory, skills &amp; routines</span></button>
+          <button className="preferences-nav" onClick={onSetup} aria-label="Advanced setup"><svg viewBox="0 0 24 24"><path d="M12 3v3m0 12v3M3 12h3m12 0h3M5.6 5.6l2.1 2.1m8.6 8.6 2.1 2.1m0-12.8-2.1 2.1m-8.6 8.6-2.1 2.1"/><circle cx="12" cy="12" r="4"/></svg><span>Advanced setup</span></button>
+          <button className="preferences-nav" onClick={onWorkspace} aria-label="Workspace library"><svg viewBox="0 0 24 24"><path d="M4 4h6v16H4zM14 4h6v16h-6z"/></svg><span>Saved info and tasks</span></button>
           <button className="preferences-nav" onClick={onGoals} aria-label="Goals"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><path d="m12 12 8-8"/></svg><span>Goals</span></button>
         </nav>
         <nav className="workspace-tools" aria-label="Tools and settings">
           <button className="preferences-nav" onClick={onChannels} aria-label="Channels"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4V5Z"/></svg><span>Channels</span></button>
-          <button className="preferences-nav" onClick={onPreferences} aria-label="Appearance"><svg viewBox="0 0 24 24"><path d="M5 4v16M12 4v16M19 4v16M2 8h6m1 8h6m1-6h6"/></svg><span>Appearance</span></button>
         </nav>
       </div>
     </details>

@@ -1,0 +1,26 @@
+/* Everyday choices first; specialist controls stay available on request. */
+.simple-disclosure { margin-block: 8px; border-top: 1px solid var(--cx-sep); }
+.simple-disclosure > summary { min-height: 44px; padding-block: 12px; cursor: pointer; font-size: 13px; line-height: 20px; }
+.simple-disclosure > summary:focus-visible { outline: 2px solid var(--cx-label); outline-offset: 2px; }
+.simple-options-body { display: grid; gap: 12px; padding: 4px 0 16px; }
+.simple-options-body p { margin: 0; }
+.simple-options-body label { display: grid; gap: 6px; }
+.simple-options-body > .btn-secondary { justify-self: start; }
+.simple-connector-tabs { grid-template-columns: repeat(2, minmax(0, 1fr)) auto; }
+.simple-connector-tabs > button[aria-pressed="true"] { text-decoration: underline; text-underline-offset: 12px; }
+.simple-app-options { position: relative; align-self: center; }
+.simple-app-options > summary { min-height: 44px; padding: 12px; cursor: pointer; font-size: 12px; }
+.simple-app-options > div { position: absolute; z-index: 60; top: 100%; right: 0; display: grid; min-width: 210px; padding: 8px; border: 1px solid var(--cx-sep); border-radius: 8px; background: var(--cx-card); }
+.simple-app-options > div > button { padding: 12px; text-align: left; }
+.simple-app-options > div > button:hover { background: var(--cx-fill); }
+.simple-app-options[data-active="true"] > summary { text-decoration: underline; text-underline-offset: 6px; }
+@media (max-width: 760px) {
+  .simple-connector-tabs { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto; }
+  .simple-app-options > summary { padding-inline: 8px; }
+}
+
+.preferences-dialog .btn-primary, .setup-dialog .btn-primary, .workspace-hub .btn-primary, .goals-dialog .btn-primary { border-color: var(--cx-label); }
+.workspace-hub[open] { display: flex; flex-direction: column; }
+.workspace-hub .hub-header, .workspace-hub .hub-tabs { flex-shrink: 0; }
+.workspace-hub .hub-tabs { flex-wrap: wrap; }
+.workspace-hub .hub-body { flex: 1; min-height: 0; max-height: none; }

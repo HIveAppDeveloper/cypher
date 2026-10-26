@@ -39,10 +39,10 @@ for(const kind of ['memory','skill'])test(`${kind} editing keeps upsert identity
   await view.flush();
   button(view.tree,'Edit').props.onClick();await view.flush();
   assert.equal(control(view.tree,'Name','input').props.disabled,true);
-  assert.equal(control(view.tree,'Scope','select').props.disabled,true);
+  assert.equal(control(view.tree,'Who can use this?','select').props.disabled,true);
   assert.ok(button(view.tree,'Save changes'));
-  control(view.tree,kind==='skill'?'Recipe':'Content','textarea').props.onChange({target:{value:'Updated content'}});
-  if(kind==='skill')control(view.tree,'Parameters','input').props.onChange({target:{value:'company, audience'}});
+  control(view.tree,kind==='skill'?'Instructions':'What should Cypher remember?','textarea').props.onChange({target:{value:'Updated content'}});
+  if(kind==='skill')control(view.tree,'Optional inputs','input').props.onChange({target:{value:'company, audience'}});
   await view.flush();
   submit(view.tree);await view.flush();
   assert.equal(writes.length,1);
@@ -53,27 +53,27 @@ for(const kind of ['memory','skill'])test(`${kind} editing keeps upsert identity
   assert.equal(button(view.tree,'Save changes'),undefined);
 
   button(view.tree,'Edit').props.onClick();await view.flush();
-  control(view.tree,kind==='skill'?'Recipe':'Content','textarea').props.onChange({target:{value:'Unsaved changes'}});
+  control(view.tree,kind==='skill'?'Instructions':'What should Cypher remember?','textarea').props.onChange({target:{value:'Unsaved changes'}});
   button(view.tree,'Cancel edit').props.onClick();await view.flush();
   assert.equal(control(view.tree,'Name','input').props.value,'');
-  assert.equal(control(view.tree,kind==='skill'?'Recipe':'Content','textarea').props.value,'');
+  assert.equal(control(view.tree,kind==='skill'?'Instructions':'What should Cypher remember?','textarea').props.value,'');
   assert.equal(writes.length,1,'cancelling must not save the unsaved content');
   assert.equal(app.rows[0].content,'Updated content');
 
   if(kind==='skill') {
     button(view.tree,'Edit').props.onClick();await view.flush();
     find(view.tree,node=>node.type==='select'&&node.props.value==='').props.onChange({target:{value:'run-a'}});await view.flush();
-    button(view.tree,'Draft skill from run').props.onClick();await view.flush();
+    button(view.tree,'Create reusable instructions').props.onClick();await view.flush();
     assert.equal(button(view.tree,'Cancel edit'),undefined);
     assert.equal(control(view.tree,'Name','input').props.value,'drafted-skill');
     assert.equal(control(view.tree,'Name','input').props.disabled,false);
   }
 
   button(view.tree,'Edit').props.onClick();await view.flush();
-  button(view.tree,kind==='skill'?'Memory':'Skills').props.onClick();await view.flush();
+  button(view.tree,kind==='skill'?'Notes':'Saved instructions').props.onClick();await view.flush();
   assert.equal(button(view.tree,'Cancel edit'),undefined);
   assert.equal(control(view.tree,'Name','input').props.value,'');
-  button(view.tree,kind==='skill'?'Skills':'Memory').props.onClick();await view.flush();
+  button(view.tree,kind==='skill'?'Saved instructions':'Notes').props.onClick();await view.flush();
   button(view.tree,'Edit').props.onClick();await view.flush();
   button(view.tree,'Delete').props.onClick();await view.flush();
   assert.equal(app.rows.length,0);

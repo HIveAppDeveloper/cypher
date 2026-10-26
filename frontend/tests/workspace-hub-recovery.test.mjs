@@ -36,7 +36,7 @@ test('partial Activity load failures stay visible until retry succeeds',async()=
   assert.doesNotMatch(textOf(view.tree),/No unread notifications|No recent work yet/,'failed endpoints must not look like empty data');
   assert.ok(button(view.tree,'Retry'));
 
-  button(view.tree,'Memory').props.onClick();
+  button(view.tree,'Notes').props.onClick();
   await view.flush();
   assert.ok(button(view.tree,'Retry'),'the recovery action stays visible after changing tabs');
   submit(view.tree);
@@ -44,7 +44,7 @@ test('partial Activity load failures stay visible until retry succeeds',async()=
   assert.ok(button(view.tree,'Retry'),'successful actions do not hide recovery for still-failed resources');
 
   loadPass=1;
-  button(view.tree,'Activity').props.onClick();
+  button(view.tree,'My work').props.onClick();
   await view.flush();
   button(view.tree,'Retry').props.onClick();
   await view.flush();
