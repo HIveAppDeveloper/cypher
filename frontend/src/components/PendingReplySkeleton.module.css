@@ -1,0 +1,27 @@
+.reply {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  width: 560px;
+  max-width: calc(100% - 48px);
+  margin: 18px 24px 28px;
+  box-sizing: border-box;
+  flex-shrink: 0;
+}
+.avatar, .lines span {
+  display: block;
+  background: var(--system-selected);
+  animation: pending 2s ease-in-out infinite;
+}
+.avatar { width: 28px; height: 28px; border-radius: 50%; flex: 0 0 28px; }
+.lines { flex: 1; min-width: 0; display: grid; gap: 10px; padding-block: 4px; }
+.lines span { height: 10px; width: 88%; border-radius: 4px; }
+.lines span:nth-child(2) { width: 72%; }
+.lines span:nth-child(3) { width: 42%; }
+@keyframes pending { 0%, 100% { opacity: .9; } 50% { opacity: .45; } }
+@media (prefers-reduced-motion: reduce) { .avatar, .lines span { animation: none; } }
+:global(html[data-motion="false"]) .avatar,
+:global(html[data-motion="false"]) .lines span { animation: none; }
+@media (max-width: 600px) {
+  .reply { max-width: calc(100% - 32px); margin-inline: 16px; }
+}

@@ -152,6 +152,7 @@ const message = { id: 'source-message', content: 'Existing synthetic response', 
 function chat(env, api) {
   const view = renderer(env);
   const stubs = { './LoadingState': { LoadingState: 'loading-state' }, './cipher/BinaryLens': { __esModule: true, default: 'binary-lens' }, '../lib/presets': presets, './ContextPanel': { ContextPanel: 'context-panel' },
+    './PendingReplySkeleton': { PendingReplySkeleton: 'pending-reply-skeleton' },
     './WorkPanel': { WorkPanel: 'work-panel' }, './GlassSelect': { GlassSelect: 'select' },
     '../lib/types': { MessageType: { TEXT: 'text' } }, '../lib/api': { api, ApiError },
     './BotAvatar': { BotAvatar: 'bot-avatar' }, './MessageBubble': { MessageBubble: 'message-bubble' },
@@ -166,6 +167,52 @@ function chat(env, api) {
     onQuickStart: async () => {}, onOpenLounge: async () => {} }));
   return view;
 }
+
+test('response ghosts follow real queued/running work and disappear when it finishes', async () => {
+  const env = environment();
+  let status = 'pending';
+  const view = chat(env, {
+    conversationForBot: async () => 'synthetic-conversation',
+    syncConversation: async () => ({ messages: status === 'completed' ? [message] : [], tasks: [{ id: 'task', title: 'Synthetic task', status, created_at: '2026-10-26T12:00:00Z' }] }),
+  });
+  const ghost = () => find(view.tree, node => node.type === 'pending-reply-skeleton');
+  await view.flush();
+  assert.ok(ghost());
+  assert.match(textOf(view.tree), /Request queued/);
+  assert.doesNotMatch(textOf(view.tree), /What should I take care of/);
+  status = 'running'; env.window.dispatchEvent(new Event('grokbot:refresh')); await view.flush();
+  assert.ok(ghost());
+  assert.match(textOf(view.tree), /Working on your request/);
+  status = 'completed'; env.window.dispatchEvent(new Event('grokbot:refresh')); await view.flush();
+  assert.equal(ghost(), undefined);
+  assert.equal(find(view.tree, node => node.type === 'message-bubble').props.message.content, message.content);
+  view.unmount();
+});
+
+test('response ghosts do not imply progress during search, lost sync, or cancellation', async () => {
+  const env = environment(); let fail = false, status = 'running';
+  const view = chat(env, {
+    conversationForBot: async () => 'synthetic-conversation',
+    syncConversation: async () => {
+      if (fail) throw new ApiError('Synthetic offline', 503);
+      return { messages: [message], tasks: [{ id: 'task', title: 'Synthetic task', status, created_at: '2026-10-26T12:00:00Z' }] };
+    },
+  });
+  const ghost = () => find(view.tree, node => node.type === 'pending-reply-skeleton');
+  await view.flush(); assert.ok(ghost());
+  find(view.tree, node => node.props?.['aria-label'] === 'Search this conversation').props.onClick(); await view.flush();
+  const search = find(view.tree, node => node.props?.['aria-label'] === 'Search loaded messages');
+  search.props.onChange({ target: { value: 'no matching words' } }); await view.flush();
+  assert.equal(ghost(), undefined);
+  search.props.onChange({ target: { value: '' } }); await view.flush(); assert.ok(ghost());
+  fail = true; env.window.dispatchEvent(new Event('grokbot:refresh')); await view.flush();
+  assert.equal(ghost(), undefined);
+  assert.ok(find(view.tree, node => node.props?.className === 'sync-status'));
+  fail = false; status = 'cancel_requested'; button(view.tree, 'Reconnect').props.onClick(); await view.flush();
+  assert.equal(ghost(), undefined);
+  assert.match(textOf(view.tree), /Stopping…/);
+  view.unmount();
+});
 
 test('command search ignores composing and 229 Enter, but normal Enter chooses the command', async () => {
   const env = environment(), view = renderer(env); let chosen = 0, prevented = 0;

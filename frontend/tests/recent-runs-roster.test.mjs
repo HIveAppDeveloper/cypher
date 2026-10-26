@@ -33,7 +33,9 @@ test('recent tasks distinguish initial loading from empty and retry after a fail
     return attempts === 1 ? Promise.reject(new Error('Synthetic offline state')) : Promise.resolve([run]);
   });
 
-  assert.match(textOf(view.tree), /Loading recent tasks/);
+  const skeleton = find(view.tree, node => node.type === 'loading-state' && node.props.label === 'Loading recent tasks…');
+  assert.equal(skeleton?.props.variant, 'recent');
+  assert.equal(skeleton?.props.rows, 3);
   assert.doesNotMatch(textOf(view.tree), /No recent tasks yet/);
   assert.equal(find(view.tree, node => node.props?.['aria-busy'] === true)?.props.className, 'cypher-recent-tasks');
 

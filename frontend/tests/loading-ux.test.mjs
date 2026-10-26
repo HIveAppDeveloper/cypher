@@ -72,6 +72,15 @@ test('pending agents and rooms never announce empty data',()=>{
   view.unmount();
 });
 
+test('the pending reply ghost is decorative and does not invent answer text or a progress percentage',()=>{
+  const env=environment(),view=renderer(env);
+  const {PendingReplySkeleton}=load('../src/components/PendingReplySkeleton.tsx',{'./PendingReplySkeleton.module.css':{}},{...env.globals,React:view.react.default});
+  const node=PendingReplySkeleton();
+  assert.equal(node.props['aria-hidden'],'true');
+  assert.equal(textOf(node),'');
+  assert.equal(find(node,item=>item.props?.role==='status'),undefined,'the existing real task status is the live announcement');
+});
+
 test('recent work replaces skeletons with an error, retries, and then shows real content',async()=>{
   const env=environment(),view=renderer(env),pending=deferred();let calls=0;
   const {RecentWork}=load('../src/components/cipher/RecentWork.tsx',{react:view.react,'../LoadingState':{LoadingState:'loading-state'},'./RecentWork.module.css':{},'../../lib/api':{request:()=>++calls===1?pending.promise:Promise.resolve([{id:'run',title:'Saved task',status:'completed',conversation_id:'room',created_at:'2026-10-24T12:00:00Z'}])},'../../lib/dates':load('../src/lib/dates.ts')},{...env.globals,React:view.react.default});
