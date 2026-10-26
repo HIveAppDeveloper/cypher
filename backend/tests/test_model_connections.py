@@ -157,7 +157,7 @@ async def test_explicit_provider_account_check_cannot_silently_use_included_clau
     seen=[]
     def respond(request):
         seen.append(json.loads(request.content))
-        return httpx.Response(200,json={'state':'ready','provider':'claude','verification_scope':'provider_account','connection_provider':'anthropic','connection_ref':'synthetic-anthropic-api','public_model':'anthropic/claude-sonnet-5.5','transport_model':'anthropic/claude-sonnet-5-5','message':'Synthetic provider response verified.'})
+        return httpx.Response(200,json={'state':'ready','provider':'claude','verification_scope':'provider_account','connection_provider':'anthropic','connection_ref':'grokbot-anthropic-existing-api','public_model':'anthropic/claude-sonnet-5.5','transport_model':'anthropic/claude-sonnet-5-5','model_access_verified':True,'message':'Synthetic provider response verified.'})
     real=httpx.AsyncClient
     monkeypatch.setattr(httpx,'AsyncClient',lambda **kwargs:real(transport=httpx.MockTransport(respond),**kwargs))
     queued=await client.post('/api/runtime/model-connections/claude/verify',headers=owner,json={'target':'provider_account'})

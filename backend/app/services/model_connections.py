@@ -1,6 +1,5 @@
 """Owner-managed model verification, durably queued without browser liveness."""
 import asyncio
-import re
 from contextlib import suppress
 from datetime import datetime, timedelta
 from urllib.parse import urlsplit
@@ -140,6 +139,8 @@ async def queue_check(db, provider, api_key=None, verification_target='current_r
         raise HTTPException(503, 'Model connection management is not configured on this runtime.')
     if api_key is not None and (not 20 <= len(api_key) <= 1000 or any(c.isspace() or ord(c) < 32 for c in api_key)):
         raise HTTPException(422, 'Enter a valid provider API key without spaces or line breaks.')
+    if provider == 'claude' and api_key is not None and api_key.startswith('sk-ant-oat'):
+        raise HTTPException(422, 'Use a Claude Console API key. Claude subscription/setup tokens are not API keys for this app.')
     from app.services.plugins import cipher
     try: cipher()
     except ValueError: raise HTTPException(503, 'Secure credential storage must be configured before managing model connections.')
@@ -224,11 +225,11 @@ async def control_check(payload):
         if result['state'] == 'ready':
             if (result.get('provider') != 'claude' or result.get('verification_scope') != 'provider_account'
                     or result.get('connection_provider') != 'anthropic'
-                    or not isinstance(result.get('connection_ref'),str)
-                    or not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9._:-]{0,127}',result['connection_ref'])
+                    or result.get('connection_ref') != 'grokbot-anthropic-existing-api'
+                    or result.get('model_access_verified') is not True
                     or result.get('transport_model') != 'anthropic/claude-sonnet-5-5'):
                 raise RuntimeError('Anthropic API account identity was not verified.')
-            return {key:result[key] for key in ('state','provider','verification_scope','connection_provider','connection_ref','public_model','transport_model')} | {'message':'Anthropic API account verified with a model response. API billing is separate from Claude subscriptions.'}
+            return {key:result[key] for key in ('state','provider','verification_scope','connection_provider','connection_ref','public_model','transport_model','model_access_verified')} | {'message':'Anthropic API account verified with a model response. API billing is separate from Claude subscriptions.'}
         return {'state':result['state'],'message':'Anthropic API access could not be verified. Your existing connection is preserved; review the API key, access and billing.'}
     return result
 
