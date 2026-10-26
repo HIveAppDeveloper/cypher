@@ -9,7 +9,7 @@ from app.db.tenancy import current_tenant_id
 from app.models.task import Task
 from app.models.execution import TaskExecution, ExecutionStep
 from app.services.execution import ExecutionJournal
-from app.services.fleet import ModelFleet, LLMGateway
+from app.services.fleet import ModelFleet, LLMGateway, DEFAULT_SKILLS
 from app.services.usage import active
 from app.services import specialist_budget
 from .test_workspace_workflows import workspace, room
@@ -87,7 +87,7 @@ async def test_uncertain_reservation_is_spent_and_never_reissued_after_restart(w
     monkeypatch.setattr(LLMGateway, 'complete', complete)
     args = {'specialty': 'review', 'task': 'Provider may have run before the process died'}
     try:
-        key = specialist_budget.request_key('review', None, args['task'], bid)
+        key = specialist_budget.request_key('review', DEFAULT_SKILLS['review'], args['task'], bid)
         assert await specialist_budget.reserve((tid, sessions), key) is None
         from app.services.execution import retry_or_interrupt, unsafe_inflight
         async with sessions() as db:

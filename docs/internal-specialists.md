@@ -12,11 +12,41 @@ independently trained or individually validated models. IDs such as
 `email-writing.rewrite` resolve on demand. Each profile combines a domain's
 evidence/verification requirements with a concrete procedure and deliverable.
 
+Every active profile now requires **reviewed GitHub workflow sources from
+repositories with at least 10,000 stars**. The current 100-by-100 mappings use
+58 pinned agent/skill files from Agency Agents, Superpowers, Anthropic Knowledge
+Work Plugins and GitHub Awesome Copilot. Source records include exact commit,
+path, Git blob SHA, content SHA-256, license, star count and observation date.
+Their concise reviewed guidance is part of the actual instructions. These are
+workflow adaptations; repository popularity is not a model-quality certificate.
+Unsupported agriculture, general-mathematics and public-policy labels were
+retired rather than assigned unrelated popular sources. The five general-work
+fallback IDs remain supported.
+
+Eligibility is enforced in lookup, search, automatic five-skill selection and
+consultation, including the legacy specialty-only interface. Unreviewed,
+unlicensed, archived, unpinned, below-threshold or over-30-day-old source snapshots
+are excluded. Existing cached findings also need matching approved source URLs.
+If enough eligible recipes are unavailable, the main agent continues with its
+own instructions and authorized tools. It does not ask customers to install,
+choose, repair or configure internal specialists, and does not fabricate advice.
+Required account authorization and external-action approvals remain intact.
+
+`python scripts/verify_specialist_sources.py` is the offline release check.
+`--check-live` additionally checks public GitHub metadata; `--refresh-stars`
+refreshes only star/archive observations after all checks succeed. Neither
+updates pinned source contents or executes upstream code. Run these as operator
+or release work, never in a customer turn. Retained upstream licenses ship in
+both the source tree and the backend distribution; see
+`third_party/specialist_sources/NOTICE.md`.
+
 Only two relevant cards, capped at 2,400 characters total, are automatically
 added to a task. Two small inverted indexes search the domain and procedure
 axes; the runtime does not materialize 10,000 agents or send 10,000 schemas.
 `search_specialist_skills` discovers additional recipes without a model call.
 The main agent can use a recipe itself rather than paying for delegation.
+Model-facing discovery and selection receipts are compact; full hashes and
+provenance remain available through the existing optional agent-details API.
 
 `consult_specialist` accepts its existing specialty/task arguments or a
 discovered `skill_id` and task. `consult_specialists` accepts one to three
@@ -54,7 +84,8 @@ Each full Bot can keep five distinct profile IDs in its existing tenant-scoped
 workspace settings. Automatic initial recipes are labeled as automatic; an
 actual `choose_agent_skills` call records the agent's choice. Selection is an
 idempotent metadata write under the normal write-approval policy and grants no
-new tools or account access. Its supplemental prompt is capped at 6,000
+new tools or account access. Ready automatic recipes do not require a setup
+call; changing them is optional and must not delay customer work. Its supplemental prompt is capped at 6,000
 characters. Fresh greeting and live-voice fast paths skip this extra load and
 defer selection rather than adding setup calls before a spoken reply.
 

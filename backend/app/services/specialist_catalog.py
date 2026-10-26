@@ -6,7 +6,6 @@ cached here. IDs are stable domain.procedure pairs and need no database rows.
 """
 from collections import defaultdict
 from dataclasses import dataclass
-from functools import lru_cache
 import re
 
 
@@ -119,21 +118,21 @@ def _domains():
         )),
         ('Use the sector’s actual supplied evidence and dated authoritative sources. Note jurisdiction, context and domain-expert review limits; do not invent operational access or professional certification.', (
             'climate|Climate technology|climate carbon decarbonization emissions',
-            'energy|Energy|energy solar grid batteries',
-            'agriculture|Agriculture|agriculture farming crops agritech',
-            'manufacturing|Manufacturing|manufacturing factory production quality',
-            'retail|Retail|retail ecommerce shop merchandising',
-            'education|Education|education curriculum teaching school',
+            'energy|Energy transition analysis|energy emissions decarbonization electricity',
+            'geography|Geographic consistency|geography terrain climate maps worldbuilding',
+            'manufacturing|Manufacturing operations|manufacturing factory production quality',
+            'retail|Retail growth|retail ecommerce shop conversion',
+            'education|Learning design|education curriculum teaching training',
             'real-estate|Real estate|property real estate rent buildings',
             'media|Media|media publishing journalism content',
             'nonprofits|Nonprofits|nonprofit grants charity donors',
-            'public-policy|Public policy|policy legislation regulation civic',
+            'regulatory-compliance|Regulatory compliance|compliance regulation privacy policy jurisdiction',
         )),
         ('Adapt to the user’s stated level, time and materials. Show checkable steps and uncertainty. Do not claim external actions, real-world testing or access to private records.', (
             'general-work|General work|task general work assistant',
             'personal-productivity|Personal productivity|productivity priorities focus todo',
             'learning|Learning|learn study practice lesson tutoring',
-            'mathematics|Mathematics|math equation algebra calculus geometry',
+            'quantitative-reasoning|Quantitative evidence|quantitative statistics math evidence claims',
             'science|Science|science physics chemistry biology',
             'history|History|history historical chronology',
             'languages|Language learning|vocabulary language pronunciation',
@@ -306,12 +305,46 @@ def get_skill(skill_id):
     domain, procedure = DOMAIN_BY_ID.get(domain_id), PROCEDURE_BY_ID.get(procedure_id)
     if not domain or not procedure:
         return None
+    from app.services.specialist_sources import source_for
+    domain_source = source_for('domain', domain_id)
+    procedure_source = source_for('procedure', procedure_id)
+    if not domain_source or not procedure_source:
+        return None
+    sources = {source['url']: source for source in (domain_source, procedure_source)}
     return {
         'id': skill_id, 'name': f'{domain.title}: {procedure.title}',
         'specialty': procedure.specialty,
-        'instructions': f'Domain: {domain.title}. {domain.instruction}\nProcedure: {procedure.title}. {procedure.instruction}',
+        'instructions': (f'Domain: {domain.title}. {domain.instruction}\nProcedure: {procedure.title}. {procedure.instruction}'
+                         '\nReviewed upstream workflow: ' + ' '.join(dict.fromkeys(source['guidance'] for source in sources.values()))),
         'mode': 'tool_free_advice',
+        'sources': list(sources.values()),
+        'eligibility': {'eligible': True, 'minimum_stars': 10000, 'reason': 'reviewed_pinned_github_sources'},
     }
+
+
+def eligible_catalog_size():
+    from app.services.specialist_sources import source_for
+    return (sum(source_for('domain', item.id) is not None for item in DOMAINS)
+            * sum(source_for('procedure', item.id) is not None for item in PROCEDURES))
+
+
+def compact_skill_card(card):
+    """Model-facing receipts omit redundant hashes; API details retain provenance."""
+    return {**card, 'sources': [{key: source[key] for key in
+            ('repository', 'url', 'stars', 'checked_at', 'license')} for source in card['sources']]}
+
+
+def fallback_skill_ids(limit=5):
+    from app.services.specialist_sources import source_for
+    domains = [item for item in DOMAINS if source_for('domain', item.id)]
+    procedures = [item for item in PROCEDURES if source_for('procedure', item.id)]
+    result = []
+    for domain in domains:
+        for procedure in procedures:
+            result.append(domain.id+'.'+procedure.id)
+            if len(result) == limit:
+                return result
+    return result
 
 
 def _rank(query, index):
@@ -322,10 +355,11 @@ def _rank(query, index):
     return sorted(scores.items(), key=lambda pair: (-pair[1], pair[0]))
 
 
-@lru_cache(maxsize=1)
 def catalog_metadata():
-    # Immutable scalars only. Never cache tasks, findings, query text or tenants.
-    return (CATALOG_SIZE, len(DOMAINS), len(PROCEDURES))
+    from app.services.specialist_sources import source_for
+    domains = sum(source_for('domain', item.id) is not None for item in DOMAINS)
+    procedures = sum(source_for('procedure', item.id) is not None for item in PROCEDURES)
+    return (domains*procedures, domains, procedures)
 
 
 def search_skills(query, limit=6):
@@ -344,13 +378,22 @@ def search_skills(query, limit=6):
     candidates = [(ds+ps, domain+'.'+procedure)
                   for domain, ds in domains[:8] for procedure, ps in procedures[:8]]
     candidates.sort(key=lambda pair: (-pair[0], pair[1]))
-    return [get_skill(skill_id) for _, skill_id in candidates[:limit]]
+    results = []
+    for _, skill_id in candidates:
+        card = get_skill(skill_id)
+        if card is not None:
+            results.append(card)
+        if len(results) == limit:
+            break
+    return results
 
 
 def task_skill_prompt(query):
     if not isinstance(query, str) or not _rank(query[:2000], DOMAIN_INDEX) or not _rank(query[:2000], PROCEDURE_INDEX):
         return ''
     cards = search_skills(query, 2)
+    if not cards:
+        return ''
     text = '\nRelevant internal skill recipes (use only where they fit the user request; no work has run):\n'
     text += '\n'.join(f"{card['id']}: {card['instructions']}" for card in cards)
     return text[:2400]
