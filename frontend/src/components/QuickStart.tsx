@@ -7,7 +7,7 @@ import { RunOptions, Attachment } from '../lib/types';
 import { readTaskAttachments } from '../lib/attachments';
 
 const STARTER_PROMPTS = [
-  { text: 'Find people or companies', description: 'Build lists, research, and find the right contacts.', prompt: 'Find relevant people or companies for: ', icon: 'search' },
+  { text: 'Research companies', description: 'Build a company shortlist and review the sources.', prompt: 'Research companies for: ', icon: 'search' },
   { text: 'Prepare for a meeting', description: 'Get briefs, background research, and talking points.', prompt: 'Prepare a meeting brief for: ', icon: 'calendar' },
   { text: 'Research a topic', description: 'Deep research with sources and clear summaries.', prompt: 'Research this topic and give me a clear, sourced brief: ', icon: 'document' },
   { text: 'Create something', description: 'Draft emails, documents, presentations, or more.', prompt: 'Create a first draft of: ', icon: 'sparkles' },
