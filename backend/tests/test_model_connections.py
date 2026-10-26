@@ -27,6 +27,7 @@ async def setup(tmp_path, monkeypatch):
     for name, value in {'REQUIRE_USER_AUTH':True, 'LEGACY_OWNER_EMAIL':'owner@example.test', 'BACKEND_API_TOKEN':'private-backend-test-key-at-least-32-characters', 'OMNIROUTE_URL':'https://router.example', 'OMNIROUTE_API_KEY':'inference-test-key', 'OMNIROUTE_CONTROL_KEY':'owner-control-test-key', 'SECRET_KEY':'test-only-encryption-secret-at-least-32-characters'}.items(): monkeypatch.setattr(settings, name, value)
     from app.db import session
     monkeypatch.setattr(session, 'AsyncSessionLocal', sessions)
+    monkeypatch.setattr(service,'anthropic_account_support',AsyncMock(return_value=True))
     owner = {'authorization':'Bearer private-backend-test-key-at-least-32-characters', 'x-grokbot-user-id':account_id_for('owner@example.test')}
     other = {**owner, 'x-grokbot-user-id':account_id_for('other@example.test')}
     try:
@@ -156,7 +157,7 @@ async def test_explicit_provider_account_check_cannot_silently_use_included_clau
     seen=[]
     def respond(request):
         seen.append(json.loads(request.content))
-        return httpx.Response(200,json={'state':'ready','public_model':'anthropic/claude-sonnet-5.5','transport_model':'anthropic/claude-sonnet-5-5','message':'Synthetic provider response verified.'})
+        return httpx.Response(200,json={'state':'ready','provider':'claude','verification_scope':'provider_account','connection_provider':'anthropic','connection_ref':'synthetic-anthropic-api','public_model':'anthropic/claude-sonnet-5.5','transport_model':'anthropic/claude-sonnet-5-5','message':'Synthetic provider response verified.'})
     real=httpx.AsyncClient
     monkeypatch.setattr(httpx,'AsyncClient',lambda **kwargs:real(transport=httpx.MockTransport(respond),**kwargs))
     queued=await client.post('/api/runtime/model-connections/claude/verify',headers=owner,json={'target':'provider_account'})
