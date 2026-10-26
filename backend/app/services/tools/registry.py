@@ -198,11 +198,13 @@ class ToolRegistry:
         if name == 'plugin_call':
             return any(t['plugin_id'] == arguments.get('plugin_id') and t['name'] == arguments.get('tool_name') and t.get('read_only') for t in getattr(self, '_plugin_manifest', []))
         return name in {'read_file', 'list_directory', 'search_files', 'search_web',
-                        'search_chat_history', 'list_context', 'forget_context', 'consult_specialist', 'consult_specialists', 'search_specialist_skills', 'plugin_search', 'publish_file',
+                        'search_chat_history', 'list_context', 'forget_context', 'consult_specialist', 'consult_specialists', 'search_specialist_skills', 'search_agent_skills', 'choose_agent_skills', 'github_search', 'github_read', 'plugin_search', 'publish_file',
                         'complete_goal', 'remember_context', 'get_vc_investor_match', 'prepare_vc_outreach', 'search_vc_founders', 'create_chart'}
 
     def register_default_tools(self):
         """Register all built-in tools."""
+        from app.services.tools.github import register_github_tools
+        register_github_tools(self)
         from app.services.tools.charts import create_chart, CHART_PARAMETERS
         self.register(
             'create_chart',
@@ -540,13 +542,15 @@ class ToolRegistry:
             "media": ["generate_image", "create_chart"],
             "charts": ["create_chart"],
             "visualization": ["create_chart"],
-            "browser": ["search_web", "browse_url", "browser_click", "browser_type", "browser_screenshot", "browser_extract", "browser_fill_form", *vc_research],
+            "browser": ["search_web", "browse_url", "browser_click", "browser_type", "browser_screenshot", "browser_extract", "browser_fill_form", "github_search", "github_read", *vc_research],
+            "github": ["github_search", "github_read"],
+            "research": ["search_web", "browse_url", "browser_extract", "github_search", "github_read", *vc_research],
             "prospecting": [*vc_research, "label_vc_investor_match"],
             "shell": "shell",
             "filesystem": ["local_device", "workspace_files", "publish_file", "read_file", "write_file", "list_directory", "search_files"],
         }
 
-        enabled_tool_names = {"consult_specialist", "consult_specialists", "search_specialist_skills", "set_goal", "complete_goal", "remember_context", "list_context", "forget_context", "search_chat_history"}
+        enabled_tool_names = {"consult_specialist", "consult_specialists", "search_specialist_skills", "search_agent_skills", "choose_agent_skills", "set_goal", "complete_goal", "remember_context", "list_context", "forget_context", "search_chat_history"}
         for category in bot.tools_enabled:
             category_lower = category.lower()
             if category_lower in category_map:
@@ -589,7 +593,7 @@ class ToolRegistry:
             from app.services.computer import approve_tool,agent_access
             # Deleting exact IDs is safe to replay after a crash, but is still
             # a write under the owner's approval policy.
-            approval_safe=self.replay_safe(name,arguments) and name!='forget_context'
+            approval_safe=self.replay_safe(name,arguments) and name not in {'forget_context','choose_agent_skills'}
             google_outbound=False
             if name=='plugin_call':
                 selected=next((t for t in getattr(self,'_plugin_manifest',[]) if t['plugin_id']==arguments.get('plugin_id') and t['name']==arguments.get('tool_name')),None)

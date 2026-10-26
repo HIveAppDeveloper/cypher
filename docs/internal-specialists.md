@@ -43,6 +43,20 @@ named mentions retain existing routing behavior. Each selected real Bot still
 runs its own configured agent loop and authorized tools; a room's membership
 count is never presented as the number of agents that actually participated.
 
+Each full Bot can keep five distinct profile IDs in its existing tenant-scoped
+workspace settings. Automatic initial recipes are labeled as automatic; an
+actual `choose_agent_skills` call records the agent's choice. Selection is an
+idempotent metadata write under the normal write-approval policy and grants no
+new tools or account access. Its supplemental prompt is capped at 6,000
+characters. Fresh greeting and live-voice fast paths skip this extra load and
+defer selection rather than adding setup calls before a spoken reply.
+
+Public GitHub search/read tools are available to enabled browser, research or
+GitHub categories. They use bounded credential-free GETs. Private repository
+access, authenticated code search and writes use the existing tenant-owned
+GitHub plugin grant and authorization checks. No all-repository permission is
+inferred from a public read.
+
 Run `python scripts/benchmark_specialists.py` from `backend/` for local retrieval
 timing and context/cap measurements. This benchmark sends no model request and
 does not measure end-to-end chat latency or billed savings. Lower token caps,
@@ -57,6 +71,7 @@ observations. Lifecycle runtime includes retries and approval waits. Existing
 audio stages overlap and are not additive. Tool durations, standalone model
 queue time and browser-to-play latency are not inferred from missing data.
 
-No database rows, schema, production environments or credentials are created
-by this feature. Production promotion and exact frontend/API/worker validation
+The catalog creates no Bot rows or database schema. Skill choices use only the
+existing settings table. No production environment or credential is changed.
+Production promotion and exact frontend/API/worker validation
 belong to the existing canonical release owner.
