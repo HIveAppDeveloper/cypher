@@ -46,11 +46,13 @@ async function hasAppSession() {
 
 function kokoroConfig() {
   if (process.env.KOKORO_TTS_ENABLED !== 'true') return null;
+  const model = process.env.KOKORO_TTS_MODEL || 'kokoro';
+  if (model !== 'kokoro' && model !== 'paradee-8m-v1.1') return null;
   const key = process.env.GROKBOT_BACKEND_API_TOKEN?.trim() || process.env.BACKEND_API_TOKEN?.trim() || '';
   try {
     const url = new URL('/v1/audio/speech', process.env.KOKORO_INTERNAL_URL);
     if (!['http:', 'https:'].includes(url.protocol) || url.username || url.password || key.length < 32) return null;
-    return { url, key };
+    return { url, key, model, voice: model === 'paradee-8m-v1.1' ? 'af_heart' : 'af_bella' };
   } catch { return null; }
 }
 
@@ -95,11 +97,11 @@ export async function POST(request: Request) {
     const response = await fetch(kokoro?.url || url, {
       method: 'POST',
       headers: kokoro ? { 'Content-Type': 'application/json', 'Accept': 'audio/mpeg', 'Authorization': `Bearer ${kokoro.key}` } : { 'Content-Type': 'application/json', 'Accept': 'audio/mpeg', 'xi-api-key': apiKey },
-      body: JSON.stringify(kokoro ? { model: 'kokoro', input: text, voice: 'af_bella', response_format: 'mp3', speed: 1.0 } : { text, model_id: 'eleven_flash_v2_5', voice_settings: { stability: 0.38, similarity_boost: 0.82, style: 0, use_speaker_boost: true, speed: 1.03 } }),
+      body: JSON.stringify(kokoro ? { model: kokoro.model, input: text, voice: kokoro.voice, response_format: 'mp3', speed: 1.0 } : { text, model_id: 'eleven_flash_v2_5', voice_settings: { stability: 0.38, similarity_boost: 0.82, style: 0, use_speaker_boost: true, speed: 1.03 } }),
       cache: 'no-store',
       signal: AbortSignal.any([request.signal, AbortSignal.timeout(20_000)]),
     });
-    const provider = useKokoro ? 'Kokoro' : 'ElevenLabs';
+    const provider = useKokoro ? (kokoro?.model === 'paradee-8m-v1.1' ? 'Paradee (Kokoro-derived)' : 'Kokoro') : 'ElevenLabs';
     if (!response.ok || !response.body) {
       void response.body?.cancel().catch(() => {});
       if (response.status === 429) return NextResponse.json({ detail: `${provider} is busy or its usage limit was reached. Try again shortly.` }, { status: 429, headers: { 'Cache-Control': 'no-store' } });
@@ -116,7 +118,7 @@ export async function POST(request: Request) {
     const kokoroTiming = useKokoro && firstAudio && /^\d+(\.\d+)?$/.test(firstAudio) ? `, tts_first_audio;dur=${firstAudio}` : '';
     return new Response(response.body, {
       status: 200,
-      headers: { 'Content-Type': response.headers.get('content-type') || 'audio/mpeg', 'Cache-Control': 'private, no-store', 'X-Content-Type-Options': 'nosniff', 'X-Voice-Provider': provider.toLowerCase(), 'Server-Timing': `voice_provider_headers;dur=${(performance.now() - generationStarted).toFixed(1)}${kokoroTiming}` },
+      headers: { 'Content-Type': response.headers.get('content-type') || 'audio/mpeg', 'Cache-Control': 'private, no-store', 'X-Content-Type-Options': 'nosniff', 'X-Voice-Provider': useKokoro ? kokoro!.model : 'elevenlabs', 'Server-Timing': `voice_provider_headers;dur=${(performance.now() - generationStarted).toFixed(1)}${kokoroTiming}` },
     });
   } catch {
     return NextResponse.json({ detail: `${useKokoro ? 'Kokoro' : 'ElevenLabs'} did not respond in time. Try again.` }, { status: 504, headers: { 'Cache-Control': 'no-store' } });

@@ -1,0 +1,58 @@
+[
+  {
+    "format": "pcm",
+    "text": "Check pipeline latency.",
+    "transcript": "Check Pipeline Latency.",
+    "seconds": 2.55,
+    "first_audio_ms": "14.578"
+  },
+  {
+    "format": "pcm",
+    "text": "A fresh response for this CPU test.",
+    "transcript": "A fresh response for the CPU test.",
+    "seconds": 3.575,
+    "first_audio_ms": "19.361"
+  },
+  {
+    "format": "pcm",
+    "text": "Welcome to Cypher. Your next task is ready.",
+    "transcript": "Welcome to Cypher. Your next task is ready.",
+    "seconds": 4.475,
+    "first_audio_ms": "18.256"
+  },
+  {
+    "format": "pcm",
+    "text": "Investigate the candidate before making a decision.",
+    "transcript": "investigate the candidate before making a decision.",
+    "seconds": 4.1,
+    "first_audio_ms": "25.495"
+  },
+  {
+    "format": "mp3",
+    "text": "Check pipeline latency.",
+    "transcript": "Check Pipeline Latency.",
+    "seconds": 2.616,
+    "first_audio_ms": "19.878"
+  },
+  {
+    "format": "mp3",
+    "text": "A fresh response for this CPU test.",
+    "transcript": "A fresh response for the CPU test.",
+    "seconds": 3.624,
+    "first_audio_ms": "26.296"
+  },
+  {
+    "format": "mp3",
+    "text": "Welcome to Cypher. Your next task is ready.",
+    "transcript": "Welcome to Cypher. Your next task is ready.",
+    "seconds": 4.536,
+    "first_audio_ms": "21.278"
+  },
+  {
+    "format": "mp3",
+    "text": "Investigate the candidate before making a decision.",
+    "transcript": "Investigate. The candidate before making a decision.",
+    "seconds": 4.152,
+    "first_audio_ms": "26.655"
+  }
+]

@@ -1,10 +1,17 @@
 # Kokoro on the existing Cypher Vercel project
 
-This is the Vercel-only alternative requested after the initial Modal plan. It
-runs the upstream Kokoro-82M v1.0 int8 ONNX export on **CPU**, with no Modal or
-RunPod account. It does not implement GPU acceleration or establish a 20 ms
-time-to-first-audio guarantee. The live Vercel AI Gateway catalog was checked on
-2026-10-26 and contained no Kokoro model, so this service hosts the model itself.
+This is the Vercel-only alternative requested after the initial Modal plan.
+The user subsequently authorized a smaller Kokoro-derived model. The current
+source candidate uses **Paradee 8M v1.1, af_heart**, with an optimized CPU
+interface. See [PARADEE.md](PARADEE.md) for its identity, exact benchmarks,
+limits, pinned artifacts and release requirements. It is not Kokoro-82M and
+does not establish a 20 ms cold-start, public-network or all-request guarantee.
+
+The original Kokoro-82M v1.0 int8 CPU image remains reproducible with `Dockerfile`
+and its original lockfile. The instructions and historical measurements below
+describe that original image unless stated otherwise. The candidate service
+entrypoint is now `Dockerfile.paradee`. Neither image uses a GPU, Modal or RunPod.
+The Vercel AI Gateway catalog checked on 2026-10-26 contained no Kokoro model.
 
 The existing Cypher PostgreSQL/Prisma configuration remains unchanged. This
 service performs no database operations, creates no tables, stores no clips or
