@@ -19,7 +19,7 @@ const KINDS: { id: SignalKind; label: string }[] = [
   { id: 'hiring', label: 'Hiring' }, { id: 'raising', label: 'Raising' }, { id: 'spending', label: 'Spending' }, { id: 'news', label: 'Momentum' },
 ];
 const STAGES: { id: Stage; label: string }[] = [
-  { id: 'drafted', label: 'Ready to send' }, { id: 'sent', label: 'In sequence' }, { id: 'replied', label: 'Replied' }, { id: 'meeting', label: 'Meeting booked' },
+  { id: 'drafted', label: 'Ready to send' }, { id: 'sent', label: 'In sequence' }, { id: 'manual-sent', label: 'Sent manually' }, { id: 'replied', label: 'Replied' }, { id: 'meeting', label: 'Meeting booked' },
 ];
 const stageLabel = (stage: Stage) => STAGES.find(s => s.id === stage)?.label ?? 'Queued';
 const clock = (iso: string) => new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
@@ -98,7 +98,7 @@ export default function CipherApp() {
   const pending = running ? territory.filter(c => !byId.has(c.ticker)) : [];
   const lead = selected ? byId.get(selected) ?? null : null;
   const count = (t: Tier) => leads.filter(l => l.tier === t).length;
-  const launched = leads.filter(l => l.stage !== 'drafted').length;
+  const launched = leads.filter(l => l.stage === 'sent').length;
   const meetings = leads.filter(l => l.stage === 'meeting').length;
   const readyHot = leads.filter(l => l.tier === 'Hot' && l.stage === 'drafted');
 
@@ -206,28 +206,32 @@ export default function CipherApp() {
 
   const update = (id: string, patch: Partial<Lead>) => setLeads(ls => ls.map(l => (l.id === id ? { ...l, ...patch } : l)));
   function move(l: Lead, stage: Stage) {
-    update(l.id, { stage, sentAt: stage === 'sent' ? new Date().toISOString() : l.sentAt });
+    update(l.id, { stage, sentAt: stage === 'sent' || stage === 'manual-sent' ? new Date().toISOString() : l.sentAt });
     log(`${l.company.name} moved to ${stageLabel(stage)}`, stage === 'meeting' ? 'good' : 'info', l.id);
   }
 
   async function launch(targets: Lead[]) {
     if (!targets.length) return;
-    if (webhook.trim()) {
-      const payload = { source: 'cipher', persona, offering, leads: targets.map(l => ({ company: l.company.name, ticker: l.company.ticker, domain: l.company.domain, score: l.score, tier: l.tier, why: l.why, subject: l.email.subject, body: l.email.body, sequence: l.sequence })) };
-      let detail = 'Your sending tool could not be reached.';
-      try {
-        const res = await fetch('/api/cipher/dispatch', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ webhook: webhook.trim(), payload }) });
-        const data = await res.json().catch(() => ({})) as { ok?: boolean; detail?: string };
-        if (!res.ok || !data.ok) { detail = data.detail || detail; throw new Error(detail); }
-        log(`Sent ${targets.length} sequence${targets.length > 1 ? 's' : ''} to your sending tool`, 'good');
-      } catch {
-        log(`Not sent: ${detail} Check the webhook in Setup.`, 'warn');
-        setToast('Not sent. Check the webhook in Setup.'); return;
-      }
-    } else log(`Started ${targets.length} sequence${targets.length > 1 ? 's' : ''}. Add a webhook in Setup to send through your own tool.`, 'good');
+    if (!webhook.trim()) {
+      setSetupOpen(true);
+      log('Sequence not started. Add a sending webhook in Setup first.', 'warn');
+      setToast('Add a sending webhook in Setup to start this sequence.');
+      return;
+    }
+    const payload = { source: 'cipher', persona, offering, leads: targets.map(l => ({ company: l.company.name, ticker: l.company.ticker, domain: l.company.domain, score: l.score, tier: l.tier, why: l.why, subject: l.email.subject, body: l.email.body, sequence: l.sequence })) };
+    let detail = 'Your sending tool could not be reached.';
+    try {
+      const res = await fetch('/api/cipher/dispatch', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ webhook: webhook.trim(), payload }) });
+      const data = await res.json().catch(() => ({})) as { ok?: boolean; detail?: string };
+      if (!res.ok || !data.ok) { detail = data.detail || detail; throw new Error(detail); }
+      log(`Handed off ${targets.length} sequence${targets.length > 1 ? 's' : ''} to your sending tool`, 'good');
+    } catch {
+      log(`Not sent: ${detail} Check the webhook in Setup.`, 'warn');
+      setToast('Not sent. Check the webhook in Setup.'); return;
+    }
     const now = new Date().toISOString();
     setLeads(ls => ls.map(l => (targets.some(t => t.id === l.id) ? { ...l, stage: 'sent', sentAt: now } : l)));
-    setToast(`${targets.length} sequence${targets.length > 1 ? 's' : ''} started`);
+    setToast(`${targets.length} sequence handoff${targets.length > 1 ? 's' : ''} accepted`);
   }
 
   function exportCsv() {
@@ -522,10 +526,10 @@ export default function CipherApp() {
             <footer>
               <button type="button" className="cx-btn" disabled={!!aiProgress} onClick={() => void research([lead])}>{aiBusy.includes(lead.id) ? 'Researching…' : lead.ai ? 'Research again' : 'Research with AI'}</button>
               {lead.stage === 'drafted' ? <button type="button" className="cx-act" onClick={() => void launch([lead])}>Start sequence</button> : null}
-              {lead.stage === 'drafted' ? <a className="cx-btn" href={`https://mail.google.com/mail/?view=cm&fs=1&su=${encodeURIComponent(lead.email.subject)}&body=${encodeURIComponent(lead.email.body)}`} target="_blank" rel="noreferrer" onClick={() => move(lead, 'sent')}>Open in Gmail</a> : null}
+              {lead.stage === 'drafted' ? <><a className="cx-btn" href={`https://mail.google.com/mail/?view=cm&fs=1&su=${encodeURIComponent(lead.email.subject)}&body=${encodeURIComponent(lead.email.body)}`} target="_blank" rel="noreferrer">Open in Gmail</a><button type="button" className="cx-btn" onClick={() => move(lead, 'manual-sent')}>Mark sent</button></> : null}
               <button type="button" className="cx-btn" onClick={() => void copyEmail(lead)}>Copy email</button>
-              {lead.stage === 'sent' ? <button type="button" className="cx-btn" onClick={() => move(lead, 'replied')}>Mark replied</button> : null}
-              {lead.stage === 'sent' || lead.stage === 'replied' ? <button type="button" className="cx-act" onClick={() => move(lead, 'meeting')}>Meeting booked</button> : null}
+              {lead.stage === 'sent' || lead.stage === 'manual-sent' ? <button type="button" className="cx-btn" onClick={() => move(lead, 'replied')}>Mark replied</button> : null}
+              {lead.stage === 'sent' || lead.stage === 'manual-sent' || lead.stage === 'replied' ? <button type="button" className="cx-act" onClick={() => move(lead, 'meeting')}>Meeting booked</button> : null}
               {lead.sentAt ? <span className="cx-status">Started {new Date(lead.sentAt).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span> : null}
             </footer>
           </article>

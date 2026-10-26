@@ -13,7 +13,7 @@ const KIND_WORDS: [SignalKind, RegExp, string][] = [
   ['spending', /\b(spend(ing)?|invest(ing|ment)?|expan(d|sion)|capex|budget)\b/, 'spending'],
   ['news', /\b(news|momentum|8-k|announce|launch|leadership)\b/, 'showing momentum'],
 ];
-const STAGE_NAME: Record<Lead['stage'], string> = { found: 'found', researched: 'researched', drafted: 'ready to send', sent: 'in sequence', replied: 'replied', meeting: 'meeting booked' };
+const STAGE_NAME: Record<Lead['stage'], string> = { found: 'found', researched: 'researched', drafted: 'ready to send', sent: 'in sequence', 'manual-sent': 'sent manually', replied: 'replied', meeting: 'meeting booked' };
 const list = (names: string[]) => (names.length <= 1 ? names.join('') : `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`);
 const firstSentence = (s: string) => (s.split(/(?<=[.!?])\s/)[0] || s).replace(/\s+/g, ' ').trim();
 
