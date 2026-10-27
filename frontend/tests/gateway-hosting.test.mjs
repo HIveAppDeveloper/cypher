@@ -1,11 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import {execFileSync} from 'node:child_process';
 import {environment,renderer,load,find,textOf,button,deferred} from './support/component-harness.mjs';
 const id='00000000-0000-4000-8000-000000000001';
-function mount({preview=false,fetchImpl}={}){
+const {companionSetup}=load('../src/lib/gateway-hosting.ts',{},{URL});
+function mount({preview=false,fetchImpl,origin='https://cypher-agent.vercel.app'}={}){
   const env=environment(),view=renderer(env),calls=[],intervals=[];let accountId='fixture-a';
   const baseElement=env.element;env.element=props=>baseElement({closest:()=>null,...props});
-  const Component=load('../src/components/GatewayHosting.tsx',{react:view.react,'./GatewayProviderLogo':{GatewayProviderLogo:'provider-logo'},'./GatewayDeployment':{GatewayDeployment:'deployment-wizard'}},{...env.globals,React:view.react.default,fetch:async(path,options)=>{calls.push({path,...options});return fetchImpl?fetchImpl(path,options):{ok:true,json:async()=>[]}},setInterval:fn=>{intervals.push(fn);return intervals.length},clearInterval:()=>{},navigator:{clipboard:{writeText:async()=>{}}}}).GatewayHosting;
+  const Component=load('../src/components/GatewayHosting.tsx',{react:view.react,'./GatewayProviderLogo':{GatewayProviderLogo:'provider-logo'},'./GatewayDeployment':{GatewayDeployment:'deployment-wizard'},'../lib/canonical-app':{CANONICAL_APP_ORIGIN:origin},'../lib/gateway-hosting':{companionSetup}},{...env.globals,React:view.react.default,fetch:async(path,options)=>{calls.push({path,...options});return fetchImpl?fetchImpl(path,options):{ok:true,json:async()=>[]}},setInterval:fn=>{intervals.push(fn);return intervals.length},clearInterval:()=>{},navigator:{clipboard:{writeText:async()=>{}}}}).GatewayHosting;
   view.mount(()=>Component({preview,cloudReady:true,accountId}));return{view,calls,intervals,account(value){accountId=value;view.rerender()}};
 }
 test('hosting preview exposes all three guided choices and performs no device mutations',async()=>{
@@ -19,4 +21,38 @@ test('an old account device response cannot populate the new account view',async
 });
 test('late device reads after unmount do not update state',async()=>{
   const waiting=deferred(),app=mount({fetchImpl:()=>waiting.promise});app.view.unmount();waiting.resolve({ok:true,json:async()=>[]});await app.view.flush();assert.equal(app.view.updatesAfterUnmount,0);
+});
+test('custom HTTPS hosting uses the configured origin for the companion download and server on every platform',async()=>{
+  const origin='https://cypher.owned.example:8443',app=mount({origin});await app.view.flush();
+  for(const label of ['Connect computer →','Connect AWS machine →','Connect Azure machine →']){
+    button(app.view.tree,label).props.onClick();await app.view.flush();
+    const command=textOf(find(app.view.tree,n=>n.type==='pre'));
+    assert.match(command,/python3 cypher_device.py --server 'https:\/\/cypher\.owned\.example:8443'/);
+    assert.ok(command.includes(origin+'/grokbot_device.py'));assert.ok(!command.includes('cypher-agent.vercel.app'));
+    assert.equal(find(app.view.tree,n=>n.type==='a'&&n.props.download==='cypher_device.py').props.href,origin+'/grokbot_device.py');
+    if(label==='Connect computer →'){button(app.view.tree,'Windows').props.onClick();await app.view.flush();assert.ok(textOf(find(app.view.tree,n=>n.type==='pre')).includes("py -3 cypher_device.py --server '"+origin+"'"));}
+    button(app.view.tree,'← All hosting options').props.onClick();await app.view.flush();
+  }
+  app.view.unmount();
+});
+test('canonical hosting retains its default server while passing it explicitly to the companion',async()=>{
+  const app=mount();await app.view.flush();button(app.view.tree,'Connect computer →').props.onClick();await app.view.flush();
+  const command=textOf(find(app.view.tree,n=>n.type==='pre'));assert.ok(command.includes("--server 'https://cypher-agent.vercel.app'"));assert.ok(command.includes('https://cypher-agent.vercel.app/grokbot_device.py'));app.view.unmount();
+});
+test('HTTP loopback hosting cannot create pairing codes even through a forced form submit',async()=>{
+  for(const origin of ['http://127.0.0.1:3000','http://localhost:4320']){
+    const app=mount({origin});await app.view.flush();assert.match(textOf(app.view.tree),/Computer pairing requires HTTPS/);
+    button(app.view.tree,'Connect computer →').props.onClick();await app.view.flush();assert.equal(button(app.view.tree,'HTTPS required').props.disabled,true);
+    assert.equal(find(app.view.tree,n=>n.type==='pre'),undefined);assert.equal(button(app.view.tree,'Copy command'),undefined);
+    find(app.view.tree,n=>n.type==='form').props.onSubmit({preventDefault(){}});await app.view.flush();assert.equal(app.calls.filter(call=>call.method==='POST').length,0);app.view.unmount();
+  }
+});
+test('companion command arguments preserve literal quoted origins and reject non-origin or non-HTTPS inputs',()=>{
+  const origin="https://cypher'quoted.example",setup=companionSetup(origin);assert.ok(setup);
+  const lines=setup.unix.split('\n');
+  const server=execFileSync('/bin/sh',['-c','set -- '+lines[2].replace('python3 cypher_device.py ','')+'\nprintf %s "$2"'],{encoding:'utf8'});
+  const download=execFileSync('/bin/sh',['-c','set -- '+lines[1].replace('curl ','')+'\nprintf %s "$4"'],{encoding:'utf8'});
+  assert.equal(server,origin);assert.equal(download,origin+'/grokbot_device.py');
+  assert.ok(setup.windows.includes("--server 'https://cypher''quoted.example'"));
+  for(const value of ['http://localhost:3000','http://127.0.0.1:3000','http://public.example','https://user:password@owned.example','https://owned.example/path','https://owned.example?query=1','https://owned.example#fragment','https://owned.example\n'])assert.equal(companionSetup(value),null);
 });
