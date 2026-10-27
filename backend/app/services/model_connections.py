@@ -25,6 +25,7 @@ API_ACCOUNT_CONTRACTS = {
     'xai': ('xai_api_account_check', 'grokbot-xai-existing-api', 'xai/grok-4.5', 'xai/grok-4.5'),
 }
 PREFIX = 'model_connection:'
+OPENAI_ACCOUNT_UNSUPPORTED = 'Cypher ChatGPT account checks are not supported on this release. Test the existing OpenAI model route instead; your saved connection is unchanged.'
 ROUTES = {
     'openai/gpt-6.1-sol': {'cx/gpt-6.1-sol'},
     'google/gemini-3.8-flash': {'gemini/gemini-3.8-flash', 'agy/gemini-3.8-flash-low'},
@@ -132,7 +133,7 @@ def public_connections(records):
                 item['message'] = 'Test the existing public Llama text route. This does not connect a Meta AI subscription, Facebook Page, or Instagram account. Meta Model API access needs separate provider setup.'
         expires = detail.get('verification_expires_at')
         try:
-            if provider not in LOCAL_KEY_PROVIDERS and state == 'verification_required' and expires and datetime.fromisoformat(expires.rstrip('Z')) > datetime.utcnow():
+            if provider != 'openai' and provider not in LOCAL_KEY_PROVIDERS and state == 'verification_required' and expires and datetime.fromisoformat(expires.rstrip('Z')) > datetime.utcnow():
                 from app.services.plugins import reveal
                 item['verification_url'] = safe_verification_url(reveal(detail.get('verification_encrypted')))
         except (ValueError, TypeError): pass
@@ -142,6 +143,10 @@ def public_connections(records):
             item['message'] = 'Connect Gemini with an AI Studio API key. Google account subscriptions are available through OmniRoute when configured there.'
         elif state == 'verification_required' and not item['verification_url']:
             item['message'] = 'The verification link expired. Choose Check again to get a fresh Google account check.'
+        if provider == 'openai':
+            item.update(verification_target='current_route', verification_scope='current_route', account_connected=False, verification_url=None)
+            if transport in ROUTES.get(active.get('public_model'), set()): item['access_label'] = 'Gateway model route'
+            item['message'] = ('The saved OpenAI model route passed its check. ' if state == 'ready' else 'Only the saved OpenAI model route can be checked here. ') + 'ChatGPT account sign-in requires separate approved Cypher setup; a route check does not connect a ChatGPT account.'
         result.append(item)
     return result
 
@@ -151,6 +156,8 @@ async def queue_check(db, provider, api_key=None, verification_target='current_r
         raise HTTPException(422, 'Choose a supported model connection.')
     if verification_target not in {'provider_account', 'current_route'}:
         raise HTTPException(422, 'Choose a provider account or the current model route.')
+    if provider == 'openai' and verification_target != 'current_route':
+        raise HTTPException(422, OPENAI_ACCOUNT_UNSUPPORTED)
     if provider == 'meta' and (not settings.OMNIROUTE_URL or not settings.OMNIROUTE_API_KEY or verification_target != 'current_route'):
         raise HTTPException(422, 'This checker supports the configured public Llama route only. Meta Model API accounts require separate gateway setup.')
     if provider != 'meta' and settings.OMNIROUTE_URL and not remote_control_available():
@@ -200,6 +207,8 @@ async def queue_check(db, provider, api_key=None, verification_target='current_r
     return {'status': 'pending', 'verification_target': detail['verification_target']}
 
 async def control_check(payload):
+    if payload.get('provider') == 'openai' and payload.get('verification_target', 'current_route') != 'current_route':
+        raise RuntimeError(OPENAI_ACCOUNT_UNSUPPORTED)
     from app.services import omniroute
     from app.services.model_profiles import included_routing
     if payload['provider'] == 'meta' and payload['action'] == 'check':
@@ -310,11 +319,19 @@ async def provider_key_check(provider, api_key):
     return {'state': 'ready', 'message': f'{PROVIDERS[provider][0]} API key verified with a model response.',
             'public_model': PROVIDERS[provider][1], 'transport_model': API_ACCOUNT_CONTRACTS[provider][3]}
 
+def finish_unsupported_openai_job(row, detail):
+    if detail.get('provider') != 'openai' or detail.get('verification_target', 'current_route') == 'current_route': return False
+    row.status = 'completed'
+    row.detail = {**detail, 'state':'unavailable', 'message':OPENAI_ACCOUNT_UNSUPPORTED, 'checked_at':datetime.utcnow().isoformat()+'Z'}
+    row.updated_at = datetime.utcnow()
+    return True
+
 async def recover_checks(sessions):
     async with sessions() as db:
         rows = (await db.execute(select(RuntimeCheck).where(RuntimeCheck.name.startswith(PREFIX), RuntimeCheck.status == 'running'))).scalars().all()
         for row in rows:
             detail = dict(row.detail or {})
+            if finish_unsupported_openai_job(row, detail): continue
             if detail.get('attempts', 0) < 3: row.status = 'pending'
             else:
                 row.status = 'failed'
@@ -343,7 +360,11 @@ async def run_requested_check(sessions, pulse):
     async with sessions() as db:
         row = (await db.execute(select(RuntimeCheck).where(RuntimeCheck.name.startswith(PREFIX), RuntimeCheck.status == 'pending').order_by(RuntimeCheck.updated_at).limit(1).with_for_update(skip_locked=True))).scalar_one_or_none()
         if not row: return False
-        detail = dict(row.detail or {}); detail['attempts'] = detail.get('attempts', 0) + 1
+        detail = dict(row.detail or {})
+        if finish_unsupported_openai_job(row, detail):
+            await db.commit()
+            return True
+        detail['attempts'] = detail.get('attempts', 0) + 1
         row.status = 'running'; row.detail = detail; row.updated_at = datetime.utcnow()
         name = row.name; await db.commit()
     payload = {'provider': detail['provider'], 'action': detail['action'], 'verification_target': detail.get('verification_target', 'current_route')}
