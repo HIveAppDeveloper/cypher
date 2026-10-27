@@ -45,10 +45,32 @@ test('saved route readiness is not presented as a connected subscription',()=>{
 });
 
  test('connected filter includes verified API access and excludes public fallback routes',async()=>{
-  const app=mount({items:[{id:'claude',state:'ready',can_add_api_key:true,access_kind:'api_key',verification_target:'provider_account'},{id:'openai',state:'ready',access_kind:'public',verification_target:'current_route'}]});await app.view.flush();button(app.view.tree,'Connected').props.onClick();await app.view.flush();assert.match(textOf(app.view.tree),/API key verified/);assert.ok(find(app.view.tree,n=>n.type==='button'&&n.props['aria-label']==='Manage for Claude'));assert.equal(find(app.view.tree,n=>n.type==='button'&&n.props['data-provider']==='openai'),undefined);app.view.unmount();
+  const app=mount({items:[{id:'claude',state:'ready',can_add_api_key:true,access_kind:'api_key',verification_target:'provider_account'},{id:'openai',state:'ready',access_kind:'account',verification_target:'current_route',verification_scope:'current_route',account_connected:false},{id:'gemini',state:'ready',access_kind:'public',verification_target:'current_route'}]});await app.view.flush();button(app.view.tree,'Connected').props.onClick();await app.view.flush();assert.match(textOf(app.view.tree),/API key verified/);assert.ok(find(app.view.tree,n=>n.type==='button'&&n.props['aria-label']==='Manage for Claude'));for(const id of ['openai','gemini'])assert.equal(find(app.view.tree,n=>n.type==='button'&&n.props['data-provider']===id),undefined);app.view.unmount();
 });
  test('provider-account verification cannot accept a public-route acknowledgment',async()=>{
- const app=mount({items:[{id:'openai',state:'not_checked',verification_supported:true}],fetchImpl:async()=>({ok:true,json:async()=>({status:'pending',verification_target:'current_route'})})});await app.select('ChatGPT');button(app.view.tree,'Check model access').props.onClick();await app.view.flush();assert.deepEqual(JSON.parse(app.calls[0].body),{target:'provider_account'});assert.match(textOf(app.view.tree),/did not confirm the requested access check/);assert.ok(!textOf(app.view.tree).includes('Checking in the cloud'));app.view.unmount();
+ const app=mount({items:[{id:'claude',state:'not_checked',verification_supported:true}],fetchImpl:async()=>({ok:true,json:async()=>({status:'pending',verification_target:'current_route'})})});await app.select('Claude');button(app.view.tree,'Check model access').props.onClick();await app.view.flush();assert.deepEqual(JSON.parse(app.calls[0].body),{target:'provider_account'});assert.match(textOf(app.view.tree),/did not confirm the requested access check/);assert.ok(!textOf(app.view.tree).includes('Checking in the cloud'));app.view.unmount();
+});
+
+test('OpenAI checks request and acknowledge only the existing gateway route',async()=>{
+ for(const target of ['current_route','provider_account']){
+  const app=mount({items:[{id:'openai',state:'ready',access_kind:'account',verification_target:'current_route',verification_scope:'current_route',account_connected:false}],fetchImpl:async()=>({ok:true,json:async()=>({status:'pending',verification_target:target})})});await app.select('ChatGPT');
+  assert.match(textOf(app.view.tree),/Route available/);assert.match(textOf(app.view.tree),/does not verify your ChatGPT account or subscription/);assert.ok(!textOf(app.view.tree).includes('Account connected'));
+  button(app.view.tree,'Test gateway route').props.onClick();await app.view.flush();assert.deepEqual(JSON.parse(app.calls[0].body),{target:'current_route'});
+  if(target==='current_route')assert.match(textOf(app.view.tree),/Checking in the cloud/);else{assert.match(textOf(app.view.tree),/did not confirm the requested access check/);assert.ok(!textOf(app.view.tree).includes('Checking in the cloud'));}
+  app.view.unmount();
+ }
+});
+
+test('explicit route scope and disconnected account flags override stale account-kind claims',()=>{
+ for(const item of [
+  {id:'openai',verification_target:'provider_account',access_kind:'account',account_connected:true},
+  {id:'openai',verification_target:'current_route',access_kind:'account',account_connected:false},
+  {id:'gemini',verification_target:'provider_account',verification_scope:'current_route',access_kind:'account',account_connected:true},
+  {id:'gemini',verification_target:'provider_account',access_kind:'account',account_connected:false},
+  {id:'meta',verification_target:'provider_account',access_kind:'account',account_connected:true},
+ ]){assert.equal(catalog.providerHasVerifiedAccess({...item,state:'ready'}),false);assert.equal(catalog.providerConnectionLabel({...item,state:'ready'}),'Route available');}
+ for(const id of ['openai','meta'])assert.equal(catalog.providerVerificationTarget(id),'current_route');
+ for(const id of ['claude','gemini','xai'])assert.equal(catalog.providerVerificationTarget(id),'provider_account');
 });
 
 test('queued progress waits for a new server result and then reports completion',async()=>{
