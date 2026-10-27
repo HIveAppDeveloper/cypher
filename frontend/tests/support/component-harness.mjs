@@ -120,7 +120,7 @@ function load(path, imports = {}, globals = {}) {
         for (const component of Object.values(presentation)) if (typeof component === 'function') component.fixturePresentation = true;
         return presentation;
       }
-      if (name === '../lib/canonical-app') return { CANONICAL_APP_ORIGIN: 'https://app.example', isOffCanonicalHost: () => false };
+      if (name === '../lib/canonical-app') return imports[name] ?? { CANONICAL_APP_ORIGIN: 'https://app.example', isOffCanonicalHost: () => false };
       if (name === '../lib/dates' || name === './dates') return load('../src/lib/dates.ts', {}, globals);
       if (!(name in imports)) throw new Error('Unexpected import: ' + name);
       return imports[name];
