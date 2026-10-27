@@ -1,6 +1,6 @@
 // Product identities and provider-owned destinations; never a gateway dashboard.
 export const gatewayProviders = [
-  {id:'openai',name:'ChatGPT',company:'OpenAI',logo:'openai',description:'ChatGPT account access for eligible Codex models.',account:'https://chatgpt.com/',keyUrl:null,category:'Subscriptions'},
+  {id:'openai',name:'ChatGPT',company:'OpenAI',logo:'openai',description:'Codex model routes. ChatGPT account sign-in awaits approval.',account:'https://chatgpt.com/',keyUrl:null,category:'Subscriptions'},
   {id:'claude',name:'Claude',company:'Anthropic',logo:'claude-color',description:'Writing, reasoning, and coding through the Claude API.',account:'https://claude.ai/',keyUrl:'https://platform.claude.com/settings/keys',category:'API providers'},
   {id:'gemini',name:'Gemini',company:'Google',logo:'gemini-color',description:'Google models for text, vision, and everyday tasks.',account:'https://gemini.google.com/',keyUrl:'https://aistudio.google.com/api-keys',category:'API providers'},
   {id:'xai',name:'Grok',company:'xAI',logo:'grok',description:'Connect xAI model access with your own account.',account:'https://grok.com/',keyUrl:'https://console.x.ai/',category:'API providers'},
@@ -32,16 +32,21 @@ export function providerConsentUrl(provider,value) {
 export function providerConnectionLabel(item,preview=false) {
   if(preview)return 'Preview';
   if(item?.state==='checking')return 'Checking';
-  if(item?.account_connected===true)return 'Account connected';
+  if(providerHasVerifiedAccess(item)&&item.account_connected===true)return 'Account connected';
   if(item?.state==='ready'){
     if(item.access_kind==='public')return 'Public route available';
-    if(item.verification_target==='provider_account'&&item.access_kind==='api_key')return 'API key verified';
-    if(item.verification_target==='provider_account'&&item.access_kind==='account')return 'Account route verified';
+    if(providerHasVerifiedAccess(item)&&item.access_kind==='api_key')return 'API key verified';
+    if(providerHasVerifiedAccess(item)&&item.access_kind==='account')return 'Account route verified';
     return 'Route available';
   }
   return ({rate_limited:'Rate limited',billing_required:'Billing needed',verification_required:'Action needed',access_denied:'Access denied',sign_in_required:'Sign in again',unavailable:'Needs attention'})[item?.state]||'Not connected';
 }
 
 export function providerHasVerifiedAccess(item) {
+  if(!item||['openai','meta'].includes(item.id)||item.account_connected===false||item.verification_target==='current_route'||item.verification_scope==='current_route'||item.access_kind==='public')return false;
   return item?.account_connected===true || item?.state==='ready'&&item.verification_target==='provider_account'&&['account','api_key'].includes(item.access_kind);
+}
+
+export function providerVerificationTarget(provider) {
+  return ['openai','meta'].includes(provider)?'current_route':'provider_account';
 }

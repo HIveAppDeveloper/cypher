@@ -1,5 +1,6 @@
 import { FormEvent, useEffect, useRef, useState } from 'react';
 import { dateFromApi } from '../lib/dates';
+import { providerVerificationTarget } from '../lib/gateway-connections.mjs';
 
 export type ModelConnection = {
   id: string; name: string; model: string; state: string; message: string;
@@ -7,6 +8,7 @@ export type ModelConnection = {
   account_url: string; can_add_api_key: boolean; key_configured?: boolean; requires_api_key?: boolean;
   verified_model?: string; access_kind?: 'account' | 'api_key' | 'public'; access_label?: string;
   verification_supported?: boolean; verification_target?: 'provider_account' | 'current_route';
+  verification_scope?: 'provider_account' | 'current_route'; account_connected?: boolean;
 };
 const labels: Record<string, string> = {
   not_checked: 'Not checked', ready: 'Verified', checking: 'Checking',
@@ -15,7 +17,7 @@ const labels: Record<string, string> = {
   rate_limited: 'Rate limited', unavailable: 'Could not verify',
 };
 const connectionHelp: Record<string, string> = {
-  openai: 'ChatGPT plan sign-in requires a registered Cypher connection. Checking saved model access does not create a new account connection.',
+  openai: 'This checks the configured Codex gateway model route, not a ChatGPT account or subscription. Hosted ChatGPT sign-in still awaits approval.',
   gemini: 'Connect Gemini with an AI Studio API key. Google Workspace permissions and Google AI subscriptions are separate.',
   claude: 'Use a Claude Console API key for this app. Claude Pro and Max account sign-in is not offered here.',
   xai: 'Use an xAI API key. A Grok membership does not automatically grant API access.',
@@ -47,22 +49,23 @@ export function ModelConnections({ items, canManage, workerReady, onQueued, omni
       return changed ? next : current;
     });
   }, [items]);
-  async function submit(provider: string, apiKey?: string, target: 'provider_account' | 'current_route' = 'provider_account') {
+  async function submit(provider: string, apiKey?: string, target: 'provider_account' | 'current_route' = providerVerificationTarget(provider)) {
     if (busyRef.current) return;
     busyRef.current = true;
     setBusy(provider); setError(null);
     // Keep keys out of drafts, URLs, browser storage and subsequent renders.
     if (apiKey !== undefined) { setKey(''); setKeyFor(''); }
+    const requestedTarget = providerVerificationTarget(provider) === 'current_route' ? 'current_route' : target;
     try {
       const response = await fetch(`/api/runtime/model-connections/${encodeURIComponent(provider)}/${apiKey === undefined ? 'verify' : 'api-key'}`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         signal: AbortSignal.timeout(35000),
-        body: JSON.stringify(apiKey === undefined ? { target } : { api_key: apiKey }),
+        body: JSON.stringify(apiKey === undefined ? { target: requestedTarget } : { api_key: apiKey }),
       });
       const data = await response.json();
       if (!response.ok) throw new Error(typeof data.detail === 'string' ? data.detail : 'The check could not start. Try again.');
       if (!['pending', 'running'].includes(data.status)) throw new Error('The server did not confirm a queued check. Refresh status before trying again.');
-      if (apiKey === undefined && data.verification_target !== target) throw new Error('The server did not confirm this type of check. Refresh status before trying again.');
+      if (apiKey === undefined && data.verification_target !== requestedTarget) throw new Error('The server did not confirm this type of check. Refresh status before trying again.');
       if (!mounted.current) return;
       setQueued(current => ({ ...current, [provider]: items.find(item => item.id === provider)?.checked_at }));
       try { await onQueued(); }
@@ -84,14 +87,14 @@ export function ModelConnections({ items, canManage, workerReady, onQueued, omni
         const verification = googleLink(item.verification_url);
         const checkedAt = dateFromApi(item.checked_at);
         return <li key={item.id} className="model-connection-row">
-          <div className="model-connection-title"><strong>{item.name}</strong><span className="model-connection-status" data-state={item.state}>{checking ? locallyQueued || item.job_status === 'pending' ? 'Queued' : 'Checking…' : labels[item.state] || 'Not checked'}</span></div>
+          <div className="model-connection-title"><strong>{item.name}</strong><span className="model-connection-status" data-state={item.state}>{checking ? locallyQueued || item.job_status === 'pending' ? 'Queued' : 'Checking…' : item.id === 'openai' && item.state === 'ready' ? 'Route available' : labels[item.state] || 'Not checked'}</span></div>
           <p className="field-help" role={checking ? 'status' : undefined}>{locallyQueued ? 'Queued in the cloud. You can close setup while the check runs.' : item.message}</p>
           {connectionHelp[item.id] ? <p className="field-help">{connectionHelp[item.id]}</p> : null}
-          {item.verified_model ? <p className="model-connection-time">{item.access_label || 'Model route'} · {item.verified_model}{item.access_kind === 'public' ? ' · Does not verify a subscription or provider account' : ''}</p> : null}
+          {item.verified_model ? <p className="model-connection-time">{item.id === 'openai' ? 'Gateway model route' : item.access_label || 'Model route'} · {item.verified_model}{item.access_kind === 'public' ? ' · Does not verify a subscription or provider account' : ''}</p> : null}
           {checkedAt ? <p className="model-connection-time">Last checked {checkedAt.toLocaleString()}</p> : null}
           <div className="model-connection-actions">
             {verification ? <a className="btn-primary" href={verification} target="_blank" rel="noopener noreferrer">Verify with Google</a> : null}
-            {item.verification_supported === false ? <span className="field-help">Model verification is unavailable until provider setup is configured.</span> : !item.requires_api_key || item.key_configured ? <button className="btn-secondary" disabled={checking || !!busy || !workerReady} onClick={() => void submit(item.id, undefined, item.id === 'meta' ? 'current_route' : 'provider_account')}>{checking ? locallyQueued || item.job_status === 'pending' ? 'Queued…' : 'Checking…' : item.id === 'meta' ? 'Test Llama text route' : 'Check provider access'}</button> : <span className="field-help">Add an API key to connect</span>}
+            {item.verification_supported === false ? <span className="field-help">Model verification is unavailable until provider setup is configured.</span> : !item.requires_api_key || item.key_configured ? <button className="btn-secondary" disabled={checking || !!busy || !workerReady} onClick={() => void submit(item.id, undefined, providerVerificationTarget(item.id))}>{checking ? locallyQueued || item.job_status === 'pending' ? 'Queued…' : 'Checking…' : item.id === 'openai' ? 'Test gateway route' : item.id === 'meta' ? 'Test Llama text route' : 'Check provider access'}</button> : <span className="field-help">Add an API key to connect</span>}
             {item.access_kind === 'public' && item.id !== 'meta' ? <button className="setup-doc-link" disabled={checking || !!busy || !workerReady} onClick={() => void submit(item.id, undefined, 'current_route')}>Test public route</button> : null}
             <a className="setup-doc-link" href={item.account_url} target="_blank" rel="noopener noreferrer">{item.id === 'meta' ? 'Meta Model API setup' : `Open ${item.name} account`}</a>
             {item.can_add_api_key ? <button className="setup-doc-link" disabled={checking || !!busy} onClick={() => { setKeyFor(keyFor === item.id ? '' : item.id); setKey(''); setError(null); }}>{item.key_configured ? 'Replace API key' : omniroute ? 'Add API fallback' : 'Use API key'}</button> : null}

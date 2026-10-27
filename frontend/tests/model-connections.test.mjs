@@ -1,11 +1,12 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {environment,renderer,load,deferred,find,textOf,button} from './support/component-harness.mjs';
+import * as catalog from '../src/lib/gateway-connections.mjs';
 
 const item={id:'xai',name:'xAI',model:'grok',state:'not_checked',message:'Not checked',account_url:'https://x.ai',can_add_api_key:true,requires_api_key:true};
 function panel({items=[item],canManage=true,fetcher=async()=>({ok:true,json:async()=>({})}),onQueued=async()=>{},omniroute=false,manageUrl}={}){
   const env=environment(),view=renderer(env);
-  const {ModelConnections}=load('../src/components/ModelConnections.tsx',{react:view.react},{...env.globals,React:view.react.default,fetch:fetcher,AbortSignal,URL,encodeURIComponent});
+  const {ModelConnections}=load('../src/components/ModelConnections.tsx',{react:view.react,'../lib/gateway-connections.mjs':catalog},{...env.globals,React:view.react.default,fetch:fetcher,AbortSignal,URL,encodeURIComponent});
   view.mount(()=>ModelConnections({items,canManage,workerReady:true,onQueued,omniroute,manageUrl}));
   return view;
 }
@@ -38,6 +39,17 @@ test('a public Llama check never requests a Meta account or presents API key enr
   button(view.tree,'Test Llama text route').props.onClick();await view.flush();
   assert.equal(path,'/api/runtime/model-connections/meta/verify');assert.deepEqual(body,{target:'current_route'});
   view.unmount();
+});
+
+test('saved OpenAI checks are explicitly route-only and reject an account-scope acknowledgement',async()=>{
+ for(const target of ['current_route','provider_account']){
+  let body,path;
+  const view=panel({items:[{...item,id:'openai',name:'ChatGPT',state:'ready',requires_api_key:false,can_add_api_key:false,verification_target:'current_route',verification_scope:'current_route',account_connected:false,access_kind:'account',access_label:'Gateway account route',verified_model:'gpt-6.1-sol'}],fetcher:async(url,options)=>{path=url;body=JSON.parse(options.body);return{ok:true,json:async()=>({status:'pending',verification_target:target})};}});
+  assert.match(textOf(view.tree),/Route available/);assert.match(textOf(view.tree),/Gateway model route/);assert.doesNotMatch(textOf(view.tree),/Gateway account route|Verified/);
+  button(view.tree,'Test gateway route').props.onClick();await view.flush();assert.equal(path,'/api/runtime/model-connections/openai/verify');assert.deepEqual(body,{target:'current_route'});
+  if(target==='current_route')assert.match(textOf(view.tree),/Queued in the cloud/);else assert.match(textOf(view.tree),/did not confirm this type of check/);
+  view.unmount();
+ }
 });
 
 test('unavailable verification keeps provider setup available without sending a request',async()=>{
