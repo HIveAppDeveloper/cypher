@@ -17,8 +17,13 @@ PROVIDERS = {
     'gemini': ('Gemini', 'google/gemini-3.8-flash', 'https://aistudio.google.com/api-keys'),
     'claude': ('Claude', 'anthropic/claude-sonnet-5.5', 'https://platform.claude.com/settings/keys'),
     'xai': ('Grok (xAI)', 'xai/grok-4.5', 'https://console.x.ai/'),
+    'meta': ('Meta / Llama', 'auto/free-cf-meta-llama-llama-3-3-70b-instruct-fp8-fast', 'https://dev.meta.ai/'),
 }
 LOCAL_KEY_PROVIDERS = {'gemini', 'xai'}
+API_ACCOUNT_CONTRACTS = {
+    'gemini': ('gemini_api_account_check', 'grokbot-gemini-existing-api', 'google/gemini-3.8-flash', 'gemini/gemini-3.8-flash'),
+    'xai': ('xai_api_account_check', 'grokbot-xai-existing-api', 'xai/grok-4.5', 'xai/grok-4.5'),
+}
 PREFIX = 'model_connection:'
 ROUTES = {
     'openai/gpt-6.1-sol': {'cx/gpt-6.1-sol'},
@@ -30,12 +35,45 @@ ROUTES = {
     'anthropic/claude-haiku-4.5': {'ddgw/claude-haiku-4-5'},
     'xai/grok-4.5': {'xai/grok-4.5', 'xao/grok-4.5'},
     'xai/grok-4.7': {'xai/grok-4.7'},
+    'auto/free-cf-meta-llama-llama-3-3-70b-instruct-fp8-fast': {'cfp/meta-llama/llama-3.3-70b-instruct-fp8-fast'},
 }
 PROVIDER_MODELS = {provider:{info[1]} for provider,info in PROVIDERS.items()}
 PROVIDER_MODELS['claude'].add('anthropic/claude-haiku-4.5')
 
 def remote_control_available():
     return bool(settings.OMNIROUTE_URL and settings.OMNIROUTE_CONTROL_KEY)
+
+async def anthropic_account_support():
+    """Explicit-submit preflight through the actual deployed gateway worker."""
+    from app.services import omniroute
+    if not remote_control_available(): return False
+    try:
+        url = omniroute.endpoint().removesuffix('/v1') + '/api/internal/connections/check'
+        headers = omniroute.headers()
+        headers['Authorization'] = 'Bearer ' + settings.OMNIROUTE_CONTROL_KEY
+        async with httpx.AsyncClient(timeout=20, follow_redirects=False) as client:
+            response = await client.post(url,headers=headers,json={'provider':'claude','action':'capabilities'})
+        data = response.json() if response.status_code == 200 else {}
+        capabilities = data.get('capabilities',{})
+        return data.get('provider') == 'claude' and data.get('state') == 'supported' and capabilities.get('anthropic_api_account_check') is True and type(capabilities.get('version')) is int and capabilities['version'] == 1
+    except Exception:
+        return False
+
+async def direct_api_account_support(provider):
+    """Read only the paired worker's explicit direct-API capability; never send a key."""
+    from app.services import omniroute
+    if provider not in API_ACCOUNT_CONTRACTS or not remote_control_available(): return False
+    try:
+        url = omniroute.endpoint().removesuffix('/v1') + '/api/internal/connections/check'
+        headers = omniroute.headers()
+        headers['Authorization'] = 'Bearer ' + settings.OMNIROUTE_CONTROL_KEY
+        async with httpx.AsyncClient(timeout=20, follow_redirects=False) as client:
+            response = await client.post(url,headers=headers,json={'provider':provider,'action':'capabilities'})
+        data = response.json() if response.status_code == 200 else {}
+        capabilities = data.get('capabilities',{})
+        return data.get('provider') == provider and data.get('state') == 'supported' and capabilities.get(API_ACCOUNT_CONTRACTS[provider][0]) is True and type(capabilities.get('version')) is int and capabilities['version'] == 1
+    except Exception:
+        return False
 
 def can_manage():
     from app.services.managed_connections import installation_owner
@@ -81,6 +119,17 @@ def public_connections(records):
                 'requires_api_key': provider in LOCAL_KEY_PROVIDERS and not settings.OMNIROUTE_URL,
                 'key_configured': bool(detail.get('credentials_encrypted')),
                 'checked_at': detail.get('checked_at'), 'verification_url': None}
+        transport = active.get('transport_model')
+        if transport in ROUTES.get(active.get('public_model'), set()):
+            item['verified_model'] = transport.split('/', 1)[1]
+            kind, access = ('public', 'Public model route') if transport.startswith(('ddgw/', 'cfp/')) else ('account', 'Gateway account route') if transport.startswith(('cx/', 'cc/', 'agy/', 'xao/')) else ('api_key', 'Provider API key')
+            item.update(access_kind=kind, access_label=access)
+        item['verification_target'] = detail.get('verification_target', 'current_route')
+        item['verification_supported'] = bool(settings.OMNIROUTE_URL and settings.OMNIROUTE_API_KEY) if provider == 'meta' else remote_control_available() or provider in LOCAL_KEY_PROVIDERS and not settings.OMNIROUTE_URL
+        if provider == 'meta':
+            item['verification_target'] = 'current_route'
+            if state == 'not_checked':
+                item['message'] = 'Test the existing public Llama text route. This does not connect a Meta AI subscription, Facebook Page, or Instagram account. Meta Model API access needs separate provider setup.'
         expires = detail.get('verification_expires_at')
         try:
             if provider not in LOCAL_KEY_PROVIDERS and state == 'verification_required' and expires and datetime.fromisoformat(expires.rstrip('Z')) > datetime.utcnow():
@@ -96,29 +145,45 @@ def public_connections(records):
         result.append(item)
     return result
 
-async def queue_check(db, provider, api_key=None):
+async def queue_check(db, provider, api_key=None, verification_target='current_route'):
     require_owner()
     if provider not in PROVIDERS or (api_key is not None and provider not in {'gemini', 'claude', 'xai'}):
         raise HTTPException(422, 'Choose a supported model connection.')
-    if settings.OMNIROUTE_URL and not remote_control_available():
+    if verification_target not in {'provider_account', 'current_route'}:
+        raise HTTPException(422, 'Choose a provider account or the current model route.')
+    if provider == 'meta' and (not settings.OMNIROUTE_URL or not settings.OMNIROUTE_API_KEY or verification_target != 'current_route'):
+        raise HTTPException(422, 'This checker supports the configured public Llama route only. Meta Model API accounts require separate gateway setup.')
+    if provider != 'meta' and settings.OMNIROUTE_URL and not remote_control_available():
         raise HTTPException(503, 'OmniRoute account management is not configured on this runtime.')
-    if provider not in LOCAL_KEY_PROVIDERS and not remote_control_available():
+    if provider != 'meta' and provider not in LOCAL_KEY_PROVIDERS and not remote_control_available():
         raise HTTPException(503, 'Model connection management is not configured on this runtime.')
     if api_key is not None and (not 20 <= len(api_key) <= 1000 or any(c.isspace() or ord(c) < 32 for c in api_key)):
         raise HTTPException(422, 'Enter a valid provider API key without spaces or line breaks.')
+    if provider == 'claude' and api_key is not None and api_key.startswith('sk-ant-oat'):
+        raise HTTPException(422, 'Use a Claude Console API key. Claude subscription/setup tokens are not API keys for this app.')
     from app.services.plugins import cipher
     try: cipher()
     except ValueError: raise HTTPException(503, 'Secure credential storage must be configured before managing model connections.')
+    if provider == 'claude' and (api_key is not None or verification_target == 'provider_account') and not await anthropic_account_support():
+        raise HTTPException(503, 'Anthropic API account checks are not available on this gateway release yet. Your saved connection is unchanged.')
+    if provider in API_ACCOUNT_CONTRACTS and remote_control_available() and (api_key is not None or verification_target == 'provider_account') and not await direct_api_account_support(provider):
+        raise HTTPException(503, f'{PROVIDERS[provider][0]} API account checks are not available on this gateway release yet. Your saved connection is unchanged.')
     if db.bind.dialect.name == 'postgresql': await db.execute(text('SELECT pg_advisory_xact_lock(1763000276)'))
     row = await db.get(RuntimeCheck, PREFIX + provider)
-    if row and row.status in {'pending', 'running'}: return {'status': row.status}
+    if row and row.status in {'pending', 'running'}:
+        target = (row.detail or {}).get('verification_target', 'current_route')
+        if api_key is not None:
+            raise HTTPException(409, 'A connection check is already running. Your new key was not accepted; wait for that result before replacing it.')
+        if verification_target == 'provider_account' and target != verification_target:
+            raise HTTPException(409, 'A current-route check is already running. Wait for its result, then check the provider account separately.')
+        return {'status': row.status, 'verification_target': target}
     if row and datetime.utcnow() - row.updated_at < timedelta(seconds=15):
         raise HTTPException(429, 'Wait 15 seconds before checking this connection again.', headers={'Retry-After': '15'})
     previous = row.detail or {} if row else {}
     detail = {key: value for key, value in previous.items() if key in {'active_route', 'blocked_models'}}
     if provider in LOCAL_KEY_PROVIDERS and previous.get('credentials_encrypted'):
         detail['credentials_encrypted'] = previous['credentials_encrypted']
-    detail.update(provider=provider, action='connect_api_key' if api_key is not None else 'check', request_id=str(uuid4()), attempts=0, state='checking', message='Queued in the cloud. You can close this window while the connection is checked.')
+    detail.update(provider=provider, action='connect_api_key' if api_key is not None else 'check', verification_target='provider_account' if api_key is not None else verification_target, request_id=str(uuid4()), attempts=0, state='checking', message='Queued in the cloud. You can close this window while the connection is checked.')
     if api_key is not None:
         from app.services.plugins import seal
         if provider in LOCAL_KEY_PROVIDERS and previous.get('credentials_encrypted'):
@@ -132,12 +197,23 @@ async def queue_check(db, provider, api_key=None):
     if row: row.status = 'pending'; row.detail = detail; row.updated_at = datetime.utcnow()
     else: db.add(RuntimeCheck(name=PREFIX + provider, status='pending', detail=detail, updated_at=datetime.utcnow()))
     await db.commit()
-    return {'status': 'pending'}
+    return {'status': 'pending', 'verification_target': detail['verification_target']}
 
 async def control_check(payload):
     from app.services import omniroute
     from app.services.model_profiles import included_routing
-    if payload['provider'] == 'claude' and payload['action'] == 'check' and included_routing():
+    if payload['provider'] == 'meta' and payload['action'] == 'check':
+        public = PROVIDERS['meta'][1]
+        target = next(iter(ROUTES[public]))
+        try:
+            response = await omniroute.request('/chat/completions', {'model': target, 'messages': [{'role': 'user', 'content': 'Reply with exactly: Connection ready'}], 'max_tokens': 128, 'stream': False})
+            content = ((response.get('choices') or [{}])[0].get('message') or {}).get('content')
+            if response.get('model') not in {target, target.split('/', 1)[1]} or not isinstance(content, str) or not content.strip():
+                raise RuntimeError('Llama did not verify its model identity and response.')
+            return {'state': 'ready', 'message': 'Llama returned a text response through the public Cloudflare route. Meta account and subscription access were not tested.', 'public_model': public, 'transport_model': target}
+        except Exception:
+            return {'state': 'unavailable', 'message': 'The public Llama route did not pass its check. No Meta account was connected and your other model connections were preserved.'}
+    if payload['provider'] == 'claude' and payload['action'] == 'check' and included_routing() and payload.get('verification_target') != 'provider_account':
         try:
             response = await omniroute.request('/chat/completions', {
                 'model':'ddgw/claude-haiku-4-5',
@@ -163,6 +239,33 @@ async def control_check(payload):
     expected = PROVIDER_MODELS[payload['provider']]
     if result['state'] == 'ready' and (result.get('public_model') not in expected or result.get('transport_model') not in ROUTES.get(result.get('public_model'),set())):
         raise RuntimeError('Provider check did not verify the requested model.')
+    if result['state'] == 'ready' and payload.get('verification_target') == 'provider_account' and result['transport_model'].startswith(('ddgw/', 'cfp/')):
+        raise RuntimeError('A public model route does not verify a provider account.')
+    if payload['provider'] == 'claude' and (payload.get('verification_target') == 'provider_account' or payload['action'] == 'connect_api_key'):
+        if result['state'] == 'verification_required':
+            raise RuntimeError('A Google verification link cannot verify an Anthropic API account.')
+        if result['state'] == 'ready':
+            if (result.get('provider') != 'claude' or result.get('verification_scope') != 'provider_account'
+                    or result.get('connection_provider') != 'anthropic'
+                    or result.get('connection_ref') != 'grokbot-anthropic-existing-api'
+                    or result.get('model_access_verified') is not True
+                    or result.get('transport_model') != 'anthropic/claude-sonnet-5-5'):
+                raise RuntimeError('Anthropic API account identity was not verified.')
+            return {key:result[key] for key in ('state','provider','verification_scope','connection_provider','connection_ref','public_model','transport_model','model_access_verified')} | {'message':'Anthropic API account verified with a model response. API billing is separate from Claude subscriptions.'}
+        return {'state':result['state'],'message':'Anthropic API access could not be verified. Your existing connection is preserved; review the API key, access and billing.'}
+    if payload['provider'] in API_ACCOUNT_CONTRACTS and (payload.get('verification_target') == 'provider_account' or payload['action'] == 'connect_api_key'):
+        provider = payload['provider']
+        _, slot, public, transport = API_ACCOUNT_CONTRACTS[provider]
+        if result['state'] == 'verification_required':
+            raise RuntimeError('Browser account verification cannot verify this direct API credential.')
+        if result['state'] == 'ready':
+            if (result.get('provider') != provider or result.get('verification_scope') != 'provider_account'
+                    or result.get('connection_provider') != provider or result.get('connection_ref') != slot
+                    or result.get('model_access_verified') is not True
+                    or result.get('public_model') != public or result.get('transport_model') != transport):
+                raise RuntimeError('The requested API credential and model were not verified.')
+            return {key:result[key] for key in ('state','provider','verification_scope','connection_provider','connection_ref','public_model','transport_model','model_access_verified')} | {'message':f'{PROVIDERS[provider][0]} API access verified with the expected model. API billing is separate from subscriptions.'}
+        return {'state':result['state'],'message':f'{PROVIDERS[provider][0]} API access could not be verified. Your existing connection is preserved; review the API key, access and billing.'}
     return result
 
 
@@ -195,17 +298,17 @@ async def provider_key_check(provider, api_key):
         if provider == 'gemini':
             choices = body.get('candidates') or []
             content = choices[0].get('content', {}).get('parts', []) if choices else []
-            verified = any(isinstance(part, dict) and isinstance(part.get('text'), str) and part['text'].strip() for part in content)
+            verified = body.get('modelVersion') == model and any(isinstance(part, dict) and isinstance(part.get('text'), str) and part['text'].strip() and not part.get('thought') for part in content)
         else:
             choices = body.get('choices') or []
             message = choices[0].get('message') if choices else None
-            verified = isinstance(message, dict) and isinstance(message.get('content'), str) and bool(message['content'].strip())
+            verified = body.get('model') == model and isinstance(message, dict) and isinstance(message.get('content'), str) and bool(message['content'].strip())
     except (ValueError, TypeError, AttributeError, IndexError):
         verified = False
     if not verified:
-        return {'state': 'unavailable', 'message': f'{PROVIDERS[provider][0]} returned no model response. Check model availability and retry.'}
+        return {'state': 'unavailable', 'message': f'{PROVIDERS[provider][0]} did not verify the expected model response. Check model availability and retry.'}
     return {'state': 'ready', 'message': f'{PROVIDERS[provider][0]} API key verified with a model response.',
-            'public_model': PROVIDERS[provider][1], 'transport_model': PROVIDERS[provider][1]}
+            'public_model': PROVIDERS[provider][1], 'transport_model': API_ACCOUNT_CONTRACTS[provider][3]}
 
 async def recover_checks(sessions):
     async with sessions() as db:
@@ -243,12 +346,12 @@ async def run_requested_check(sessions, pulse):
         detail = dict(row.detail or {}); detail['attempts'] = detail.get('attempts', 0) + 1
         row.status = 'running'; row.detail = detail; row.updated_at = datetime.utcnow()
         name = row.name; await db.commit()
-    payload = {'provider': detail['provider'], 'action': detail['action']}
+    payload = {'provider': detail['provider'], 'action': detail['action'], 'verification_target': detail.get('verification_target', 'current_route')}
     try:
         if detail.get('credentials_encrypted'):
             from app.services.plugins import reveal
             payload['api_key'] = reveal(detail['credentials_encrypted'])
-        if remote_control_available():
+        if payload['provider'] == 'meta' or remote_control_available():
             check = control_check(payload)
         elif payload['provider'] in LOCAL_KEY_PROVIDERS:
             check = provider_key_check(payload['provider'], payload['api_key'])

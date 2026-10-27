@@ -1,4 +1,16 @@
-export const CANONICAL_APP_ORIGIN = 'https://cypher-agent.vercel.app';
+// Only an explicit build-time operator setting may change the origin. Request
+// headers and user input must never select an OAuth callback/login destination.
+export function selfHostedOrigin(value?: string): string | null {
+  if (!value || value.trim() !== value) return null;
+  try {
+    const url = new URL(value);
+    const loopback = url.hostname === 'localhost' || url.hostname === '127.0.0.1';
+    if ((url.protocol !== 'https:' && !(loopback && url.protocol === 'http:')) || url.username || url.password || url.pathname !== '/' || url.search || url.hash) return null;
+    return url.origin;
+  } catch { return null; }
+}
+const configuredOrigin = typeof process === 'undefined' ? '' : process.env.NEXT_PUBLIC_SELF_HOSTED_ORIGIN;
+export const CANONICAL_APP_ORIGIN = selfHostedOrigin(configuredOrigin) || 'https://cypher-agent.vercel.app';
 const CANONICAL_APP_HOST = new URL(CANONICAL_APP_ORIGIN).hostname;
 
 export function isOffCanonicalHost(hostname: string): boolean {
