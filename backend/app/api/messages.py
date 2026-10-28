@@ -91,8 +91,11 @@ async def list_tasks(id: UUID, db: AsyncSession = Depends(get_db)):
 
 @router.get('/{id}/sync')
 async def sync_conversation(id:UUID,after_id:UUID|None=None,db:AsyncSession=Depends(get_db)):
-    # One browser request and one database connection for both pieces of state.
-    return {'messages':await list_messages(id,limit=50,offset=0,before_id=None,after_id=after_id,db=db), 'tasks':await list_tasks(id,db=db)}
+    # Read completion first: under READ COMMITTED, a final reply already committed
+    # before its task completed is visible to the later message query. Reversing
+    # these reads can advertise completion with a pre-completion message snapshot.
+    tasks = await list_tasks(id,db=db)
+    return {'messages':await list_messages(id,limit=50,offset=0,before_id=None,after_id=after_id,db=db), 'tasks':tasks}
 
 @router.get("/{id}/attachments/{message_id}/{index}")
 async def get_attachment(id: UUID, message_id: UUID, index: int, db: AsyncSession = Depends(get_db)):

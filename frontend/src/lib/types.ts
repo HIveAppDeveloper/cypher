@@ -1,7 +1,7 @@
 export enum BotStatus { ONLINE = 'online', IDLE = 'idle', WORKING = 'working', ERROR = 'error', OFFLINE = 'offline' }
 export enum MessageType { TEXT = 'text', SYSTEM = 'status_update', TOOL_CALL = 'tool_call' }
 export interface Bot { id: string; name: string; role: string; description?: string; avatar?: string; status: BotStatus; containerId?: string | null; llmProvider: string; llmModel: string; toolsEnabled: string[]; systemPrompt: string; defaultOptions?: Partial<RunOptions>; }
-export interface Message { threadRootId?:string; replyToId?:string; delivery?: 'sending' | 'sent' | 'failed'; id: string; conversationId: string; senderType: string; senderBotId?: string; content: string; messageType: MessageType; createdAt: string; internal?: boolean; modelRoutes?: {provider:string;model:string;specialty:string;fallback:boolean}[]; attachments?: Attachment[]; }
+export interface Message { taskId?:string; threadRootId?:string; replyToId?:string; delivery?: 'sending' | 'sent' | 'failed'; id: string; conversationId: string; senderType: string; senderBotId?: string; content: string; messageType: MessageType; createdAt: string; internal?: boolean; modelRoutes?: {provider:string;model:string;specialty:string;fallback:boolean}[]; attachments?: Attachment[]; }
 export interface WebSocketMessage { type: string; payload: { channel?: string; botId?: string; status?: BotStatus }; }
 
 export interface Attachment { name: string; mime: string; data: string; url?: string; }
