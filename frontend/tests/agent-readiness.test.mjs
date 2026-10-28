@@ -116,6 +116,17 @@ test('Markdown selection respects explicit quality values and ordinary browser H
   for(const accept of [null,'*/*','text/html,application/xhtml+xml,*/*;q=0.8','text/markdown;q=0','text/markdown;q=0.5,text/html','text/markdown;q=bogus'])assert.equal(docs.prefersMarkdown(accept),false,accept);
 });
 
+test('public negotiation uses the Services-compatible Node runtime and does not intercept private API or writes',async()=>{
+  class NextResponse extends Response {static next(){return new NextResponse(null,{headers:{'x-test-next':'1'}});}}
+  const {config,middleware}=load('../src/middleware.ts',{'next/server':{NextResponse},'./lib/public-docs':docs},{Response});
+  assert.equal(config.runtime,'nodejs','the Services deployment rejects Edge middleware');
+  const input=(path,method='GET')=>({method,nextUrl:{pathname:path},headers:new Headers({Accept:'text/markdown'})});
+  const response=middleware(input('/'));
+  assert.match(response.headers.get('content-type'),/text\/markdown/);assert.match(await response.text(),/^# Cypher/);
+  assert.equal(middleware(input('/api/conversations')).headers.get('x-test-next'),'1');
+  assert.equal(middleware(input('/','POST')).headers.get('x-test-next'),'1');
+});
+
 test('platform variation headers apply to only the eight public pages and preserve framework cache dimensions',()=>{
   const config=JSON.parse(readFileSync(new URL('../../vercel.json',import.meta.url),'utf8'));
   assert.deepEqual(config.headers.map(rule=>rule.source).sort(),[...docs.PUBLIC_PATHS].sort());

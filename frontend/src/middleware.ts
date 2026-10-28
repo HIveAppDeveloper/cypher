@@ -13,4 +13,4 @@ export function middleware(request:NextRequest) {
   response.headers.set('Link',`</llms.txt>; rel="describedby", <${markdownPath(document)}>; rel="alternate"; type="text/markdown"`);
   return response;
 }
-export const config={matcher:['/((?!api/|_next/|mcp$|provider-logos/|connector-icons/).*)']};
+export const config={runtime:'nodejs',matcher:['/((?!api/|_next/|mcp$|provider-logos/|connector-icons/).*)']};
