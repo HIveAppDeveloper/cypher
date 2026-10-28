@@ -1,13 +1,16 @@
 // Keep the same audio element connected to Web Audio across voice sessions.
 // MP3-capable MSE browsers can play the first chunk while TTS is still arriving.
+const SOURCE_OPEN_TIMEOUT_MS = 5_000;
+
 export async function playVoiceResponse(response: Response, audio: HTMLAudioElement, signal: AbortSignal, onPlaying: () => void) {
   signal.throwIfAborted();
   const cleanup = new AbortController();
   signal = AbortSignal.any([signal, cleanup.signal]);
   let url = '';
   let reader: ReadableStreamDefaultReader<Uint8Array> | undefined;
-  const waitFor = (target: EventTarget, event: string, action?: () => void) => new Promise<void>((resolve, reject) => {
-    const clean = () => { target.removeEventListener(event, done); target.removeEventListener('error', failed); signal.removeEventListener('abort', aborted); };
+  const waitFor = (target: EventTarget, event: string, action?: () => void, timeoutMs?: number) => new Promise<void>((resolve, reject) => {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const clean = () => { clearTimeout(timer); target.removeEventListener(event, done); target.removeEventListener('error', failed); signal.removeEventListener('abort', aborted); };
     const done = () => { clean(); resolve(); };
     const failed = () => { clean(); reject(new Error('Cypher’s reply could not be played.')); };
     const aborted = () => { clean(); reject(signal.reason); };
@@ -15,6 +18,7 @@ export async function playVoiceResponse(response: Response, audio: HTMLAudioElem
     target.addEventListener(event, done, { once: true });
     target.addEventListener('error', failed, { once: true });
     signal.addEventListener('abort', aborted, { once: true });
+    if (timeoutMs !== undefined) timer = setTimeout(() => { clean(); reject(new Error('Cypher’s voice playback took too long to start.')); }, timeoutMs);
     try { action?.(); } catch (error) { clean(); reject(error); }
   });
   let rejectPlayback: (reason: unknown) => void = () => {};
@@ -31,13 +35,16 @@ export async function playVoiceResponse(response: Response, audio: HTMLAudioElem
   try {
     const streamable = response.body && typeof MediaSource !== 'undefined' && MediaSource.isTypeSupported('audio/mpeg') && response.headers.get('content-type')?.split(';')[0].trim() === 'audio/mpeg';
     if (streamable) {
+      // Own the response before opening MSE so startup failure/Stop cancels it.
+      reader = response.body!.getReader();
       const source = new MediaSource();
       url = URL.createObjectURL(source);
-      const opened = waitFor(source, 'sourceopen', () => { audio.src = url; });
-      await opened;
+      const opened = waitFor(source, 'sourceopen', () => { audio.src = url; }, SOURCE_OPEN_TIMEOUT_MS);
+      // Audio can fail before MediaSource emits sourceopen. Bound setup only;
+      // successful streaming/download and the reply's duration have no new cap.
+      await Promise.race([opened, ended.then(() => { throw new Error('Voice playback ended before it started.'); })]);
       signal.throwIfAborted();
       const buffer = source.addSourceBuffer('audio/mpeg');
-      reader = response.body!.getReader();
       const feed = async () => {
         let started = false;
         while (true) {
