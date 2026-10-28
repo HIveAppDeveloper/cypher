@@ -20,6 +20,7 @@ import CypherMark from './cipher/CypherMark';
 import { playVoiceResponse, speakWithBrowser } from '../lib/voice-playback';
 import { VoiceSilenceTimer } from '../lib/voice-activity';
 const POLL_MS = 1500;
+const VOICE_REPLY_SYNC_GRACE_MS = 15000;
 const MAX_BYTES = 3 * 1024 * 1024;
 export function messageTime(value: string) {
   return dateFromApi(value) ?? new Date(Number.NaN);
@@ -111,7 +112,7 @@ export function ChatPanel({ bot, room, bots, onCreateBot, onCreateRoom, onQuickS
   const [voiceError, setVoiceError] = useState('');
   const voiceStatusRef = useRef<VoiceStatus>('off');
   const voiceModeRef = useRef(voiceMode);
-  const voicePending = useRef<{ messageId: string; taskId: string | null } | null>(null);
+  const voicePending = useRef<{ messageId: string; taskId: string | null; replyDeadline?: number } | null>(null);
   const voicePanel = useRef<HTMLDivElement>(null);
   const voiceButton = useRef<HTMLButtonElement>(null);
   const voiceAudio = useRef<HTMLAudioElement>(null);
@@ -160,7 +161,7 @@ export function ChatPanel({ bot, room, bots, onCreateBot, onCreateRoom, onQuickS
     const poll = async () => {
       if(!active || pending || !currentId || Date.now()<retryNotBefore.current)return;
       pending=true; clearTimeout(timer); let delay=10000;
-      try { const {messages:data,tasks}=await api.syncConversation(currentId,latestMessageId,controller.signal); if(active){failures=0;if(data.length)latestMessageId=data[data.length-1].id;if(firstPage.current){setHasEarlier(data.length===50);firstPage.current=false;}setMessages(previous=>mergeMessages(previous,data));setJobs(tasks);setLoading(false);setSyncError('');setSessionExpired(false);delay=tasks.some(t=>['pending','running','cancel_requested'].includes(t.status))?POLL_MS:10000;} }
+      try { const {messages:data,tasks}=await api.syncConversation(currentId,latestMessageId,controller.signal); if(active){failures=0;if(data.length)latestMessageId=data[data.length-1].id;if(firstPage.current){setHasEarlier(data.length===50);firstPage.current=false;}setMessages(previous=>mergeMessages(previous,data));setJobs(tasks);setLoading(false);setSyncError('');setSessionExpired(false);delay=tasks.some(t=>['pending','running','cancel_requested'].includes(t.status))||voicePending.current?.taskId?POLL_MS:10000;} }
       catch(e){if(active){failures++;setLoading(false);setSessionExpired(e instanceof ApiError && e.status===401);const wait=e instanceof ApiError?Math.max(0,e.retryAfter*1000):0;retryNotBefore.current=wait?Date.now()+wait:0;setRetryAt(retryNotBefore.current);setSyncError(e instanceof ApiError && e.code==='database_quota'?e.message:e instanceof ApiError && e.status===401?'Your session expired. Sign in again to reconnect.':'Couldn’t refresh this conversation. Your messages are saved; reconnecting automatically…');delay=Math.max(e instanceof ApiError?e.retryAfter*1000:0,Math.min(60000,2000*2**Math.min(failures,5)));}}
       finally{pending=false;if(active){retryOpening.current=false;setRefreshing(false);}if(active){const next=refreshRequested && !failures?0:document.hidden?Math.max(delay,60000):delay;refreshRequested=false;timer=setTimeout(poll,next);}}
     };
@@ -313,11 +314,22 @@ export function ChatPanel({ bot, room, bots, onCreateBot, onCreateRoom, onQuickS
     if (!voiceMode || !pending?.taskId) return;
     const job = jobs.find(item => item.id === pending.taskId);
     if (!job || ['pending','running','cancel_requested'].includes(job.status)) return;
-    const userIndex = messages.findIndex(message => message.id === pending.messageId);
-    const replies = userIndex < 0 ? [] : messages.slice(userIndex + 1).filter(message => message.senderType !== 'user' && message.messageType === MessageType.TEXT && !message.internal && message.content.trim());
+    const replies = messages.filter(message => message.taskId === pending.taskId && message.senderType !== 'user' && message.messageType === MessageType.TEXT && !message.internal && message.content.trim());
     const reply = replies[replies.length - 1];
+    const missingReply = () => {
+      if (voicePending.current !== pending || !voiceModeRef.current) return;
+      voicePending.current = null;
+      setVoiceError('Cypher could not return a spoken answer. Check the task details, then try again or type a message.');
+      updateVoiceStatus('listening');
+    };
     if (reply) { voicePending.current = null; void speakReply(reply.content); }
-    else if (['failed','cancelled','interrupted','completed'].includes(job.status)) { voicePending.current = null; setVoiceError('Cypher could not return a spoken answer. Check the task details, then try again or type a message.'); updateVoiceStatus('listening'); }
+    else if (job.status === 'completed') {
+      // A completed task can precede its reply's incremental page. Keep the
+      // exact turn pending briefly, never an unrelated reply or an endless wait.
+      pending.replyDeadline ??= Date.now() + VOICE_REPLY_SYNC_GRACE_MS;
+      const timer = setTimeout(missingReply, Math.max(0, pending.replyDeadline - Date.now()));
+      return () => clearTimeout(timer);
+    } else if (['failed','cancelled','interrupted'].includes(job.status)) missingReply();
   }, [jobs, messages, voiceMode]);
   useEffect(() => {
     if (!voiceMode || !voiceStream || !conversationId) {
