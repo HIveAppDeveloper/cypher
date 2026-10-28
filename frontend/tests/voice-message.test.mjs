@@ -3,13 +3,13 @@ import assert from 'node:assert/strict';
 import {load, renderer, environment, find, textOf} from './support/component-harness.mjs';
 
 const placeholder = 'Voice message attached. Please respond directly to what I said in the recording.';
-function renderMessage(attachments, content = placeholder) {
+function renderMessage(attachments, content = placeholder, conversationId) {
   const env = environment(), view = renderer(env);
   const react = {...view.react, lazy: () => 'markdown', Suspense: 'suspense'};
   const {MessageBubble} = load('../src/components/MessageBubble.tsx', {
-    react, './BotAvatar': {BotAvatar: 'avatar'}, '../lib/dates': load('../src/lib/dates.ts'),
+    react, './VoiceTranscript': {VoiceTranscript:'voice-transcript'}, './BotAvatar': {BotAvatar: 'avatar'}, '../lib/dates': load('../src/lib/dates.ts'),
   }, {...env.globals, React: react.default});
-  const message = {id: 'voice', content, senderType: 'user', createdAt: '2026-10-24T19:28:00Z', attachments};
+  const message = {id: 'voice', conversationId, content, senderType: 'user', createdAt: '2026-10-24T19:28:00Z', attachments};
   view.mount(() => MessageBubble({message}));
   return {view, message};
 }
@@ -43,6 +43,18 @@ test('unsupported or failed playback offers the original audio as a download', (
   assert.equal(link.props.href, '/recording.webm');
   assert.equal(link.props.download, 'voice.webm');
   assert.match(textOf(view.tree), /Playback unavailable/);
+});
+
+test('saved recordings expose the matching transcript even if audio playback fails', () => {
+  const {view} = renderMessage([{mime: 'audio/webm', name: 'voice.webm', url: '/recording.webm'}], placeholder, 'conversation-1');
+  const transcript = () => find(view.tree, node => node.type === 'voice-transcript');
+  assert.equal(transcript().props.conversationId, 'conversation-1');
+  assert.equal(transcript().props.messageId, 'voice');
+  find(view.tree, node => node.type === 'audio').props.onError(); view.render();
+  assert.ok(transcript());
+  assert.ok(find(view.tree, node => node.type === 'a' && textOf(node) === 'Download audio'));
+  const unsaved = renderMessage([{mime: 'audio/webm', name: 'voice.webm', data: 'AAEC'}]);
+  assert.equal(find(unsaved.view.tree, node => node.type === 'voice-transcript'), undefined);
 });
 
 test('video, images and files keep their existing controls and labels', () => {

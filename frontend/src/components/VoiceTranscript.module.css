@@ -1,0 +1,9 @@
+.root { flex: 0 0 auto; min-width: 0; max-width: 100%; color: inherit; font-size: .875rem; }
+.root button { min-height: 44px; padding: 8px 12px; color: var(--cx-label, #242423); background: var(--cx-card, #fff); border: 1px solid var(--cx-sep, #d8d8d4); border-radius: 9px; font: inherit; cursor: pointer; }
+.root button:hover { background: var(--cx-card, #fff); border-color: var(--cx-label, #242423); text-decoration: underline; text-underline-offset: 3px; }
+.root button:focus-visible { outline: 2px solid; outline-color: inherit; outline-offset: 3px; }
+.toggle { text-decoration: underline; text-underline-offset: 3px; }
+.panel { margin-top: 12px; max-width: 65ch; text-align: left; }
+.panel p { margin: 0 0 12px; line-height: 1.55; }
+.text { white-space: pre-wrap; overflow-wrap: anywhere; user-select: text; }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; }

@@ -64,6 +64,7 @@ export const api = {
     return (await request('/conversations', { method: 'POST', body: JSON.stringify({ title, bot_ids: [bot.id] }) })).id;
   },
   syncConversation: async (id:string,after?:string,signal?:AbortSignal): Promise<{messages:Message[];tasks:Job[]}> => { const data=await request(`/conversations/${id}/sync${after?'?after_id='+encodeURIComponent(after):''}`,{signal});return {messages:data.messages.reverse().map(messageFromWire),tasks:data.tasks}; },
+  getTranscript: (conversation: string, messageId: string, signal?: AbortSignal): Promise<{status:'pending'|'ready'|'unavailable';text:string}> => request(`/conversations/${conversation}/messages/${messageId}/transcript`, {signal}),
   getMessages: async (id:string,before?:string): Promise<Message[]> => (await request(`/conversations/${id}/messages${before ? `?before_id=${encodeURIComponent(before)}` : ''}`)).reverse().map(messageFromWire),
   sendMessage: (id: string, content: string, attachments: Attachment[], options: RunOptions, client_message_id?: string,reply_to_id?:string) => request(`/conversations/${id}/messages`, { method: 'POST', body: JSON.stringify({ sender_type: 'user', content, attachments, options, client_message_id,reply_to_id }) }),
   getConversations: (): Promise<Conversation[]> => request('/conversations'),

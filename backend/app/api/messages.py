@@ -4,7 +4,7 @@ from sqlalchemy import select, or_, and_, literal_column
 from uuid import UUID, uuid4
 import base64
 from urllib.parse import quote
-from fastapi.responses import Response
+from fastapi.responses import Response, JSONResponse
 from app.db.session import get_db
 from app.models.message import Message
 from app.models.task import Task
@@ -88,6 +88,33 @@ async def list_messages(id: UUID, limit: int = Query(50, ge=1, le=200), offset: 
 async def list_tasks(id: UUID, db: AsyncSession = Depends(get_db)):
     tasks = (await db.execute(select(Task).where(Task.conversation_id == str(id)).order_by(Task.created_at.desc()).limit(25))).scalars().all()
     return [{"id": t.id, "title": t.title, "status": t.status, "created_at": t.created_at} for t in tasks]
+
+
+@router.get('/{id}/messages/{message_id}/transcript')
+async def get_transcript(id: UUID, message_id: UUID, db: AsyncSession = Depends(get_db)):
+    # Select only the server-owned transcript cache, never the base64 assets.
+    # This is a read: opening a transcript cannot initiate another STT request.
+    row = (await db.execute(select(
+        Message.metadata_json['audio_transcripts'].label('transcripts'),
+        Message.metadata_json['task_id'].as_string().label('task_id'),
+        Message.metadata_json['internal'].as_boolean().label('internal'),
+    ).where(Message.id == str(message_id), Message.conversation_id == str(id)))).first()
+    if row is None or row.internal:
+        raise HTTPException(status_code=404, detail='Recording not found')
+    cache = row.transcripts if isinstance(row.transcripts, dict) else {}
+    parts = []
+    for key, value in cache.items():
+        if not (str(key).startswith('audio:') or str(key).isdigit()) or not isinstance(value, dict):
+            continue
+        text = value.get('text')
+        if isinstance(text, str) and text.strip() and text.strip() not in parts:
+            parts.append(text.strip())
+    if parts:
+        body = {'status': 'ready', 'text': '\n\n'.join(parts)}
+    else:
+        status = await db.scalar(select(Task.status).where(Task.id == row.task_id)) if row.task_id else None
+        body = {'status': 'pending' if status in {'pending', 'running', 'cancel_requested'} else 'unavailable', 'text': ''}
+    return JSONResponse(body, headers={'Cache-Control': 'private, no-store'})
 
 @router.get('/{id}/sync')
 async def sync_conversation(id:UUID,after_id:UUID|None=None,db:AsyncSession=Depends(get_db)):
