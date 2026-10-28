@@ -21,15 +21,15 @@
       "terminationGracePeriodSeconds": 60
     }
   },
-  "headers": [
-    {"source":"/","headers":[{"key":"Vary","value":"Accept, RSC, Next-Router-State-Tree, Next-Router-Prefetch, Next-Router-Segment-Prefetch, Accept-Encoding"}]},
-    {"source":"/about","headers":[{"key":"Vary","value":"Accept, RSC, Next-Router-State-Tree, Next-Router-Prefetch, Next-Router-Segment-Prefetch, Accept-Encoding"}]},
-    {"source":"/contact","headers":[{"key":"Vary","value":"Accept, RSC, Next-Router-State-Tree, Next-Router-Prefetch, Next-Router-Segment-Prefetch, Accept-Encoding"}]},
-    {"source":"/privacy","headers":[{"key":"Vary","value":"Accept, RSC, Next-Router-State-Tree, Next-Router-Prefetch, Next-Router-Segment-Prefetch, Accept-Encoding"}]},
-    {"source":"/docs","headers":[{"key":"Vary","value":"Accept, RSC, Next-Router-State-Tree, Next-Router-Prefetch, Next-Router-Segment-Prefetch, Accept-Encoding"}]},
-    {"source":"/docs/api","headers":[{"key":"Vary","value":"Accept, RSC, Next-Router-State-Tree, Next-Router-Prefetch, Next-Router-Segment-Prefetch, Accept-Encoding"}]},
-    {"source":"/docs/auth","headers":[{"key":"Vary","value":"Accept, RSC, Next-Router-State-Tree, Next-Router-Prefetch, Next-Router-Segment-Prefetch, Accept-Encoding"}]},
-    {"source":"/docs/mcp","headers":[{"key":"Vary","value":"Accept, RSC, Next-Router-State-Tree, Next-Router-Prefetch, Next-Router-Segment-Prefetch, Accept-Encoding"}]}
+  "routes": [
+    {"src":"^/$","methods":["GET","HEAD"],"caseSensitive":true,"continue":true,"transforms":[{"type":"response.headers","op":"append","target":{"key":"Vary"},"args":"Accept"}]},
+    {"src":"^/about$","methods":["GET","HEAD"],"caseSensitive":true,"continue":true,"transforms":[{"type":"response.headers","op":"append","target":{"key":"Vary"},"args":"Accept"}]},
+    {"src":"^/contact$","methods":["GET","HEAD"],"caseSensitive":true,"continue":true,"transforms":[{"type":"response.headers","op":"append","target":{"key":"Vary"},"args":"Accept"}]},
+    {"src":"^/privacy$","methods":["GET","HEAD"],"caseSensitive":true,"continue":true,"transforms":[{"type":"response.headers","op":"append","target":{"key":"Vary"},"args":"Accept"}]},
+    {"src":"^/docs$","methods":["GET","HEAD"],"caseSensitive":true,"continue":true,"transforms":[{"type":"response.headers","op":"append","target":{"key":"Vary"},"args":"Accept"}]},
+    {"src":"^/docs/api$","methods":["GET","HEAD"],"caseSensitive":true,"continue":true,"transforms":[{"type":"response.headers","op":"append","target":{"key":"Vary"},"args":"Accept"}]},
+    {"src":"^/docs/auth$","methods":["GET","HEAD"],"caseSensitive":true,"continue":true,"transforms":[{"type":"response.headers","op":"append","target":{"key":"Vary"},"args":"Accept"}]},
+    {"src":"^/docs/mcp$","methods":["GET","HEAD"],"caseSensitive":true,"continue":true,"transforms":[{"type":"response.headers","op":"append","target":{"key":"Vary"},"args":"Accept"}]}
   ],
   "rewrites": [{"source": "/(.*)", "destination": {"service": "frontend"}}]
 }

@@ -127,16 +127,19 @@ test('public negotiation uses the Services-compatible Node runtime and does not 
   assert.equal(middleware(input('/','POST')).headers.get('x-test-next'),'1');
 });
 
-test('platform variation headers apply to only the eight public pages and preserve framework cache dimensions',()=>{
+test('response transforms append Accept only to exact public reads and preserve existing origin headers and routing',()=>{
   const config=JSON.parse(readFileSync(new URL('../../vercel.json',import.meta.url),'utf8'));
-  assert.deepEqual(config.headers.map(rule=>rule.source).sort(),[...docs.PUBLIC_PATHS].sort());
-  for(const rule of config.headers){
-    assert.deepEqual(Object.keys(rule).sort(),['headers','source']);
-    assert.equal(rule.headers.length,1);assert.equal(rule.headers[0].key.toLowerCase(),'vary');
-    const tokens=new Set(rule.headers[0].value.split(',').map(value=>value.trim().toLowerCase()));
-    for(const token of ['accept','rsc','next-router-state-tree','next-router-prefetch','next-router-segment-prefetch','accept-encoding'])assert.ok(tokens.has(token),token);
-    assert.ok(!rule.source.includes('*')&&!rule.source.startsWith('/api')&&!rule.source.startsWith('/workspace'));
+  assert.equal(config.headers,undefined,'ineffective static headers are removed');
+  assert.deepEqual(config.routes.map(rule=>rule.src).sort(),[...docs.PUBLIC_PATHS].map(path=>`^${path}$`).sort());
+  for(const rule of config.routes){
+    assert.deepEqual(Object.keys(rule).sort(),['caseSensitive','continue','methods','src','transforms']);
+    assert.deepEqual(rule.methods,['GET','HEAD']);assert.equal(rule.caseSensitive,true);assert.equal(rule.continue,true);
+    assert.deepEqual(rule.transforms,[{type:'response.headers',op:'append',target:{key:'Vary'},args:'Accept'}]);
   }
+  const selected=(path,method)=>config.routes.filter(rule=>rule.methods.includes(method)&&new RegExp(rule.src).test(path));
+  for(const path of docs.PUBLIC_PATHS){assert.equal(selected(path,'GET').length,1);assert.equal(selected(path,'HEAD').length,1);assert.equal(selected(path,'POST').length,0);assert.equal(selected(path,'DELETE').length,0);}
+  for(const path of ['/api/conversations','/workspace','/gateway','/connect/meta','/About','/ABOUT','/docs/api-extra','/about/extra'])assert.equal(selected(path,'GET').length,0,path);
+  assert.deepEqual(config.rewrites,[{source:'/(.*)',destination:{service:'frontend'}}]);
 });
 
 test('discovery lists only public documents, real Markdown paths and useful recovery links',async()=>{
