@@ -4,15 +4,70 @@ import {createElement} from 'react';
 import {renderToStaticMarkup} from 'react-dom/server';
 import {readFileSync} from 'node:fs';
 import ts from 'typescript';
-import {load} from './support/component-harness.mjs';
+import {load,environment} from './support/component-harness.mjs';
 
 const canonical=load('../src/lib/canonical-app.ts',{}, {URL,URLSearchParams});
 const docs=load('../src/lib/public-docs.ts',{'./canonical-app':canonical},{URL});
-const mcp=load('../src/lib/public-mcp.ts',{'./canonical-app':canonical,'./public-docs':docs},{URL,Response,TextDecoder,Uint8Array});
+const loadMcp=(globals={})=>load('../src/lib/public-mcp.ts',{'./canonical-app':canonical,'./public-docs':docs},{URL,Response,TextDecoder,Uint8Array,setTimeout,clearTimeout,...globals});
+const mcp=loadMcp();
 const origin='https://cypher-agent.vercel.app';
 const jsonrpc=(method,params={},id=1)=>({jsonrpc:'2.0',id,method,params});
 const request=(body,headers={},url=origin+'/mcp')=>new Request(url,{method:'POST',headers:{'Content-Type':'application/json',Accept:'application/json, text/event-stream',...headers},body:typeof body==='string'?body:JSON.stringify(body)});
 const call=async(body,headers)=>mcp.mcpPost(request(body,headers));
+async function settles(promise){let timer;try{return await Promise.race([promise,new Promise((_,reject)=>{timer=setTimeout(()=>reject(Error('The HTTP response waited for stalled body/cancellation.')),1000);})]);}finally{clearTimeout(timer);}}
+function streamRequest(body,signal){return new Request(origin+'/mcp',{method:'POST',headers:{'Content-Type':'application/json',Accept:'application/json,text/event-stream'},body,signal,duplex:'half'});}
+
+test('a stalled body gets a finite response before the route deadline even if source cancellation never settles',async()=>{
+  const env=environment(),timed=loadMcp({setTimeout:env.globals.setTimeout,clearTimeout:env.globals.clearTimeout});
+  let cancelled=0;
+  const stream=new ReadableStream({cancel(){cancelled++;return new Promise(()=>{});}});
+  const pending=timed.mcpPost(streamRequest(stream));
+  const {maxDuration}=load('../src/app/mcp/route.ts',{'../../lib/public-mcp':timed});
+  assert.ok(10000<maxDuration*1000,'the whole-body test bound is below the explicit platform duration');
+  env.time.advance(10000);
+  const response=await settles(pending);
+  assert.equal(response.status,408);assert.match((await response.json()).error.message,/timed out/);
+  assert.equal(cancelled,1);assert.equal(stream.locked,false);assert.equal(env.time.pending,0);
+});
+
+test('trickling bytes does not restart the whole-body deadline',async()=>{
+  const env=environment(),timed=loadMcp({setTimeout:env.globals.setTimeout,clearTimeout:env.globals.clearTimeout});
+  let source,cancelled=0;
+  const stream=new ReadableStream({start(controller){source=controller;controller.enqueue(new TextEncoder().encode('{'));},cancel(){cancelled++;}});
+  const pending=timed.mcpPost(streamRequest(stream));
+  for(let i=0;i<8;i++)await Promise.resolve();
+  env.time.advance(4000);source.enqueue(new TextEncoder().encode('"jsonrpc":'));
+  for(let i=0;i<8;i++)await Promise.resolve();
+  env.time.advance(4000);
+  const response=await settles(pending);
+  assert.equal(response.status,408);assert.equal(cancelled,1);assert.equal(env.time.pending,0);
+});
+
+test('client abort cancels its owned reader and responds without awaiting a stalled cancellation',async()=>{
+  for(const alreadyAborted of [false,true]){
+    const env=environment(),timed=loadMcp({setTimeout:env.globals.setTimeout,clearTimeout:env.globals.clearTimeout});
+    const abort=new AbortController();let cancelled=0;
+    const stream=new ReadableStream({cancel(){cancelled++;return new Promise(()=>{});}});
+    if(alreadyAborted)abort.abort();
+    const pending=timed.mcpPost(streamRequest(stream,abort.signal));
+    if(!alreadyAborted)abort.abort();
+    const response=await settles(pending);
+    assert.equal(response.status,408);assert.match((await response.json()).error.message,/aborted/);
+    assert.equal(cancelled,1);assert.equal(stream.locked,false);assert.equal(env.time.pending,0);
+  }
+});
+
+test('source errors and rejected cancellation do not escape or change the strict byte-limit response',async()=>{
+  for(const failure of ['read','cancel']){
+    const env=environment(),timed=loadMcp({setTimeout:env.globals.setTimeout,clearTimeout:env.globals.clearTimeout});
+    let cancelled=0;
+    const stream=new ReadableStream({start(controller){if(failure==='read')controller.error(Error('private source detail'));else controller.enqueue(new Uint8Array(32769));},cancel(){cancelled++;return Promise.reject(Error('private cancellation detail'));}});
+    const response=await settles(timed.mcpPost(streamRequest(stream)));
+    assert.equal(response.status,failure==='read'?400:413);
+    assert.doesNotMatch(await response.text(),/private/);
+    assert.equal(cancelled,failure==='read'?0:1);assert.equal(stream.locked,false);assert.equal(env.time.pending,0);
+  }
+});
 
 test('public documents render meaningful raw HTML with sequential headings and real navigation',()=>{
   const {default:Document}=load('../src/components/PublicDocument.tsx',{
@@ -59,6 +114,18 @@ test('signed-out homepage returns a public document and preserves the workspace 
 test('Markdown selection respects explicit quality values and ordinary browser HTML requests',()=>{
   for(const accept of ['text/markdown','TEXT/MARKDOWN; charset=utf-8','text/html;q=0.5,text/markdown;q=0.9'])assert.equal(docs.prefersMarkdown(accept),true,accept);
   for(const accept of [null,'*/*','text/html,application/xhtml+xml,*/*;q=0.8','text/markdown;q=0','text/markdown;q=0.5,text/html','text/markdown;q=bogus'])assert.equal(docs.prefersMarkdown(accept),false,accept);
+});
+
+test('platform variation headers apply to only the eight public pages and preserve framework cache dimensions',()=>{
+  const config=JSON.parse(readFileSync(new URL('../../vercel.json',import.meta.url),'utf8'));
+  assert.deepEqual(config.headers.map(rule=>rule.source).sort(),[...docs.PUBLIC_PATHS].sort());
+  for(const rule of config.headers){
+    assert.deepEqual(Object.keys(rule).sort(),['headers','source']);
+    assert.equal(rule.headers.length,1);assert.equal(rule.headers[0].key.toLowerCase(),'vary');
+    const tokens=new Set(rule.headers[0].value.split(',').map(value=>value.trim().toLowerCase()));
+    for(const token of ['accept','rsc','next-router-state-tree','next-router-prefetch','next-router-segment-prefetch','accept-encoding'])assert.ok(tokens.has(token),token);
+    assert.ok(!rule.source.includes('*')&&!rule.source.startsWith('/api')&&!rule.source.startsWith('/workspace'));
+  }
 });
 
 test('discovery lists only public documents, real Markdown paths and useful recovery links',async()=>{

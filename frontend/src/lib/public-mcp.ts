@@ -29,11 +29,34 @@ async function boundedBody(request:Request){
   const reader=request.body?.getReader();
   if(!reader)return '';
   const chunks:Uint8Array[]=[];let length=0;
+  let completed=false;
+  let interrupt:(reason:BodyReadError)=>void=()=>{};
+  const interrupted=new Promise<never>((_,reject)=>{interrupt=reject;});
+  const abort=()=>interrupt(new BodyReadError('aborted'));
+  const deadline=setTimeout(()=>interrupt(new BodyReadError('timeout')),5000);
+  request.signal.addEventListener('abort',abort,{once:true});
   try {
-    while(true){const {done,value}=await reader.read();if(done)break;length+=value.length;if(length>32768){await reader.cancel();throw new RangeError('MCP request exceeds 32 KiB.');}chunks.push(value);}
-  }finally{reader.releaseLock();}
+    if(request.signal.aborted)throw new BodyReadError('aborted');
+    while(true){
+      const {done,value}=await Promise.race([reader.read(),interrupted]);
+      if(done){completed=true;break;}
+      length+=value.length;
+      if(length>32768)throw new RangeError('MCP request exceeds 32 KiB.');
+      chunks.push(value);
+    }
+  }finally{
+    clearTimeout(deadline);
+    request.signal.removeEventListener('abort',abort);
+    // An underlying source may never settle cancellation, or reject it. Neither
+    // can hold the HTTP response open; the reader is never used after cleanup.
+    if(!completed){try{void reader.cancel().catch(()=>{});}catch{}}
+    reader.releaseLock();
+  }
   const bytes=new Uint8Array(length);let offset=0;for(const chunk of chunks){bytes.set(chunk,offset);offset+=chunk.length;}
   return new TextDecoder('utf-8',{fatal:true}).decode(bytes);
+}
+class BodyReadError extends Error {
+  constructor(readonly reason:'timeout'|'aborted'){super(reason==='timeout'?'Request body timed out.':'Request was aborted.');}
 }
 export async function mcpPost(request:Request):Promise<Response>{
   if(!originAllowed(request))return error(null,-32000,'Origin is not allowed.',403);
@@ -48,7 +71,10 @@ export async function mcpPost(request:Request):Promise<Response>{
   const version=request.headers.get('mcp-protocol-version');
   if(version!==null&&!MCP_PROTOCOLS.includes(version))return error(null,-32600,'Unsupported MCP-Protocol-Version.',400);
   let body:unknown;
-  try{body=JSON.parse(await boundedBody(request));}catch(cause){return error(null,-32700,cause instanceof RangeError?'Request exceeds 32 KiB.':'Invalid UTF-8 JSON.',cause instanceof RangeError?413:400);}
+  try{body=JSON.parse(await boundedBody(request));}catch(cause){
+    if(cause instanceof BodyReadError)return error(null,-32000,cause.message,408);
+    return error(null,-32700,cause instanceof RangeError?'Request exceeds 32 KiB.':'Invalid UTF-8 JSON.',cause instanceof RangeError?413:400);
+  }
   if(!object(body)||body.jsonrpc!=='2.0'||typeof body.method!=='string'||('params'in body&&!object(body.params)))return error(null,-32600,'Expected a single JSON-RPC 2.0 message.',400);
   if('id'in body&&!(typeof body.id==='string'||typeof body.id==='number'&&Number.isFinite(body.id)||body.id===null))return error(null,-32600,'Invalid JSON-RPC request id.',400);
   // A stateless public documentation server never sends requests to a client.
