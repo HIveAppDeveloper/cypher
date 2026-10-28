@@ -1,5 +1,13 @@
 # Cypher for Hive and Atlas
 
+## Public product and agent documentation
+
+When authentication is required, signed-out visitors receive a server-rendered product page at the canonical root, with a normal sign-in link that preserves the requested workspace path and query. Signed-in users continue to receive the existing workspace. The public pages reuse the Privacy surface and original Cypher mark; no workspace styling or provider authorization flow is replaced.
+
+Public About, Contact, Privacy, and documentation pages have HTML and Markdown representations, canonical metadata, a sitemap, a robots file, and an llms.txt index with task-specific guidance. The public OpenAPI description covers only these public documentation resources. The stateless Streamable HTTP endpoint at /mcp exposes two tools for searching and retrieving authored public documentation; it never reads sessions or connects to account, model, tool-execution, or task APIs. Its manifest is discovery data, not proof of external registry publication. The separate authenticated Google MCP transport remains unchanged.
+
+Contact information comes from the existing published privacy page. No business street address, price, external registry listing, search ranking, or post-release audit score is invented. Source verification and public endpoint checks do not establish private provider grants or a new production release.
+
 ## Finding and connecting apps
 
 Apps opens a searchable discovery view. Existing account connections appear as compact rows, with the full list in My apps; connected apps remain searchable without repeating them in default discovery. The native Google chooser lets users choose services before the provider consent screen. Supported sign-in connections open the existing browser-bound authorization flow, then check the exact returned connection. A catalog listing alone does not establish sign-in support, a valid grant, or successful tool execution.

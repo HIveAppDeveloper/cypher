@@ -18,11 +18,15 @@ import './cypher-simple.css';
 import './agent-identity.css';
 import './cypher-purposeful.css';
 import type { Metadata } from 'next';
+import {CANONICAL_APP_ORIGIN} from '../lib/canonical-app';
 
 export const metadata: Metadata = {
+  metadataBase:new URL(CANONICAL_APP_ORIGIN),
   title: 'Cypher',
   description: 'Your workspace for conversations, agents, and connected tools.',
   icons: { icon: '/cypher-mark.svg', apple: '/cypher-mark.svg' },
+  robots:{index:false,follow:false},
+  other:{'is-agentic-site-type':'app'},
 };
 
 export default function RootLayout({
@@ -32,7 +36,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <head><script dangerouslySetInnerHTML={{__html:THEME_BOOTSTRAP}}/></head>
+      <head><script dangerouslySetInnerHTML={{__html:THEME_BOOTSTRAP}}/><link rel="describedby" href="/llms.txt" type="text/plain"/></head>
       <body>
         <AppearanceSync/>{children}</body>
     </html>

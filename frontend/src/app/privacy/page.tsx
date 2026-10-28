@@ -1,10 +1,7 @@
-import type { Metadata } from 'next';
 import CypherMark from '../../components/cipher/CypherMark';
+import {publicMetadata} from '../../lib/public-metadata';
 
-export const metadata: Metadata = {
-  title: 'Privacy and data use | Cypher',
-  description: 'How Cypher uses account and connected service data to carry out the tasks you request.',
-};
+export const metadata=publicMetadata('/privacy');
 
 const sections = [
   { href: '#google-connections', label: 'Google connections' },
