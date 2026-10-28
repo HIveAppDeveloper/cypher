@@ -374,7 +374,8 @@ class AgentOrchestrator:
             history = (await db.execute(history_query.order_by(Message.created_at.desc(), Message.id.desc()).limit(40))).scalars().all()
             if history and not getattr(self,'thread_root_id',None):
                 from app.services.compaction import compact_context
-                system_prompt+=await compact_context(db,conversation_id,history[-1],self.journal)
+                system_prompt+=await compact_context(db,conversation_id,history[-1],self.journal,
+                    verified_voice=bool(self.options.voice_mode and getattr(self,'voice_request','')))
             names = dict((await db.execute(select(Bot.id, Bot.name))).all())
             if self.options.steering:
                 system_prompt += "\nUser working brief (within this task): " + self.options.steering
