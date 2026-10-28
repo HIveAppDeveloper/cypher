@@ -77,6 +77,8 @@ async def list_messages(id: UUID, limit: int = Query(50, ge=1, le=200), offset: 
     for message in messages:
         item = MessageResponse.model_validate(dict(message) if projected else message).model_dump()
         meta = dict(item.get('metadata_json') or {})
+        # Keep cached speech behind the explicit transcript read on every dialect.
+        meta.pop('audio_transcripts', None)
         if 'attachments' in meta:
             from app.services.attachments import attachment_mime
             meta['attachments'] = [{'name': a['name'], 'mime': attachment_mime(meta, index, a), 'url': f'/api/conversations/{id}/attachments/{message.id}/{index}'} for index, a in enumerate(meta['attachments'])]

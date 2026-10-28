@@ -54,6 +54,24 @@ async def test_saved_transcript_is_read_only_tenant_scoped_and_never_downloads_a
     assert calls == ['transcribe', 'model']
     assert all('attachments' not in statement for statement in statements)
     assert all('messages.content' not in statement for statement in statements)
+    for route in ('messages', 'sync'):
+        response = await client.get(f'/api/conversations/{cid}/{route}', headers=headers)
+        assert response.status_code == 200
+        body = response.json()
+        messages = body['messages'] if route == 'sync' else body
+        assert all('audio_transcripts' not in (message.get('metadata_json') or {}) for message in messages)
+        assert phrase not in response.text
+        assert audio['data'] not in response.text
+        recording = next(message for message in messages if message['id'] == accepted['message_id'])
+        assert recording['metadata_json']['task_id'] == accepted['task_id']
+        assert recording['metadata_json']['attachments'][0] == {
+            'name': 'recording.wav', 'mime': 'audio/wav',
+            'url': f"/api/conversations/{cid}/attachments/{accepted['message_id']}/0",
+        }
+        reply = next(message for message in messages if message['sender_type'] == 'bot' and message['content'] == 'Thursday, understood.')
+        assert reply['metadata_json']['task_id'] == accepted['task_id']
+    assert (await client.get(url, headers=headers)).json() == {'status': 'ready', 'text': phrase}
+    assert calls == ['transcribe', 'model'], 'Reading message projections must not initiate transcription or generation'
     assert (await client.get(url, headers={'x-grokbot-user-id': 'other-transcript-owner'})).status_code == 404
     assert (await client.get(url.replace(cid, other), headers=headers)).status_code == 404
     original = await client.get(f"/api/conversations/{cid}/attachments/{accepted['message_id']}/0", headers=headers)
