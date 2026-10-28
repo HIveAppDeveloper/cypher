@@ -299,6 +299,20 @@ test('structured registration responses retain recovery fields and readable erro
 });
 
 
+test('Apps exposes Meta permissions directly without starting another authorization flow',async()=>{
+  let authorizations=0,checks=0;
+  const p=panel({api:{authorizePlugin:async()=>{authorizations++;throw Error('Navigation must not authorize');},testPlugin:async()=>{checks++;throw Error('Navigation must not execute a tool');}}});
+  await p.view.flush();
+  const entry=()=>find(p.view.tree,n=>n.type==='a'&&textOf(n)==='Connect Facebook & Instagram');
+  assert.equal(entry().props.href,'/connect/meta');
+  assert.equal(entry().props.target,undefined,'the existing signed-in permission page opens in this tab');
+  find(p.view.tree,n=>n.props?.id==='plugin-search').props.onChange({target:{value:'Instagram'}});
+  await p.view.flush();
+  assert.equal(entry().props.href,'/connect/meta','the dedicated entry remains discoverable when searching for Instagram');
+  assert.equal(authorizations,0);assert.equal(checks,0);assert.equal(p.opens,0);
+  p.view.unmount();
+});
+
 test('legacy Gmail entries use native Google recovery instead of invalid website authorization',async()=>{
   const p=panel({embedded:true,api:{getPlugins:async()=>[{id:'legacy-gmail',name:'Gmail',url:'site-mcp://gmail.com',enabled:true,authenticated:true,tools:[]}]}});
   await p.view.flush();
