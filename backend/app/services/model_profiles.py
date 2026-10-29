@@ -76,7 +76,7 @@ INCLUDED_ROUTES = {
     'auto/best-fast': 'ds-web/deepseek-v4-flash',
     'auto/best-chat': 'ds-web/deepseek-v4-flash',
 }
-ALLOWED_MODELS = {(p.provider,p.model) for p in (*PROFILES.values(),*INCLUDED_PROFILES.values())} | {p.fallback for p in PROFILES.values()} | LEGACY_SPECIALISTS | {('auto', model) for model in OMNIROUTE_AUTO_MODELS} | {tuple(public.split('/',1)) for public in FREE_ROUTES}
+ALLOWED_MODELS = {(p.provider,p.model) for p in (*PROFILES.values(),*INCLUDED_PROFILES.values())} | {p.fallback for p in PROFILES.values()} | LEGACY_SPECIALISTS | {('auto', model) for model in OMNIROUTE_AUTO_MODELS} | {tuple(public.split('/',1)) for public in FREE_ROUTES} | {('muse', 'muse-spark-1.3')}
 
 def included_routing():
     from app.config import settings
