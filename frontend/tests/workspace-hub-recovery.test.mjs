@@ -209,3 +209,37 @@ test('a saved memory remains visible when the initial knowledge request finishes
   assert.match(textOf(view.tree),/Saved\./);
   view.unmount();
 });
+
+test('routine run feedback is immediate while the workspace refresh finishes in the background',async()=>{
+  const env=environment(),view=renderer(env),slowRoutineRefresh=deferred();
+  let routineReads=0;
+  const routine={id:'routine-a',name:'Morning briefing',instructions:'Summarize new work.',enabled:true,next_run_at:'2026-10-30T09:00:00Z',schedule:'daily',conversation_id:'room-a'};
+  const updatedRoutine={...routine,name:'Morning briefing refreshed'};
+  const request=async path=>{
+    if(path==='/computer/approvals/pending')return [];
+    if(path==='/workspace/knowledge'||path==='/workspace/runs'||path==='/workspace/notifications')return [];
+    if(path==='/workspace/routines')return ++routineReads===1?[routine]:slowRoutineRefresh.promise;
+    if(path==='/workspace/routines/routine-a/run')return {status:'pending'};
+    if(path==='/workspace/usage')return {tokens:0,estimated_cost:0,weekly_token_limit:null,resets_at:'2026-10-30T00:00:00Z',models:[]};
+    if(path==='/workspace/settings')return {tool_approval:'never',notifications:true,weekly_token_limit:null};
+    throw new Error('Unexpected request: '+path);
+  };
+  const {WorkspaceHub}=load('../src/components/WorkspaceHub.tsx',{
+    react:view.react,'./LoadingState':{LoadingState:'loading-state'},'./GlassSelect':{GlassSelect:'select'},
+    '../lib/api':{api:{},request},'../lib/dates':load('../src/lib/dates.ts'),
+  },{...env.globals,React:view.react.default,setInterval:()=>1,clearInterval(){}});
+  view.mount(()=>WorkspaceHub({bots:[],rooms:[],ensureRoom:async()=>({id:'room-a'}),onRefresh:async()=>{},onOpenWorkspace(){},onClose(){},initialTab:'Routines'}));
+  await view.flush();
+
+  button(view.tree,'Run now').props.onClick();
+  await view.flush();
+  assert.match(textOf(view.tree),/The routine run is pending\./,'the accepted API status appears before list refresh completes');
+  assert.equal(button(view.tree,'Run now').props.disabled,false,'the accepted action does not wait on unrelated reads');
+  assert.equal(find(view.tree,node=>node.props?.className==='hub-body').props['aria-busy'],false,'background refresh does not replace the usable page with loading state');
+
+  slowRoutineRefresh.resolve([updatedRoutine]);
+  await view.flush();
+  assert.match(textOf(view.tree),/Morning briefing refreshed/,'the delayed refresh still updates the routine list');
+  assert.match(textOf(view.tree),/The routine run is pending\./,'refresh completion preserves the accepted run status');
+  view.unmount();
+});
