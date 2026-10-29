@@ -98,3 +98,39 @@ test('failed API-key verification clears the key and leaves a recoverable error'
   assert.ok(find(view.tree,node=>node.type==='a'&&node.props?.href==='https://x.ai'));
   assert.doesNotMatch(textOf(view.tree),/Connect accounts in OmniRoute/);view.unmount();
 });
+
+test('Muse enrollment has its own masked token form, clears the secret and queues an account check',async()=>{
+  let request;
+  const view=panel({items:[{...item,id:'muse',name:'Meta Muse',model:'muse/muse-spark-1.3',account_url:'https://dev.meta.ai/'}],omniroute:true,fetcher:async(url,options)=>{request={url,body:JSON.parse(options.body)};return{ok:true,json:async()=>({status:'pending',verification_target:'provider_account'})};}});
+  assert.ok(find(view.tree,node=>node.type==='a'&&textOf(node)==='Get a Muse token'&&node.props.href==='https://dev.meta.ai/'));
+  button(view.tree,'Connect Muse').props.onClick();await view.flush();
+  const input=find(view.tree,node=>node.type==='input');
+  assert.equal(input.props.type,'password');assert.equal(input.props.autoComplete,'off');
+  input.props.onChange({target:{value:'synthetic-meta-model-token'}});await view.flush();
+  find(view.tree,node=>node.type==='form').props.onSubmit({preventDefault(){}});await view.flush();
+  assert.deepEqual(request,{url:'/api/runtime/model-connections/muse/api-key',body:{api_key:'synthetic-meta-model-token'}});
+  assert.equal(find(view.tree,node=>node.type==='input'),undefined);
+  assert.doesNotMatch(textOf(view.tree),/synthetic-meta-model-token|Verified/);
+  assert.match(textOf(view.tree),/Queued in the cloud/);
+  view.unmount();
+});
+
+test('Gemini explains every personal plan restriction without offering false subscription sign-in',()=>{
+  const view=panel({items:[{...item,id:'gemini',name:'Gemini'}]});
+  assert.match(textOf(view.tree),/Free, Plus, Pro and Ultra/);
+  assert.match(textOf(view.tree),/cannot bring a personal Gemini subscription/);
+  assert.equal(button(view.tree,'Continue with Google'),undefined);
+  assert.ok(find(view.tree,node=>node.type==='a'&&node.props.href.startsWith('https://discuss.ai.google.dev/')));
+  view.unmount();
+});
+
+test('Muse token enrollment rejects a stale current-route acknowledgment',async()=>{
+  const view=panel({items:[{...item,id:'muse',name:'Meta Muse'}],fetcher:async()=>({ok:true,json:async()=>({status:'pending',verification_target:'current_route'})})});
+  button(view.tree,'Connect Muse').props.onClick();await view.flush();
+  find(view.tree,node=>node.type==='input').props.onChange({target:{value:'synthetic-meta-model-token'}});await view.flush();
+  find(view.tree,node=>node.type==='form').props.onSubmit({preventDefault(){}});await view.flush();
+  assert.match(textOf(view.tree),/did not confirm this type of check/);
+  assert.equal(find(view.tree,node=>node.type==='input'),undefined);
+  assert.doesNotMatch(textOf(view.tree),/Queued in the cloud|Verified|synthetic-meta-model-token/);
+  view.unmount();
+});

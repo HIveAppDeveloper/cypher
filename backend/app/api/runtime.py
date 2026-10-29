@@ -10,7 +10,7 @@ from app.services.runtime_identity import runtime_identity, same_release
 router=APIRouter()
 from typing import Literal
 from pydantic import SecretStr
-Provider = Literal['openai', 'gemini', 'claude', 'xai', 'meta']
+Provider = Literal['openai', 'gemini', 'claude', 'xai', 'meta', 'muse']
 
 class ProviderVerification(BaseModel):
     target: Literal['provider_account', 'current_route'] = 'current_route'
@@ -56,7 +56,7 @@ async def verify_model_connection(body: ModelCheckRequest):
     except Exception as error:
         raise HTTPException(status_code=503, detail=public_model_error(error)) from error
     from app.services import omniroute
-    return {'status':'passed','provider':provider,'model':model,'transport':'omniroute' if omniroute.enabled() else 'direct'}
+    return {'status':'passed','provider':provider,'model':model,'transport':'direct' if provider == 'muse' else 'omniroute' if omniroute.enabled() else 'direct'}
 
 @router.get('')
 async def runtime(db=Depends(get_db)):
@@ -88,11 +88,15 @@ async def runtime(db=Depends(get_db)):
             stale_transport = name in {'model','fallback','fleet','media_openai'} and (result.detail or {}).get('transport', 'direct') != transport
             details[name] = {'status':'not_checked' if stale_transport else result.status,'detail':{} if stale_transport else result.detail,'checked_at':result.updated_at.isoformat()+'Z'}
     managed_provider_key = any((item.detail or {}).get('state') == 'ready' and (item.detail or {}).get('credentials_encrypted')
-                               for name, item in recorded_checks.items() if name in {'model_connection:gemini', 'model_connection:xai'})
-    model_configured = bool(settings.OMNIROUTE_API_KEY) if settings.OMNIROUTE_URL else bool(settings.LLM_API_KEY) or managed_provider_key
+                               for name, item in recorded_checks.items() if name in {'model_connection:gemini', 'model_connection:xai', 'model_connection:muse'})
+    model_configured = managed_provider_key or (bool(settings.OMNIROUTE_API_KEY) if settings.OMNIROUTE_URL else bool(settings.LLM_API_KEY))
+    configured_models = list(model_map(model_records)) if settings.OMNIROUTE_URL else [
+        'muse/muse-spark-1.3' for item in model_records
+        if item.name == 'model_connection:muse' and (item.detail or {}).get('state') == 'ready' and (item.detail or {}).get('credentials_encrypted')
+    ]
     configured_services = {'model': model_configured, 'model_control': remote_control_available(), 'backend_auth': len(settings.BACKEND_API_TOKEN) >= 32, 'atlas_engine': bool(settings.GROKBOT_ATLAS_ENGINE_ENABLED and settings.ATLAS_ENGINE_SIGNING_KEY)}
     from app.services.omniroute import cloud_project_matches
-    return {'configured_services': configured_services, 'checks':details, **checks, **connections, 'database':True,'worker':worker_fresh and version_ready,'worker_last_seen_seconds':int(age) if age is not None else None,'worker_version_matches':version_matches,'deployment':deployment,'worker_deployment':worker_deployment,'model_transport':transport,'model_gateway_project_matches':cloud_project_matches(),'model_configured':model_configured,'configured_models':list(model_map(model_records)) if settings.OMNIROUTE_URL else [],'sandbox_backend':settings.SANDBOX_BACKEND}
+    return {'configured_services': configured_services, 'checks':details, **checks, **connections, 'database':True,'worker':worker_fresh and version_ready,'worker_last_seen_seconds':int(age) if age is not None else None,'worker_version_matches':version_matches,'deployment':deployment,'worker_deployment':worker_deployment,'model_transport':transport,'model_gateway_project_matches':cloud_project_matches(),'model_configured':model_configured,'configured_models':configured_models,'sandbox_backend':settings.SANDBOX_BACKEND}
 
 @router.post('/checks', status_code=202)
 async def request_checks(db=Depends(get_db)):

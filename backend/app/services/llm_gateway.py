@@ -29,6 +29,8 @@ def model_selection(model=None, provider=None, *, specialist=False):
 def completion_options(model=None, provider=None, *, specialist=False, direct=False, api_key_override=None):
     provider, model = model_selection(model, provider, specialist=specialist)
     from app.services import omniroute
+    if provider == 'muse':
+        raise ModelConfigurationError('Muse uses its verified Meta Model API connection, not a gateway or ambient API key.')
     if provider == 'auto' and direct:
         raise ModelConfigurationError("OmniRoute cloud models cannot be used for a direct provider check. Select a direct provider model.")
     if omniroute.enabled() and not direct:
@@ -67,6 +69,8 @@ def generation_options(options, provider, model):
     kwargs = {"max_tokens": options.max_tokens}
     reasoning = options.reasoning_effort
     is_gpt5 = provider == "openai" and model.removeprefix("openai/").startswith(("gpt-5", "gpt-6"))
+    if provider == 'muse':
+        kwargs['reasoning_effort'] = reasoning or 'low'
     if is_gpt5:
         reasoning = reasoning or ("medium" if model.removeprefix("openai/").startswith("gpt-6") else "none")
         if model.removeprefix("openai/").startswith(("gpt-6.1-sol", "gpt-6-astra")) and reasoning == "none":
@@ -120,14 +124,20 @@ class LLMGateway:
         last_error = None
         for index, (route_provider, route_model) in enumerate(routes):
             try:
-                managed_key = omniroute.managed_api_key(route_provider) if route_provider in {'gemini', 'xai'} else None
+                from app.services import muse
+                managed_key = muse.verified_token(omniroute._managed_records) if route_provider == 'muse' else omniroute.managed_api_key(route_provider) if route_provider in {'gemini', 'xai'} else None
                 direct_managed = bool(managed_key)
                 validated_model = None
-                connection = completion_options(route_model, route_provider, direct=direct_managed, api_key_override=managed_key)
-                if direct_managed:
+                if route_provider == 'muse':
+                    muse.require_token(managed_key)
+                    muse.validate(messages, route_model)
+                    connection = {}
+                else:
+                    connection = completion_options(route_model, route_provider, direct=direct_managed, api_key_override=managed_key)
+                if route_provider != 'muse' and direct_managed:
                     from app.services.model_routing import validate_direct_capabilities
                     await validate_direct_capabilities(messages, tools, route_provider, route_model)
-                else:
+                elif route_provider != 'muse':
                     validated_model = await validate_capabilities(messages, tools, route_provider, route_model)
             except (ModelConfigurationError, ModelCapabilityError) as error:
                 # Missing route configuration or an unsupported capability may
@@ -162,7 +172,9 @@ class LLMGateway:
                         effort = requested if requested in efforts else ('low' if requested in {'none','low','medium'} and 'low' in efforts else 'high' if 'high' in efforts else efforts[0])
                         generation['reasoning_effort']=effort
                 with stage('model_provider'):
-                    if omniroute.enabled() and not direct_managed:
+                    if route_provider == 'muse':
+                        response = await muse.complete(messages, tools, route_model, generation, managed_key)
+                    elif omniroute.enabled() and not direct_managed:
                         response = await omniroute.complete(messages, tools, route_provider, route_model, generation)
                     else:
                         response = await litellm.acompletion(messages=messages, tools=tools, **generation, **connection, num_retries=0)
@@ -189,6 +201,34 @@ class LLMGateway:
         provider, model = model_selection(model, provider)
         if not direct:
             await omniroute.refresh_model_routes()
+        if provider == 'muse':
+            from app.services import muse
+            from app.services.usage import check_allowance, record
+            # Direct probes must use the same verified saved token. Never use
+            # ambient credentials or send Muse traffic through another gateway.
+            if direct:
+                await omniroute.refresh_model_routes()
+            key = muse.verified_token(omniroute._managed_records)
+            muse.require_token(key)
+            muse.validate(messages, model)
+            await check_allowance()
+            if deadline is not None and asyncio.get_running_loop().time() >= deadline:
+                raise TimeoutError()
+            response = muse.stream(messages, tools, model, run_options, key)
+            usage = None
+            try:
+                async for chunk in response:
+                    if getattr(chunk, 'usage', None):
+                        usage = chunk.usage
+                    yield chunk
+            finally:
+                try:
+                    async with asyncio.timeout(1):
+                        await response.aclose()
+                finally:
+                    if usage is not None:
+                        await record(provider, model, usage, direct=True)
+            return
         managed_key = omniroute.managed_api_key(provider) if not direct and provider in {'gemini', 'xai'} else None
         direct_managed = bool(managed_key)
         if omniroute.enabled() and not direct and not direct_managed:

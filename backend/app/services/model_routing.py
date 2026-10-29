@@ -49,6 +49,10 @@ async def validate_direct_capabilities(messages, tools, provider, model):
 
 async def validate_capabilities(messages, tools, provider, model, *, direct=False):
     """Return the verified catalog entry for reuse within this route preflight."""
+    if provider == 'muse':
+        from app.services.muse import validate
+        validate(messages, model)
+        return None
     catalog_model = None
     required = required_modalities(messages)
     from app.services import omniroute
@@ -98,6 +102,8 @@ def public_model_error(error):
     if isinstance(error, (ModelConfigurationError, ModelCapabilityError)) or type(error).__name__=='UsageLimitError':
         return str(error)
     status = getattr(error, "status_code", None)
+    if type(error).__name__ == 'MuseError' and status in {401, 403}:
+        return "Meta Muse could not verify your token or model access. Review the Meta Muse connection in Model access. Your message and files are saved."
     kind, reason = type(error).__name__.lower(), str(error).lower()
     if status == 413:
         return "This request exceeds the model connection's size limit. Your original message and files are saved. Send fewer or smaller files, or start a new conversation to reduce attachment history."
