@@ -66,6 +66,8 @@ export default function VcProspectingWorkspace({ accountId }: { accountId?: stri
   const [searching, setSearching] = useState(false);
   const [starting, setStarting] = useState(false);
   const [startingHistory, setStartingHistory] = useState(false);
+  const [runPollRetry, setRunPollRetry] = useState(0);
+  const [runPollPaused, setRunPollPaused] = useState(false);
   const [drafting, setDrafting] = useState('');
   const [outreach, setOutreach] = useState<{ resultId: string; value: Outreach } | null>(null);
   const [error, setError] = useState('');
@@ -147,10 +149,20 @@ export default function VcProspectingWorkspace({ accountId }: { accountId?: stri
     if (!run?.id || !ACTIVE.has(run.status)) return;
     const controller = new AbortController();
     let timer: ReturnType<typeof setTimeout>;
+    let retryAttempt = 0;
+    let lastPollingError: string | null = null;
+    setRunPollPaused(false);
     const poll = async () => {
       try {
         const next: MatchRun = await request(`/prospecting/investors/runs/${encodeURIComponent(run.id)}`, { signal: controller.signal });
         if (controller.signal.aborted) return;
+        retryAttempt = 0;
+        if (lastPollingError) {
+          const recoveredMessage = lastPollingError;
+          lastPollingError = null;
+          setError(current => current === recoveredMessage ? '' : current);
+          setRunPollPaused(false);
+        }
         setRun(next);
         setRuns(rows => [next, ...rows.filter(item => item.id !== next.id)]);
         if (ACTIVE.has(next.status)) timer = setTimeout(poll, 3000);
@@ -160,14 +172,23 @@ export default function VcProspectingWorkspace({ accountId }: { accountId?: stri
         }
       } catch (failure) {
         if (!controller.signal.aborted) {
-          setError(errorMessage(failure));
-          timer = setTimeout(poll, 5000);
+          const message = errorMessage(failure);
+          lastPollingError = message;
+          setError(message);
+          const retryable = !(failure instanceof ApiError) || [408, 429].includes(failure.status) || failure.status >= 500;
+          setRunPollPaused(!retryable);
+          if (retryable) {
+            const backoff = Math.min(3000 * 2 ** retryAttempt, 30000);
+            const retryAfter = failure instanceof ApiError && Number.isFinite(failure.retryAfter) ? Math.max(0, failure.retryAfter * 1000) : 0;
+            retryAttempt += 1;
+            timer = setTimeout(poll, Math.max(backoff, retryAfter));
+          }
         }
       }
     };
     void poll();
     return () => { controller.abort(); clearTimeout(timer); };
-  }, [loadFounders, run?.id, run?.status]);
+  }, [loadFounders, run?.id, run?.status, runPollRetry]);
 
   useEffect(() => {
     const status = data?.database.historical.status;
@@ -303,7 +324,7 @@ export default function VcProspectingWorkspace({ accountId }: { accountId?: stri
       </button>)}
     </nav>
 
-    {error || initialDataFailure ? <div className="vc-alert" role="alert"><span aria-hidden="true">!</span><div><strong>{initialDataFailure ? 'Cypher couldn’t load SEC public data.' : 'Cypher couldn’t finish that step.'}</strong>{error ? <p>{error}</p> : initialDataFailure ? <p>Retry to check the public filing records again.</p> : null}{/sign in again/i.test(error) ? <a href={`/login?returnTo=${encodeURIComponent('/prospecting/investors')}`}>Sign in</a> : null}{initialDataFailure ? <button type="button" onClick={() => void retryWorkspaceLoad()}>Retry</button> : null}{error ? <button type="button" onClick={() => setError('')}>Dismiss</button> : null}</div></div> : null}
+    {error || initialDataFailure ? <div className="vc-alert" role="alert"><span aria-hidden="true">!</span><div><strong>{initialDataFailure ? 'Cypher couldn’t load SEC public data.' : 'Cypher couldn’t finish that step.'}</strong>{error ? <p>{error}</p> : initialDataFailure ? <p>Retry to check the public filing records again.</p> : null}{/sign in again/i.test(error) ? <a href={`/login?returnTo=${encodeURIComponent('/prospecting/investors')}`}>Sign in</a> : null}{initialDataFailure ? <button type="button" onClick={() => void retryWorkspaceLoad()}>Retry</button> : null}{runPollPaused && run && ACTIVE.has(run.status) ? <button type="button" onClick={() => { setError(''); setRunPollPaused(false); setRunPollRetry(value => value + 1); }}>Retry status check</button> : null}{error ? <button type="button" onClick={() => setError('')}>Dismiss</button> : null}</div></div> : null}
     {notice ? <div className="vc-notice" role="status"><VcIcon kind="check"/>{notice}</div> : null}
 
     <section className="vc-data-settings">
