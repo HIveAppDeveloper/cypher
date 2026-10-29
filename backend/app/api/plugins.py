@@ -131,27 +131,43 @@ async def disconnect(id: UUID, db: AsyncSession = Depends(get_db)):
         await db.delete(plugin); await db.commit()
     return {'status': 'disconnected'}
 
+async def connection_snapshot(db,plugin):
+    authorizations=select(PluginAuthorization.id).where(PluginAuthorization.plugin_id==plugin.id,PluginAuthorization.status=='connected')
+    return plugin.url,plugin.credential,frozenset((await db.execute(authorizations)).scalars())
+
+
+async def lock_current_connection(db,id,snapshot):
+    # Never hold a row lock during provider I/O. Recheck identity and tool
+    # choices afterwards; ordinary token refresh retains its authorization ID.
+    plugin=(await db.execute(select(Plugin).where(Plugin.id==str(id)).with_for_update().execution_options(populate_existing=True))).scalar_one_or_none()
+    if not plugin:raise HTTPException(404,'Plugin not found')
+    if await connection_snapshot(db,plugin)!=snapshot:
+        raise HTTPException(409,'This connection changed while the request was running. Retry it.')
+    return plugin
+
+
 @router.post('/{id}/refresh')
 async def refresh_tools(id:UUID,db:AsyncSession=Depends(get_db)):
     plugin=await db.get(Plugin,str(id))
     if not plugin:raise HTTPException(404,'Plugin not found')
+    snapshot=await connection_snapshot(db,plugin)
     from app.services import google_workspace as google
     from app.services.plugins import is_google_workspace
     if is_google_workspace(plugin):
         row=await google.grant(db)
         if not row:raise HTTPException(401,'Reconnect Google to refresh its tools.')
         allowed=google.allowed_tools(google.DatabaseTokenStorage(db,row).read())
-        previous={t['name']:t.get('enabled',True) for t in plugin.tools}
-        plugin.tools=[{k:t[k] for k in ('name','description','schema','read_only')}|{'enabled':previous.get(t['name'],True)} for t in allowed]
-        await db.commit();return public(plugin)
-    from app.services.plugins import connection_auth
-    try:
-        token,auth=await connection_auth(db,plugin)
-        tools=await discover(plugin.url,token,auth=auth)
-    except Exception as error:
-        from app.services.plugins import authentication_failure
-        if authentication_failure(error):raise HTTPException(401,'This saved connection needs sign-in again. Reconnect it in Plugins.') from None
-        raise HTTPException(502,'Could not refresh tools. The saved connection was preserved.') from None
+        tools=[{k:t[k] for k in ('name','description','schema','read_only')} for t in allowed]
+    else:
+        from app.services.plugins import connection_auth
+        try:
+            token,auth=await connection_auth(db,plugin)
+            tools=await discover(plugin.url,token,auth=auth)
+        except Exception as error:
+            from app.services.plugins import authentication_failure
+            if authentication_failure(error):raise HTTPException(401,'This saved connection needs sign-in again. Reconnect it in Plugins.') from None
+            raise HTTPException(502,'Could not refresh tools. The saved connection was preserved.') from None
+    plugin=await lock_current_connection(db,id,snapshot)
     previous={t['name']:t.get('enabled',True) for t in plugin.tools}
     plugin.tools=[{**t,'enabled':previous.get(t['name'],True)} for t in tools]
     from app.models.runtime import RuntimeCheck
@@ -199,9 +215,9 @@ async def test_connection(id:UUID,db:AsyncSession=Depends(get_db)):
     import time, asyncio
     from urllib.parse import urlsplit
     from app.services.plugins import invoke
-    from app.services.verification import save_check
     plugin=await db.get(Plugin,str(id))
     if not plugin or not plugin.enabled:raise HTTPException(409,'Enable the connection before testing it.')
+    snapshot=await connection_snapshot(db,plugin)
     from app.services.plugins import is_google_workspace
     host=urlsplit(plugin.url).hostname
     google_tests=[('gmail_users_getProfile',{}),('calendar_calendarList_list',{'maxResults':1}),('drive_about_get',{'fields':'user(emailAddress)'}),('tasks_tasklists_list',{'maxResults':1}),('people_people_connections_list',{'resourceName':'people/me','personFields':'names','pageSize':1})] if is_google_workspace(plugin) else []
@@ -220,8 +236,19 @@ async def test_connection(id:UUID,db:AsyncSession=Depends(get_db)):
     example=next(((name,args) for name,args in (google_tests or examples.get(host,[])) if name in names),None)
     started=time.monotonic()
     async def finish(status, message, http_status=200, **detail):
+        current=await lock_current_connection(db,id,snapshot)
+        if not current.enabled or (example and example[0] not in {t['name'] for t in current.tools if t.get('enabled',True)}):
+            raise HTTPException(409,'The connection or tested tool was paused or changed. Retry after reviewing its settings.')
         result={'message':message,'latency_ms':round((time.monotonic()-started)*1000),**detail}
-        await save_check('plugin:'+plugin.id,status,result)
+        # Save in the same transaction as the identity check so reconnects and
+        # disconnects cannot invalidate it between validation and persistence.
+        from datetime import datetime
+        from app.models.runtime import RuntimeCheck
+        check=await db.get(RuntimeCheck,'plugin:'+str(id))
+        if check:
+            check.status=status;check.detail=result;check.updated_at=datetime.utcnow()
+        else:db.add(RuntimeCheck(name='plugin:'+str(id),status=status,detail=result,updated_at=datetime.utcnow()))
+        await db.commit()
         if http_status != 200:raise HTTPException(http_status,message)
         return {'status':status,**result}
     if not google_tests and urlsplit(plugin.url).scheme != 'https':
