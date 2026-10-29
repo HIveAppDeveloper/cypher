@@ -243,12 +243,15 @@ async def authorize(body:Begin,db:AsyncSession=Depends(get_db),request:Request=N
         raise HTTPException(422,'This service could not start automatic sign-in. It may require an API key, an administrator-installed app, or a different MCP endpoint. Your account has not been connected.')
     if not tools:
         row.status='failed';await db.commit();raise HTTPException(422,'The server connected but did not publish any tools.')
-    plugin=existing or Plugin(name=row.name,url=url,tools=tools,enabled=True)
     if existing:
-        old={tool['name']:tool.get('enabled',True) for tool in existing.tools}
+        # Match refresh/verification locking even when equal tools cause no UPDATE.
+        plugin=(await db.execute(select(Plugin).where(Plugin.id==existing.id).with_for_update().execution_options(populate_existing=True))).scalar_one_or_none()
+        if not plugin:raise HTTPException(409,'The connection was disconnected during sign-in. Start again from Plugins.')
+        old={tool['name']:tool.get('enabled',True) for tool in plugin.tools}
         plugin.tools=[{**tool,'enabled':old.get(tool['name'],True)} for tool in tools]
         await db.execute(delete(PluginAuthorization).where(PluginAuthorization.plugin_id==plugin.id,PluginAuthorization.id!=row.id))
-    else:db.add(plugin)
+    else:
+        plugin=Plugin(name=row.name,url=url,tools=tools,enabled=True);db.add(plugin)
     await db.flush();row.plugin_id=plugin.id;row.status='connected'
     from app.models.runtime import RuntimeCheck
     stale=await db.get(RuntimeCheck,'plugin:'+plugin.id)
@@ -293,7 +296,7 @@ async def callback(body:Callback,db:AsyncSession=Depends(get_db)):
         await provider._handle_token_response(response)
         tools=await discover(row.url,auth=provider)
         if not tools: raise ValueError('No tools')
-        plugin=await db.get(Plugin,row.plugin_id) if row.plugin_id else None
+        plugin=(await db.execute(select(Plugin).where(Plugin.id==row.plugin_id).with_for_update().execution_options(populate_existing=True))).scalar_one_or_none() if row.plugin_id else None
         if row.plugin_id and not plugin:raise ValueError('The plugin was disconnected during sign-in.')
         if plugin:
             old={tool['name']:tool.get('enabled',True) for tool in plugin.tools}
