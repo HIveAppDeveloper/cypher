@@ -19,6 +19,7 @@ const LOVABLE_MCP_URL='https://mcp.lovable.dev';
 const LOVABLE_SOURCE='https://docs.lovable.dev/integrations/lovable-mcp-server';
 const CANVA_MCP_URL='https://api.canva.com/connect/v1/mcp';
 const CANVA_READ_SCOPE='design:meta:read design:content:read';
+const CANVA_UNAVAILABLE='Canva connections aren’t available yet. You can keep connecting other apps.';
 function normalizeHost(value:string){
   try{return new URL(/^[a-z][a-z\d+.-]*:\/\//i.test(value.trim())?value.trim():`https://${value.trim()}`).hostname.toLocaleLowerCase().replace(/^www\./,'');}
   catch{return '';}
@@ -265,8 +266,13 @@ export function PluginPanel({onClose,onExploreConnection,onManageSkills,embedded
     }else throw new Error('This service did not provide a sign-in page. Try its advanced setup.');
   }
   function isConnected(item:CatalogEntry){return plugins.some(plugin=>sameEndpoint(plugin.url,item.url)&&(!item.connection_id||plugin.connection_id===item.connection_id));}
+  function canvaUnavailable(item:CatalogEntry){return item.url===CANVA_MCP_URL&&!isConnected(item)&&!item.oauth_client_configured&&!available.some(connection=>sameEndpoint(connection.url,item.url));}
   function connectionFailure(error:unknown,item:CatalogEntry,reconnect=false){
     const data=(error as {details?:Record<string,unknown>})?.details;
+    if(item.url===CANVA_MCP_URL&&((error as {status?:number})?.status===409||data?.code==='oauth_registration_required')){
+      setCatalog(items=>items.map(entry=>entry.url===CANVA_MCP_URL?{...entry,oauth_client_configured:false}:entry));
+      setRegistration(null);setError('');setNotice(CANVA_UNAVAILABLE);setRefreshableError(false);return;
+    }
     if(data?.code==='oauth_registration_required' && typeof data.callback_url==='string'){
       setRegistration({item,callback:data.callback_url,reconnect});setError('');
       setClientScope(normalizeHost(item.url)==='mcp.lovable.dev'?'openid profile email offline projects:read projects:write workspaces:read workspaces:write':item.url===CANVA_MCP_URL?CANVA_READ_SCOPE:'');
@@ -284,6 +290,7 @@ export function PluginPanel({onClose,onExploreConnection,onManageSkills,embedded
     if(item.url.endsWith('/api/google/mcp')){window.location.assign('/connect/google');return;}
     if(connecting.current||flow)return;
     const connected=isConnected(item);
+    if(canvaUnavailable(item)){setRegistration(null);setError('');setNotice(CANVA_UNAVAILABLE);setRefreshableError(false);return;}
     if(connected&&!reconnect){await begin(item);return;}
     const result=sync?.results[item.id];
     if(!connected&&(item.setup_note||result?.status==='setup_required')){
@@ -410,11 +417,12 @@ export function PluginPanel({onClose,onExploreConnection,onManageSkills,embedded
     const needsEndpoint=!!item.setup_note&&!item.url;
     const manual=needsManualSetup(item);
     const unavailable=result?.status==='unavailable';
-    const action=connected?'Manage':manual?'View options':'Connect';
+    const needsCanvaSetup=canvaUnavailable(item);
+    const action=connected?'Manage':needsCanvaSetup?'Unavailable':manual?'View options':'Connect';
     return <article className="connector-entry" key={`${keyPrefix}:${item.id}`}>
-      <Logo item={item}/><div className="app-entry-copy"><h4>{item.name}</h4><p>{item.description||'Use this app with Cypher.'}</p>{connected?<span className="connector-access-hint">Already in your apps</span>:manual?<span className="connector-access-hint">Additional setup needed</span>:unavailable?<span className="connector-access-hint">Couldn’t reach this app at its last check</span>:null}
+      <Logo item={item}/><div className="app-entry-copy"><h4>{item.name}</h4><p>{item.description||'Use this app with Cypher.'}</p>{connected?<span className="connector-access-hint">Already in your apps</span>:needsCanvaSetup?<span className="connector-access-hint">Canva connections aren’t available yet.</span>:manual?<span className="connector-access-hint">Additional setup needed</span>:unavailable?<span className="connector-access-hint">Couldn’t reach this app at its last check</span>:null}
       </div>
-      <button disabled={busy||!connectionsLoaded||needsEndpoint||!item.url} className="connector-connect" aria-label={`${action} ${item.name}`} onClick={()=>void connectItem(item)}>{action}<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14m-5-5 5 5-5 5"/></svg></button>
+      <button disabled={busy||!connectionsLoaded||needsEndpoint||!item.url||needsCanvaSetup} className="connector-connect" aria-label={`${action} ${item.name}`} onClick={()=>void connectItem(item)}>{action}<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14m-5-5 5 5-5 5"/></svg></button>
     </article>;
   }
   const panelContent=<>

@@ -43,21 +43,35 @@ test('catalog never exposes credential-bearing or non-HTTPS addresses as public 
   p.view.unmount();
 });
 
-test('Canva uses its saved MCP endpoint and offers registered-client setup before sign-in',async()=>{
+test('unavailable Canva does not open developer setup or block connecting another app',async()=>{
   const canva={...item,id:'canva-official',name:'Canva',url:'https://api.canva.com/connect/v1/mcp',auth:'registered_oauth',source:'https://www.canva.dev/docs/apps/mcp/'};
   let calls=0,input;
-  const p=panel({api:{getPluginCatalog:async()=>[canva],authorizePlugin:async body=>{calls++;input=body;return {status:'awaiting_login',flow_id:id,authorization_url:pending.url,name:'Canva'};}}});
-  await p.view.flush();find(p.view.tree,n=>n.type==='button'&&n.props?.['aria-label']==='Connect Canva').props.onClick();await p.view.flush();
+  const p=panel({api:{getPluginCatalog:async()=>[canva,item],authorizePlugin:async body=>{calls++;input=body;return {status:'awaiting_login',flow_id:id,authorization_url:pending.url,name:body.name};}}});
+  await p.view.flush();const unavailable=find(p.view.tree,n=>n.type==='button'&&n.props?.['aria-label']==='Unavailable Canva');
+  assert.equal(unavailable.props.disabled,true);unavailable.props.onClick();await p.view.flush();
   assert.equal(calls,0);
-  assert.match(textOf(p.view.tree),/Sign-in isn’t ready for Canva yet/);
-  assert.equal(find(p.view.tree,n=>n.props?.id==='oauth-callback').props.value,'https://cypher-agent.vercel.app/api/plugin-oauth/callback');
-  const field=label=>find(find(p.view.tree,n=>n.type==='label'&&textOf(n).startsWith(label)),n=>n.type==='input');
-  field('Client ID').props.onChange({target:{value:'fixture-canva-client'}});await p.view.flush();
-  const section=find(p.view.tree,n=>n.props?.className==='plugin-registration');
-  await find(section,n=>n.type==='form').props.onSubmit({preventDefault(){}});await p.view.flush();
-  assert.equal(calls,1);assert.equal(input.url,canva.url);assert.equal(input.oauth_client.client_id,'fixture-canva-client');
-  assert.equal(input.oauth_client.scope,'design:meta:read design:content:read');
+  assert.equal(p.opens,0);assert.equal(find(p.view.tree,n=>n.props?.className==='plugin-registration'),undefined);
+  assert.match(textOf(p.view.tree),/You can keep connecting other apps/);
+  await connect(p);assert.equal(calls,1);assert.equal(input.url,item.url);
   p.view.unmount();
+});
+
+test('Canva setup failures keep developer credentials out of the primary connection flow',async()=>{
+  const canva={...item,id:'canva-official',name:'Canva',url:'https://api.canva.com/connect/v1/mcp',auth:'registered_oauth',oauth_client_configured:true};
+  const p=panel({api:{getPluginCatalog:async()=>[canva],authorizePlugin:async()=>{throw Object.assign(Error('Internal client setup'),{status:409,details:{code:'oauth_registration_required',callback_url:'https://cypher-agent.vercel.app/api/plugin-oauth/callback'}});}}});
+  await p.view.flush();find(p.view.tree,n=>n.type==='button'&&n.props?.['aria-label']==='Connect Canva').props.onClick();await p.view.flush();
+  assert.equal(find(p.view.tree,n=>n.props?.className==='plugin-registration'),undefined);
+  assert.doesNotMatch(textOf(p.view.tree),/Client ID|Client secret|Internal client setup/);
+  assert.equal(find(p.view.tree,n=>n.type==='button'&&n.props?.['aria-label']==='Unavailable Canva').props.disabled,true);p.view.unmount();
+});
+
+test('an existing saved Canva connection stays manageable without the shared app client',async()=>{
+  const canva={...item,id:'canva-official',name:'Canva',url:'https://api.canva.com/connect/v1/mcp',auth:'registered_oauth',oauth_client_configured:false};
+  let authorizations=0;
+  const p=panel({api:{getPluginCatalog:async()=>[canva],getPlugins:async()=>[{...linkedPlugin(),name:'Canva',url:canva.url}],authorizePlugin:async()=>{authorizations++;throw Error('Do not reauthorize');}}});
+  await p.view.flush();const manage=find(p.view.tree,n=>n.type==='button'&&n.props?.['aria-label']==='Manage Canva');
+  assert.notEqual(manage.props.disabled,true);manage.props.onClick();await p.view.flush();
+  assert.equal(authorizations,0);assert.equal(find(p.view.tree,n=>n.props?.className==='plugin-registration'),undefined);p.view.unmount();
 });
 
 test('configured Cypher Canva client starts the saved endpoint directly',async()=>{
