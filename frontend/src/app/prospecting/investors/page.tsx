@@ -24,5 +24,5 @@ export default async function VcProspectingPage(
     const returnTo = internalPathWithSearch('/prospecting/investors', searchParams);
     redirect(`/login?returnTo=${encodeURIComponent(returnTo)}`);
   }
-  return <VcProspectingWorkspace accountId={session?.sub} />;
+  return <VcProspectingWorkspace key={session?.sub ?? 'anonymous'} accountId={session?.sub} />;
 }
