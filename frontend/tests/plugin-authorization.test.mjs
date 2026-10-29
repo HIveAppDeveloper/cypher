@@ -153,6 +153,21 @@ test('connecting from a website search reveals the saved connection instead of f
   p.view.unmount();
 });
 
+test('catalog appears and can be searched while saved connections are still loading',async()=>{
+  const pendingConnections=deferred();let authorizations=0;
+  const p=panel({api:{getPlugins:()=>pendingConnections.promise,authorizePlugin:async()=>{authorizations++;throw Error('Must wait for saved connections');}}});
+  await p.view.flush();
+  assert.match(textOf(p.view.tree),/Fixture Service/);
+  const search=find(p.view.tree,n=>n.type==='input'&&n.props?.type==='search');
+  search.props.onChange({target:{value:'Fixture'}});await p.view.flush();
+  const connect=find(p.view.tree,n=>n.type==='button'&&n.props?.['aria-label']===`Connect ${item.name}`);
+  assert.ok(connect);assert.equal(connect.props.disabled,true);assert.equal(authorizations,0);
+  pendingConnections.resolve([linkedPlugin()]);await p.view.flush();await p.view.flush();
+  assert.equal(find(p.view.tree,n=>n.type==='button'&&n.props?.className==='connector-connect'&&n.props?.['aria-label']===`Manage ${item.name}`).props.disabled,false);
+  assert.equal(authorizations,0);
+  p.view.unmount();
+});
+
 test('connection request failures do not claim there are no saved tools and retry recovers',async()=>{
   let calls=0;
   const p=panel({api:{getPlugins:async()=>{if(++calls===1)throw Error('Synthetic offline');return [];}}});
