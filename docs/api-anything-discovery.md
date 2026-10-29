@@ -18,8 +18,13 @@ Discovery does not claim a working transport, sign-in or verified tools.
 
 API Anything gets two seconds within the existing overall eight-second first-page
 budget. Empty, unavailable, malformed or oversized responses fall back to the
-official MCP Registry. Existing official pagination cursors continue to use that
-registry directly. Successful catalog responses, including empty results, have a
+official MCP Registry, with a four-second first-page allowance. If that registry
+fails or times out, the already-packaged public MCP directory supplies matching
+results, explicitly labeled as saved listings with their snapshot timestamp.
+It does not copy historical protocol checks into a claim of current access.
+Existing official pagination cursors continue to use that registry directly;
+an unavailable later page is never replaced with a repeated saved first page.
+Successful API Anything responses, including empty results, have a
 bounded process-local 60-second cache; no production database migration is needed.
 
 No learned operations, account sessions, browser learning, uploads, reports,
@@ -32,4 +37,7 @@ or nonpublic URL hints are rejected. Pagination shares the same eight-second bud
 The October 29 live probe returned HTTP 200 for `linear.app`, `notion.so` and
 `hacker-news`. The first two had no matches; Hacker News had two website operations
 and no MCP interfaces. Those observations prove catalog access, not that API
-Anything currently lists every MCP service. The official fallback retains coverage.
+Anything currently lists every MCP service. A real local adapter probe reached both
+catalogs but timed out at the official registry; the existing deployed official-only
+search for `linear` also returned HTTP 503. These failures motivated the saved-directory
+fallback. They are not recorded as successful live discovery.

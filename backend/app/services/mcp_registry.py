@@ -1,6 +1,7 @@
 """Discover MCP interfaces through API Anything, with official-registry fallback."""
 
 import asyncio
+import re
 from urllib.parse import urlsplit
 
 from app.services.plugins import http_client
@@ -120,13 +121,57 @@ async def search_registry(query, cursor=None):
     # provider. API Anything's catalog does not currently expose pagination.
     # The fallback shares the existing eight-second search budget, including
     # slow DNS/streaming, rather than adding another full timeout to the UI.
-    async with asyncio.timeout(8):
+    try:
+        async with asyncio.timeout(8):
+            if cursor:
+                return await _search_official_registry(query, cursor)
+            try:
+                items = await search_interfaces(query)
+            except Exception:
+                items = []
+            if items:
+                return {'items': items, 'next_cursor': None}
+            async with asyncio.timeout(4):
+                return await _search_official_registry(query)
+    except Exception:
+        # A page cursor belongs to the live registry. Never replace its page
+        # with a repeated first page from another source.
         if cursor:
-            return await _search_official_registry(query, cursor)
-        try:
-            items = await search_interfaces(query)
-        except Exception:
-            items = []
-        if items:
-            return {'items': items, 'next_cursor': None}
-        return await _search_official_registry(query)
+            raise
+        saved = _search_packaged_registry(query)
+        if saved['items']:
+            return saved
+        raise
+
+
+def _search_packaged_registry(query):
+    from app.services.mcp_directory import read_snapshot
+    from app.services.api_anything import public_host
+    snapshot = read_snapshot()
+    words = re.findall(r'[a-z0-9]+', query.lower())
+    items = []
+    for row in snapshot['entries']:
+        text = ' '.join(str(row.get(k) or '') for k in ('title', 'registry_name', 'description', 'url', 'domains')).lower()
+        if not words or not all(word in text for word in words):
+            continue
+        endpoint = _safe_public_url(row.get('url'))
+        if endpoint and not public_host(urlsplit(endpoint).hostname):
+            endpoint = ''
+        items.append({
+            'id': 'mcp:' + str(row.get('registry_name') or row['id']) + ':' + str(row.get('version') or 'latest'),
+            'name': str(row.get('title') or row.get('registry_name') or 'MCP server')[:100],
+            'url': endpoint,
+            'description': ('Saved directory listing; access is checked when you connect. ' + str(row.get('description') or ''))[:1000],
+            'category': 'MCP Registry',
+            'domains': row.get('domains') or [],
+            'icon': _safe_public_url(row.get('icon')) or None,
+            'source': _safe_source_url(row.get('source')) or 'https://registry.modelcontextprotocol.io/',
+            'discovery_source': 'packaged_registry',
+            'snapshot_at': snapshot.get('fetched_at'),
+            'auth': 'auto' if endpoint else 'setup',
+            'setup_note': '' if endpoint else row.get('setup_note') or 'Ask the provider for its public HTTPS MCP endpoint.',
+            'transport': row.get('transport') or 'unknown',
+        })
+        if len(items) == 50:
+            break
+    return {'items': items, 'next_cursor': None}

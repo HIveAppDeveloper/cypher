@@ -151,6 +151,7 @@ async def test_outer_budget_cancels_slow_fallback_without_detached_network_work(
             cancelled.set()
     monkeypatch.setattr(api_anything, 'search_interfaces', empty)
     monkeypatch.setattr(mcp_registry, '_search_official_registry', slow)
+    monkeypatch.setattr(mcp_registry, '_search_packaged_registry', lambda query: {'items': [], 'next_cursor': None})
     real_timeout = asyncio.timeout
     monkeypatch.setattr(mcp_registry.asyncio, 'timeout', lambda seconds: real_timeout(.02))
     with pytest.raises(TimeoutError):
@@ -166,3 +167,33 @@ def test_ambiguous_or_nonpublic_url_hints_are_rejected_before_discovery(query):
 
 def test_ordinary_search_words_remain_unchanged():
     assert api_anything.discovery_hint('project management tools') == 'project management tools'
+
+
+@pytest.mark.asyncio
+async def test_unavailable_live_catalog_uses_saved_directory_without_claiming_verified_access(monkeypatch):
+    from app.services import mcp_directory
+    monkeypatch.setattr(mcp_directory, 'read_snapshot', lambda: {'fetched_at': '2026-10-24T00:00:00Z', 'entries': [
+        {'id': 'saved', 'registry_name': 'example/linear', 'title': 'Linear', 'version': '1',
+         'url': 'https://mcp.example.com/mcp', 'test_status': 'protocol_verified', 'tool_count': 10},
+        {'id': 'other', 'registry_name': 'other', 'title': 'Other'},
+    ]})
+    async def empty(query):
+        return []
+    async def unavailable(query, cursor=None):
+        raise httpx.ReadTimeout('synthetic')
+    monkeypatch.setattr(api_anything, 'search_interfaces', empty)
+    monkeypatch.setattr(mcp_registry, '_search_official_registry', unavailable)
+    result = await mcp_registry.search_registry('linear')
+    assert len(result['items']) == 1 and result['next_cursor'] is None
+    item = result['items'][0]
+    assert item['discovery_source'] == 'packaged_registry' and item['snapshot_at'] == '2026-10-24T00:00:00Z'
+    assert item['url'] == 'https://mcp.example.com/mcp' and 'Saved directory listing' in item['description']
+    assert 'test_status' not in item and 'tool_count' not in item and 'authenticated' not in item
+    with pytest.raises(httpx.ReadTimeout):
+        await mcp_registry.search_registry('linear', 'opaque:page2')
+
+
+def test_packaged_fallback_has_real_github_entries_and_no_saved_connection_state():
+    result = mcp_registry._search_packaged_registry('github')
+    assert 0 < len(result['items']) <= 50
+    assert all(item['discovery_source'] == 'packaged_registry' and 'authenticated' not in item for item in result['items'])
