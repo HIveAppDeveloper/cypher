@@ -1,6 +1,6 @@
 # Meta Muse connection candidate — 2026-10-28
 
-Source candidate based on canonical main `3dfb82b5680772d26c4cf544475f895edf5d246a`. This document is not a live acceptance receipt.
+Source candidate refreshed on 2026-10-29 against canonical main `619dc45946c367ba27ee3447bba2c08fdb8c7d31`. Original candidate `b2eb97139fbd647f9ea07f2f8124e26b84b5533f` is preserved; its exact 14-path patch cherry-picked without conflicts. This document is not a live acceptance receipt.
 
 ## Customer flow
 
@@ -37,3 +37,13 @@ The canonical release owner must review this separate candidate, build/release A
 - Frontend production build: `npm run build` → **pass** (existing multiple-lockfile root warning retained).
 - Scoped Impeccable detection: ModelConnections.tsx + ModelControls.tsx → `[]`; manual React review found no introduced effects, dependencies or accessibility control regression.
 - Existing Impeccable product/design metadata has stale context/schema/sidecar/build-path findings. Refresh is separate work; no design metadata repair was bundled into this functional change.
+
+### October 29 release refresh
+
+The exact original patch applied cleanly on `619dc45946c367ba27ee3447bba2c08fdb8c7d31`. A second source review traced the setup form → owner-guarded queue → worker → encrypted token read → native Meta adapter → task response/usage path. No production/provider calls were made by this source lane.
+
+Current-base validation: **55 passed** in the model/connection/preflight/worker-scheduling suite; **428 passed** in the full frontend suite after the setup regression fix; production build passed including compile, type checks and all 19 static pages. The complete current-base backend suite passed **915 tests, 9 gated skips**. The original preserved `b2eb971` separately passed **905 backend tests, 9 gated skips** and **420 frontend tests** on its older base; those are not claimed as the current integrated release's full-suite results.
+
+Review finding fixed after the release owner allocated the two additional WorkspaceSetup/test paths: direct-transport setup had excluded Muse in its Gemini/xAI filter, although the canonical OmniRoute transport displayed it. The new boundary regression first failed with actual `gemini,xai` versus expected `gemini,xai,muse`; the one-line filter repair then passed direct/gateway and nonowner cases. Final source scope is 16 paths, with no other broad settings changes. The scoped three-component detector returned `[]`; manual React review found no new hooks, effects, requests or dependencies from the one-line filter repair. This refresh remains a candidate, not proof of a working live token.
+
+The release owner was notified of fresh human authorization to review, deploy and actually test Muse on October 29. Further deployment was temporarily queued behind a separately reported live-app performance/connection UX issue. This does not cancel the Muse request or establish live provider success. Secure owner token presence, stage/final same-release gates, real model verification and a bounded tool conversation remain required.
