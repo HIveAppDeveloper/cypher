@@ -338,7 +338,7 @@ export default function VcProspectingWorkspace({ accountId }: { accountId?: stri
           </form>
         </> : null}
 
-        <div className="vc-table-head"><h3>{savedListView ? 'Saved candidates' : `Candidates (${secCount(data?.database.matched_records)})`}</h3><span>Source-backed records</span></div>
+        <div className="vc-table-head"><h3>{savedListView ? 'Saved candidates' : `People in SEC filings (${secCount(data?.database.matched_records)})`}</h3><span>Source-backed records</span></div>
         <div className="vc-table-wrap">
           <table className="vc-candidate-table">
             <thead><tr><th scope="col">Company</th><th scope="col">Founder or related person</th><th scope="col">Filed role</th><th scope="col">Evidence</th></tr></thead>
