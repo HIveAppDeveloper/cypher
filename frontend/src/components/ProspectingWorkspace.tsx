@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState, type FormEvent } from 'react';
-import { request } from '../lib/api';
+import { ApiError, request } from '../lib/api';
 import { dateFromApi } from '../lib/dates';
 import { companyWebsite } from '../lib/company-website';
 import { CYPHER_VOICE_INTRO } from '../lib/cypher-voice';
@@ -198,16 +198,35 @@ export default function ProspectingWorkspace({ accountId }: { accountId?: string
     if (!runId || terminal(run?.status || '')) return;
     const controller = new AbortController();
     let timer: ReturnType<typeof setTimeout>;
+    let retryAttempt = 0;
+    let lastPollingError: string | null = null;
     setPollError('');
     async function poll() {
       try {
         const next: Run = await request(`/prospecting/runs/${encodeURIComponent(runId!)}`, { signal: controller.signal });
         if (controller.signal.aborted) return;
+        retryAttempt = 0;
+        if (lastPollingError) {
+          const recoveredMessage = lastPollingError;
+          lastPollingError = null;
+          setPollError(current => current === recoveredMessage ? '' : current);
+        }
         setRun(next);
         setRuns(rows => [next, ...rows.filter(row => row.id !== next.id)]);
         if (!terminal(next.status)) timer = setTimeout(poll, 2500);
       } catch (pollFailure) {
-        if (!controller.signal.aborted) setPollError(errorText(pollFailure));
+        if (!controller.signal.aborted) {
+          const message = errorText(pollFailure);
+          lastPollingError = message;
+          setPollError(message);
+          const retryable = !(pollFailure instanceof ApiError) || [408, 429].includes(pollFailure.status) || pollFailure.status >= 500;
+          if (retryable) {
+            const backoff = Math.min(2500 * 2 ** retryAttempt, 30000);
+            const retryAfter = pollFailure instanceof ApiError && Number.isFinite(pollFailure.retryAfter) ? Math.max(0, pollFailure.retryAfter * 1000) : 0;
+            retryAttempt += 1;
+            timer = setTimeout(poll, Math.max(backoff, retryAfter));
+          }
+        }
       }
     }
     void poll();
