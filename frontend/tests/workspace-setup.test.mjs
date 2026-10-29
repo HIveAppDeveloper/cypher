@@ -58,3 +58,21 @@ test('subscription guidance keeps setup in Cypher without fetching a dashboard l
   assert.equal(find(view.tree,node=>node.type==='a'&&textOf(node).includes('OmniRoute')),undefined);
   assert.match(textOf(view.tree),/Hosted ChatGPT sign-in requires an approved Cypher registration/);view.unmount();
 });
+
+test('Muse setup remains available for direct and gateway runtimes without exposing owner controls to other users',async()=>{
+  const items=['gemini','xai','muse','meta','openai'].map(id=>({id,name:id,state:'not_checked',account_url:'https://dev.meta.ai/',can_add_api_key:id==='muse',requires_api_key:id==='muse'}));
+  for(const transport of ['direct','omniroute']){
+    const view=panel(async()=>({ok:true,json:async()=>({connected:true,worker:true,model_configured:true,model_transport:transport,can_manage_model_connections:true,model_connections:items})}));
+    await view.flush();
+    const connections=find(view.tree,node=>node.type==='model-connections');
+    assert.ok(connections,'The owner should be able to open model access');
+    assert.equal(connections.props.items.map(item=>item.id).join(','),transport==='direct'?'gemini,xai,muse':'gemini,xai,muse,meta,openai');
+    assert.equal(connections.props.workerReady,true);
+    assert.equal(connections.props.omniroute,transport==='omniroute');
+    view.unmount();
+  }
+  const guest=panel(async()=>({ok:true,json:async()=>({connected:true,worker:true,model_transport:'direct',can_manage_model_connections:false,model_connections:items})}));
+  await guest.flush();
+  assert.equal(find(guest.tree,node=>node.type==='model-connections'),undefined);
+  guest.unmount();
+});
