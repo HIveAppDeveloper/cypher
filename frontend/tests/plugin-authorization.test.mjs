@@ -1,22 +1,26 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
+import {createHash} from 'node:crypto';
+import {TextEncoder} from 'node:util';
 import {environment,renderer,load,storage,deferred,find,textOf,button} from './support/component-harness.mjs';
 const auth=load('../src/lib/pluginAuthorization.ts',{}, {URL,Date});
 const id='e52dad3f-b0db-4cf8-a0f0-f9b88c16f230';
 const item={id:'fixture',name:'Fixture Service',url:'https://provider.example/mcp',domains:['provider.example'],description:'Synthetic service',category:'Testing'};
 const pending={id,name:item.name,url:'https://provider.example/allow?state=synthetic',startedAt:0};
-function panel({saved={},popupBlocked=false,api:overrides={},embedded=false,runtimeConnected=false,onManageSkills}={}){
-  const session=storage(saved),env=environment(session),view=renderer(env);let opens=0,closed=0;
-  const popup={closed:false,opener:{},document:{title:'',createElement:()=>({style:{}}),body:{appendChild(){}}},location:{replace(){}},focus(){},close(){this.closed=true;closed++;}};
+function panel({saved={},popupBlocked=false,api:overrides={},embedded=false,runtimeConnected=false,onManageSkills,existingSession,existingEnvironment,approve=async()=>undefined,locationSearch='?workspace=1&conversation=fixture'}={}){
+  const session=existingSession||storage(saved),env=existingEnvironment||environment(session),view=renderer(env);let opens=0,closed=0;
+  const makePopup=()=>({closed:false,opener:{},sessionStorage:storage(),document:{title:'',createElement:()=>({style:{}}),body:{appendChild(){}}},location:{url:'',replace(value){this.url=value;}},focus(){},close(){this.closed=true;closed++;}});
+  const popup=makePopup(),popups=[];
   env.document.createElement=()=>({style:{}});
-  env.window.open=()=>{opens++;return popupBlocked?null:popup;};
-  env.window.location={hostname:'cypher-agent.vercel.app',href:'https://app.example/?workspace=1&conversation=fixture',search:'?workspace=1&conversation=fixture',assign(){throw Error('Must preserve the workspace');}};
+  env.window.crypto={subtle:{digest:async (_algorithm,bytes)=>{const digest=createHash('sha256').update(bytes).digest();return digest.buffer.slice(digest.byteOffset,digest.byteOffset+digest.byteLength);}}};
+  env.window.open=()=>{opens++;if(popupBlocked)return null;const opened=opens===1?popup:makePopup();popups.push(opened);return opened;};
+  env.window.location={hostname:'cypher-agent.vercel.app',href:'https://app.example/?workspace=1&conversation=fixture',search:locationSearch,assign(){throw Error('Must preserve the workspace');}};
   env.window.history={state:null,replaceState(){}};
   const api={getPluginCatalog:async()=>[item],getPlugins:async()=>[],deviceStatus:async()=>({enrolled:false}),getAvailableConnections:async()=>[],pluginSyncStatus:async()=>null,accountStatus:async()=>({}),authorizePlugin:async()=>({status:'awaiting_login',flow_id:id,authorization_url:pending.url,name:item.name}),pluginAuthStatus:async()=>({status:'awaiting_login',name:item.name}),cancelPluginAuth:async()=>({status:'cancelled'}),...overrides};
-  const scopedAuth=load('../src/lib/pluginAuthorization.ts',{}, {URL,Date:env.globals.Date});
-  const {PluginPanel}=load('../src/components/PluginPanel.tsx',{react:view.react,'./LoadingState':{LoadingState:'loading-state'},'../lib/api':{api},'../lib/plugin-status':load('../src/lib/plugin-status.ts',{}, {Date}),'../lib/canonical-app':load('../src/lib/canonical-app.ts',{}, {URL}),'../lib/device':{approveConnection:async()=>undefined,enrollDevice:async()=>{}},'../lib/pluginAuthorization':scopedAuth,'./McpDirectory':{McpDirectory:'mcp-directory'},'./cipher/CypherMark':{__esModule:true,default:'cypher-mark'},'./cipher/BinaryLens':{__esModule:true,default:'binary-lens'}},{...env.globals,URL,URLSearchParams,React:view.react.default,fetch:async()=>({ok:true,json:async()=>({connected:runtimeConnected,variables:[]})})});
+  const scopedAuth=load('../src/lib/pluginAuthorization.ts',{}, {URL,Date:env.globals.Date,TextEncoder});
+  const {PluginPanel}=load('../src/components/PluginPanel.tsx',{react:view.react,'./LoadingState':{LoadingState:'loading-state'},'../lib/api':{api},'../lib/plugin-status':load('../src/lib/plugin-status.ts',{}, {Date}),'../lib/canonical-app':load('../src/lib/canonical-app.ts',{}, {URL}),'../lib/device':{approveConnection:approve,enrollDevice:async()=>{}},'../lib/pluginAuthorization':scopedAuth,'../lib/connectionQueue':load('../src/lib/connectionQueue.ts'),'./McpDirectory':{McpDirectory:'mcp-directory'},'./cipher/CypherMark':{__esModule:true,default:'cypher-mark'},'./cipher/BinaryLens':{__esModule:true,default:'binary-lens'}},{...env.globals,URL,URLSearchParams,React:view.react.default,fetch:async()=>({ok:true,json:async()=>({connected:runtimeConnected,variables:[]})})});
   view.mount(()=>PluginPanel({onClose(){},onManageSkills,embedded}));
-  return {env,view,api,session,popup,get opens(){return opens;},get closed(){return closed;}};
+  return {env,view,api,session,popup,popups,get opens(){return opens;},get closed(){return closed;}};
 }
 async function connect(p){await p.view.flush();find(p.view.tree,n=>n.type==='button'&&n.props?.['aria-label']===`Connect ${item.name}`).props.onClick();await p.view.flush();await p.view.flush();}
 
@@ -201,6 +205,15 @@ test('Canva availability waits for available-account lookup',async()=>{
   assert.match(textOf(p.view.tree),/Canva connections aren’t available yet/);p.view.unmount();
 });
 
+test('retry publishes the catalog without waiting for slower connection refresh',async()=>{
+  let catalogCalls=0,pluginCalls=0;const waiting=deferred();
+  const p=panel({api:{getPluginCatalog:async()=>{if(++catalogCalls===1)throw Error('offline');return [item];},getPlugins:()=>++pluginCalls===1?Promise.resolve([]):waiting.promise}});
+  await p.view.flush();assert.match(textOf(p.view.tree),/App catalog unavailable/);
+  button(p.view.tree,'Retry catalog').props.onClick();await p.view.flush();
+  assert.match(textOf(p.view.tree),/Fixture Service/);assert.doesNotMatch(textOf(p.view.tree),/App catalog unavailable/);
+  waiting.resolve([]);await p.view.flush();p.view.unmount();
+});
+
 test('connection request failures do not claim there are no saved tools and retry recovers',async()=>{
   let calls=0;
   const p=panel({api:{getPlugins:async()=>{if(++calls===1)throw Error('Synthetic offline');return [];}}});
@@ -302,7 +315,13 @@ test('Lovable opens its official MCP OAuth flow and waits for verified tools aft
 test('a closed provider window can be reopened through the real link',async()=>{
   const p=panel();await connect(p);p.popup.closed=true;let prevented=false;
   find(p.view.tree,n=>n.type==='a'&&textOf(n)==='Continue to Fixture Service').props.onClick({preventDefault(){prevented=true;}});
-  assert.equal(prevented,false,'browser follows the link when the old window is closed');p.view.unmount();
+  assert.equal(prevented,true);assert.equal(p.popups[1].location.url,pending.url);
+  assert.deepEqual(JSON.parse(p.popups[1].sessionStorage.getItem(auth.PLUGIN_SIGN_INS_KEY)).map(value=>value.id),[id]);p.view.unmount();
+});
+test('a blocked reopening leaves the direct provider link usable',async()=>{
+  const p=panel();await connect(p);p.popup.closed=true;p.env.window.open=()=>null;let prevented=false;
+  find(p.view.tree,n=>n.type==='a'&&textOf(n)==='Continue to Fixture Service').props.onClick({preventDefault(){prevented=true;}});
+  assert.equal(prevented,false);p.view.unmount();
 });
 test('transient status errors preserve sign-in and retry without a second authorization',async()=>{
   let polls=0,starts=0;
@@ -329,9 +348,148 @@ test('failed cancellation keeps a resumable flow; successful cancellation clears
   button(p.view.tree,'Cancel sign-in').props.onClick();await p.view.flush();assert.ok(p.session.getItem(auth.PLUGIN_SIGN_IN_KEY));
   button(p.view.tree,'Cancel sign-in').props.onClick();await p.view.flush();assert.equal(p.session.getItem(auth.PLUGIN_SIGN_IN_KEY),null);assert.match(textOf(p.view.tree),/Sign-in cancelled/);p.view.unmount();
 });
+test('multiple selected apps proceed after a failure and retain independent sign-ins',async()=>{
+  const one={...item,id:'one',name:'One',url:'https://one.example/mcp'};
+  const two={...item,id:'two',name:'Two',url:'https://two.example/mcp'};
+  const three={...item,id:'three',name:'Three',url:'https://three.example/mcp'};
+  const first=deferred(),calls=[];const id2='f52dad3f-b0db-4cf8-a0f0-f9b88c16f230';
+  const p=panel({api:{getPluginCatalog:async()=>[one,two,three],authorizePlugin:async input=>{calls.push(input.name);if(input.name==='One')return first.promise;if(input.name==='Two')throw Error('provider failed');return {status:'awaiting_login',flow_id:id2,name:input.name,authorization_url:'https://three.example/allow'};}}});
+  await p.view.flush();const click=name=>find(p.view.tree,n=>n.type==='button'&&n.props?.['aria-label']===`Connect ${name}`).props.onClick();
+  click('One');click('One');click('Two');click('Three');await p.view.flush();assert.deepEqual(calls,['One']);
+  first.resolve({status:'awaiting_login',flow_id:id,name:'One',authorization_url:'https://one.example/allow'});await p.view.flush();await p.view.flush();
+  assert.deepEqual(calls,['One','Two','Three']);assert.match(textOf(p.view.tree),/Could not connect/);
+  assert.ok(find(p.view.tree,n=>n.type==='a'&&n.props?.href==='https://one.example/allow'));
+  assert.ok(find(p.view.tree,n=>n.type==='a'&&n.props?.href==='https://three.example/allow'));
+  assert.equal(JSON.parse(p.session.getItem(auth.PLUGIN_SIGN_INS_KEY)).length,2);
+  assert.equal(p.popups.length,3);assert.equal(p.popups[0].closed,false);assert.equal(p.popups[1].closed,true);assert.equal(p.popups[2].closed,false);
+  assert.deepEqual(JSON.parse(p.popups[0].sessionStorage.getItem(auth.PLUGIN_SIGN_INS_KEY)).map(value=>value.id),[id]);
+  assert.deepEqual(JSON.parse(p.popups[2].sessionStorage.getItem(auth.PLUGIN_SIGN_INS_KEY)).map(value=>value.id),[id2]);
+  p.view.unmount();
+});
+
+test('an unsafe provider link fails its own app and does not stop the queue',async()=>{
+  const one={...item,id:'one',name:'One',url:'https://one.example/mcp'},two={...item,id:'two',name:'Two',url:'https://two.example/mcp'};const calls=[];
+  const p=panel({api:{getPluginCatalog:async()=>[one,two],authorizePlugin:async input=>{calls.push(input.name);return {status:'awaiting_login',flow_id:input.name==='One'?'f52dad3f-b0db-4cf8-a0f0-f9b88c16f230':id,name:input.name,authorization_url:input.name==='One'?'javascript:alert(1)':'https://two.example/allow'};}}});
+  await p.view.flush();find(p.view.tree,n=>n.type==='button'&&n.props?.['aria-label']==='Connect One').props.onClick();find(p.view.tree,n=>n.type==='button'&&n.props?.['aria-label']==='Connect Two').props.onClick();await p.view.flush();await p.view.flush();
+  assert.deepEqual(calls,['One','Two']);assert.match(textOf(p.view.tree),/Could not connect/);assert.equal(p.popups[0].closed,true);
+  assert.equal(find(p.view.tree,n=>n.type==='a'&&n.props?.href==='javascript:alert(1)'),undefined);assert.ok(find(p.view.tree,n=>n.type==='a'&&n.props?.href==='https://two.example/allow'));p.view.unmount();
+});
+
+test('cancelling an in-flight start moves on without treating a late result as a connection',async()=>{
+  const one={...item,id:'one',name:'One',url:'https://one.example/mcp'};const two={...item,id:'two',name:'Two',url:'https://two.example/mcp'};
+  const late=deferred(),calls=[];let firstSignal;
+  const p=panel({api:{getPluginCatalog:async()=>[one,two],authorizePlugin:(input,signal)=>{calls.push(input.name);if(input.name==='One'){firstSignal=signal;return late.promise;}return Promise.resolve({status:'awaiting_login',flow_id:id,name:'Two',authorization_url:'https://two.example/allow'});}}});
+  await p.view.flush();find(p.view.tree,n=>n.type==='button'&&n.props?.['aria-label']==='Connect One').props.onClick();find(p.view.tree,n=>n.type==='button'&&n.props?.['aria-label']==='Connect Two').props.onClick();await p.view.flush();
+  button(p.view.tree,'Cancel One').props.onClick();await p.view.flush();await p.view.flush();
+  assert.equal(firstSignal.aborted,true);assert.deepEqual(calls,['One','Two']);assert.equal(p.popups[0].closed,true);
+  late.resolve({status:'awaiting_login',flow_id:'f52dad3f-b0db-4cf8-a0f0-f9b88c16f230',name:'One',authorization_url:'https://one.example/allow'});await p.view.flush();
+  assert.equal(find(p.view.tree,n=>n.type==='a'&&n.props?.href==='https://one.example/allow'),undefined);assert.ok(find(p.view.tree,n=>n.type==='a'&&n.props?.href==='https://two.example/allow'));p.view.unmount();
+});
+
+test('cancelling a pending approval never authorizes it after it resolves',async()=>{
+  const one={...item,id:'one',name:'One',url:'https://one.example/mcp'},two={...item,id:'two',name:'Two',url:'https://two.example/mcp'};
+  const approval=deferred(),calls=[];let approvals=0;
+  const p=panel({approve:()=>++approvals===1?approval.promise:Promise.resolve(undefined),api:{getPluginCatalog:async()=>[one,two],authorizePlugin:async input=>{calls.push(input.name);return {status:'awaiting_login',flow_id:id,name:input.name,authorization_url:'https://two.example/allow'};}}});
+  await p.view.flush();find(p.view.tree,n=>n.type==='button'&&n.props?.['aria-label']==='Connect One').props.onClick();find(p.view.tree,n=>n.type==='button'&&n.props?.['aria-label']==='Connect Two').props.onClick();await p.view.flush();
+  button(p.view.tree,'Cancel One').props.onClick();await p.view.flush();await p.view.flush();assert.deepEqual(calls,['Two']);
+  approval.resolve(undefined);await p.view.flush();assert.deepEqual(calls,['Two']);p.view.unmount();
+});
+
+test('a slow tool check does not delay starting the next selected app',async()=>{
+  const two={...item,id:'two',name:'Two',url:'https://two.example/mcp'},check=deferred();const calls=[];
+  const p=panel({api:{getPluginCatalog:async()=>[item,two],authorizePlugin:async input=>{calls.push(input.name);return input.name===item.name?{status:'connected',plugin_id:'linked-account',name:input.name}:{status:'awaiting_login',flow_id:id,name:input.name,authorization_url:'https://two.example/allow'};},testPlugin:()=>check.promise}});
+  await p.view.flush();find(p.view.tree,n=>n.type==='button'&&n.props?.['aria-label']===`Connect ${item.name}`).props.onClick();
+  find(p.view.tree,n=>n.type==='button'&&n.props?.['aria-label']==='Connect Two').props.onClick();await p.view.flush();await p.view.flush();
+  assert.deepEqual(calls,[item.name,'Two']);assert.ok(find(p.view.tree,n=>n.type==='a'&&n.props?.href==='https://two.example/allow'));
+  check.resolve({status:'passed',message:'Read succeeded.'});await p.view.flush();p.view.unmount();
+});
+
+test('one stalled provider status does not prevent another pending flow completing',async()=>{
+  const second={id:'f52dad3f-b0db-4cf8-a0f0-f9b88c16f230',name:'Two',url:'https://two.example/allow',startedAt:0};
+  const slow=deferred(),checked=[];
+  const p=panel({saved:{[auth.PLUGIN_SIGN_INS_KEY]:JSON.stringify([pending,second])},api:{pluginAuthStatus:flow=>{checked.push(flow);return flow===id?slow.promise:Promise.resolve({status:'connected',name:'Two'});}}});
+  await p.view.flush();await p.view.flush();assert.deepEqual(checked,[id,second.id]);
+  assert.equal(find(p.view.tree,n=>n.type==='a'&&n.props?.href===second.url),undefined);assert.ok(find(p.view.tree,n=>n.type==='a'&&n.props?.href===pending.url));
+  slow.resolve({status:'awaiting_login',name:item.name});await p.view.flush();p.view.unmount();
+});
+
+test('API-key setup remains actionable while another app continues',async()=>{
+  const keyed={...item,id:'keyed',name:'Keyed',url:'https://key.example/mcp',auth:'api_key'};let calls=0;
+  const p=panel({api:{getPluginCatalog:async()=>[keyed,item],authorizePlugin:async()=>{calls++;return {status:'awaiting_login',flow_id:id,name:item.name,authorization_url:pending.url};}}});
+  await p.view.flush();find(p.view.tree,n=>n.type==='button'&&n.props?.['aria-label']==='View options Keyed').props.onClick();
+  find(p.view.tree,n=>n.type==='button'&&n.props?.['aria-label']===`Connect ${item.name}`).props.onClick();await p.view.flush();await p.view.flush();
+  assert.equal(calls,1);assert.ok(find(p.view.tree,n=>n.type==='a'&&n.props?.href===pending.url));
+  button(p.view.tree,'View options for Keyed').props.onClick();await p.view.flush();
+  assert.ok(find(p.view.tree,n=>n.props?.id==='plugin-token'));assert.match(textOf(p.view.tree),/Keyed uses an API key/);p.view.unmount();
+});
+
+test('multiple pending sign-ins resume separately and cancellation removes only its own flow',async()=>{
+  const second={id:'f52dad3f-b0db-4cf8-a0f0-f9b88c16f230',name:'Two',url:'https://two.example/allow',startedAt:0};
+  const saved={[auth.PLUGIN_SIGN_INS_KEY]:JSON.stringify([pending,second])};let cancelled=[];
+  const p=panel({saved,api:{cancelPluginAuth:async flow=>{cancelled.push(flow);return {status:'cancelled'};}}});
+  await p.view.flush();assert.ok(find(p.view.tree,n=>n.type==='a'&&n.props?.href===pending.url));assert.ok(find(p.view.tree,n=>n.type==='a'&&n.props?.href===second.url));
+  const section=find(p.view.tree,n=>n.props?.['aria-label']===`Connect ${item.name}`&&n.type==='section');
+  button(section,'Cancel sign-in').props.onClick();await p.view.flush();
+  assert.deepEqual(cancelled,[id]);assert.deepEqual(JSON.parse(p.session.getItem(auth.PLUGIN_SIGN_INS_KEY)).map(x=>x.id),[second.id]);
+  assert.ok(find(p.view.tree,n=>n.type==='a'&&n.props?.href===second.url));p.view.unmount();
+});
+
+test('closing during authorization preserves its returned flow and never starts queued work',async()=>{
+  const second={...item,id:'two',name:'Two',url:'https://two.example/mcp'},first=deferred();let calls=0;
+  const p=panel({api:{getPluginCatalog:async()=>[item,second],authorizePlugin:async()=>{calls++;return first.promise;}}});
+  await p.view.flush();find(p.view.tree,n=>n.type==='button'&&n.props?.['aria-label']===`Connect ${item.name}`).props.onClick();
+  find(p.view.tree,n=>n.type==='button'&&n.props?.['aria-label']==='Connect Two').props.onClick();await p.view.flush();
+  p.view.unmount();first.resolve({status:'awaiting_login',flow_id:id,name:item.name,authorization_url:pending.url});
+  await p.view.flush();await p.view.flush();assert.equal(calls,1);assert.equal(p.view.updatesAfterUnmount,0);
+  assert.equal(JSON.parse(p.session.getItem(auth.PLUGIN_SIGN_INS_KEY))[0].id,id);assert.equal(p.popups[1].closed,true);
+});
+
+test('provider return removes only its matching stored flow',async()=>{
+  const second={id:'f52dad3f-b0db-4cf8-a0f0-f9b88c16f230',name:'Two',url:'https://two.example/allow',startedAt:0};
+  const p=panel({saved:{[auth.PLUGIN_SIGN_INS_KEY]:JSON.stringify([pending,second])},locationSearch:`?workspace=1&plugins=connected&plugin_flow=${id}`});
+  await p.view.flush();assert.deepEqual(JSON.parse(p.session.getItem(auth.PLUGIN_SIGN_INS_KEY)).map(value=>value.id),[second.id]);
+  assert.ok(find(p.view.tree,n=>n.type==='a'&&n.props?.href===second.url));p.view.unmount();
+});
+
+test('a late result merges with sign-ins started in a newly opened panel',async()=>{
+  const late=deferred(),two={...item,id:'two',name:'Two',url:'https://two.example/mcp'};const id2='f52dad3f-b0db-4cf8-a0f0-f9b88c16f230';
+  const old=panel({api:{authorizePlugin:()=>late.promise}});await old.view.flush();
+  find(old.view.tree,n=>n.type==='button'&&n.props?.['aria-label']===`Connect ${item.name}`).props.onClick();await old.view.flush();old.view.unmount();
+  const fresh=panel({existingSession:old.session,existingEnvironment:old.env,api:{getPluginCatalog:async()=>[two],authorizePlugin:async()=>({status:'awaiting_login',flow_id:id2,name:'Two',authorization_url:'https://two.example/allow'})}});
+  await fresh.view.flush();find(fresh.view.tree,n=>n.type==='button'&&n.props?.['aria-label']==='Connect Two').props.onClick();await fresh.view.flush();
+  late.resolve({status:'awaiting_login',flow_id:id,name:item.name,authorization_url:pending.url});await old.view.flush();await fresh.view.flush();
+  assert.deepEqual(JSON.parse(fresh.session.getItem(auth.PLUGIN_SIGN_INS_KEY)).map(value=>value.id).sort(),[id,id2].sort());
+  assert.ok(find(fresh.view.tree,n=>n.type==='a'&&n.props?.href===pending.url));assert.ok(find(fresh.view.tree,n=>n.type==='a'&&n.props?.href==='https://two.example/allow'));
+  assert.equal(old.view.updatesAfterUnmount,0);fresh.view.unmount();
+});
+
+test('a restored pending sign-in prevents reauthorization of the same endpoint without storing its address',async()=>{
+  const key=createHash('sha256').update(item.url+'|').digest('hex');let calls=0;
+  const p=panel({saved:{[auth.PLUGIN_SIGN_INS_KEY]:JSON.stringify([{...pending,keyHash:key}])},api:{authorizePlugin:async()=>{calls++;throw Error('Unexpected duplicate');}}});
+  await p.view.flush();find(p.view.tree,n=>n.type==='button'&&n.props?.['aria-label']===`Connect ${item.name}`).props.onClick();await p.view.flush();
+  assert.equal(calls,0);assert.equal(p.popup.closed,true);assert.doesNotMatch(p.session.getItem(auth.PLUGIN_SIGN_INS_KEY),/provider\.example\/mcp/);p.view.unmount();
+});
+
 test('expired or unsafe stored links are never resumed',()=>{
   for(const change of [{url:'javascript:alert(1)'},{url:'https://user:secret@provider.example/allow'},{startedAt:-auth.PLUGIN_SIGN_IN_TTL},{id:'other'}]){const s=storage({[auth.PLUGIN_SIGN_IN_KEY]:JSON.stringify({...pending,...change})});assert.equal(auth.readPluginSignIn(s,0),null);assert.equal(s.getItem(auth.PLUGIN_SIGN_IN_KEY),null);}
 });
+test('multiple stored flows migrate legacy state and retain only safe unexpired entries',()=>{
+  const old=storage({[auth.PLUGIN_SIGN_IN_KEY]:JSON.stringify(pending)});assert.equal(auth.readPluginSignIns(old,0)[0].id,id);
+  const second={id:'f52dad3f-b0db-4cf8-a0f0-f9b88c16f230',name:'Two',url:'https://two.example/allow',startedAt:0,keyHash:'a'.repeat(64)};
+  const mixed=storage({[auth.PLUGIN_SIGN_INS_KEY]:JSON.stringify([pending,{...second,url:'javascript:alert(1)'},second,{...pending,id:'bad'}])});
+  assert.deepEqual(Array.from(auth.readPluginSignIns(mixed,0),x=>x.id),[id,second.id]);
+  assert.equal(auth.readPluginSignIns(mixed,auth.PLUGIN_SIGN_IN_TTL).length,0);
+});
+
+test('pending start reservations deduplicate across panels and release only their own claim',()=>{
+  const state=storage(),hash='a'.repeat(64),other='b'.repeat(64);
+  assert.equal(auth.reservePluginStart(state,hash,'first',0),true);assert.equal(auth.reservePluginStart(state,hash,'second',0),false);
+  assert.equal(auth.reservePluginStart(state,other,'other',0),true);auth.releasePluginStart(state,'first',0);
+  assert.equal(auth.reservePluginStart(state,hash,'second',0),true);
+  auth.releasePluginStart(state,'first',0);assert.equal(auth.reservePluginStart(state,hash,'third',0),false);
+  assert.equal(auth.reservePluginStart(state,hash,'later',auth.PLUGIN_SIGN_IN_TTL),true);
+});
+
 test('provider return paths retain the conversation and reject external or API destinations',()=>{
   const origin='https://app.example';assert.equal(auth.pluginReturnPath(origin+'/?workspace=1&conversation=123&plugins=failed&state=secret',origin),'/?workspace=1&conversation=123');
   for(const value of ['https://outside.example/','//outside.example/','/api/plugin-oauth/callback?code=secret'])assert.equal(auth.pluginReturnPath(value,origin),'/?workspace=1');
@@ -379,12 +537,24 @@ test('provider registration errors open an actionable OAuth form without claimin
 test('connected tool descriptions are searchable and public tools have a separate view',async()=>{
   const connections=[{id:'account',name:'Account fixture',url:'https://account.example/mcp',authenticated:true,enabled:true,tools:[{name:'lookup',description:'Find invoices'}]},{id:'public',name:'Public fixture',url:'https://public.example/mcp',authenticated:false,enabled:true,tools:[{name:'public_read',description:'Public documentation'}]}];
   const p=panel({api:{getPlugins:async()=>connections}});await p.view.flush();
-  button(p.view.tree,'My apps · 2').props.onClick();await p.view.flush();
+  button(p.view.tree,'My apps · 1').props.onClick();await p.view.flush();
   assert.match(textOf(p.view.tree),/Account fixture/);assert.doesNotMatch(textOf(p.view.tree),/Public fixture/);
   button(p.view.tree,'Public tools · 1').props.onClick();await p.view.flush();assert.match(textOf(p.view.tree),/Public fixture/);
+  find(p.view.tree,n=>n.props?.['aria-label']==='Search public tools').props.onChange({target:{value:'invoices'}});await p.view.flush();
+  assert.match(textOf(p.view.tree),/No public tools match your search/);assert.doesNotMatch(textOf(p.view.tree),/Account fixture/);
+  button(p.view.tree,'Account connections').props.onClick();await p.view.flush();
   find(p.view.tree,n=>n.props?.['aria-label']==='Search my apps').props.onChange({target:{value:'invoices'}});await p.view.flush();
   assert.match(textOf(p.view.tree),/Account fixture/);assert.doesNotMatch(textOf(p.view.tree),/Public fixture/);
   p.view.unmount();
+});
+
+test('My apps search counts and shows only matching account connections',async()=>{
+  const connections=[{id:'account',name:'GitHub',url:'https://github.example/mcp',authenticated:true,enabled:true,tools:[{name:'issues',description:'Find GitHub issues'}]},{id:'public',name:'Public docs',url:'https://public.example/mcp',authenticated:false,enabled:true,tools:[{name:'search',description:'Search GitHub docs'}]}];
+  const p=panel({api:{getPlugins:async()=>connections}});await p.view.flush();button(p.view.tree,'My apps · 1').props.onClick();await p.view.flush();
+  const search=find(p.view.tree,n=>n.props?.['aria-label']==='Search my apps');search.props.onChange({target:{value:'GitHub'}});await p.view.flush();
+  assert.match(textOf(p.view.tree),/Your connections 1/);assert.match(textOf(p.view.tree),/GitHub/);assert.doesNotMatch(textOf(p.view.tree),/Public docs/);
+  find(p.view.tree,n=>n.props?.['aria-label']==='Search my apps').props.onChange({target:{value:'nothing'}});await p.view.flush();
+  assert.match(textOf(p.view.tree),/Your connections 0/);assert.match(textOf(p.view.tree),/No connected services match your search/);p.view.unmount();
 });
 
 test('structured registration responses retain recovery fields and readable errors',async()=>{
@@ -393,6 +563,13 @@ test('structured registration responses retain recovery fields and readable erro
   await assert.rejects(()=>request('/plugins/authorize'),error=>error.message===fields.message&&error.code===fields.code&&error.details.callback_url===fields.callback_url);
 });
 
+
+test('authorizePlugin forwards an optional cancellation signal',async()=>{
+  let received;const controller=new AbortController();
+  const {api}=load('../src/lib/api.ts',{'./conversations':{}},{process:{env:{}},AbortSignal,fetch:async(_url,options)=>{received=options.signal;return {ok:true,json:async()=>({status:'awaiting_login',name:'Fixture'})};}});
+  await api.authorizePlugin({name:'Fixture',url:'https://provider.example/mcp'},controller.signal);
+  assert.equal(received.aborted,false);controller.abort();assert.equal(received.aborted,true);
+});
 
 test('Apps exposes Meta permissions directly without starting another authorization flow',async()=>{
   let authorizations=0,checks=0;
