@@ -35,7 +35,7 @@ export const api = {
   pluginSyncStatus: (): Promise<import('../components/PluginPanel').PluginSync|null> => request('/plugins/catalog/sync'),
   syncPlugins: (approval_id?:string): Promise<import('../components/PluginPanel').PluginSync> => request('/plugins/catalog/sync',{method:'POST',body:JSON.stringify({approval_id})}),
   resolvePlugin: (website:string): Promise<import('../components/PluginPanel').CatalogEntry> => request('/plugins/resolve',{method:'POST',body:JSON.stringify({website})}),
-  authorizePlugin: (data:{name:string;url:string;approval_id?:string;reconnect?:boolean;connection_id?:string;oauth_client?:{client_id:string;client_secret?:string;scope?:string}}): Promise<{status:string;flow_id?:string;plugin_id?:string;authorization_url?:string;name:string}> => request('/plugins/authorize',{method:'POST',body:JSON.stringify(data)},65000),
+  authorizePlugin: (data:{name:string;url:string;approval_id?:string;reconnect?:boolean;connection_id?:string;oauth_client?:{client_id:string;client_secret?:string;scope?:string}},signal?:AbortSignal): Promise<{status:string;flow_id?:string;plugin_id?:string;authorization_url?:string;name:string}> => request('/plugins/authorize',{method:'POST',body:JSON.stringify(data),signal},65000),
   cancelPluginAuth: async (id:string) => { const response=await fetch('/api/plugin-oauth/callback?flow='+encodeURIComponent(id),{method:'DELETE'}); const data=await response.json(); if(!response.ok)throw new Error(data.detail||'Could not cancel sign-in.'); return data; },
   pluginAuthStatus: (id:string): Promise<{status:string;name:string;plugin_id?:string}> => request('/plugins/oauth/status/'+id),
   getPlugins: (): Promise<import('../components/PluginPanel').PluginConnection[]> => request('/plugins'),

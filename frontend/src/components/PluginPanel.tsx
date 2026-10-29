@@ -3,7 +3,8 @@ import { pluginStatus, isAccountPlugin } from '../lib/plugin-status';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { approveConnection, enrollDevice } from '../lib/device';
 import { api } from '../lib/api';
-import { PLUGIN_SIGN_IN_KEY, PLUGIN_SIGN_IN_TTL, readPluginSignIn, type PluginSignIn } from '../lib/pluginAuthorization';
+import { PLUGIN_SIGN_IN_TTL, PLUGIN_STARTS_KEY, MAX_PLUGIN_SIGN_INS, readPluginSignIns, writePluginSignIns, pluginConnectionKeyHash, parsePluginSignIn, reservePluginStart, releasePluginStart, type PluginSignIn } from '../lib/pluginAuthorization';
+import { ConnectionQueue, untilAborted, type ConnectionJob, type ConnectionOutcome } from '../lib/connectionQueue';
 import { CANONICAL_APP_ORIGIN, isOffCanonicalHost } from '../lib/canonical-app';
 import CypherMark from './cipher/CypherMark';
 import BinaryLens from './cipher/BinaryLens';
@@ -13,6 +14,7 @@ export interface CatalogEntry { id:string;name:string;url:string;description:str
 export interface AvailableConnection {id:string;name:string;url:string;domains:string[];reuse_available:boolean;method:string;}
 export interface PluginSync {id:string;status:string;checked:number;total:number;counts:Record<string,number>;results:Record<string,{status:string;message:string;tool_count?:number;credential_source?:string}>;}
 type View='browse'|'connected'|'custom'|'settings';
+type QueuedConnection={item:CatalogEntry;reconnect:boolean;popup:Window|null;key:string;keyHash:string;reservationId:string;controller:AbortController};
 const AUTH_POLL_MS=2000;
 const CONNECTION_LOAD_ERROR='Some connections could not load. Retry to refresh the catalog and your connected services.';
 const LOVABLE_MCP_URL='https://mcp.lovable.dev';
@@ -27,6 +29,7 @@ function normalizeHost(value:string){
 function displayAddress(value:string){
   try{const url=new URL(value);return url.origin+url.pathname.replace(/\/$/,'');}catch{return value;}
 }
+function connectionKey(endpoint:string,connectionId?:string){try{return new URL(endpoint).href+'|'+(connectionId||'');}catch{return endpoint+'|'+(connectionId||'');}}
 function sameEndpoint(left:string,right:string){
   // URL serialization equates an HTTPS origin with its root slash, while
   // retaining paths and query strings that may identify different connections.
@@ -92,16 +95,25 @@ export function PluginPanel({onClose,onExploreConnection,onManageSkills,embedded
   const [manualOpen,setManualOpen]=useState(false);
   useEffect(()=>setVisibleCount(12),[search,activeCategory]);
   const [url,setUrl]=useState('');const [name,setName]=useState('');const [token,setToken]=useState('');const [authHeader,setAuthHeader]=useState('Authorization');
-  const [busy,setBusy]=useState(false);const [flow,setFlow]=useState<PluginSignIn|null>(null);
+  const [busy,setBusy]=useState(false);const [flows,setFlows]=useState<PluginSignIn[]>([]);
+  const flowsRef=useRef<PluginSignIn[]>([]);const flow=flows[0]||null;
+  const flowPopups=useRef(new Map<string,Window>());
+  const pendingKeys=useRef(new Set<string>());
+  const [queueJobs,setQueueJobs]=useState<ConnectionJob<QueuedConnection>[]>([]);
+  const queueJobsRef=useRef<ConnectionJob<QueuedConnection>[]>([]);
+  const queueRunner=useRef<(job:QueuedConnection)=>Promise<ConnectionOutcome>>(async()=>({state:'setup'}));
+  const queue=useRef<ConnectionQueue<QueuedConnection>|null>(null);
+  if(!queue.current)queue.current=new ConnectionQueue(async job=>{try{return await queueRunner.current(job);}finally{try{releasePluginStart(sessionStorage,job.reservationId);}catch{}}},jobs=>{queueJobsRef.current=jobs;setQueueJobs(jobs);},MAX_PLUGIN_SIGN_INS,job=>{job.controller.abort();job.popup?.close();try{releasePluginStart(sessionStorage,job.reservationId);}catch{}});
   const [connectingName,setConnectingName]=useState('');
-  const [flowError,setFlowError]=useState('');const [checkingSignIn,setCheckingSignIn]=useState(false);
-  const [cancellingSignIn,setCancellingSignIn]=useState(false);
-  const checkSignIn=useRef<()=>Promise<void>>(async()=>{});
+  const [checkingSignIns,setCheckingSignIns]=useState<Record<string,boolean>>({});
+  const [cancellingSignIns,setCancellingSignIns]=useState<Record<string,boolean>>({});
+  const verificationChain=useRef<Promise<void>>(Promise.resolve());
+  const checkSignIn=useRef<(id?:string)=>Promise<void>>(async()=>{});
   const connecting=useRef(false);
   const testing=useRef(false);
   const mounted=useRef(false);
   const [testingId,setTestingId]=useState('');
-  useEffect(()=>{mounted.current=true;return()=>{mounted.current=false;};},[]);
+  useEffect(()=>{mounted.current=true;if(!queue.current||queue.current.isDisposed)queue.current=new ConnectionQueue(async job=>{try{return await queueRunner.current(job);}finally{try{releasePluginStart(sessionStorage,job.reservationId);}catch{}}},jobs=>{queueJobsRef.current=jobs;setQueueJobs(jobs);},MAX_PLUGIN_SIGN_INS,job=>{job.controller.abort();job.popup?.close();try{releasePluginStart(sessionStorage,job.reservationId);}catch{}});return()=>{mounted.current=false;queue.current?.dispose();};},[]);
   const [notice,setNotice]=useState('');const [error,setError]=useState('');
   const [refreshableError,setRefreshableError]=useState(false);
   const [disconnected,setDisconnected]=useState(false);
@@ -129,8 +141,8 @@ export function PluginPanel({onClose,onExploreConnection,onManageSkills,embedded
   useEffect(()=>{
     const previous=document.activeElement as HTMLElement;if(!embedded)dialog.current?.showModal();let active=true;
     const items=api.getPluginCatalog().then(value=>{if(active){setCatalog(value);setCatalogLoaded(true);setCatalogLoadFailed(false);}}).catch(()=>{if(active){setCatalogLoadFailed(true);setError(CONNECTION_LOAD_ERROR);setRefreshableError(true);}}).finally(()=>{if(active)setCatalogLoading(false);});
-    const connections=api.getPlugins().then(value=>{if(active){setPlugins(value);setConnectionsLoaded(true);setConnectionsLoadFailed(false);}}).catch(()=>{if(active){setConnectionsLoadFailed(true);setError(CONNECTION_LOAD_ERROR);setRefreshableError(true);}});
-    void Promise.all([items,connections]).then(()=>{if(active)setLoading(false);});
+    void items;
+    void api.getPlugins().then(value=>{if(active){setPlugins(value);setConnectionsLoaded(true);setConnectionsLoadFailed(false);}}).catch(()=>{if(active){setConnectionsLoadFailed(true);setError(CONNECTION_LOAD_ERROR);setRefreshableError(true);}}).finally(()=>{if(active)setLoading(false);});
     api.deviceStatus().then(s=>{if(active)setDevice(s.enrolled);}).catch(()=>{});
     api.getAvailableConnections().then(s=>{if(active){setAvailable(s);setAvailableLoaded(true);setAvailableLoadFailed(false);}}).catch(()=>{if(active)setAvailableLoadFailed(true);});
     api.pluginSyncStatus().then(s=>{if(active)setSync(s);}).catch(()=>{});
@@ -144,15 +156,20 @@ export function PluginPanel({onClose,onExploreConnection,onManageSkills,embedded
       else {setSearch(connectTarget);if(params.get('reconnect')==='1')setView('connected');setNotice(`Continue with ${connectTarget} from Cypher’s main address. Choose Connect ${connectTarget} to start again.`);}
       const clean=new URL(window.location.href);clean.searchParams.delete('connect');clean.searchParams.delete('server');clean.searchParams.delete('reconnect');clean.searchParams.delete('q');window.history.replaceState(window.history.state,'',clean.pathname+clean.search+clean.hash);
     }
-    let saved:PluginSignIn|null=null;
-    try{saved=readPluginSignIn(sessionStorage);}catch{}
+    let saved:PluginSignIn[]=[];
+    try{saved=readPluginSignIns(sessionStorage);}catch{}
     if(result&&['connected','cancelled','failed'].includes(result)){
-      if(!params.get('plugin_flow')||params.get('plugin_flow')===saved?.id){try{sessionStorage.removeItem(PLUGIN_SIGN_IN_KEY);}catch{}saved=null;}
+      const returned=params.get('plugin_flow');
+      if(returned)saved=saved.filter(item=>item.id!==returned);
+      else if(saved.length===1)saved=[];
+      try{writePluginSignIns(sessionStorage,saved);}catch{}
       setView('connected');if(result==='connected')setNotice('Your app is connected. You can manage its access below.');else setError(result==='cancelled'?'Access was not allowed. Choose Connect to try again.':'Sign-in could not be verified. Choose Connect to try again.');
       const clean=new URL(window.location.href);clean.searchParams.delete('plugins');clean.searchParams.delete('plugin_flow');window.history.replaceState(window.history.state,'',clean.pathname+clean.search+clean.hash);
     }
-    if(saved){setFlow(saved);setBusy(true);setNotice('Finish signing in and allow access on the provider’s page. Your progress is saved in this tab.');}
-    return()=>{active=false;dialog.current?.close();previous?.focus();};
+    flowsRef.current=saved;if(saved.length){setFlows(saved);setNotice('Finish signing in on each provider’s page. Your progress is saved in this tab.');}
+    const syncFlows=()=>{try{const latest=readPluginSignIns(sessionStorage);if(JSON.stringify(latest)!==JSON.stringify(flowsRef.current)){flowsRef.current=latest;setFlows(latest);}}catch{}};
+    window.addEventListener('cypher-plugin-sign-ins-changed',syncFlows);
+    return()=>{active=false;window.removeEventListener('cypher-plugin-sign-ins-changed',syncFlows);dialog.current?.close();previous?.focus();};
   },[]);
   useEffect(()=>{
     const term=search.trim();
@@ -170,7 +187,16 @@ export function PluginPanel({onClose,onExploreConnection,onManageSkills,embedded
     return()=>{active=false;clearTimeout(timer);};
   },[view,search,registryRetry,moreResultsOpen]);
   useEffect(()=>{ if(error || notice) body.current?.scrollTo({top:0}); },[error,notice]);
-  async function retryLoad(){setLoading(true);setCatalogLoading(true);setError('');setRefreshableError(false);const [items,connections,status,accounts]=await Promise.allSettled([api.getPluginCatalog(),api.getPlugins(),api.pluginSyncStatus(),api.getAvailableConnections()]);if(accounts.status==='fulfilled'){setAvailable(accounts.value);setAvailableLoaded(true);setAvailableLoadFailed(false);}else setAvailableLoadFailed(true);if(items.status==='fulfilled'){setCatalog(items.value);setCatalogLoaded(true);setCatalogLoadFailed(false);}else setCatalogLoadFailed(true);if(connections.status==='fulfilled'){setPlugins(connections.value);setConnectionsLoaded(true);setConnectionsLoadFailed(false);}else setConnectionsLoadFailed(true);if(status.status==='fulfilled')setSync(status.value);if(items.status==='rejected'||connections.status==='rejected'||status.status==='rejected'||accounts.status==='rejected'){setError('The connection service is unavailable. Try again shortly.');setRefreshableError(true);}setLoading(false);setCatalogLoading(false);}  async function loadMoreRegistry(){if(!registryCursor||registryLoadingMore)return;const term=search.trim();const cursor=registryCursor;setRegistryLoadingMore(true);setRegistryError('');try{const page=await api.searchMcpRegistry(term,cursor);if(registryQueryRef.current!==term)return;setRegistryItems(current=>{const seen=new Set(current.map(item=>item.id));return [...current,...page.items.filter(item=>!seen.has(item.id))];});setRegistryCursor(page.next_cursor);}catch(e){if(registryQueryRef.current===term)setRegistryError(e instanceof Error?e.message:'Could not load more MCP servers.');}finally{if(registryQueryRef.current===term)setRegistryLoadingMore(false);}}  useEffect(()=>{
+  async function retryLoad(){
+    setLoading(true);setCatalogLoading(!catalogLoaded);setError('');setRefreshableError(false);
+    const fail=()=>{if(mounted.current){setError('The connection service is unavailable. Try again shortly.');setRefreshableError(true);}};
+    const items=api.getPluginCatalog().then(value=>{if(mounted.current){setCatalog(value);setCatalogLoaded(true);setCatalogLoadFailed(false);}}).catch(()=>{if(mounted.current){setCatalogLoadFailed(true);fail();}}).finally(()=>{if(mounted.current)setCatalogLoading(false);});
+    const connections=api.getPlugins().then(value=>{if(mounted.current){setPlugins(value);setConnectionsLoaded(true);setConnectionsLoadFailed(false);}}).catch(()=>{if(mounted.current){setConnectionsLoadFailed(true);fail();}}).finally(()=>{if(mounted.current)setLoading(false);});
+    const accounts=api.getAvailableConnections().then(value=>{if(mounted.current){setAvailable(value);setAvailableLoaded(true);setAvailableLoadFailed(false);}}).catch(()=>{if(mounted.current){setAvailableLoadFailed(true);fail();}});
+    const status=api.pluginSyncStatus().then(value=>{if(mounted.current)setSync(value);}).catch(fail);
+    await Promise.all([items,connections,accounts,status]);
+  }
+  async function loadMoreRegistry(){if(!registryCursor||registryLoadingMore)return;const term=search.trim();const cursor=registryCursor;setRegistryLoadingMore(true);setRegistryError('');try{const page=await api.searchMcpRegistry(term,cursor);if(registryQueryRef.current!==term)return;setRegistryItems(current=>{const seen=new Set(current.map(item=>item.id));return [...current,...page.items.filter(item=>!seen.has(item.id))];});setRegistryCursor(page.next_cursor);}catch(e){if(registryQueryRef.current===term)setRegistryError(e instanceof Error?e.message:'Could not load more MCP servers.');}finally{if(registryQueryRef.current===term)setRegistryLoadingMore(false);}}  useEffect(()=>{
     if(!syncing)return;let active=true;let timer:ReturnType<typeof setTimeout>;
     async function poll(){
       try{const [job,connections]=await Promise.all([api.pluginSyncStatus(),api.getPlugins()]);if(!active)return;setSync(job);setPlugins(connections);}
@@ -180,33 +206,71 @@ export function PluginPanel({onClose,onExploreConnection,onManageSkills,embedded
     timer=setTimeout(poll,3000);return()=>{active=false;clearTimeout(timer);};
   },[syncing]);
   async function syncAll(){setBusy(true);setError('');setRefreshableError(false);try{const approval=await approveConnection('connect_plugin:catalog');setSync(await api.syncPlugins(approval));}catch(e){setError(e instanceof Error?e.message:'Could not start catalog sync.');}finally{setBusy(false);}}
+  const pendingPolls=useRef(new Set<string>());
+  const pollFailures=useRef(new Map<string,number>());
+  const cancellingFlows=useRef(new Set<string>());
+  const [flowErrors,setFlowErrors]=useState<Record<string,string>>({});
+  const [flowResults,setFlowResults]=useState<{id:string;name:string;message:string}[]>([]);
+  function showFlowFailure(current:PluginSignIn,message:string){
+    const key=flowJobKey(current);if(key)queue.current?.update(key,'failed',message);
+    else setFlowResults(previous=>[...previous.filter(value=>value.id!==current.id),{id:current.id,name:current.name,message}]);
+  }
+  function saveFlows(next:PluginSignIn[]){
+    flowsRef.current=next;try{writePluginSignIns(sessionStorage,next);window.dispatchEvent(new Event('cypher-plugin-sign-ins-changed'));}catch{}
+    if(mounted.current)setFlows(next);
+  }
+  function flowJobKey(current:PluginSignIn){return current.keyHash?queueJobsRef.current.find(job=>job.item.keyHash===current.keyHash)?.key:undefined;}
+  function clearSignIn(id:string){
+    const current=mounted.current?flowsRef.current:readPluginSignIns(sessionStorage);
+    pollFailures.current.delete(id);saveFlows(current.filter(item=>item.id!==id));
+    if(mounted.current){setFlowErrors(previous=>{const copy={...previous};delete copy[id];return copy;});setCheckingSignIns(previous=>({...previous,[id]:false}));setNotice('');setRefreshableError(false);}
+  }
+  function scheduleVerification(id:string|undefined,name:string,navigate:boolean){
+    const task=verificationChain.current.then(async()=>{if(mounted.current)await verifyConnection(id,name,true,navigate);});
+    verificationChain.current=task.catch(()=>{});
+  }
   useEffect(()=>{
-    if(!flow)return;let active=true;let pending=false;let failures=0;let timer:ReturnType<typeof setTimeout>;
-    function finish(message:string,failed=false){clearSignIn();setBusy(false);popup.current?.close();if(failed)setError(message);else setNotice(message);}
-    async function poll(){
-      if(!active||pending)return;clearTimeout(timer);pending=true;setCheckingSignIn(true);
+    if(!flows.length)return;let active=true;const timers=new Map<string,ReturnType<typeof setTimeout>>();
+    function schedule(current:PluginSignIn){if(active&&flowsRef.current.some(value=>value.id===current.id)){clearTimeout(timers.get(current.id));timers.set(current.id,setTimeout(()=>void pollOne(current),Math.min(15000,AUTH_POLL_MS*2**Math.min(3,pollFailures.current.get(current.id)||0))));}}
+    async function pollOne(current:PluginSignIn){
+      if(!active)return;if(pendingPolls.current.has(current.id)){schedule(current);return;}
+      pendingPolls.current.add(current.id);setCheckingSignIns(previous=>({...previous,[current.id]:true}));
       try{
-        if(Date.now()-flow!.startedAt>=PLUGIN_SIGN_IN_TTL){finish('This sign-in link expired. Choose Connect to start again.',true);return;}
-        const state=await api.pluginAuthStatus(flow!.id);if(!active)return;
-        if(state.status==='connected'){
-          clearSignIn();popup.current?.close();
-          await verifyConnection(state.plugin_id,state.name,true);return;
+        if(Date.now()-current.startedAt>=PLUGIN_SIGN_IN_TTL){
+          clearSignIn(current.id);flowPopups.current.get(current.id)?.close();flowPopups.current.delete(current.id);
+          showFlowFailure(current,'Sign-in expired. Try again.');return;
         }
-        if(['failed','cancelled','expired'].includes(state.status)){finish(state.status==='cancelled'?'Access was not allowed. Choose Connect to try again.':state.status==='expired'?'This sign-in link expired. Choose Connect to start again.':'The provider returned, but its tools could not be verified. Choose Connect to try again.',true);return;}
-        failures=0;setFlowError('');
-      }catch{if(active){failures++;setFlowError('Could not check the connection yet. We’ll retry automatically; you can continue on the provider’s page.');}}
-      finally{pending=false;if(active)setCheckingSignIn(false);}
-      if(active)timer=setTimeout(poll,Math.min(15000,AUTH_POLL_MS*2**failures));
+        const state=await api.pluginAuthStatus(current.id);if(!active||cancellingFlows.current.has(current.id))return;
+        if(state.status==='connected'){
+          clearSignIn(current.id);flowPopups.current.get(current.id)?.close();flowPopups.current.delete(current.id);
+          if(flowJobKey(current))queue.current?.update(flowJobKey(current)!,'connected','Connected.');
+          const hasOthers=flowsRef.current.length>0||queueJobsRef.current.some(job=>['queued','connecting','waiting'].includes(job.state));
+          scheduleVerification(state.plugin_id,state.name,!hasOthers);return;
+        }
+        if(['failed','cancelled','expired'].includes(state.status)){
+          clearSignIn(current.id);flowPopups.current.get(current.id)?.close();flowPopups.current.delete(current.id);
+          const message=state.status==='cancelled'?'Access was not allowed. Try again.':state.status==='expired'?'Sign-in expired. Try again.':'The connection could not be verified. Try again.';
+          showFlowFailure(current,message);return;
+        }
+        pollFailures.current.delete(current.id);setFlowErrors(previous=>({...previous,[current.id]:''}));
+      }catch{if(active){pollFailures.current.set(current.id,(pollFailures.current.get(current.id)||0)+1);const message='Could not check the connection yet. We’ll retry automatically; you can continue on the provider’s page.';setFlowErrors(previous=>({...previous,[current.id]:message}));}}
+      finally{pendingPolls.current.delete(current.id);if(active){setCheckingSignIns(previous=>({...previous,[current.id]:false}));schedule(current);}}
     }
-    const resume=()=>{if(!document.hidden)void poll();};checkSignIn.current=poll;
+    checkSignIn.current=async(id?:string)=>{await Promise.all(flowsRef.current.filter(item=>!id||item.id===id).map(pollOne));};
+    const resume=()=>{if(!document.hidden)for(const current of flowsRef.current)void pollOne(current);};
     window.addEventListener('focus',resume);window.addEventListener('online',resume);document.addEventListener('visibilitychange',resume);
-    void poll();return()=>{active=false;clearTimeout(timer);checkSignIn.current=async()=>{};window.removeEventListener('focus',resume);window.removeEventListener('online',resume);document.removeEventListener('visibilitychange',resume);};
-  },[flow]);
-  function clearSignIn(){try{sessionStorage.removeItem(PLUGIN_SIGN_IN_KEY);}catch{}setFlow(null);setFlowError('');setCheckingSignIn(false);setNotice('');setRefreshableError(false);}
-  async function cancelSignIn(){if(!flow||cancellingSignIn)return;setCancellingSignIn(true);try{await api.cancelPluginAuth(flow.id);popup.current?.close();clearSignIn();setBusy(false);setNotice('Sign-in cancelled. You can choose another service or try again.');setError('');}catch(e){setError(e instanceof Error?e.message:'Could not cancel sign-in.');setRefreshableError(false);}finally{setCancellingSignIn(false);}}
+    for(const current of flows)void pollOne(current);
+    return()=>{active=false;timers.forEach(timer=>clearTimeout(timer));checkSignIn.current=async()=>{};window.removeEventListener('focus',resume);window.removeEventListener('online',resume);document.removeEventListener('visibilitychange',resume);};
+  },[flows]);
+  async function cancelSignIn(current:PluginSignIn){
+    if(cancellingFlows.current.has(current.id))return;cancellingFlows.current.add(current.id);setCancellingSignIns(previous=>({...previous,[current.id]:true}));
+    try{await api.cancelPluginAuth(current.id);flowPopups.current.get(current.id)?.close();flowPopups.current.delete(current.id);clearSignIn(current.id);if(flowJobKey(current))queue.current?.update(flowJobKey(current)!,'cancelled','Sign-in cancelled.');if(mounted.current){setBusy(false);setNotice('Sign-in cancelled. You can choose another service or try again.');setError('');}}
+    catch{if(mounted.current){setFlowErrors(previous=>({...previous,[current.id]:'Could not cancel sign-in. Try again.'}));setRefreshableError(false);}}
+    finally{cancellingFlows.current.delete(current.id);if(mounted.current)setCancellingSignIns(previous=>({...previous,[current.id]:false}));}
+  }
   function chooseView(next:View){setView(next);setError('');setRefreshableError(false);if(!flow)setNotice('');}
   function preparePopup(provider='service'){
-    const opened=window.open('about:blank','grokbot-service-login','popup,width=620,height=760');
+    const opened=window.open('about:blank',`grokbot-service-login-${Date.now()}-${Math.random().toString(36).slice(2)}`,'popup,width=620,height=760');
     if(opened){
       opened.opener=null;opened.document.title=`Connect ${provider}`;
       const doc=opened.document;let brandedSplash=false;
@@ -248,24 +312,33 @@ export function PluginPanel({onClose,onExploreConnection,onManageSkills,embedded
       }catch{/* Keep provider consent available if the browser isolates the splash document. */}
       if(!brandedSplash){const message=doc.createElement('p');message.textContent='Finding the secure sign-in page…';if(message.style)message.style.cssText='font:16px system-ui;padding:32px;color:#45434c';doc.body?.appendChild?.(message);}
     }
-    popup.current=opened;
+    popup.current=opened;return opened;
   }
   async function begin(item:CatalogEntry,reconnect=false,oauth_client?:{client_id:string;client_secret?:string;scope?:string}){
     const existing=plugins.find(plugin=>sameEndpoint(plugin.url,item.url) && (!item.connection_id||plugin.connection_id===item.connection_id));
     if(existing && !reconnect){setBusy(false);setView('connected');setSearch(existing.name);setNotice(`${existing.name} is already in your workspace. ${existing.enabled?'Its enabled tools are available to agents.':'Enable it below to let agents use its tools.'}`);popup.current?.close();return;}
+    const keyHash=await pluginConnectionKeyHash(connectionKey(item.url,item.connection_id),window.crypto);
+    if(flowsRef.current.some(value=>value.keyHash===keyHash||(!value.keyHash&&value.name.toLocaleLowerCase()===item.name.toLocaleLowerCase()))){popup.current?.close();setBusy(false);setNotice(`${item.name} is already waiting for sign-in.`);return;}
     if(item.setup_note){popup.current?.close();setBusy(false);setNotice(item.setup_note+' Source: '+(item.source||item.url));return;}
     if(item.auth==='api_key'){popup.current?.close();setView('custom');setUrl(item.url);setName(item.name);setAuthHeader(item.auth_header||'Authorization');setNotice(`${item.name} uses an API key. Get it from the service, then paste it below.`);setBusy(false);return;}
-    setNotice(item.name.toLocaleLowerCase()==='lovable'?'':`Checking ${item.name}…`);
-    const approval_id=await approveConnection('connect_plugin:'+item.url);
-    const result=await api.authorizePlugin({name:item.name.slice(0,80),url:item.url,approval_id,reconnect,connection_id:item.connection_id,oauth_client});
-    if(result.status==='connected'){
-      popup.current?.close();await verifyConnection(result.plugin_id,result.name,true);
-    }else if(result.authorization_url && result.flow_id){
-      const next={id:result.flow_id,name:result.name,url:result.authorization_url,startedAt:Date.now()};
-      try{sessionStorage.setItem(PLUGIN_SIGN_IN_KEY,JSON.stringify(next));}catch{}
-      setFlow(next);setNotice('');setFlowError('');
-      try{if(popup.current&&!popup.current.closed)popup.current.location.replace(result.authorization_url);}catch{/* The visible link can reopen a closed or isolated provider window. */}
-    }else throw new Error('This service did not provide a sign-in page. Try its advanced setup.');
+    const reservationId=`${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    if(!reservePluginStart(sessionStorage,keyHash,reservationId)){popup.current?.close();setBusy(false);setNotice(`${item.name} is already connecting, or the connection limit is reached.`);return;}
+    try{
+      setNotice(item.name.toLocaleLowerCase()==='lovable'?'':`Checking ${item.name}…`);
+      const approval_id=await approveConnection('connect_plugin:'+item.url);
+      if(!mounted.current){popup.current?.close();return;}
+      const result=await api.authorizePlugin({name:item.name.slice(0,80),url:item.url,approval_id,reconnect,connection_id:item.connection_id,oauth_client});
+      if(result.status==='connected'){
+        popup.current?.close();if(mounted.current)await verifyConnection(result.plugin_id,result.name,true);
+      }else if(result.authorization_url && result.flow_id){
+        const next=parsePluginSignIn({id:result.flow_id,name:result.name,url:result.authorization_url,startedAt:Date.now(),keyHash});
+        if(!next)throw new Error('The provider returned an invalid sign-in link.');
+        const current=mounted.current?flowsRef.current:readPluginSignIns(sessionStorage);
+        if(current.some(value=>value.id===next.id))throw new Error('The provider returned an existing sign-in. Try again.');
+        saveFlows([...current,next]);if(popup.current)flowPopups.current.set(next.id,popup.current);if(mounted.current)setNotice('');
+        try{if(popup.current&&!popup.current.closed){try{writePluginSignIns(popup.current.sessionStorage,[next]);popup.current.sessionStorage.removeItem(PLUGIN_STARTS_KEY);}catch{}popup.current.location.replace(next.url);}}catch{/* The visible link can reopen a closed or isolated provider window. */}
+      }else throw new Error('This service did not provide a sign-in page. Try its advanced setup.');
+    }finally{try{releasePluginStart(sessionStorage,reservationId);}catch{}}
   }
   function isConnected(item:CatalogEntry){return plugins.some(plugin=>sameEndpoint(plugin.url,item.url)&&(!item.connection_id||plugin.connection_id===item.connection_id));}
   function canvaUnavailable(item:CatalogEntry){return item.url===CANVA_MCP_URL&&connectionsLoaded&&availableLoaded&&!isConnected(item)&&!item.oauth_client_configured&&!available.some(connection=>sameEndpoint(connection.url,item.url));}
@@ -281,53 +354,98 @@ export function PluginPanel({onClose,onExploreConnection,onManageSkills,embedded
     }else setError(error instanceof Error?error.message:'Connection failed.');
   }
   async function connectRegisteredClient(event:FormEvent){
-    event.preventDefault();if(!registration||connecting.current||flow)return;
+    event.preventDefault();if(!registration||connecting.current||queueJobsRef.current.some(job=>job.state==='connecting'))return;
     connecting.current=true;setBusy(true);setConnectingName(registration.item.name);setError('');preparePopup(registration.item.name);
     try{await begin(registration.item,registration.reconnect,{client_id:clientId.trim(),client_secret:clientSecret||undefined,scope:clientScope.trim()});setRegistration(null);}
     catch(error){popup.current?.close();setBusy(false);connectionFailure(error,registration.item,registration.reconnect);}
     finally{setClientSecret('');setConnectingName('');connecting.current=false;}
   }
+  queueRunner.current=async job=>{
+    const {item,reconnect,key}=job;
+    const close=()=>{try{job.popup?.close();}catch{}};
+    if(!mounted.current){close();return {state:'setup',message:'Open Apps to try again.'};}
+    if(isConnected(item)&&!reconnect){close();return {state:'connected',message:'Already connected.'};}
+    if(canvaUnavailable(item)){close();return {state:'setup',message:CANVA_UNAVAILABLE};}
+    const result=sync?.results[item.id];
+    if(item.setup_note||result?.status==='setup_required'||item.auth==='api_key'||item.auth==='setup'||result?.status==='key_required'){
+      close();return {state:'setup',message:'This app needs additional setup before it can connect.'};
+    }
+    if(item.auth==='registered_oauth'&&!item.oauth_client_configured&&!available.some(connection=>sameEndpoint(connection.url,item.url))){
+      close();return {state:'setup',message:'This app needs provider setup before it can connect.'};
+    }
+    try{
+      const approval_id=await untilAborted(()=>approveConnection('connect_plugin:'+item.url),job.controller.signal);
+      if(!mounted.current){close();return {state:'setup',message:'Open Apps to try again.'};}
+      const response=await untilAborted(()=>api.authorizePlugin({name:item.name.slice(0,80),url:item.url,approval_id,reconnect,connection_id:item.connection_id},job.controller.signal),job.controller.signal);
+      if(response.status==='connected'){
+        close();if(mounted.current){const hasOthers=flowsRef.current.length>0||queueJobsRef.current.some(other=>other.key!==key&&['queued','connecting','waiting'].includes(other.state));scheduleVerification(response.plugin_id,response.name,!hasOthers);}return {state:'connected',message:'Connected.'};
+      }
+      if(!response.authorization_url||!response.flow_id)throw new Error('This app did not provide a sign-in page. Try again or check its setup.');
+      const next=parsePluginSignIn({id:response.flow_id,name:response.name,url:response.authorization_url,startedAt:Date.now(),keyHash:job.keyHash});
+      if(!next)throw new Error('The provider returned an invalid sign-in link.');
+      // Read the current tab state when an old panel finishes after it was closed.
+      const current=mounted.current?flowsRef.current:readPluginSignIns(sessionStorage);
+      if(current.some(value=>value.id===next.id))throw new Error('The provider returned an existing sign-in. Try again.');
+      saveFlows([...current,next]);
+      if(job.popup)flowPopups.current.set(next.id,job.popup);
+      try{if(job.popup&&!job.popup.closed){try{writePluginSignIns(job.popup.sessionStorage,[next]);job.popup.sessionStorage.removeItem(PLUGIN_STARTS_KEY);}catch{}job.popup.location.replace(next.url);}}catch{/* The per-app Continue link remains available. */}
+      if(mounted.current){setNotice('');}
+      return {state:'waiting',message:'Waiting for sign-in.'};
+    }catch(error){
+      close();const data=(error as {details?:Record<string,unknown>})?.details;
+      if(item.url===CANVA_MCP_URL&&((error as {status?:number})?.status===409||data?.code==='oauth_registration_required')){if(mounted.current)connectionFailure(error,item,reconnect);return {state:'setup',message:CANVA_UNAVAILABLE};}
+      if(data?.code==='oauth_registration_required'&&typeof data.callback_url==='string'){if(mounted.current)connectionFailure(error,item,reconnect);return {state:'setup',message:'This app needs provider setup.'};}
+      throw error;
+    }
+  };
   async function connectItem(item:CatalogEntry,reconnect=false){
-    if(!connectionsLoaded){setError('Your saved connections are still loading. Retry if they could not be loaded.');setRefreshableError(connectionsLoadFailed);return;}
+    if((!connectionsLoaded||loading||connectionsLoadFailed)&&!(isConnected(item)&&!reconnect)){setError(connectionsLoadFailed?'Could not check your saved connections. Refresh to try again.':'Checking your saved connections…');setRefreshableError(connectionsLoadFailed);return;}
     if(item.url===CANVA_MCP_URL&&!isConnected(item)&&!item.oauth_client_configured&&!availableLoaded){setError(availableLoadFailed?'Could not check available Canva connections. Refresh connections to try again.':'Checking available Canva connections…');setRefreshableError(availableLoadFailed);return;}
     if(item.url.endsWith('/api/google/mcp')){window.location.assign('/connect/google');return;}
-    if(connecting.current||flow)return;
-    const connected=isConnected(item);
-    if(canvaUnavailable(item)){setRegistration(null);setError('');setNotice(CANVA_UNAVAILABLE);setRefreshableError(false);return;}
-    if(connected&&!reconnect){await begin(item);return;}
+    if(isConnected(item)&&!reconnect){const existing=plugins.find(plugin=>sameEndpoint(plugin.url,item.url)&&(!item.connection_id||plugin.connection_id===item.connection_id));if(existing){setView('connected');setSearch(existing.name);setNotice(`${existing.name} is already in your workspace. ${existing.enabled?'Its enabled tools are available to agents.':'Enable it below to let agents use its tools.'}`);}return;}
+    if(isOffCanonicalHost(window.location.hostname)){
+      const destination=new URL('/',CANONICAL_APP_ORIGIN);destination.searchParams.set('workspace','1');destination.searchParams.set('connect',item.name);
+      if(reconnect)destination.searchParams.set('reconnect','1');window.location.replace(destination.toString());return;
+    }
+    const key=connectionKey(item.url,item.connection_id);
+    if(flowsRef.current.some(value=>!value.keyHash&&value.name.toLocaleLowerCase()===item.name.toLocaleLowerCase())){setNotice(`${item.name} is already waiting for sign-in.`);return;}
+    if(pendingKeys.current.has(key)||!queue.current?.canEnqueue(key))return;
+    if(flowsRef.current.length+queueJobsRef.current.filter(job=>job.state==='queued'||job.state==='connecting').length+pendingKeys.current.size>=MAX_PLUGIN_SIGN_INS){setNotice('Finish or cancel a sign-in before adding another app.');return;}
+    const manual=Boolean(canvaUnavailable(item)||item.setup_note||item.auth==='api_key'||item.auth==='setup'||['setup_required','key_required'].includes(sync?.results[item.id]?.status||'')||(item.auth==='registered_oauth'&&!item.oauth_client_configured&&!available.some(connection=>sameEndpoint(connection.url,item.url))));
+    const opened=manual?null:preparePopup(item.name);if(popup.current===opened)popup.current=null;
+    const controller=new AbortController();
+    pendingKeys.current.add(key);
+    try{
+      const keyHash=await pluginConnectionKeyHash(key,window.crypto);
+      const reservationId=`${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      if(!mounted.current||!reservePluginStart(sessionStorage,keyHash,reservationId)){opened?.close();if(mounted.current)setNotice('This app is already connecting, or the connection limit is reached.');return;}
+      if(!queue.current?.enqueue(key,{item,reconnect,popup:opened,key,keyHash,reservationId,controller})){releasePluginStart(sessionStorage,reservationId);opened?.close();}
+    }catch{opened?.close();if(mounted.current)setError('Could not prepare this connection. Try again.');}
+    finally{pendingKeys.current.delete(key);}
+  }
+  function showSetupOptions(item:CatalogEntry,reconnect:boolean){
+    if(item.url===CANVA_MCP_URL&&canvaUnavailable(item)){setNotice(CANVA_UNAVAILABLE);return;}
     const result=sync?.results[item.id];
-    if(!connected&&(item.setup_note||result?.status==='setup_required')){
-      popup.current?.close();setBusy(false);setError('');setRefreshableError(false);
-      setNotice(`${item.name} needs setup before it can connect. ${item.setup_note||result?.message||'Follow the provider setup instructions, then try again.'}`);
-      return;
+    if(item.auth==='api_key'||result?.status==='key_required'){
+      setView('custom');setUrl(item.url);setName(item.name);setAuthHeader(item.auth_header||'Authorization');
+      setNotice(`${item.name} uses an API key. Get it from the service, then paste it below.`);return;
     }
-    const connectionItem=!connected&&result?.status==='key_required'?{...item,auth:'api_key'}:item;
-    if(!connected&&connectionItem.auth!=='api_key'&&isOffCanonicalHost(window.location.hostname)){
-      const destination=new URL('/',CANONICAL_APP_ORIGIN);
-      destination.searchParams.set('workspace','1');destination.searchParams.set('connect',item.name);
-      if(reconnect)destination.searchParams.set('reconnect','1');
-      window.location.replace(destination.toString());return;
+    if(item.auth==='registered_oauth'&&!item.oauth_client_configured){
+      setRegistration({item,callback:CANONICAL_APP_ORIGIN+'/api/plugin-oauth/callback',reconnect});setClientScope('');return;
     }
-    if(!connected&&item.auth==='registered_oauth'&&!item.oauth_client_configured&&!available.some(connection=>sameEndpoint(connection.url,item.url))){
-      setRegistration({item,callback:CANONICAL_APP_ORIGIN+'/api/plugin-oauth/callback',reconnect});
-      setClientScope(item.url===CANVA_MCP_URL?CANVA_READ_SCOPE:'');
-      setError('');setNotice('');setRefreshableError(false);return;
-    }
-    connecting.current=true;setBusy(true);setConnectingName(item.name);setError('');setRefreshableError(false);
-    if(connectionItem.auth!=='api_key')preparePopup(item.name);
-    try{await begin(connectionItem,reconnect);setRegistration(null);}catch(e){popup.current?.close();setBusy(false);setNotice('');connectionFailure(e,item,reconnect);}finally{connecting.current=false;setConnectingName('');}
+    setNotice(item.setup_note||result?.message||`${item.name} needs setup from its provider before it can connect.`);
   }
   async function submitSearch(event:FormEvent){
     event.preventDefault();
     const query=search.trim();if(!query)return;
-    if(!connectionsLoaded){setError('Your saved connections are still loading. Retry if they could not be loaded.');setRefreshableError(connectionsLoadFailed);return;}
-    if(connecting.current||flow)return;
+    if(!connectionsLoaded||loading||connectionsLoadFailed){setError(connectionsLoadFailed?'Could not check your saved connections. Refresh to try again.':'Checking your saved connections…');setRefreshableError(connectionsLoadFailed);return;}
     if(query.toLocaleLowerCase()==='lovable'||normalizeHost(query)==='lovable.dev'||normalizeHost(query)==='mcp.lovable.dev'){await connectItem(lovableItem);return;}
     const match=exactCatalogMatch(query,appCatalog);
     if(match){
       if(needsManualSetup(match)){setManualOpen(true);setNotice(`${match.name} needs additional setup. Its options are below; your account has not been connected.`);return;}
       await connectItem(match);return;
     }
+    if(connecting.current||flow)return;
     if(!isWebsiteQuery(query)){
       setRefreshableError(false);setNotice(filtered.length?`Choose a service below to connect${filtered.length===1?`: ${filtered[0].name}`:'.'}`:'No matching service. Enter a provider website to check for a published connector.');
       setError('');return;
@@ -342,7 +460,7 @@ export function PluginPanel({onClose,onExploreConnection,onManageSkills,embedded
     catch(e){popup.current?.close();setBusy(false);setNotice('');if(resolved)connectionFailure(e,resolved);else setError(e instanceof Error?e.message:'Could not find a published connector for this website.');}finally{connecting.current=false;}
   }
   async function connectCustom(event:FormEvent){
-    event.preventDefault();if(connecting.current||flow)return;connecting.current=true;setBusy(true);setError('');setRefreshableError(false);setNotice('');
+    event.preventDefault();if(connecting.current||queueJobsRef.current.some(job=>job.state==='connecting'))return;connecting.current=true;setBusy(true);setError('');setRefreshableError(false);setNotice('');
     try{
       const parsed=new URL(url.trim());
       if(parsed.protocol!=='https:')throw new Error('Use the HTTPS server address supplied by the company.');
@@ -358,10 +476,10 @@ export function PluginPanel({onClose,onExploreConnection,onManageSkills,embedded
     }catch(e){popup.current?.close();setBusy(false);setError(e instanceof Error?e.message:'Connection failed.');}finally{connecting.current=false;}
   }
   async function connectionAction(action:()=>Promise<unknown>){setBusy(true);setError('');setRefreshableError(false);try{await action();setPlugins(await api.getPlugins());}catch(e){setError(e instanceof Error?e.message:'Could not update this connection.');}finally{setBusy(false);}}
-  async function verifyConnection(id:string|undefined,name:string,justConnected=false){
+  async function verifyConnection(id:string|undefined,name:string,justConnected=false,navigate=true){
     if(testing.current)return;
     testing.current=true;setBusy(true);setTestingId(id||'');setError('');setRefreshableError(false);
-    if(justConnected){setView('connected');setSearch(name);}
+    if(justConnected&&navigate){setView('connected');setSearch(name);}
     setNotice(id?`${name}: checking its tools…`:`${name} connected. Tools were discovered; choose Test tools to verify access.`);
     try{
       if(id){
@@ -407,9 +525,8 @@ export function PluginPanel({onClose,onExploreConnection,onManageSkills,embedded
   });
   const curatedUrls=new Set(catalog.map(item=>item.url).filter(Boolean));
   const registryVisible=registryItems.filter(item=>!item.url||!curatedUrls.has(item.url));
-  const lovableActive=connectingName.toLocaleLowerCase()==='lovable'||flow?.name.toLocaleLowerCase()==='lovable';
   const connectionTerm=query;
-  const connectedVisible=(query?plugins:publicTools?plugins.filter(plugin=>!isAccountPlugin(plugin)):plugins.some(isAccountPlugin)?plugins.filter(isAccountPlugin):plugins).filter(plugin=>!connectionTerm||[plugin.name,...plugin.tools.map(tool=>tool.name+' '+tool.description)].join(' ').toLocaleLowerCase().includes(connectionTerm)).sort((a,b)=>Number(b.authenticated)-Number(a.authenticated)||a.name.localeCompare(b.name));
+  const connectedVisible=(publicTools?plugins.filter(plugin=>!isAccountPlugin(plugin)):accountPlugins).filter(plugin=>!connectionTerm||[plugin.name,...plugin.tools.map(tool=>tool.name+' '+tool.description)].join(' ').toLocaleLowerCase().includes(connectionTerm)).sort((a,b)=>Number(b.authenticated)-Number(a.authenticated)||a.name.localeCompare(b.name));
   function connectionIdentity(plugin:PluginConnection){
     const item=displayCatalog.get(displayAddress(plugin.url));
     return {name:plugin.provider==='google'?'Google apps':item?.name||plugin.name,icon:item?.icon,provider:plugin.provider};
@@ -421,19 +538,21 @@ export function PluginPanel({onClose,onExploreConnection,onManageSkills,embedded
     const manual=needsManualSetup(item);
     const unavailable=result?.status==='unavailable';
     const needsCanvaSetup=canvaUnavailable(item);
+    const job=queueJobs.find(value=>value.key===connectionKey(item.url,item.connection_id));
+    const pending=Boolean(job&&['queued','connecting','waiting'].includes(job.state));
     const checkingCanva=item.url===CANVA_MCP_URL&&!connected&&!item.oauth_client_configured&&!availableLoaded;
-    const action=connected?'Manage':needsCanvaSetup?'Unavailable':manual?'View options':'Connect';
+    const action=connected?'Manage':needsCanvaSetup?'Unavailable':pending?'In progress':manual?'View options':'Connect';
     return <article className="connector-entry" key={`${keyPrefix}:${item.id}`}>
       <Logo item={item}/><div className="app-entry-copy"><h4>{item.name}</h4><p>{item.description||'Use this app with Cypher.'}</p>{connected?<span className="connector-access-hint">Already in your apps</span>:needsCanvaSetup?<span className="connector-access-hint">Canva connections aren’t available yet.</span>:manual?<span className="connector-access-hint">Additional setup needed</span>:unavailable?<span className="connector-access-hint">Couldn’t reach this app at its last check</span>:null}
       </div>
-      <button disabled={busy||!connectionsLoaded||needsEndpoint||!item.url||needsCanvaSetup||checkingCanva} className="connector-connect" aria-label={`${action} ${item.name}`} onClick={()=>void connectItem(item)}>{action}<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14m-5-5 5 5-5 5"/></svg></button>
+      <button disabled={((!connectionsLoaded||loading||connectionsLoadFailed)&&!connected)||needsEndpoint||!item.url||needsCanvaSetup||checkingCanva||pending} className="connector-connect" aria-label={`${action} ${item.name}`} onClick={()=>void connectItem(item)}>{action}<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14m-5-5 5 5-5 5"/></svg></button>
     </article>;
   }
   const panelContent=<>
     <header className="connectors-header"><div><h2 id="plugins-title">Apps</h2><p>Connect the apps you use. You choose what Cypher can access.</p></div><button className="connector-close" aria-label="Close connections" onClick={onClose}><svg viewBox="0 0 24 24"><path d="m6 6 12 12M6 18 18 6"/></svg></button></header>
     <nav className="connector-tabs simple-connector-tabs" aria-label="Connection pages">
       <button type="button" aria-pressed={view==='browse'} onClick={()=>chooseView('browse')}>Find apps</button>
-      <button type="button" aria-pressed={view==='connected'} onClick={()=>chooseView('connected')}>My apps{plugins.length?<span className="plugin-tab-count">{' · '+plugins.length}</span>:null}</button>
+      <button type="button" aria-pressed={view==='connected'} onClick={()=>chooseView('connected')}>My apps{accountPlugins.length?<span className="plugin-tab-count">{' · '+accountPlugins.length}</span>:null}</button>
       <details className="simple-app-options" data-active={view==='custom'||view==='settings'}><summary>More options</summary><div>
         <button type="button" onClick={event=>{chooseView('custom');event.currentTarget.closest('details')?.removeAttribute('open');}}>Add a connection link</button>
         <button type="button" onClick={event=>{chooseView('settings');event.currentTarget.closest('details')?.removeAttribute('open');}}>Connection settings</button>
@@ -441,10 +560,12 @@ export function PluginPanel({onClose,onExploreConnection,onManageSkills,embedded
     </nav>
     <div key={view} ref={body} className="connectors-body" aria-busy={view==='browse'?catalogLoading:loading} data-view={view}>
       {connectingName.toLocaleLowerCase()==='lovable'&&!flow?<div className="lovable-connect-progress" role="status"><LovableMark active/><div><strong>Opening Lovable</strong><p>Preparing Lovable’s secure sign-in. You’ll review access on Lovable before anything connects.</p></div></div>:null}
-      {flow?<section className={`connector-authorization${lovableActive?' lovable-authorization':''}`} aria-labelledby="plugin-sign-in-title">{lovableActive?<div className="lovable-auth-heading"><LovableMark active/><div><h3 id="plugin-sign-in-title">Connect Lovable</h3><p>Sign in, review access, then press Allow.</p></div></div>:<h3 id="plugin-sign-in-title">Connect {flow.name}</h3>}<ol>{lovableActive?<><li>Sign in to Lovable in the secure window.</li><li>Review the permissions Lovable lists and press <strong>Allow</strong>.</li><li>Return here while we verify the available tools.</li></>:<><li>Sign in on {flow.name}’s page.</li><li>Review the permissions and choose Allow or Authorize.</li><li>Return here. We’ll verify the connection and load its tools.</li></>}</ol><div className="connector-login-actions"><a className="btn-primary" href={flow.url} target="_blank" rel="noopener noreferrer" onClick={event=>{try{if(popup.current&&!popup.current.closed){event.preventDefault();popup.current.focus();}}catch{}}}>Continue to {flow.name}</a><button className="btn-secondary" type="button" disabled={checkingSignIn} onClick={()=>void checkSignIn.current()}>{checkingSignIn?'Checking…':'Check connection'}</button><button type="button" disabled={cancellingSignIn} onClick={()=>void cancelSignIn()}>{cancellingSignIn?'Cancelling…':'Cancel sign-in'}</button></div><p role="status">{flowError||'Waiting for provider approval. You can close this panel and continue later in this tab.'}{lovableActive?' Only tools Lovable authorizes are available; some Lovable actions may consume plan credits.':''}</p></section>:null}
+      {flows.map(current=><section key={current.id} className={`connector-authorization${current.name.toLocaleLowerCase()==='lovable'?' lovable-authorization':''}`} aria-label={`Connect ${current.name}`}>{current.name.toLocaleLowerCase()==='lovable'?<div className="lovable-auth-heading"><LovableMark active/><div><h3>Connect Lovable</h3><p>Sign in, review access, then press Allow.</p></div></div>:<h3>Connect {current.name}</h3>}<ol>{current.name.toLocaleLowerCase()==='lovable'?<><li>Sign in to Lovable in the secure window.</li><li>Review the permissions Lovable lists and press <strong>Allow</strong>.</li><li>Return here while we verify the available tools.</li></>:<><li>Sign in on {current.name}’s page.</li><li>Review the permissions and choose Allow or Authorize.</li><li>Return here. We’ll verify the connection and load its tools.</li></>}</ol><div className="connector-login-actions"><a className="btn-primary" href={current.url} target="_blank" rel="noopener noreferrer" onClick={event=>{try{const opened=flowPopups.current.get(current.id);if(opened&&!opened.closed){event.preventDefault();opened.focus();return;}const reopened=window.open('about:blank','_blank');if(reopened){event.preventDefault();reopened.opener=null;try{writePluginSignIns(reopened.sessionStorage,[current]);reopened.sessionStorage.removeItem(PLUGIN_STARTS_KEY);}catch{}flowPopups.current.set(current.id,reopened);reopened.location.replace(current.url);}}catch{}}}>Continue to {current.name}</a><button className="btn-secondary" type="button" aria-label={`Check ${current.name} connection`} disabled={Boolean(checkingSignIns[current.id])} onClick={()=>void checkSignIn.current(current.id)}>{checkingSignIns[current.id]?'Checking…':'Check connection'}</button><button type="button" aria-label={`Cancel ${current.name} sign-in`} disabled={Boolean(cancellingSignIns[current.id])} onClick={()=>void cancelSignIn(current)}>{cancellingSignIns[current.id]?'Cancelling…':'Cancel sign-in'}</button></div><p role="status">{flowErrors[current.id]||'Waiting for provider approval. You can close this panel and continue later in this tab.'}{current.name.toLocaleLowerCase()==='lovable'?' Only tools Lovable authorizes are available; some Lovable actions may consume plan credits.':''}</p></section>)}
+      {flowResults.map(result=><section key={result.id} className="connector-authorization" aria-label={`${result.name} connection result`}><h3>{result.name}</h3><p role="status">{result.message}</p><div className="connector-login-actions"><button type="button" className="btn-secondary" onClick={()=>{setView('browse');setSearch(result.name);setFlowResults(previous=>previous.filter(value=>value.id!==result.id));}}>Find {result.name}</button><button type="button" onClick={()=>setFlowResults(previous=>previous.filter(value=>value.id!==result.id))}>Dismiss</button></div></section>)}
+      {queueJobs.length?<section className="connector-authorization connection-queue" aria-label="Connection progress"><h3>Connection progress</h3>{queueJobs.map(job=><div key={job.key} className="connection-queue-item connector-login-actions"><strong>{job.item.item.name}</strong>{' · '}<span role="status">{job.state==='queued'?'Queued':job.state==='connecting'?'Connecting…':job.state==='waiting'?'Waiting for sign-in':job.state==='connected'?'Connected':job.state==='setup'?'Needs setup':job.state==='cancelled'?'Cancelled':'Could not connect'}{job.message?` · ${job.message}`:''}</span>{['queued','connecting'].includes(job.state)?<button type="button" className="btn-secondary" onClick={()=>queue.current?.cancel(job.key)}>Cancel {job.item.item.name}</button>:null}{job.state==='setup'?<button type="button" className="btn-secondary" onClick={()=>showSetupOptions(job.item.item,job.item.reconnect)}>View options for {job.item.item.name}</button>:null}{['failed','cancelled'].includes(job.state)?<button type="button" className="btn-secondary" onClick={()=>void connectItem(job.item.item,job.item.reconnect)}>Retry {job.item.item.name}</button>:null}{['failed','setup','cancelled'].includes(job.state)?<button type="button" className="btn-secondary" onClick={()=>queue.current?.dismiss(job.key)}>Dismiss {job.item.item.name}</button>:null}</div>)}</section>:null}
       {notice?<div className="connector-notice" role="status">{notice}</div>:null}
       {disconnected?<div className="connector-error" role="status">Cypher is disconnected from its cloud runtime. Saved connections and past tool tests may be out of date. Reconnect, then use Test tools to check live access.</div>:refreshableError&&plugins.length?<div className="connector-notice" role="status">Showing saved connections. Their current status could not be refreshed.</div>:null}
-      {registration?<section className="plugin-registration" aria-labelledby="plugin-registration-title"><div className="plugin-registration-heading"><div><h3 id="plugin-registration-title">Sign-in isn’t ready for {registration.item.name} yet</h3><p>Cypher needs provider setup before this app can connect. Your account has not been connected.</p></div><button type="button" aria-label="Close connection setup" onClick={()=>{setRegistration(null);setClientSecret('');}}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M6 18 18 6"/></svg></button></div><details className="apps-advanced-list"><summary>Advanced setup for app administrators</summary><p>Use a client registered with this provider. Most people can choose another app and leave this setup to their administrator.</p><form onSubmit={event=>void connectRegisteredClient(event)}><label htmlFor="oauth-callback">Callback URL</label><input id="oauth-callback" readOnly value={registration.callback} onFocus={event=>event.currentTarget.select()}/><div className="oauth-client-fields"><label>Client ID<input required autoComplete="off" value={clientId} onChange={event=>setClientId(event.target.value)} maxLength={2000}/></label><label>Client secret <small>if required</small><input type="password" autoComplete="new-password" value={clientSecret} onChange={event=>setClientSecret(event.target.value)} maxLength={4096}/></label></div><details><summary>Requested scopes</summary><input aria-label="OAuth scopes" value={clientScope} onChange={event=>setClientScope(event.target.value)} maxLength={2000}/></details><div className="plugin-registration-actions"><button type="submit" className="btn-primary" disabled={busy||!clientId.trim()}>Connect with OAuth</button>{normalizeHost(registration.item.url)==='mcp.lovable.dev'?<a href="https://docs.lovable.dev/features/oauth-clients" target="_blank" rel="noreferrer">Lovable setup guide</a>:registration.item.source?<a href={registration.item.source} target="_blank" rel="noreferrer">Provider setup guide</a>:null}</div>{normalizeHost(registration.item.url)==='mcp.lovable.dev'?<p className="field-help">Lovable requires Business or Enterprise for project and workspace scopes. Client details stay encrypted on the server.</p>:<p className="field-help">Use your own registered client. Credentials stay encrypted on the server.</p>}</form></details></section>:null}
+      {registration?<section className="plugin-registration" aria-labelledby="plugin-registration-title"><div className="plugin-registration-heading"><div><h3 id="plugin-registration-title">Sign-in isn’t ready for {registration.item.name} yet</h3><p>Cypher needs provider setup before this app can connect. Your account has not been connected.</p></div><button type="button" aria-label="Close connection setup" onClick={()=>{setRegistration(null);setClientSecret('');}}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M6 18 18 6"/></svg></button></div><details className="apps-advanced-list"><summary>Advanced setup for app administrators</summary><p>Use a client registered with this provider. Most people can choose another app and leave this setup to their administrator.</p><form onSubmit={event=>void connectRegisteredClient(event)}><label htmlFor="oauth-callback">Callback URL</label><input id="oauth-callback" readOnly value={registration.callback} onFocus={event=>event.currentTarget.select()}/><div className="oauth-client-fields"><label>Client ID<input required autoComplete="off" value={clientId} onChange={event=>setClientId(event.target.value)} maxLength={2000}/></label><label>Client secret <small>if required</small><input type="password" autoComplete="new-password" value={clientSecret} onChange={event=>setClientSecret(event.target.value)} maxLength={4096}/></label></div><details><summary>Requested scopes</summary><input aria-label="OAuth scopes" value={clientScope} onChange={event=>setClientScope(event.target.value)} maxLength={2000}/></details><div className="plugin-registration-actions"><button type="submit" className="btn-primary" disabled={busy||queueJobs.some(job=>job.state==='connecting')||!clientId.trim()}>Connect with OAuth</button>{normalizeHost(registration.item.url)==='mcp.lovable.dev'?<a href="https://docs.lovable.dev/features/oauth-clients" target="_blank" rel="noreferrer">Lovable setup guide</a>:registration.item.source?<a href={registration.item.source} target="_blank" rel="noreferrer">Provider setup guide</a>:null}</div>{normalizeHost(registration.item.url)==='mcp.lovable.dev'?<p className="field-help">Lovable requires Business or Enterprise for project and workspace scopes. Client details stay encrypted on the server.</p>:<p className="field-help">Use your own registered client. Credentials stay encrypted on the server.</p>}</form></details></section>:null}
       {error&&!(disconnected&&error===CONNECTION_LOAD_ERROR)?<div className="connector-error" role="alert">{error}{refreshableError?<button type="button" className="connector-retry" disabled={loading||busy} onClick={()=>void retryLoad()}>Refresh connections</button>:null}</div>:null}
       {view==='browse'?<>
         <section className="store-search" aria-label="Find an app">
@@ -479,8 +600,8 @@ export function PluginPanel({onClose,onExploreConnection,onManageSkills,embedded
         {query.length>=2?<details className="mcp-registry-results apps-advanced-list" open={moreResultsOpen} onToggle={event=>setMoreResultsOpen(event.currentTarget.open)}><summary>Search more connections</summary><p>Community-published connections may need extra setup. Check the provider before allowing access.</p>{registryLoading?<LoadingState label="Searching more apps…" rows={4}/>:null}{registryError?<p className="connector-error" role="alert">{registryError}<button className="connector-retry" onClick={()=>setRegistryRetry(value=>value+1)}>Retry search</button></p>:null}{moreResultsOpen&&!registryLoading&&!registryError&&!registryVisible.length?<p className="registry-empty">No additional results for “{search}”.</p>:null}{moreResultsOpen&&registryVisible.length?<div className="connector-catalog">{registryVisible.map(item=>connectorCard(item,'mcp'))}</div>:null}{registryCursor?<button className="btn-secondary" disabled={registryLoadingMore} onClick={()=>void loadMoreRegistry()}>{registryLoadingMore?'Loading…':'Load more apps'}</button>:null}</details>:null}
         <details className="mcp-directory-disclosure apps-advanced-list" onToggle={event=>setDirectoryOpen(event.currentTarget.open)}><summary>Advanced connection options</summary>{directoryOpen?<><p>Browse the community directory or add a connection supplied by your service.</p><McpDirectory busy={busy} connectedUrls={plugins.map(plugin=>plugin.url)} onConnect={entry=>void connectItem(entry)} /></>:null}{publicPluginCount>0?<button type="button" className="connection-kind-toggle" onClick={()=>{setPublicTools(true);setSearch('');chooseView('connected');}}>Public tools · {publicPluginCount}</button>:null}</details>
       </>:null}
-      {view==='connected'?<><div className="catalog-heading"><div><h3>{publicTools&&!query?'Public tools':'Your connections'} {connectionsLoaded?<span>{connectedVisible.length}</span>:null}</h3><p>Manage access to connected accounts. Create and manage reusable skill recipes separately in your workspace library.</p>{plugins.some(isAccountPlugin)&&plugins.some(plugin=>!isAccountPlugin(plugin))?<button type="button" className="connection-kind-toggle" onClick={()=>{setPublicTools(value=>!value);setSearch('');}}>{publicTools?'Account connections':`Public tools · ${plugins.filter(plugin=>!isAccountPlugin(plugin)).length}`}</button>:null}{onManageSkills?<button type="button" className="btn-secondary" onClick={onManageSkills}>Saved instructions</button>:null}</div><input type="search" aria-label="Search my apps" value={search} onChange={event=>setSearch(event.target.value)} placeholder="Search connected services or tools…"/></div>{loading?<LoadingState label="Loading your connections…" rows={4}/>:connectionsLoadFailed&&!connectionsLoaded?<div className="connector-empty" role="alert"><h3>Connections unavailable</h3><p>Cypher couldn’t load your saved connections. Try again to check which services are connected.</p><button type="button" className="btn-secondary" onClick={()=>void retryLoad()}>Retry connections</button></div>:!plugins.length?<div className="connector-empty"><h3>No tools connected yet</h3><p>Find a service in the app store or add its connection link.</p><div className="connector-empty-actions"><button className="btn-primary" onClick={()=>chooseView('browse')}>Browse apps</button><button className="btn-secondary" onClick={()=>chooseView('custom')}>Add by link</button></div></div>:!connectedVisible.length?<div className="connector-empty">No connected services match your search.</div>:connectedVisible.map(plugin=><section className="connected-service" key={plugin.id}><div className="connected-service-header"><Logo item={connectionIdentity(plugin)}/><div><h3>{plugin.name}</h3><p>{plugin.tools.length} tools · {plugin.enabled?'Enabled for agents':'Paused'} · {plugin.authenticated?'Account or API access linked':'Public tools · no account linked'} · {pluginStatus(plugin).label}</p></div><button type="button" className="btn-secondary" disabled={busy||!plugin.enabled} onClick={()=>void testTools(plugin)}>{testingId===plugin.id?'Checking tools…':!plugin.enabled?'Enable to test':plugin.verification?.status==='passed'?'Test again':'Test tools'}</button><button className="btn-secondary" role="switch" aria-checked={plugin.enabled} aria-label={`Enable ${plugin.name}`} disabled={busy} onClick={()=>void connectionAction(()=>api.togglePlugin(plugin.id,!plugin.enabled))}>{plugin.enabled?'Pause':'Enable'}</button></div><details open={Boolean(query)}><summary>Manage tools</summary>{plugin.tools.filter(tool=>!query||plugin.name.toLocaleLowerCase().includes(query)||(tool.name+' '+tool.description).toLocaleLowerCase().includes(query)).map(tool=><div className="connected-tool" key={tool.name}><div><strong>{tool.name}</strong><p>{tool.description}</p></div><button className="btn-secondary" role="switch" aria-checked={tool.enabled!==false} aria-label={`Enable ${tool.name}`} disabled={busy} onClick={()=>void connectionAction(()=>api.setPluginTool(plugin.id,tool.name,tool.enabled===false))}>{tool.enabled===false?'Turn on':'Turn off'}</button></div>)}<div className="connected-service-actions">{plugin.authenticated?<button type="button" disabled={busy||!plugin.enabled} onClick={()=>onExploreConnection?.(plugin.name)}>See what’s in my account</button>:null}{plugin.url.startsWith('site-mcp://') ? plugin.url === 'site-mcp://gmail.com' ? <a href="/connect/google">Use Google apps</a> : <button type="button" disabled={busy} onClick={()=>{setView('browse');setSearch(plugin.url === 'site-mcp://instagram.com' ? 'Instagram' : plugin.name);setNotice('Choose a supported provider and sign in to verify its tools.');}}>Find provider</button> : <button disabled={busy} onClick={()=>void connectItem({...catalog.find(item=>item.url===plugin.url),id:plugin.id,name:plugin.name,url:plugin.url,description:'',category:'Custom',domains:[],connection_id:plugin.connection_id},true)}>Reconnect</button>}<button disabled={busy} onClick={()=>void connectionAction(()=>api.refreshPlugin(plugin.id))}>Refresh tools</button><button disabled={busy} onClick={()=>void connectionAction(()=>api.disconnectPlugin(plugin.id))}>Disconnect</button></div></details></section>)}</>:null}
-      {view==='custom'?<form className="connector-custom" onSubmit={event=>void connectCustom(event)}><h3>Connect with a link</h3><p>Paste an MCP server link. If it supports sign-in, Cypher opens the service so you can sign in and approve access.</p><label htmlFor="plugin-url">Service or MCP link</label><input id="plugin-url" type="url" value={url} onChange={event=>setUrl(event.target.value)} required placeholder="https://service.com/mcp"/><details className="connector-custom-advanced"><summary>I have an API key or need custom options</summary><label htmlFor="plugin-token">API key or bearer token <span>optional</span></label><input id="plugin-token" type="password" autoComplete="off" value={token} onChange={event=>setToken(event.target.value)} placeholder="Paste the key from the service"/><label htmlFor="plugin-auth-header">API key header</label><input id="plugin-auth-header" value={authHeader} onChange={event=>setAuthHeader(event.target.value)} placeholder="Authorization or X-API-Key"/><label htmlFor="plugin-name">Connection name <span>optional</span></label><input id="plugin-name" value={name} maxLength={80} onChange={event=>setName(event.target.value)} placeholder="Use the server name"/><p className="field-help">Keys are encrypted on the server. Connected tools can read or change data based on the permissions you grant.</p></details><div className="connector-custom-actions"><button className="btn-primary" disabled={busy}>{busy?'Connecting…':'Connect service'}</button><button type="button" className="btn-secondary" disabled={busy} onClick={()=>chooseView('browse')}>Browse apps</button></div></form>:null}
+      {view==='connected'?<><div className="catalog-heading"><div><h3>{publicTools?'Public tools':'Your connections'} {connectionsLoaded?<span>{connectedVisible.length}</span>:null}</h3><p>Manage access to connected accounts. Create and manage reusable skill recipes separately in your workspace library.</p>{publicPluginCount>0?<button type="button" className="connection-kind-toggle" onClick={()=>{setPublicTools(value=>!value);setSearch('');}}>{publicTools?'Account connections':`Public tools · ${plugins.filter(plugin=>!isAccountPlugin(plugin)).length}`}</button>:null}{onManageSkills?<button type="button" className="btn-secondary" onClick={onManageSkills}>Saved instructions</button>:null}</div><input type="search" aria-label={publicTools?'Search public tools':'Search my apps'} value={search} onChange={event=>setSearch(event.target.value)} placeholder="Search connected services or tools…"/></div>{loading?<LoadingState label="Loading your connections…" rows={4}/>:connectionsLoadFailed&&!connectionsLoaded?<div className="connector-empty" role="alert"><h3>Connections unavailable</h3><p>Cypher couldn’t load your saved connections. Try again to check which services are connected.</p><button type="button" className="btn-secondary" onClick={()=>void retryLoad()}>Retry connections</button></div>:!plugins.length?<div className="connector-empty"><h3>No tools connected yet</h3><p>Find a service in the app store or add its connection link.</p><div className="connector-empty-actions"><button className="btn-primary" onClick={()=>chooseView('browse')}>Browse apps</button><button className="btn-secondary" onClick={()=>chooseView('custom')}>Add by link</button></div></div>:!connectedVisible.length?<div className="connector-empty">{query?(publicTools?'No public tools match your search.':'No connected services match your search.'):(publicTools?'No public tools yet.':'No account connections yet.')}</div>:connectedVisible.map(plugin=><section className="connected-service" key={plugin.id}><div className="connected-service-header"><Logo item={connectionIdentity(plugin)}/><div><h3>{plugin.name}</h3><p>{plugin.tools.length} tools · {plugin.enabled?'Enabled for agents':'Paused'} · {plugin.authenticated?'Account or API access linked':'Public tools · no account linked'} · {pluginStatus(plugin).label}</p></div><button type="button" className="btn-secondary" disabled={busy||!plugin.enabled} onClick={()=>void testTools(plugin)}>{testingId===plugin.id?'Checking tools…':!plugin.enabled?'Enable to test':plugin.verification?.status==='passed'?'Test again':'Test tools'}</button><button className="btn-secondary" role="switch" aria-checked={plugin.enabled} aria-label={`Enable ${plugin.name}`} disabled={busy} onClick={()=>void connectionAction(()=>api.togglePlugin(plugin.id,!plugin.enabled))}>{plugin.enabled?'Pause':'Enable'}</button></div><details open={Boolean(query)}><summary>Manage tools</summary>{plugin.tools.filter(tool=>!query||plugin.name.toLocaleLowerCase().includes(query)||(tool.name+' '+tool.description).toLocaleLowerCase().includes(query)).map(tool=><div className="connected-tool" key={tool.name}><div><strong>{tool.name}</strong><p>{tool.description}</p></div><button className="btn-secondary" role="switch" aria-checked={tool.enabled!==false} aria-label={`Enable ${tool.name}`} disabled={busy} onClick={()=>void connectionAction(()=>api.setPluginTool(plugin.id,tool.name,tool.enabled===false))}>{tool.enabled===false?'Turn on':'Turn off'}</button></div>)}<div className="connected-service-actions">{plugin.authenticated?<button type="button" disabled={busy||!plugin.enabled} onClick={()=>onExploreConnection?.(plugin.name)}>See what’s in my account</button>:null}{plugin.url.startsWith('site-mcp://') ? plugin.url === 'site-mcp://gmail.com' ? <a href="/connect/google">Use Google apps</a> : <button type="button" disabled={busy} onClick={()=>{setView('browse');setSearch(plugin.url === 'site-mcp://instagram.com' ? 'Instagram' : plugin.name);setNotice('Choose a supported provider and sign in to verify its tools.');}}>Find provider</button> : <button disabled={busy} onClick={()=>void connectItem({...catalog.find(item=>item.url===plugin.url),id:plugin.id,name:plugin.name,url:plugin.url,description:'',category:'Custom',domains:[],connection_id:plugin.connection_id},true)}>Reconnect</button>}<button disabled={busy} onClick={()=>void connectionAction(()=>api.refreshPlugin(plugin.id))}>Refresh tools</button><button disabled={busy} onClick={()=>void connectionAction(()=>api.disconnectPlugin(plugin.id))}>Disconnect</button></div></details></section>)}</>:null}
+      {view==='custom'?<form className="connector-custom" onSubmit={event=>void connectCustom(event)}><h3>Connect with a link</h3><p>Paste an MCP server link. If it supports sign-in, Cypher opens the service so you can sign in and approve access.</p><label htmlFor="plugin-url">Service or MCP link</label><input id="plugin-url" type="url" value={url} onChange={event=>setUrl(event.target.value)} required placeholder="https://service.com/mcp"/><details className="connector-custom-advanced"><summary>I have an API key or need custom options</summary><label htmlFor="plugin-token">API key or bearer token <span>optional</span></label><input id="plugin-token" type="password" autoComplete="off" value={token} onChange={event=>setToken(event.target.value)} placeholder="Paste the key from the service"/><label htmlFor="plugin-auth-header">API key header</label><input id="plugin-auth-header" value={authHeader} onChange={event=>setAuthHeader(event.target.value)} placeholder="Authorization or X-API-Key"/><label htmlFor="plugin-name">Connection name <span>optional</span></label><input id="plugin-name" value={name} maxLength={80} onChange={event=>setName(event.target.value)} placeholder="Use the server name"/><p className="field-help">Keys are encrypted on the server. Connected tools can read or change data based on the permissions you grant.</p></details><div className="connector-custom-actions"><button className="btn-primary" disabled={busy||queueJobs.some(job=>job.state==='connecting')}>{busy?'Connecting…':'Connect service'}</button><button type="button" className="btn-secondary" disabled={busy} onClick={()=>chooseView('browse')}>Browse apps</button></div></form>:null}
       {view==='settings'?<div className="connector-settings"><h3>Connection settings</h3><section><h4>Device approval</h4><p>{device?'New connections require your registered passkey.':'Confirm new connections with a device passkey, Touch ID, Face ID, or Windows Hello.'}</p>{!device?<button className="btn-secondary" disabled={busy} onClick={()=>void enableDevice()}>Enable device approval</button>:null}</section><section><h4>Email connections</h4>{Object.entries(accountState).map(([service,state])=><p key={service}><strong>{service==='gmail'?'Gmail':'Resend'} · {state.configured?'Configured':'Not connected'}</strong><br/>{state.detail}</p>)}</section><details><summary>Catalog reachability checks</summary><p>Check the curated endpoints in the background. This verifies reachability and available tools; sign-in still needs your approval.</p><button type="button" className="btn-secondary" disabled={busy||syncing} onClick={()=>void syncAll()}>{syncing?'Checking catalog…':sync?'Check again':'Check catalog'}</button>{sync?<p role="status">{sync.checked} of {sync.total} checked · {sync.counts.connected||0} reachable · {(sync.counts.sign_in_required||0)+(sync.counts.key_required||0)+(sync.counts.setup_required||0)} need setup · {sync.counts.unavailable||0} unavailable{syncing?' · Continues in the cloud.':''}</p>:null}</details><details><summary>Account signup assistance</summary><label htmlFor="account-signup">Signup page</label><input id="account-signup" type="url" value={accountUrl} onChange={event=>setAccountUrl(event.target.value)} placeholder="https://service.com/signup"/><label htmlFor="account-email">Account email</label><input id="account-email" type="email" value={accountEmail} onChange={event=>setAccountEmail(event.target.value)} placeholder="Your email"/><button disabled={busy||!accountUrl||!accountEmail} className="btn-secondary" onClick={()=>void setupAccount()}>Start account setup</button></details><details><summary>Server configuration</summary><div className="variable-inventory">{variables.map(variable=><div key={variable.target}><span><strong>{variable.name}</strong><small>{variable.project}</small></span><span>{variable.state==='configured'?'Configured':'Needs link'}</span></div>)}</div></details></div>:null}    </div>
   </>;
   return embedded?<section className="connectors-dialog app-store-dialog apps-workspace" aria-labelledby="plugins-title">{panelContent}</section>:<dialog ref={dialog} className="connectors-dialog app-store-dialog" aria-labelledby="plugins-title" onCancel={event=>{event.preventDefault();onClose();}}>{panelContent}</dialog>;
