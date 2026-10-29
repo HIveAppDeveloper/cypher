@@ -20,5 +20,5 @@ export default async function Page(
     const returnTo = internalPathWithSearch('/', searchParams);
     return <PublicDocument path="/" loginHref={`/login?returnTo=${encodeURIComponent(returnTo)}`}/>;
   }
-  return <WorkspaceApp accountEmail={session?.email} accountId={session?.sub}/>;
+  return <WorkspaceApp key={session?.sub ?? 'anonymous'} accountEmail={session?.email} accountId={session?.sub}/>;
 }

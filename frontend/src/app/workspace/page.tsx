@@ -23,5 +23,5 @@ export default async function WorkspacePage(
     const returnTo = internalPathWithSearch('/workspace', searchParams);
     redirect(`/login?returnTo=${encodeURIComponent(returnTo)}`);
   }
-  return <WorkspaceApp accountEmail={session?.email} accountId={session?.sub}/>;
+  return <WorkspaceApp key={session?.sub ?? 'anonymous'} accountEmail={session?.email} accountId={session?.sub}/>;
 }
