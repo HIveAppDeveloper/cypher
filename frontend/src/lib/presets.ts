@@ -36,6 +36,7 @@ export const MODEL_CHOICES = [
  {"id":"free-cf-ibm-granite-granite-4-0-h-micro","label":"Granite 4.0 H Micro (IBM) · Free","detail":"Free text through Cloudflare. Tool work uses Codex.","provider":"auto","model":"free-cf-ibm-granite-granite-4-0-h-micro"},
  {"id":"free-cf-aisingapore-gemma-sea-lion-v4-27b-it","label":"Gemma SEA-LION V4 27B (AI Singapore) · Free","detail":"Free text through Cloudflare. Tool work uses Codex.","provider":"auto","model":"free-cf-aisingapore-gemma-sea-lion-v4-27b-it"},
  {id:'gemini38',label:'Gemini 3.8 Flash',detail:'Research and visual understanding',provider:'gemini',model:'gemini-3.8-flash'},
+ {id:'muse-spark',label:'Muse Spark 1.3',detail:'Text and function tools with your verified Meta Model API token. Uses Meta API credits',provider:'muse',model:'muse-spark-1.3'},
  {id:'deepseek41',label:'DeepSeek V4.1 Flash',detail:'Mathematical and data analysis',provider:'deepseek',model:'deepseek-v4.1-flash'},
  {id:'grok45',label:'Grok 4.5',detail:'Independent review and verification',provider:'xai',model:'grok-4.5'},
  { id:'sol61',label:'GPT-6.1 Sol',detail:'OpenAI coordinator · reasoning and everyday work',provider:'openai',model:'gpt-6.1-sol' },

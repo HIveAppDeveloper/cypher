@@ -246,3 +246,100 @@ def test_automatic_included_profiles_use_codex_and_free_routes(monkeypatch):
     assert profiles['vision'].provider=='openai' and profiles['coding'].provider=='openai'
     monkeypatch.setattr(settings,'MODEL_ROUTING_POLICY','standard')
     assert routing_profiles()['coding'].model=='claude-sonnet-5.5'
+
+
+@pytest.mark.asyncio
+async def test_muse_is_local_owner_only_encrypted_and_does_not_replace_llama(setup,monkeypatch):
+    from app.services import muse
+    client,sessions,owner,other=setup
+    key='synthetic-meta-model-token-1234567890'
+    assert (await client.post('/api/runtime/model-connections/muse/api-key',headers=other,json={'api_key':key})).status_code==403
+    response=await client.post('/api/runtime/model-connections/muse/api-key',headers=owner,json={'api_key':key})
+    assert response.status_code==202 and response.json()['verification_target']=='provider_account'
+    async with sessions() as db:
+        row=await db.get(RuntimeCheck,service.PREFIX+'muse')
+        assert key not in json.dumps(row.detail)
+        assert muse.verified_token([row]) is None
+    verify=AsyncMock(return_value=muse._body({'model':muse.MODEL,'choices':[{'index':0,'message':{'role':'assistant','content':'Connection verified.'},'finish_reason':'stop'}]}))
+    monkeypatch.setattr(muse,'complete',verify)
+    control=AsyncMock(side_effect=AssertionError('Do not send a Muse token to the lower gateway'));monkeypatch.setattr(service,'control_check',control)
+    assert await service.run_requested_check(sessions,AsyncMock())
+    verify.assert_awaited_once();assert verify.await_args.args[-1]==key;control.assert_not_called()
+    async with sessions() as db:
+        row=await db.get(RuntimeCheck,service.PREFIX+'muse')
+        assert row.detail['state']=='ready' and muse.verified_token([row])==key
+        assert row.detail['active_route']=={'public_model':muse.PUBLIC_MODEL,'transport_model':muse.PUBLIC_MODEL}
+    runtime=(await client.get('/api/runtime',headers=owner)).json()
+    by_id={x['id']:x for x in runtime['model_connections']}
+    assert by_id['muse']['key_configured'] and by_id['muse']['access_kind']=='api_key'
+    assert by_id['meta']['model'].startswith('auto/free-cf-meta-llama')
+    assert by_id['gemini']['consumer_subscription_supported'] is False
+    assert key not in json.dumps(runtime)
+    other_runtime=(await client.get('/api/runtime',headers=other)).json()
+    assert other_runtime['model_connections']==[] and key not in json.dumps(other_runtime)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize('action',['connect_api_key','check'])
+async def test_muse_previous_verified_token_remains_usable_during_check_and_failed_replacement(setup,monkeypatch,action):
+    from app.services import muse
+    from app.services.plugins import seal
+    client,sessions,owner,_=setup
+    key='synthetic-verified-meta-token-1234567890'
+    replacement='synthetic-rejected-meta-token-1234567890'
+    async with sessions() as db:
+        db.add(RuntimeCheck(name=service.PREFIX+'muse',status='completed',detail={'state':'ready','credentials_encrypted':seal(key),'active_route':{'public_model':muse.PUBLIC_MODEL,'transport_model':muse.PUBLIC_MODEL}},updated_at=datetime.utcnow()-timedelta(minutes=1)));await db.commit()
+    path='api-key' if action=='connect_api_key' else 'verify'
+    request=await client.post('/api/runtime/model-connections/muse/'+path,headers=owner,json={'api_key':replacement} if path=='api-key' else {'target':'provider_account'})
+    assert request.status_code==202
+    async with sessions() as db:
+        assert muse.verified_token([await db.get(RuntimeCheck,service.PREFIX+'muse')])==key
+    if action=='connect_api_key':
+        monkeypatch.setattr(service,'provider_key_check',AsyncMock(return_value={'state':'access_denied','message':'Rejected.'}))
+        await service.run_requested_check(sessions,AsyncMock())
+        async with sessions() as db:
+            row=await db.get(RuntimeCheck,service.PREFIX+'muse')
+            assert row.detail['state']=='ready' and muse.verified_token([row])==key
+            assert 'previous_credentials_encrypted' not in row.detail
+
+
+@pytest.mark.asyncio
+async def test_muse_missing_token_rejected_even_with_lower_control_configured(setup):
+    client,_,owner,_=setup
+    response=await client.post('/api/runtime/model-connections/muse/verify',headers=owner,json={'target':'provider_account'})
+    assert response.status_code==422 and 'API key' in response.text
+
+
+@pytest.mark.asyncio
+async def test_muse_queue_worker_and_two_turn_tool_loop_use_same_encrypted_connection(setup,monkeypatch):
+    from app.services import muse, usage
+    from app.services.llm_gateway import LLMGateway
+    client,sessions,owner,_=setup
+    key='synthetic-real-contract-meta-token-1234567890'
+    monkeypatch.setattr(settings,'OMNIROUTE_CONTROL_KEY','')
+    # Muse is independent of the lower gateway control plane.
+    request=await client.post('/api/runtime/model-connections/muse/api-key',headers=owner,json={'api_key':key})
+    assert request.status_code==202
+    real=httpx.AsyncClient;seen=[]
+    tool={'id':'meta-call-1','type':'function','function':{'name':'lookup','arguments':'{}'}}
+    def respond(request):
+        data=json.loads(request.content);seen.append(data)
+        assert str(request.url)==muse.ENDPOINT and request.headers['authorization']=='Bearer '+key
+        n=len(seen)
+        message={'role':'assistant','content':'Connection verified.'} if n==1 else {'role':'assistant','content':None,'tool_calls':[tool]} if n==2 else {'role':'assistant','content':'Your meeting is at noon.'}
+        if n==3:
+            assert data['messages'][-2]['tool_calls']==[tool]
+            assert data['messages'][-1]=={'role':'tool','tool_call_id':'meta-call-1','content':'Noon.'}
+        return httpx.Response(200,json={'model':muse.MODEL,'choices':[{'index':0,'message':message,'finish_reason':'tool_calls' if n==2 else 'stop'}],'usage':{'prompt_tokens':20,'completion_tokens':10,'total_tokens':30}})
+    monkeypatch.setattr(httpx,'AsyncClient',lambda **kwargs:real(transport=httpx.MockTransport(respond),**kwargs))
+    assert await service.run_requested_check(sessions,AsyncMock())
+    async with sessions() as db: assert muse.verified_token([await db.get(RuntimeCheck,service.PREFIX+'muse')])==key
+    recorded=AsyncMock();monkeypatch.setattr(usage,'record',recorded)
+    tools=[{'type':'function','function':{'name':'lookup','parameters':{'type':'object','properties':{}}}}]
+    history=[{'role':'system','content':'Use lookup for meetings.'},{'role':'user','content':'When is my meeting?'}]
+    response=await LLMGateway.complete(history,tools,model=muse.MODEL,provider='muse',allow_fallback=False)
+    assert response.choices[0].message.tool_calls[0].id=='meta-call-1'
+    history.extend([response.choices[0].message.model_dump(),{'role':'tool','tool_call_id':'meta-call-1','content':'Noon.'}])
+    final=await LLMGateway.complete(history,tools,model=muse.MODEL,provider='muse',allow_fallback=False)
+    assert final.choices[0].message.content=='Your meeting is at noon.'
+    assert len(seen)==3 and recorded.await_count==2

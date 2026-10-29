@@ -17,9 +17,10 @@ PROVIDERS = {
     'gemini': ('Gemini', 'google/gemini-3.8-flash', 'https://aistudio.google.com/api-keys'),
     'claude': ('Claude', 'anthropic/claude-sonnet-5.5', 'https://platform.claude.com/settings/keys'),
     'xai': ('Grok (xAI)', 'xai/grok-4.5', 'https://console.x.ai/'),
+    'muse': ('Meta Muse', 'muse/muse-spark-1.3', 'https://dev.meta.ai/'),
     'meta': ('Meta / Llama', 'auto/free-cf-meta-llama-llama-3-3-70b-instruct-fp8-fast', 'https://dev.meta.ai/'),
 }
-LOCAL_KEY_PROVIDERS = {'gemini', 'xai'}
+LOCAL_KEY_PROVIDERS = {'gemini', 'xai', 'muse'}
 API_ACCOUNT_CONTRACTS = {
     'gemini': ('gemini_api_account_check', 'grokbot-gemini-existing-api', 'google/gemini-3.8-flash', 'gemini/gemini-3.8-flash'),
     'xai': ('xai_api_account_check', 'grokbot-xai-existing-api', 'xai/grok-4.5', 'xai/grok-4.5'),
@@ -27,6 +28,7 @@ API_ACCOUNT_CONTRACTS = {
 PREFIX = 'model_connection:'
 OPENAI_ACCOUNT_UNSUPPORTED = 'Cypher ChatGPT account checks are not supported on this release. Test the existing OpenAI model route instead; your saved connection is unchanged.'
 ROUTES = {
+    'muse/muse-spark-1.3': {'muse/muse-spark-1.3'},
     'openai/gpt-6.1-sol': {'cx/gpt-6.1-sol'},
     'google/gemini-3.8-flash': {'gemini/gemini-3.8-flash', 'agy/gemini-3.8-flash-low'},
     'anthropic/claude-sonnet-5.5': {
@@ -116,8 +118,8 @@ def public_connections(records):
         item = {'id': provider, 'name': label, 'model': public, 'state': state, 'job_status': row.status if row else None,
                 'message': detail.get('message', 'Check the saved connection to verify model access.'),
                 'account_url': account_url,
-                'can_add_api_key': provider in {'gemini', 'claude', 'xai'} and (not settings.OMNIROUTE_URL or remote_control_available()),
-                'requires_api_key': provider in LOCAL_KEY_PROVIDERS and not settings.OMNIROUTE_URL,
+                'can_add_api_key': provider == 'muse' or provider in {'gemini', 'claude', 'xai'} and (not settings.OMNIROUTE_URL or remote_control_available()),
+                'requires_api_key': provider == 'muse' or provider in LOCAL_KEY_PROVIDERS and not settings.OMNIROUTE_URL,
                 'key_configured': bool(detail.get('credentials_encrypted')),
                 'checked_at': detail.get('checked_at'), 'verification_url': None}
         transport = active.get('transport_model')
@@ -126,7 +128,7 @@ def public_connections(records):
             kind, access = ('public', 'Public model route') if transport.startswith(('ddgw/', 'cfp/')) else ('account', 'Gateway account route') if transport.startswith(('cx/', 'cc/', 'agy/', 'xao/')) else ('api_key', 'Provider API key')
             item.update(access_kind=kind, access_label=access)
         item['verification_target'] = detail.get('verification_target', 'current_route')
-        item['verification_supported'] = bool(settings.OMNIROUTE_URL and settings.OMNIROUTE_API_KEY) if provider == 'meta' else remote_control_available() or provider in LOCAL_KEY_PROVIDERS and not settings.OMNIROUTE_URL
+        item['verification_supported'] = bool(settings.OMNIROUTE_URL and settings.OMNIROUTE_API_KEY) if provider == 'meta' else provider == 'muse' or remote_control_available() or provider in LOCAL_KEY_PROVIDERS and not settings.OMNIROUTE_URL
         if provider == 'meta':
             item['verification_target'] = 'current_route'
             if state == 'not_checked':
@@ -137,10 +139,14 @@ def public_connections(records):
                 from app.services.plugins import reveal
                 item['verification_url'] = safe_verification_url(reveal(detail.get('verification_encrypted')))
         except (ValueError, TypeError): pass
+        if provider == 'gemini':
+            item['consumer_subscription_supported'] = False
+        if provider == 'muse' and state == 'not_checked':
+            item['message'] = 'Connect your Meta Model API token, then choose Muse Spark 1.3 for a conversation. Uses your Meta API credits; separate from Facebook, Instagram and public Llama.'
         if provider == 'gemini' and state == 'verification_required' and remote_control_available():
             item['message'] = 'Google requires an account check before this OmniRoute connection can respond. Complete the check, then choose Check again.'
         elif provider == 'gemini' and state == 'verification_required':
-            item['message'] = 'Connect Gemini with an AI Studio API key. Google account subscriptions are available through OmniRoute when configured there.'
+            item['message'] = 'Google AI Free, Plus, Pro and Ultra subscriptions cannot be connected to third-party Cypher through Google sign-in. Existing API access is separate.'
         elif state == 'verification_required' and not item['verification_url']:
             item['message'] = 'The verification link expired. Choose Check again to get a fresh Google account check.'
         if provider == 'openai':
@@ -152,7 +158,7 @@ def public_connections(records):
 
 async def queue_check(db, provider, api_key=None, verification_target='current_route'):
     require_owner()
-    if provider not in PROVIDERS or (api_key is not None and provider not in {'gemini', 'claude', 'xai'}):
+    if provider not in PROVIDERS or (api_key is not None and provider not in {'gemini', 'claude', 'xai', 'muse'}):
         raise HTTPException(422, 'Choose a supported model connection.')
     if verification_target not in {'provider_account', 'current_route'}:
         raise HTTPException(422, 'Choose a provider account or the current model route.')
@@ -160,7 +166,7 @@ async def queue_check(db, provider, api_key=None, verification_target='current_r
         raise HTTPException(422, OPENAI_ACCOUNT_UNSUPPORTED)
     if provider == 'meta' and (not settings.OMNIROUTE_URL or not settings.OMNIROUTE_API_KEY or verification_target != 'current_route'):
         raise HTTPException(422, 'This checker supports the configured public Llama route only. Meta Model API accounts require separate gateway setup.')
-    if provider != 'meta' and settings.OMNIROUTE_URL and not remote_control_available():
+    if provider not in {'meta', 'muse'} and settings.OMNIROUTE_URL and not remote_control_available():
         raise HTTPException(503, 'OmniRoute account management is not configured on this runtime.')
     if provider != 'meta' and provider not in LOCAL_KEY_PROVIDERS and not remote_control_available():
         raise HTTPException(503, 'Model connection management is not configured on this runtime.')
@@ -199,8 +205,10 @@ async def queue_check(db, provider, api_key=None, verification_target='current_r
             detail['previous_key_message'] = previous.get('message')
             detail['previous_key_checked_at'] = previous.get('checked_at')
         detail['credentials_encrypted'] = seal(api_key)
-    elif provider in LOCAL_KEY_PROVIDERS and not remote_control_available() and not detail.get('credentials_encrypted'):
+    elif provider in LOCAL_KEY_PROVIDERS and (provider == 'muse' or not remote_control_available()) and not detail.get('credentials_encrypted'):
         raise HTTPException(422, 'Add a provider API key before checking this connection.')
+    if provider == 'muse':
+        detail['verified_key'] = previous.get('state') == 'ready' and bool(previous.get('credentials_encrypted'))
     if row: row.status = 'pending'; row.detail = detail; row.updated_at = datetime.utcnow()
     else: db.add(RuntimeCheck(name=PREFIX + provider, status='pending', detail=detail, updated_at=datetime.utcnow()))
     await db.commit()
@@ -281,6 +289,16 @@ async def control_check(payload):
 async def provider_key_check(provider, api_key):
     """Verify a direct provider API key against that provider's official API."""
     model = PROVIDERS[provider][1].split('/', 1)[1]
+    if provider == 'muse':
+        from app.services import muse
+        try:
+            response = await muse.complete([{'role':'user', 'content':'Reply with exactly: Connection verified.'}], None, muse.MODEL, {'max_tokens':256, 'reasoning_effort':'minimal'}, api_key)
+            if response.choices[0].message.content.strip() != 'Connection verified.':
+                raise muse.MuseError(502)
+        except muse.MuseError as error:
+            state = {401:'access_denied', 403:'access_denied', 402:'billing_required', 429:'rate_limited'}.get(error.status_code, 'unavailable')
+            return {'state':state, 'message':'Meta Muse did not verify this token and model response. Review token access, credits and availability; your previous connection is preserved.'}
+        return {'state':'ready', 'message':'Meta Muse token verified with a Muse Spark 1.3 response. Requests use your Meta API credits.', 'public_model':muse.PUBLIC_MODEL, 'transport_model':muse.PUBLIC_MODEL}
     if provider == 'gemini':
         url = f'https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent'
         headers = {'x-goog-api-key': api_key, 'Content-Type': 'application/json'}
@@ -372,7 +390,9 @@ async def run_requested_check(sessions, pulse):
         if detail.get('credentials_encrypted'):
             from app.services.plugins import reveal
             payload['api_key'] = reveal(detail['credentials_encrypted'])
-        if payload['provider'] == 'meta' or remote_control_available():
+        if payload['provider'] == 'muse':
+            check = provider_key_check('muse', payload['api_key'])
+        elif payload['provider'] == 'meta' or remote_control_available():
             check = control_check(payload)
         elif payload['provider'] in LOCAL_KEY_PROVIDERS:
             check = provider_key_check(payload['provider'], payload['api_key'])
