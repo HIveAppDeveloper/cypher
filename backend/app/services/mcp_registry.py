@@ -1,5 +1,6 @@
-"""Search the public MCP Registry without treating every listing as connectable."""
+"""Discover MCP interfaces through API Anything, with official-registry fallback."""
 
+import asyncio
 from urllib.parse import urlsplit
 
 from app.services.plugins import http_client
@@ -96,7 +97,7 @@ def server_to_catalog(entry):
     }
 
 
-async def search_registry(query, cursor=None):
+async def _search_official_registry(query, cursor=None):
     params = {"search": query, "version": "latest", "limit": 50}
     if cursor:
         params["cursor"] = cursor
@@ -110,3 +111,22 @@ async def search_registry(query, cursor=None):
     metadata = payload.get("metadata") if isinstance(payload.get("metadata"), dict) else {}
     next_cursor = metadata.get("nextCursor")
     return {"items": items, "next_cursor": next_cursor if isinstance(next_cursor, str) and next_cursor else None}
+
+
+async def search_registry(query, cursor=None):
+    from app.services.api_anything import discovery_hint, search_interfaces
+    query = discovery_hint(query)
+    # Existing official-registry cursors stay opaque and keep their original
+    # provider. API Anything's catalog does not currently expose pagination.
+    if cursor:
+        return await _search_official_registry(query, cursor)
+    # The fallback shares the existing eight-second search budget, including
+    # slow DNS/streaming, rather than adding another full timeout to the UI.
+    async with asyncio.timeout(8):
+        try:
+            items = await search_interfaces(query)
+        except Exception:
+            items = []
+        if items:
+            return {'items': items, 'next_cursor': None}
+        return await _search_official_registry(query)
