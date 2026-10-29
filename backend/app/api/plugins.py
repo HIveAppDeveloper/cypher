@@ -57,12 +57,15 @@ async def list_plugins(db: AsyncSession = Depends(get_db)):
             else:damaged.add(authorization.plugin_id)
         except (InvalidToken, ValueError, AttributeError, TypeError):
             damaged.add(authorization.plugin_id)
+    saved_plugins=(await db.execute(select(Plugin))).scalars().all()
+    check_names=['plugin:'+plugin.id for plugin in saved_plugins]
+    checks={check.name:check for check in (await db.execute(select(RuntimeCheck).where(RuntimeCheck.name.in_(check_names)))).scalars()} if check_names else {}
     output=[]
-    for plugin in (await db.execute(select(Plugin))).scalars():
+    for plugin in saved_plugins:
         item=public(plugin);item['authenticated']=item['authenticated'] or plugin.id in authenticated
         if plugin.id in damaged:item['connection_state']='sign_in_required'
         elif plugin.id in authenticated and plugin.enabled and item['connection_state']!='sign_in_required':item['connection_state']='saved'
-        check=await db.get(RuntimeCheck,'plugin:'+plugin.id)
+        check=checks.get('plugin:'+plugin.id)
         item['verification']={'status':check.status,'detail':check.detail,'checked_at':check.updated_at.isoformat()+'Z'} if check else {'status':'not_tested'}
         if item['connection_state']=='sign_in_required':
             item['authenticated']=False
