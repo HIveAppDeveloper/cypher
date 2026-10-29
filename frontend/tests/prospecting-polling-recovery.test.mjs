@@ -14,6 +14,10 @@ const companyRun = (id, market, status = 'running') => ({
   id, market, product: 'Synthetic scheduling software', limit: 20, status,
   results: [], events: [], gmail: { status: 'connection_required' }, limitations: [],
 });
+const matchRun = (id = 'match-run', status = 'running') => ({
+  id, direction: 'companies_for_thesis', thesis: { one_liner: 'Synthetic thesis' },
+  status, phase: 'matching', results: [], events: [], source_snapshot: null, error: null, limitations: [],
+});
 
 function mountCompany(env, request) {
   const view = renderer(env);
@@ -244,5 +248,115 @@ test('SEC archive polling stops after unmount and does not repeat a nonretryable
   env.time.advance(120000);
   await view.flush();
   assert.equal(backfillCalls, 1, 'the archive poll never restarts after unmount');
+  assert.equal(view.updatesAfterUnmount, 0);
+});
+
+test('SEC archive cancels a scheduled transient retry on unmount', async () => {
+  const env = environment();
+  let backfillCalls = 0;
+  let backfillSignal;
+  const request = async (path, options = {}) => {
+    if (path.startsWith('/prospecting/investors/founders?')) return historicalPage();
+    if (path === '/prospecting/investors/runs') return [];
+    if (path === '/prospecting/investors/founders/backfill') {
+      backfillCalls++;
+      backfillSignal = options.signal;
+      throw new ApiError('Synthetic temporary archive failure.', 503);
+    }
+    throw new Error(`Unexpected request: ${path}`);
+  };
+  const view = mountVc(env, request);
+  await view.flush();
+  assert.equal(backfillCalls, 1);
+  assert.equal(env.time.pending, 1, 'a transient failure schedules one bounded retry');
+  view.unmount();
+  assert.equal(backfillSignal.aborted, true);
+  assert.equal(env.time.pending, 0, 'unmount clears the scheduled archive retry');
+  env.time.advance(120000);
+  await view.flush();
+  assert.equal(backfillCalls, 1, 'the archive request does not repeat after unmount');
+  assert.equal(view.updatesAfterUnmount, 0);
+});
+
+test('VC matching retries transient status failures, honors Retry-After, and clears the alert after recovery', async () => {
+  const env = environment();
+  let statusCalls = 0;
+  const request = async path => {
+    if (path.startsWith('/prospecting/investors/founders?')) return historicalPage('idle');
+    if (path === '/prospecting/investors/runs') return [matchRun()];
+    if (path === '/prospecting/investors/runs/match-run') {
+      statusCalls++;
+      if (statusCalls === 1) throw new ApiError('Synthetic matching service failure.', 503, 9);
+      return matchRun('match-run', 'completed');
+    }
+    throw new Error(`Unexpected request: ${path}`);
+  };
+  const view = mountVc(env, request);
+  await view.flush();
+  assert.equal(statusCalls, 1);
+  assert.match(textOf(find(view.tree, node => node.props?.className === 'vc-alert')), /couldn’t reach the research service/i);
+
+  env.time.advance(8999);
+  await view.flush();
+  assert.equal(statusCalls, 1, 'the status poll waits for Retry-After');
+  env.time.advance(1);
+  await view.flush();
+  assert.equal(statusCalls, 2);
+  assert.doesNotMatch(textOf(view.tree), /couldn’t reach the research service/i);
+  assert.match(textOf(view.tree), /SEC snapshot and match results are ready/);
+  view.unmount();
+});
+
+test('VC matching stops automatic polling for 401 and exposes a deliberate retry action', async () => {
+  const env = environment();
+  let statusCalls = 0;
+  const request = async path => {
+    if (path.startsWith('/prospecting/investors/founders?')) return historicalPage('idle');
+    if (path === '/prospecting/investors/runs') return [matchRun()];
+    if (path === '/prospecting/investors/runs/match-run') {
+      statusCalls++;
+      if (statusCalls === 1) throw new ApiError('Your sign-in expired.', 401);
+      return matchRun('match-run', 'completed');
+    }
+    throw new Error(`Unexpected request: ${path}`);
+  };
+  const view = mountVc(env, request);
+  await view.flush();
+  assert.equal(statusCalls, 1);
+  assert.equal(env.time.pending, 0, 'authentication errors schedule no background poll');
+  assert.ok(find(view.tree, node => node.type === 'a' && String(node.props?.href || '').startsWith('/login?returnTo=')));
+  const retryButton = find(view.tree, node => node.type === 'button' && textOf(node) === 'Retry status check');
+  assert.ok(retryButton, 'the user can resume a status check after restoring access');
+  retryButton.props.onClick();
+  await view.flush();
+  assert.equal(statusCalls, 2);
+  assert.doesNotMatch(textOf(view.tree), /Your sign-in expired/);
+  view.unmount();
+});
+
+test('VC matching cancels its scheduled retry after unmount', async () => {
+  const env = environment();
+  let statusCalls = 0;
+  let statusSignal;
+  const request = async (path, options = {}) => {
+    if (path.startsWith('/prospecting/investors/founders?')) return historicalPage('idle');
+    if (path === '/prospecting/investors/runs') return [matchRun()];
+    if (path === '/prospecting/investors/runs/match-run') {
+      statusCalls++;
+      statusSignal = options.signal;
+      throw new ApiError('Synthetic temporary failure.', 503);
+    }
+    throw new Error(`Unexpected request: ${path}`);
+  };
+  const view = mountVc(env, request);
+  await view.flush();
+  assert.equal(statusCalls, 1);
+  assert.equal(env.time.pending, 1);
+  view.unmount();
+  assert.equal(statusSignal.aborted, true);
+  assert.equal(env.time.pending, 0);
+  env.time.advance(120000);
+  await view.flush();
+  assert.equal(statusCalls, 1);
   assert.equal(view.updatesAfterUnmount, 0);
 });
