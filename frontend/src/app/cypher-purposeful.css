@@ -52,9 +52,6 @@
 .app-store-dialog .apps-advanced-list > summary span { margin-left:5px; font-size:12px; }
 .app-store-dialog .apps-advanced-list > p { max-width:65ch; margin:8px 0 16px; font-size:12px; line-height:1.6; }
 .app-store-dialog .plugin-registration .apps-advanced-list { margin-top:16px; }
-.apps-workspace .catalog-heading { flex-wrap:wrap; }
-.apps-workspace .catalog-heading > div { flex:1 1 240px; min-width:0; }
-.apps-workspace .catalog-heading > input { flex:1 1 220px; width:min(420px,100%); max-width:100%; min-width:0; box-sizing:border-box; }
 .app-store-dialog .connected-service-header { gap:12px; }
 .app-store-dialog .connected-service-header > div { min-width:0; }
 .app-store-dialog .connected-service-header h3 { font-size:15px; }
