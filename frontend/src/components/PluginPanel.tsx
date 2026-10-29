@@ -68,6 +68,8 @@ export function PluginPanel({onClose,onExploreConnection,onManageSkills,embedded
   const [catalogLoadFailed,setCatalogLoadFailed]=useState(false);
   const [connectionsLoadFailed,setConnectionsLoadFailed]=useState(false);
   const [available,setAvailable]=useState<AvailableConnection[]>([]);
+  const [availableLoaded,setAvailableLoaded]=useState(false);
+  const [availableLoadFailed,setAvailableLoadFailed]=useState(false);
   const [sync,setSync]=useState<PluginSync|null>(null);
   const syncing=sync?.status==='pending'||sync?.status==='running';
   const [loading,setLoading]=useState(true);
@@ -130,7 +132,7 @@ export function PluginPanel({onClose,onExploreConnection,onManageSkills,embedded
     const connections=api.getPlugins().then(value=>{if(active){setPlugins(value);setConnectionsLoaded(true);setConnectionsLoadFailed(false);}}).catch(()=>{if(active){setConnectionsLoadFailed(true);setError(CONNECTION_LOAD_ERROR);setRefreshableError(true);}});
     void Promise.all([items,connections]).then(()=>{if(active)setLoading(false);});
     api.deviceStatus().then(s=>{if(active)setDevice(s.enrolled);}).catch(()=>{});
-    api.getAvailableConnections().then(s=>{if(active)setAvailable(s);}).catch(()=>{});
+    api.getAvailableConnections().then(s=>{if(active){setAvailable(s);setAvailableLoaded(true);setAvailableLoadFailed(false);}}).catch(()=>{if(active)setAvailableLoadFailed(true);});
     api.pluginSyncStatus().then(s=>{if(active)setSync(s);}).catch(()=>{});
     api.accountStatus().then(s=>{if(active)setAccountState(s);}).catch(()=>{});
     fetch('/api/connections').then(r=>r.json()).then(data=>{if(active)setVariables(data.variables||[]);}).catch(()=>{});
@@ -168,7 +170,7 @@ export function PluginPanel({onClose,onExploreConnection,onManageSkills,embedded
     return()=>{active=false;clearTimeout(timer);};
   },[view,search,registryRetry,moreResultsOpen]);
   useEffect(()=>{ if(error || notice) body.current?.scrollTo({top:0}); },[error,notice]);
-  async function retryLoad(){setLoading(true);setCatalogLoading(true);setError('');setRefreshableError(false);const [items,connections,status]=await Promise.allSettled([api.getPluginCatalog(),api.getPlugins(),api.pluginSyncStatus()]);if(items.status==='fulfilled'){setCatalog(items.value);setCatalogLoaded(true);setCatalogLoadFailed(false);}else setCatalogLoadFailed(true);if(connections.status==='fulfilled'){setPlugins(connections.value);setConnectionsLoaded(true);setConnectionsLoadFailed(false);}else setConnectionsLoadFailed(true);if(status.status==='fulfilled')setSync(status.value);if(items.status==='rejected'||connections.status==='rejected'||status.status==='rejected'){setError('The connection service is unavailable. Try again shortly.');setRefreshableError(true);}setLoading(false);setCatalogLoading(false);}  async function loadMoreRegistry(){if(!registryCursor||registryLoadingMore)return;const term=search.trim();const cursor=registryCursor;setRegistryLoadingMore(true);setRegistryError('');try{const page=await api.searchMcpRegistry(term,cursor);if(registryQueryRef.current!==term)return;setRegistryItems(current=>{const seen=new Set(current.map(item=>item.id));return [...current,...page.items.filter(item=>!seen.has(item.id))];});setRegistryCursor(page.next_cursor);}catch(e){if(registryQueryRef.current===term)setRegistryError(e instanceof Error?e.message:'Could not load more MCP servers.');}finally{if(registryQueryRef.current===term)setRegistryLoadingMore(false);}}  useEffect(()=>{
+  async function retryLoad(){setLoading(true);setCatalogLoading(true);setError('');setRefreshableError(false);const [items,connections,status,accounts]=await Promise.allSettled([api.getPluginCatalog(),api.getPlugins(),api.pluginSyncStatus(),api.getAvailableConnections()]);if(accounts.status==='fulfilled'){setAvailable(accounts.value);setAvailableLoaded(true);setAvailableLoadFailed(false);}else setAvailableLoadFailed(true);if(items.status==='fulfilled'){setCatalog(items.value);setCatalogLoaded(true);setCatalogLoadFailed(false);}else setCatalogLoadFailed(true);if(connections.status==='fulfilled'){setPlugins(connections.value);setConnectionsLoaded(true);setConnectionsLoadFailed(false);}else setConnectionsLoadFailed(true);if(status.status==='fulfilled')setSync(status.value);if(items.status==='rejected'||connections.status==='rejected'||status.status==='rejected'||accounts.status==='rejected'){setError('The connection service is unavailable. Try again shortly.');setRefreshableError(true);}setLoading(false);setCatalogLoading(false);}  async function loadMoreRegistry(){if(!registryCursor||registryLoadingMore)return;const term=search.trim();const cursor=registryCursor;setRegistryLoadingMore(true);setRegistryError('');try{const page=await api.searchMcpRegistry(term,cursor);if(registryQueryRef.current!==term)return;setRegistryItems(current=>{const seen=new Set(current.map(item=>item.id));return [...current,...page.items.filter(item=>!seen.has(item.id))];});setRegistryCursor(page.next_cursor);}catch(e){if(registryQueryRef.current===term)setRegistryError(e instanceof Error?e.message:'Could not load more MCP servers.');}finally{if(registryQueryRef.current===term)setRegistryLoadingMore(false);}}  useEffect(()=>{
     if(!syncing)return;let active=true;let timer:ReturnType<typeof setTimeout>;
     async function poll(){
       try{const [job,connections]=await Promise.all([api.pluginSyncStatus(),api.getPlugins()]);if(!active)return;setSync(job);setPlugins(connections);}
@@ -266,7 +268,7 @@ export function PluginPanel({onClose,onExploreConnection,onManageSkills,embedded
     }else throw new Error('This service did not provide a sign-in page. Try its advanced setup.');
   }
   function isConnected(item:CatalogEntry){return plugins.some(plugin=>sameEndpoint(plugin.url,item.url)&&(!item.connection_id||plugin.connection_id===item.connection_id));}
-  function canvaUnavailable(item:CatalogEntry){return item.url===CANVA_MCP_URL&&!isConnected(item)&&!item.oauth_client_configured&&!available.some(connection=>sameEndpoint(connection.url,item.url));}
+  function canvaUnavailable(item:CatalogEntry){return item.url===CANVA_MCP_URL&&connectionsLoaded&&availableLoaded&&!isConnected(item)&&!item.oauth_client_configured&&!available.some(connection=>sameEndpoint(connection.url,item.url));}
   function connectionFailure(error:unknown,item:CatalogEntry,reconnect=false){
     const data=(error as {details?:Record<string,unknown>})?.details;
     if(item.url===CANVA_MCP_URL&&((error as {status?:number})?.status===409||data?.code==='oauth_registration_required')){
@@ -287,6 +289,7 @@ export function PluginPanel({onClose,onExploreConnection,onManageSkills,embedded
   }
   async function connectItem(item:CatalogEntry,reconnect=false){
     if(!connectionsLoaded){setError('Your saved connections are still loading. Retry if they could not be loaded.');setRefreshableError(connectionsLoadFailed);return;}
+    if(item.url===CANVA_MCP_URL&&!isConnected(item)&&!item.oauth_client_configured&&!availableLoaded){setError(availableLoadFailed?'Could not check available Canva connections. Refresh connections to try again.':'Checking available Canva connections…');setRefreshableError(availableLoadFailed);return;}
     if(item.url.endsWith('/api/google/mcp')){window.location.assign('/connect/google');return;}
     if(connecting.current||flow)return;
     const connected=isConnected(item);
@@ -418,11 +421,12 @@ export function PluginPanel({onClose,onExploreConnection,onManageSkills,embedded
     const manual=needsManualSetup(item);
     const unavailable=result?.status==='unavailable';
     const needsCanvaSetup=canvaUnavailable(item);
+    const checkingCanva=item.url===CANVA_MCP_URL&&!connected&&!item.oauth_client_configured&&!availableLoaded;
     const action=connected?'Manage':needsCanvaSetup?'Unavailable':manual?'View options':'Connect';
     return <article className="connector-entry" key={`${keyPrefix}:${item.id}`}>
       <Logo item={item}/><div className="app-entry-copy"><h4>{item.name}</h4><p>{item.description||'Use this app with Cypher.'}</p>{connected?<span className="connector-access-hint">Already in your apps</span>:needsCanvaSetup?<span className="connector-access-hint">Canva connections aren’t available yet.</span>:manual?<span className="connector-access-hint">Additional setup needed</span>:unavailable?<span className="connector-access-hint">Couldn’t reach this app at its last check</span>:null}
       </div>
-      <button disabled={busy||!connectionsLoaded||needsEndpoint||!item.url||needsCanvaSetup} className="connector-connect" aria-label={`${action} ${item.name}`} onClick={()=>void connectItem(item)}>{action}<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14m-5-5 5 5-5 5"/></svg></button>
+      <button disabled={busy||!connectionsLoaded||needsEndpoint||!item.url||needsCanvaSetup||checkingCanva} className="connector-connect" aria-label={`${action} ${item.name}`} onClick={()=>void connectItem(item)}>{action}<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14m-5-5 5 5-5 5"/></svg></button>
     </article>;
   }
   const panelContent=<>
@@ -464,6 +468,7 @@ export function PluginPanel({onClose,onExploreConnection,onManageSkills,embedded
         {available.length?<section className="store-available"><div><h3>Available accounts</h3><p>Use a connection already available in this workspace.</p></div><div className="connected-service-actions">{available.map(c=><button type="button" key={c.id} disabled={busy} onClick={()=>void connectItem({id:c.id,name:c.name,url:c.url,domains:c.domains,category:'Development',description:'',connection_id:c.id})}>{c.reuse_available?`Use ${c.name}`:`Connect ${c.name}`}</button>)}</div></section>:null}
         <section className="store-browse" aria-labelledby="store-browse-title">
           {!connectionsLoaded&&!connectionsLoadFailed?<p role="status">Checking your saved connections…</p>:null}
+          {availableLoadFailed?<p role="alert">Could not check available accounts. <button type="button" className="connector-retry" onClick={()=>void retryLoad()}>Retry connections</button></p>:null}
           <div className="store-browse-heading"><h3 id="store-browse-title">{query?'Search results':'Discover apps'}</h3></div>
           <div className="store-categories" role="group" aria-label="App categories"><button type="button" aria-pressed={activeCategory==='All'} onClick={()=>setActiveCategory('All')}>All apps</button>{categories.map(category=><button type="button" key={category} aria-pressed={activeCategory===category} onClick={()=>setActiveCategory(category)}>{category}</button>)}</div>
           {catalogLoading?<LoadingState label="Loading apps…" rows={4}/>:catalogLoadFailed&&!catalogLoaded?<div className="connector-empty" role="alert"><h3>App catalog unavailable</h3><p>Cypher couldn’t load the app catalog. Try again to browse available services.</p><button type="button" className="btn-secondary" onClick={()=>void retryLoad()}>Retry catalog</button></div>:<div className="connector-catalog">{filtered.slice(0,visibleCount).map(item=>connectorCard(item))}</div>}

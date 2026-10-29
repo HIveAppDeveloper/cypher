@@ -182,6 +182,25 @@ test('catalog appears and can be searched while saved connections are still load
   p.view.unmount();
 });
 
+test('catalog stays visible when saved connections fail without permitting a duplicate connection',async()=>{
+  const pendingConnections=deferred();let authorizations=0;
+  const p=panel({api:{getPlugins:()=>pendingConnections.promise,authorizePlugin:async()=>{authorizations++;throw Error('Unexpected authorization');}}});
+  await p.view.flush();assert.match(textOf(p.view.tree),/Fixture Service/);
+  pendingConnections.reject(Error('offline'));await p.view.flush();await p.view.flush();
+  assert.match(textOf(p.view.tree),/Could not load your saved connections/);
+  assert.equal(find(p.view.tree,n=>n.type==='button'&&n.props?.['aria-label']===`Connect ${item.name}`).props.disabled,true);
+  assert.equal(authorizations,0);p.view.unmount();
+});
+
+test('Canva availability waits for available-account lookup',async()=>{
+  const canva={...item,id:'canva-official',name:'Canva',url:'https://api.canva.com/connect/v1/mcp',auth:'registered_oauth'};
+  const accounts=deferred();const p=panel({api:{getPluginCatalog:async()=>[canva],getAvailableConnections:()=>accounts.promise}});
+  await p.view.flush();assert.doesNotMatch(textOf(p.view.tree),/Canva connections aren’t available yet/);
+  assert.equal(find(p.view.tree,n=>n.type==='button'&&n.props?.['aria-label']==='Connect Canva').props.disabled,true);
+  accounts.resolve([]);await p.view.flush();
+  assert.match(textOf(p.view.tree),/Canva connections aren’t available yet/);p.view.unmount();
+});
+
 test('connection request failures do not claim there are no saved tools and retry recovers',async()=>{
   let calls=0;
   const p=panel({api:{getPlugins:async()=>{if(++calls===1)throw Error('Synthetic offline');return [];}}});
