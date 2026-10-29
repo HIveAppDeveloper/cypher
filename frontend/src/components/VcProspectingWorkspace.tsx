@@ -174,10 +174,18 @@ export default function VcProspectingWorkspace({ accountId }: { accountId?: stri
     if (!status || !['pending', 'running'].includes(status)) return;
     const controller = new AbortController();
     let timer: ReturnType<typeof setTimeout>;
+    let retryAttempt = 0;
+    let lastPollingError: string | null = null;
     const poll = async () => {
       try {
         const next: FounderHistory = await request('/prospecting/investors/founders/backfill', { signal: controller.signal });
         if (controller.signal.aborted) return;
+        retryAttempt = 0;
+        if (lastPollingError) {
+          const recoveredMessage = lastPollingError;
+          lastPollingError = null;
+          setError(current => current === recoveredMessage ? '' : current);
+        }
         setData(current => current ? { ...current, database: { ...current.database, historical: next } } : current);
         if (['pending', 'running'].includes(next.status)) timer = setTimeout(poll, 5000);
         else if (next.status === 'completed') {
@@ -185,7 +193,18 @@ export default function VcProspectingWorkspace({ accountId }: { accountId?: stri
           setNotice('Historical SEC Form D archive is indexed and searchable.');
         } else if (next.error) setError('Cypher couldn’t finish importing the SEC archive. Try again in a moment.');
       } catch (failure) {
-        if (!controller.signal.aborted) setError(errorMessage(failure));
+        if (!controller.signal.aborted) {
+          const message = errorMessage(failure);
+          lastPollingError = message;
+          setError(message);
+          const retryable = !(failure instanceof ApiError) || [408, 429].includes(failure.status) || failure.status >= 500;
+          if (retryable) {
+            const backoff = Math.min(5000 * 2 ** retryAttempt, 30000);
+            const retryAfter = failure instanceof ApiError && Number.isFinite(failure.retryAfter) ? Math.max(0, failure.retryAfter * 1000) : 0;
+            retryAttempt += 1;
+            timer = setTimeout(poll, Math.max(backoff, retryAfter));
+          }
+        }
       }
     };
     void poll();
