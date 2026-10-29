@@ -13,7 +13,7 @@ const destinations = [
   { label: 'New task', href: '/', path: 'M12 5v14M5 12h14' },
   { label: 'My work', href: '/?view=work', path: 'M5 5h14v14H5zM9 4v3m6-3v3m-6 5 2 2 4-4' },
   { label: 'Apps', href: '/?plugins=1', path: 'M4 4h6v6H4zm10 0h6v6h-6zM4 14h6v6H4zm10 0h6v6h-6z' },
-  { label: 'Saved', href: '/?view=saved', path: 'M6 4h12v17l-6-4-6 4z' },
+  { label: 'Library', href: '/?view=saved', path: 'M6 4.5A2.5 2.5 0 0 1 8.5 2H19v18H8.5A2.5 2.5 0 0 0 6 22V4.5Zm0 0A2.5 2.5 0 0 0 3.5 2H3v18h5.5A2.5 2.5 0 0 1 11 22' },
   { label: 'Settings', href: '/?view=settings', path: 'M5 6h14M5 12h14M5 18h14M9 4v4m6 2v4m-6 2v4' },
 ];
 
