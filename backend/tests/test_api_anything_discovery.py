@@ -117,7 +117,13 @@ async def test_cache_is_bounded_expires_and_returns_detached_results(monkeypatch
 
 
 @pytest.mark.asyncio
-async def test_discovery_url_does_not_forward_login_codes_to_either_catalog(monkeypatch):
+@pytest.mark.parametrize('hint', [
+    'https://example.com/oauth?code=private#token',
+    'example.com/oauth?code=private#token',
+    '//example.com/oauth?code=private#token',
+    'https://user:private@example.com/oauth',
+])
+async def test_discovery_url_does_not_forward_login_codes_to_either_catalog(monkeypatch, hint):
     seen = []
     def handler(request):
         seen.append(request.url.params['q'])
@@ -127,13 +133,14 @@ async def test_discovery_url_does_not_forward_login_codes_to_either_catalog(monk
         seen.append(query)
         return {'items': [], 'next_cursor': None}
     monkeypatch.setattr(mcp_registry, '_search_official_registry', official)
-    await mcp_registry.search_registry('https://example.com/oauth?code=private#token')
+    await mcp_registry.search_registry(hint)
     assert seen == ['example.com', 'example.com']
     assert list(api_anything._cache) == ['example.com']
 
 
 @pytest.mark.asyncio
-async def test_outer_budget_cancels_slow_fallback_without_detached_network_work(monkeypatch):
+@pytest.mark.parametrize('cursor', [None, 'unchanged:opaque/cursor'])
+async def test_outer_budget_cancels_slow_fallback_without_detached_network_work(monkeypatch, cursor):
     async def empty(query):
         return []
     cancelled = asyncio.Event()
@@ -147,5 +154,15 @@ async def test_outer_budget_cancels_slow_fallback_without_detached_network_work(
     real_timeout = asyncio.timeout
     monkeypatch.setattr(mcp_registry.asyncio, 'timeout', lambda seconds: real_timeout(.02))
     with pytest.raises(TimeoutError):
-        await mcp_registry.search_registry('Example')
+        await mcp_registry.search_registry('Example', cursor)
     assert cancelled.is_set()
+
+
+@pytest.mark.parametrize('query', ['//localhost/oauth?code=private', '/oauth?code=private', 'http://[bad]', '127.1/oauth?code=private'])
+def test_ambiguous_or_nonpublic_url_hints_are_rejected_before_discovery(query):
+    with pytest.raises(ValueError):
+        api_anything.discovery_hint(query)
+
+
+def test_ordinary_search_words_remain_unchanged():
+    assert api_anything.discovery_hint('project management tools') == 'project management tools'

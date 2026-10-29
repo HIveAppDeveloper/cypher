@@ -24,8 +24,10 @@ bounded process-local 60-second cache; no production database migration is neede
 
 No learned operations, account sessions, browser learning, uploads, reports,
 background verification or automatic connections run through this integration.
-Only the user's explicit discovery query is sent to the public catalog; URLs are
-reduced to a hostname so login codes in query strings are not forwarded there.
+Only the user's explicit discovery query is sent to the public catalog. Full,
+bare and protocol-relative URL hints are reduced to a public hostname before
+either catalog request or caching, so login codes are not forwarded. Malformed
+or nonpublic URL hints are rejected. Pagination shares the same eight-second budget.
 
 The October 29 live probe returned HTTP 200 for `linear.app`, `notion.so` and
 `hacker-news`. The first two had no matches; Hacker News had two website operations

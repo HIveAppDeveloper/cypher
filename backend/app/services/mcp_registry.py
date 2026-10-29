@@ -118,11 +118,11 @@ async def search_registry(query, cursor=None):
     query = discovery_hint(query)
     # Existing official-registry cursors stay opaque and keep their original
     # provider. API Anything's catalog does not currently expose pagination.
-    if cursor:
-        return await _search_official_registry(query, cursor)
     # The fallback shares the existing eight-second search budget, including
     # slow DNS/streaming, rather than adding another full timeout to the UI.
     async with asyncio.timeout(8):
+        if cursor:
+            return await _search_official_registry(query, cursor)
         try:
             items = await search_interfaces(query)
         except Exception:

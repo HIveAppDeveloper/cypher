@@ -81,7 +81,16 @@ def interface_to_catalog(match, interface):
 
 
 def discovery_hint(query):
-    return (urlsplit(query).hostname or '') if '://' in query else query
+    query = query.strip()
+    url_shaped = '://' in query or query.startswith('//') or (
+        not any(c.isspace() for c in query) and any(c in query for c in './?#@'))
+    if not url_shaped:
+        return query
+    value = query if '://' in query else 'https:' + query if query.startswith('//') else 'https://' + query
+    host = public_host(urlsplit(value).hostname)
+    if not host:
+        raise ValueError('Use a public website hostname for MCP discovery')
+    return host
 
 
 async def search_interfaces(query):
