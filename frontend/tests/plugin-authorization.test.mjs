@@ -22,13 +22,13 @@ async function connect(p){await p.view.flush();find(p.view.tree,n=>n.type==='but
 
 const linkedPlugin=(verification={status:'not_tested'})=>({id:'linked-account',name:item.name,url:item.url,enabled:true,authenticated:true,tools:[{name:'read_profile',description:'Read an authorized profile',enabled:true}],verification});
 
-test('catalog exposes the configured MCP endpoint and Connect authorizes that exact address',async()=>{
+test('catalog keeps connection details internal while Connect uses the saved endpoint',async()=>{
   let authorization;
-  const p=panel({api:{authorizePlugin:async body=>{authorization=body;return {status:'awaiting_login',flow_id:id,authorization_url:pending.url,name:item.name};},resolvePlugin:async()=>{throw Error('Catalog entries must not be rediscovered');}}});
+  const p=panel({api:{getPluginCatalog:async()=>[{...item,source:'https://provider.example/developers'}],authorizePlugin:async body=>{authorization=body;return {status:'awaiting_login',flow_id:id,authorization_url:pending.url,name:item.name};},resolvePlugin:async()=>{throw Error('Catalog entries must not be rediscovered');}}});
   await p.view.flush();
-  const link=find(p.view.tree,n=>n.type==='a'&&n.props?.['aria-label']==='Open Fixture Service MCP server');
-  assert.equal(link.props.href,item.url);
-  assert.equal(link.props.rel,'noopener noreferrer');
+  assert.equal(find(p.view.tree,n=>n.type==='a'&&n.props?.href===item.url),undefined);
+  assert.doesNotMatch(textOf(p.view.tree),/MCP server:|About this connection/);
+  assert.equal(find(p.view.tree,n=>n.type==='a'&&n.props?.href==='https://provider.example/developers'),undefined);
   await connect(p);
   assert.equal(authorization.url,item.url);
   assert.match(textOf(p.view.tree),/Continue to Fixture Service/);

@@ -26,12 +26,6 @@ function normalizeHost(value:string){
 function displayAddress(value:string){
   try{const url=new URL(value);return url.origin+url.pathname.replace(/\/$/,'');}catch{return value;}
 }
-function publicMcpEndpoint(value:string){
-  try{
-    const url=new URL(value);
-    return url.protocol==='https:'&&!url.username&&!url.password&&!url.search&&!url.hash?url.href:null;
-  }catch{return null;}
-}
 function sameEndpoint(left:string,right:string){
   // URL serialization equates an HTTPS origin with its root slash, while
   // retaining paths and query strings that may identify different connections.
@@ -412,11 +406,9 @@ export function PluginPanel({onClose,onExploreConnection,onManageSkills,embedded
     const manual=needsManualSetup(item);
     const unavailable=result?.status==='unavailable';
     const action=connected?'Manage':manual?'View options':'Connect';
-    const endpoint=publicMcpEndpoint(item.url);
     return <article className="connector-entry" key={`${keyPrefix}:${item.id}`}>
       <Logo item={item}/><div className="app-entry-copy"><h4>{item.name}</h4><p>{item.description||'Use this app with Cypher.'}</p>{connected?<span className="connector-access-hint">Already in your apps</span>:manual?<span className="connector-access-hint">Additional setup needed</span>:unavailable?<span className="connector-access-hint">Couldn’t reach this app at its last check</span>:null}
-      {endpoint?<a className="app-mcp-endpoint" href={endpoint} target="_blank" rel="noopener noreferrer" aria-label={`Open ${item.name} MCP server`}>MCP server: {displayAddress(endpoint)}</a>:null}
-      {item.setup_note||item.source?<details className="app-provider-details"><summary>About this connection</summary>{item.setup_note?<p>{item.setup_note}</p>:null}{item.source?<a href={item.source} target="_blank" rel="noreferrer">Provider details</a>:null}</details>:null}</div>
+      </div>
       <button disabled={busy||needsEndpoint||!item.url} className="connector-connect" aria-label={`${action} ${item.name}`} onClick={()=>void connectItem(item)}>{action}<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14m-5-5 5 5-5 5"/></svg></button>
     </article>;
   }
