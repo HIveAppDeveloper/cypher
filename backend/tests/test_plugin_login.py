@@ -52,16 +52,16 @@ async def create_flow(db):
     db.add(row);await db.commit();await db.refresh(row)
     return row,binding
 
-async def prepare_consent(db,row,monkeypatch,cimd=False):
+async def prepare_consent(db,row,monkeypatch,cimd=False,callback='https://grokbot.example/api/plugin-oauth/callback',token_method='none'):
     async def valid_endpoint(url):pass
     monkeypatch.setattr(plugin_auth,'validate_endpoint',valid_endpoint)
-    provider=await make_provider(db,row,'https://grokbot.example/api/plugin-oauth/callback')
+    provider=await make_provider(db,row,callback)
     requests=[]
     def transport(request):
         requests.append(request)
-        if request.url.path=='/mcp':return httpx.Response(401,headers={'WWW-Authenticate':'Bearer resource_metadata="https://service.example/.well-known/oauth-protected-resource"'},json={})
+        if request.url.path in {'/mcp','/connect/v1/mcp'}:return httpx.Response(401,headers={'WWW-Authenticate':'Bearer resource_metadata="https://service.example/.well-known/oauth-protected-resource"'},json={})
         if request.url.path=='/.well-known/oauth-protected-resource':return httpx.Response(200,json={'resource':row.url,'authorization_servers':['https://accounts.example'],'scopes_supported':['read']})
-        if request.url.path=='/.well-known/oauth-authorization-server':return httpx.Response(200,json={'issuer':'https://accounts.example','authorization_endpoint':'https://accounts.example/authorize','token_endpoint':'https://accounts.example/token','registration_endpoint':'https://accounts.example/register','code_challenge_methods_supported':['S256'],'response_types_supported':['code'],'token_endpoint_auth_methods_supported':['none'],'client_id_metadata_document_supported':cimd})
+        if request.url.path=='/.well-known/oauth-authorization-server':return httpx.Response(200,json={'issuer':'https://accounts.example','authorization_endpoint':'https://accounts.example/authorize','token_endpoint':'https://accounts.example/token','registration_endpoint':'https://accounts.example/register','code_challenge_methods_supported':['S256'],'response_types_supported':['code'],'token_endpoint_auth_methods_supported':[token_method],'client_id_metadata_document_supported':cimd})
         if request.url.path=='/register' and cimd:return httpx.Response(400,json={'error':'invalid_redirect_uri','error_description':'Use the client_id_metadata_document flow for hosted callbacks.'})
         if request.url.path=='/register':return httpx.Response(201,json={'client_id':'test-client','redirect_uris':['https://grokbot.example/api/plugin-oauth/callback'],'token_endpoint_auth_method':'none'})
         return httpx.Response(404)
@@ -70,6 +70,93 @@ async def prepare_consent(db,row,monkeypatch,cimd=False):
             await client.get(row.url,headers={'MCP-Protocol-Version':'2025-11-25'})
     saved=DatabaseTokenStorage(db,row).read()
     return provider,saved,requests
+
+@pytest.mark.asyncio
+async def test_canva_app_client_real_sdk_builds_scoped_pkce_and_token_exchange(db,monkeypatch):
+    monkeypatch.setenv('CANVA_OAUTH_CLIENT_ID','fixture-canva-client')
+    monkeypatch.setenv('CANVA_OAUTH_CLIENT_SECRET','fixture-canva-secret')
+    row,_=await create_flow(db);row.url=plugin_auth.CANVA_MCP_URL;await db.commit()
+    provider,saved,requests=await prepare_consent(db,row,monkeypatch,callback=plugin_auth.CANVA_CALLBACK,token_method='client_secret_post')
+    params=parse_qs(urlsplit(saved['authorization_url']).query)
+    assert params['client_id']==['fixture-canva-client']
+    assert params['redirect_uri']==[plugin_auth.CANVA_CALLBACK]
+    assert params['scope']==[plugin_auth.CANVA_READ_SCOPE]
+    assert params['code_challenge_method']==['S256']
+    assert not any(request.url.path=='/register' for request in requests)
+    assert 'fixture-canva-secret' not in row.payload
+    restored=await make_provider(db,row);await restored._initialize()
+    exchange=await restored._exchange_token_authorization_code('fixture-code',saved['verifier'])
+    form=parse_qs(exchange.content.decode())
+    assert form['client_id']==['fixture-canva-client']
+    assert form['client_secret']==['fixture-canva-secret']
+
+@pytest.mark.asyncio
+async def test_app_canva_client_uses_exact_endpoint_canonical_callback_and_read_scope(db,monkeypatch):
+    monkeypatch.setenv('CANVA_OAUTH_CLIENT_ID','fixture-canva-client')
+    monkeypatch.setenv('CANVA_OAUTH_CLIENT_SECRET','fixture-canva-secret')
+    row,_=await create_flow(db);row.url=plugin_auth.CANVA_MCP_URL;await db.commit()
+    provider=await make_provider(db,row,plugin_auth.CANVA_CALLBACK)
+    saved=DatabaseTokenStorage(db,row).read()
+    assert saved['managed_client']=='canva'
+    assert saved['client_info']['client_id']=='fixture-canva-client'
+    assert saved['client_metadata']['scope']==plugin_auth.CANVA_READ_SCOPE
+    assert saved['client_metadata']['token_endpoint_auth_method']=='client_secret_post'
+    assert 'fixture-canva-secret' not in row.payload
+    assert provider.context.client_metadata_url is None
+    assert str(provider.context.client_metadata.redirect_uris[0])==plugin_auth.CANVA_CALLBACK
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize('url,callback',[
+    ('https://api.canva.com.evil.example/connect/v1/mcp',plugin_auth.CANVA_CALLBACK),
+    ('https://api.canva.com/connect/v1/other',plugin_auth.CANVA_CALLBACK),
+    ('https://api.canva.com/connect/v1/mcp?other=1',plugin_auth.CANVA_CALLBACK),
+    (plugin_auth.CANVA_MCP_URL,'https://other.example/api/plugin-oauth/callback'),
+])
+async def test_app_canva_credentials_never_apply_to_another_endpoint_or_callback(db,monkeypatch,url,callback):
+    monkeypatch.setenv('CANVA_OAUTH_CLIENT_ID','fixture-canva-client')
+    monkeypatch.setenv('CANVA_OAUTH_CLIENT_SECRET','fixture-canva-secret')
+    row,_=await create_flow(db);row.url=url;await db.commit()
+    await make_provider(db,row,callback)
+    assert 'client_info' not in DatabaseTokenStorage(db,row).read()
+
+@pytest.mark.asyncio
+async def test_explicit_canva_client_takes_precedence_over_app_client(db,monkeypatch):
+    monkeypatch.setenv('CANVA_OAUTH_CLIENT_ID','fixture-app-client')
+    monkeypatch.setenv('CANVA_OAUTH_CLIENT_SECRET','fixture-app-secret')
+    row,_=await create_flow(db);row.url=plugin_auth.CANVA_MCP_URL;await db.commit()
+    storage=DatabaseTokenStorage(db,row)
+    await plugin_auth.configure_client(storage,plugin_auth.CANVA_CALLBACK,'user-client','user-secret','design:meta:read')
+    await make_provider(db,row,plugin_auth.CANVA_CALLBACK)
+    saved=storage.read()
+    assert saved['client_info']['client_id']=='user-client'
+    assert saved['client_metadata']['scope']=='design:meta:read'
+    assert not saved.get('managed_client')
+
+@pytest.mark.asyncio
+async def test_canva_catalog_only_exposes_configuration_presence(monkeypatch):
+    monkeypatch.setenv('CANVA_OAUTH_CLIENT_ID','fixture-client-id')
+    monkeypatch.setenv('CANVA_OAUTH_CLIENT_SECRET','fixture-client-secret')
+    entry=next(item for item in await catalog_api.list_catalog() if item['url']==plugin_auth.CANVA_MCP_URL)
+    assert entry['oauth_client_configured'] is True
+    assert 'fixture-client-id' not in json.dumps(entry)
+    assert 'fixture-client-secret' not in json.dumps(entry)
+    monkeypatch.delenv('CANVA_OAUTH_CLIENT_SECRET')
+    entry=next(item for item in await catalog_api.list_catalog() if item['url']==plugin_auth.CANVA_MCP_URL)
+    assert entry['oauth_client_configured'] is False
+
+@pytest.mark.asyncio
+async def test_unconfigured_canva_fails_before_creating_an_authorization(db,monkeypatch):
+    from app.api import device
+    async def allowed(*args,**kwargs):pass
+    monkeypatch.delenv('CANVA_OAUTH_CLIENT_ID',raising=False)
+    monkeypatch.delenv('CANVA_OAUTH_CLIENT_SECRET',raising=False)
+    monkeypatch.setattr(catalog_api,'validate_endpoint',allowed)
+    monkeypatch.setattr(device,'require_device',allowed)
+    body=catalog_api.Begin(name='Canva',url=plugin_auth.CANVA_MCP_URL)
+    with pytest.raises(HTTPException) as error:await catalog_api.authorize(body,db,types.SimpleNamespace(headers={}))
+    assert error.value.status_code==409
+    from sqlalchemy import select
+    assert (await db.execute(select(PluginAuthorization))).scalars().all()==[]
 
 @pytest.mark.asyncio
 async def test_real_sdk_discovers_registers_and_persists_pkce(db,monkeypatch):

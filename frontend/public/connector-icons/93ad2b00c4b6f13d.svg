@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" role="img" aria-label="Emisso Connect">
+  <title>Emisso Connect</title>
+  <!--
+    Icono monocromo de Connect: molinete blanco #FAFAF7 sobre tinta #0D0D0D,
+    tomado de la variante molinete-blanco.svg del kit oficial. Elegido el
+    2026-09-15 para acompañar la nueva identidad negra de Emisso Connect.
+
+    Se conserva la retícula óptica de 16 px: cuatro aspas de 7×3 con espacios
+    de 2 px, legibles en una pestaña. El master display de 120 no se reduce aquí.
+    El centro queda abierto y la marca permanece a 0°, como en el kit.
+
+    Fondo opaco a sangre, sin esquinas propias: cada navegador o cliente aplica
+    su máscara. Los colores HEX funcionan también fuera de los temas del sitio.
+    Mantener sincronizados public/favicon.svg, favicon.ico (16/32/48),
+    apple-icon.png (180), icon1.png (1024) y serverInfo.icons en app/mcp/route.ts.
+    El cuadrado de 1024 evita que los clientes elijan y recorten la pieza social.
+    icono-marca.test.ts verifica geometría, colores y formatos de estos archivos.
+  -->
+  <rect width="16" height="16" fill="#0d0d0d"/>
+  <g fill="#fafaf7">
+    <rect x="2"  y="2"  width="7" height="3" rx="1"/>
+    <rect x="11" y="2"  width="3" height="7" rx="1"/>
+    <rect x="7"  y="11" width="7" height="3" rx="1"/>
+    <rect x="2"  y="7"  width="3" height="7" rx="1"/>
+  </g>
+</svg>

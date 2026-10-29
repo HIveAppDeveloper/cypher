@@ -32,9 +32,12 @@
 .app-store-dialog .connector-entry:hover { border-color:var(--cx-sep); transform:none; }
 .app-store-dialog .connector-entry > .connector-logo { width:32px; height:32px; border-radius:0; background:transparent; }
 .app-store-dialog .connector-entry .connector-logo img { width:28px; height:28px; }
+.app-store-dialog .connector-entry .connector-logo[data-brand="canva"] img { width:16px; height:16px; }
 .app-store-dialog .app-entry-copy { min-width:0; overflow-wrap:anywhere; }
 .app-store-dialog .connector-entry h4 { margin:0; font-size:14px; line-height:1.5; }
-.app-store-dialog .app-entry-copy > p { display:-webkit-box; overflow:hidden; -webkit-box-orient:vertical; -webkit-line-clamp:2; margin:5px 0 0; color:var(--cx-label-2); font-size:12px; line-height:1.6; }
+.app-store-dialog .app-entry-copy > p { display:block; overflow:visible; margin:5px 0 0; color:var(--cx-label-2); font-size:12px; line-height:1.6; }
+.app-store-dialog .app-mcp-endpoint { display:block; margin-top:7px; color:var(--cx-label-2); font-size:11px; line-height:1.5; overflow-wrap:anywhere; text-decoration:underline; text-underline-offset:3px; }
+.app-store-dialog .app-mcp-endpoint:focus-visible { outline:2px solid var(--cx-label); outline-offset:3px; }
 .app-store-dialog .connector-access-hint { display:block; margin-top:6px; color:var(--cx-label-2); font-size:11px; line-height:1.5; }
 .app-store-dialog .app-provider-details { margin-top:8px; color:var(--cx-label-2); font-size:11px; line-height:1.6; }
 .app-store-dialog .app-provider-details summary { cursor:pointer; }

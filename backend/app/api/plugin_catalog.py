@@ -33,7 +33,11 @@ class Website(BaseModel):
 @router.get('/catalog')
 async def list_catalog():
     from app.services.managed_connections import public_connections
+    from app.services.plugin_auth import CANVA_MCP_URL, canva_client_configured
     items=catalog();urls={item['url'].rstrip('/') for item in items}
+    for item in items:
+        if item['url'] == CANVA_MCP_URL:
+            item['oauth_client_configured'] = canva_client_configured()
     for c in public_connections():
         if c['url'].rstrip('/') not in urls:
             items.append({'id':'managed-'+c['id'],'name':c['name'].split(' · ')[0],'url':c['url'],'description':'Connect your account with managed sign-in. Existing authorized connections are reused.','category':'Development','domains':c['domains'],'auth':'auto','source':'https://vercel.com/docs/connect'})
@@ -199,6 +203,12 @@ async def authorize(body:Begin,db:AsyncSession=Depends(get_db),request:Request=N
     if body.connection_id and not config:raise HTTPException(422,'Choose an available connection for this provider.')
     existing=await managed_connections.matching_connection(db,url,config) if config else (await db.execute(select(Plugin).where(Plugin.url==url))).scalars().first()
     if existing and not body.reconnect: return {'status':'connected','plugin_id':existing.id,'name':existing.name}
+    from app.services.plugin_auth import CANVA_MCP_URL, CANVA_CALLBACK, canva_client_configured
+    if url == CANVA_MCP_URL and not body.oauth_client and not existing and not config:
+        if callback_url != CANVA_CALLBACK:
+            raise HTTPException(422,'Use the main Cypher address to connect Canva.')
+        if not canva_client_configured():
+            raise HTTPException(409,'Canva needs a registered OAuth client before sign-in can start. Use the provider setup guide.')
     await db.execute(delete(PluginAuthorization).where(PluginAuthorization.status!='connected',PluginAuthorization.created_at<time.time()-FLOW_TTL))
     if config:return await managed_connections.begin(db,body.name.strip(),url,config,existing,callback_url=callback_url)
     await db.execute(delete(PluginAuthorization).where(PluginAuthorization.status!='connected',PluginAuthorization.created_at<time.time()-FLOW_TTL))
@@ -213,9 +223,12 @@ async def authorize(body:Begin,db:AsyncSession=Depends(get_db),request:Request=N
         previous=(await db.execute(select(PluginAuthorization).where(PluginAuthorization.plugin_id==existing.id,PluginAuthorization.status=='connected'))).scalars().first()
         saved=DatabaseTokenStorage(db,previous).read() if previous else {}
         if saved.get('custom_oauth_client') and saved.get('client_info'):
+            if saved.get('managed_client') == 'canva' and (url != CANVA_MCP_URL or callback_url != CANVA_CALLBACK):
+                row.status='failed';await db.commit()
+                raise HTTPException(422,'The Cypher Canva client requires its registered callback and server.')
             # Reconnect with the same user's client, but a fresh state and PKCE verifier.
             metadata={**saved['client_metadata'],'redirect_uris':[callback_url]}
-            await DatabaseTokenStorage(db,row).update(client_metadata=metadata,client_info=saved['client_info'],custom_oauth_client=True)
+            await DatabaseTokenStorage(db,row).update(client_metadata=metadata,client_info=saved['client_info'],custom_oauth_client=True,managed_client=saved.get('managed_client'))
     provider=await make_provider(db,row,callback_url)
     try:
         tools=await discover(url,auth=provider)

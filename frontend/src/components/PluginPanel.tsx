@@ -9,7 +9,7 @@ import CypherMark from './cipher/CypherMark';
 import BinaryLens from './cipher/BinaryLens';
 import { McpDirectory } from './McpDirectory';
 export interface PluginConnection { provider?:string; connection_id?:string; id:string;name:string;url:string;enabled:boolean;authenticated:boolean;verification?:{status:string;checked_at?:string;detail?:{tool?:string;latency_ms?:number;message?:string}};tools:{name:string;description:string;enabled?:boolean}[]; }
-export interface CatalogEntry { id:string;name:string;url:string;description:string;category:string;domains:string[];icon?:string;source?:string;auth?:string;auth_header?:string;setup_note?:string;connection_id?:string;transport?:string; }
+export interface CatalogEntry { id:string;name:string;url:string;description:string;category:string;domains:string[];icon?:string;source?:string;auth?:string;auth_header?:string;setup_note?:string;connection_id?:string;transport?:string;oauth_client_configured?:boolean; }
 export interface AvailableConnection {id:string;name:string;url:string;domains:string[];reuse_available:boolean;method:string;}
 export interface PluginSync {id:string;status:string;checked:number;total:number;counts:Record<string,number>;results:Record<string,{status:string;message:string;tool_count?:number;credential_source?:string}>;}
 type View='browse'|'connected'|'custom'|'settings';
@@ -17,12 +17,20 @@ const AUTH_POLL_MS=2000;
 const CONNECTION_LOAD_ERROR='Some connections could not load. Retry to refresh the catalog and your connected services.';
 const LOVABLE_MCP_URL='https://mcp.lovable.dev';
 const LOVABLE_SOURCE='https://docs.lovable.dev/integrations/lovable-mcp-server';
+const CANVA_MCP_URL='https://api.canva.com/connect/v1/mcp';
+const CANVA_READ_SCOPE='design:meta:read design:content:read';
 function normalizeHost(value:string){
   try{return new URL(/^[a-z][a-z\d+.-]*:\/\//i.test(value.trim())?value.trim():`https://${value.trim()}`).hostname.toLocaleLowerCase().replace(/^www\./,'');}
   catch{return '';}
 }
 function displayAddress(value:string){
   try{const url=new URL(value);return url.origin+url.pathname.replace(/\/$/,'');}catch{return value;}
+}
+function publicMcpEndpoint(value:string){
+  try{
+    const url=new URL(value);
+    return url.protocol==='https:'&&!url.username&&!url.password&&!url.search&&!url.hash?url.href:null;
+  }catch{return null;}
 }
 function sameEndpoint(left:string,right:string){
   // URL serialization equates an HTTPS origin with its root slash, while
@@ -43,7 +51,7 @@ function exactCatalogMatch(value:string,items:CatalogEntry[]){
 function Logo({item}:{item:Pick<CatalogEntry,'name'|'icon'> & {provider?:string}}){
   const [failed,setFailed]=useState(false);
   useEffect(()=>setFailed(false),[item.icon]);
-  return <span className="connector-logo" aria-hidden="true">{item.provider==='google'?<GoogleMark/>:item.icon && !failed?<img src={item.icon} alt="" loading="lazy" onError={()=>setFailed(true)}/>:<svg className="app-fallback-icon" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></svg>}</span>;
+  return <span className="connector-logo" data-brand={item.name==='Canva'?'canva':undefined} aria-hidden="true">{item.provider==='google'?<GoogleMark/>:item.icon && !failed?<img src={item.icon} alt="" loading="lazy" onError={()=>setFailed(true)}/>:<svg className="app-fallback-icon" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></svg>}</span>;
 }
 function GoogleMark(){
   return <svg className="google-brand-mark" viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M23.49 12.27c0-.78-.07-1.53-.2-2.27H12v4.3h6.44a5.5 5.5 0 0 1-2.39 3.61v2.78h3.88c2.27-2.09 3.56-5.17 3.56-8.42z"/><path fill="#34A853" d="M12 24c3.24 0 5.96-1.08 7.95-2.92l-3.88-2.78c-1.08.72-2.45 1.15-4.07 1.15-3.13 0-5.78-2.11-6.73-4.96H1.26v2.87A12 12 0 0 0 12 24z"/><path fill="#FBBC05" d="M5.27 14.49a7.2 7.2 0 0 1 0-4.98V6.64H1.26a12 12 0 0 0 0 10.72l4.01-2.87z"/><path fill="#EA4335" d="M12 4.55c1.76 0 3.34.61 4.59 1.81l3.43-3.43A11.45 11.45 0 0 0 12 0 12 12 0 0 0 1.26 6.64l4.01 2.87C6.22 6.66 8.87 4.55 12 4.55z"/></svg>;
@@ -264,7 +272,7 @@ export function PluginPanel({onClose,onExploreConnection,onManageSkills,embedded
     const data=(error as {details?:Record<string,unknown>})?.details;
     if(data?.code==='oauth_registration_required' && typeof data.callback_url==='string'){
       setRegistration({item,callback:data.callback_url,reconnect});setError('');
-      setClientScope(normalizeHost(item.url)==='mcp.lovable.dev'?'openid profile email offline projects:read projects:write workspaces:read workspaces:write':'');
+      setClientScope(normalizeHost(item.url)==='mcp.lovable.dev'?'openid profile email offline projects:read projects:write workspaces:read workspaces:write':item.url===CANVA_MCP_URL?CANVA_READ_SCOPE:'');
     }else setError(error instanceof Error?error.message:'Connection failed.');
   }
   async function connectRegisteredClient(event:FormEvent){
@@ -291,6 +299,11 @@ export function PluginPanel({onClose,onExploreConnection,onManageSkills,embedded
       destination.searchParams.set('workspace','1');destination.searchParams.set('connect',item.name);
       if(reconnect)destination.searchParams.set('reconnect','1');
       window.location.replace(destination.toString());return;
+    }
+    if(!connected&&item.auth==='registered_oauth'&&!item.oauth_client_configured&&!available.some(connection=>sameEndpoint(connection.url,item.url))){
+      setRegistration({item,callback:CANONICAL_APP_ORIGIN+'/api/plugin-oauth/callback',reconnect});
+      setClientScope(item.url===CANVA_MCP_URL?CANVA_READ_SCOPE:'');
+      setError('');setNotice('');setRefreshableError(false);return;
     }
     connecting.current=true;setBusy(true);setConnectingName(item.name);setError('');setRefreshableError(false);
     if(connectionItem.auth!=='api_key')preparePopup(item.name);
@@ -376,7 +389,7 @@ export function PluginPanel({onClose,onExploreConnection,onManageSkills,embedded
   for(const item of appCatalog){const key=displayAddress(item.url);if(!displayCatalog.has(key))displayCatalog.set(key,item);}
   function needsManualSetup(item:CatalogEntry){return !isCatalogConnected(item)&&Boolean(item.setup_note||item.auth==='api_key'||item.auth==='setup'||['setup_required','key_required'].includes(sync?.results[item.id]?.status||''));}
   const categories=Array.from(new Set(appCatalog.map(item=>item.category.trim()).filter(Boolean))).sort((a,b)=>a.localeCompare(b));
-  const popular=['linear','notion','vercel','github','figma','windsor.ai'];
+  const popular=['linear','notion','vercel','github','figma','canva','outlook email · mintmcp','outlook calendar · mintmcp','windsor.ai'];
   const matches=appCatalog.filter(item=>(Boolean(query)||!isCatalogConnected(item))&&(activeCategory==='All'||item.category===activeCategory)&&[item.name,item.description,...item.domains].join(' ').toLocaleLowerCase().includes(query));
   const manualMatches=matches.filter(needsManualSetup);
   const filtered=matches.filter(item=>!needsManualSetup(item)).sort((a,b)=>{
@@ -399,8 +412,10 @@ export function PluginPanel({onClose,onExploreConnection,onManageSkills,embedded
     const manual=needsManualSetup(item);
     const unavailable=result?.status==='unavailable';
     const action=connected?'Manage':manual?'View options':'Connect';
+    const endpoint=publicMcpEndpoint(item.url);
     return <article className="connector-entry" key={`${keyPrefix}:${item.id}`}>
       <Logo item={item}/><div className="app-entry-copy"><h4>{item.name}</h4><p>{item.description||'Use this app with Cypher.'}</p>{connected?<span className="connector-access-hint">Already in your apps</span>:manual?<span className="connector-access-hint">Additional setup needed</span>:unavailable?<span className="connector-access-hint">Couldn’t reach this app at its last check</span>:null}
+      {endpoint?<a className="app-mcp-endpoint" href={endpoint} target="_blank" rel="noopener noreferrer" aria-label={`Open ${item.name} MCP server`}>MCP server: {displayAddress(endpoint)}</a>:null}
       {item.setup_note||item.source?<details className="app-provider-details"><summary>About this connection</summary>{item.setup_note?<p>{item.setup_note}</p>:null}{item.source?<a href={item.source} target="_blank" rel="noreferrer">Provider details</a>:null}</details>:null}</div>
       <button disabled={busy||needsEndpoint||!item.url} className="connector-connect" aria-label={`${action} ${item.name}`} onClick={()=>void connectItem(item)}>{action}<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14m-5-5 5 5-5 5"/></svg></button>
     </article>;

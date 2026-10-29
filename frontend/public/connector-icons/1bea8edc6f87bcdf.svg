@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Elicitly">
+    <rect width="128" height="128" rx="26" fill="#0e7a44"/>
+    <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <!-- question hook: the ask -->
+        <path d="M48 44 C48 30 80 28 80 46 C80 60 64 58 64 70" stroke="#ffffff" stroke-width="12"/>
+        <!-- checkmark: resolved / approved -->
+        <path d="M50 85 L60 95 L78 75" stroke="#c9f7e0" stroke-width="13"/>
+    </g>
+</svg>

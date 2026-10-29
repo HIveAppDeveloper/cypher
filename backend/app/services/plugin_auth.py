@@ -16,6 +16,12 @@ from app.services.plugins import seal, reveal, validate_endpoint
 FLOW_TTL = 600
 CLIENT_METADATA_PATH = '/api/plugin-oauth/client-metadata'
 CANONICAL_APP_ORIGIN = 'https://cypher-agent.vercel.app'
+CANVA_MCP_URL = 'https://api.canva.com/connect/v1/mcp'
+CANVA_CALLBACK = CANONICAL_APP_ORIGIN + '/api/plugin-oauth/callback'
+CANVA_READ_SCOPE = 'design:meta:read design:content:read'
+
+def canva_client_configured():
+    return bool(os.getenv('CANVA_OAUTH_CLIENT_ID', '').strip() and os.getenv('CANVA_OAUTH_CLIENT_SECRET', '').strip())
 
 async def configure_client(storage, callback_url, client_id, client_secret=None, scope=None):
     """Store this user's registered client, never a token from another app."""
@@ -88,7 +94,13 @@ class BrowserOAuthProvider(OAuthClientProvider):
             'redirect_uri':str(self.context.client_metadata.redirect_uris[0]),
             'state':state,'code_challenge':pkce.code_challenge,'code_challenge_method':'S256',
         }
-        requested_scope = (self.context.client_metadata.scope or '').strip()
+        # The MCP SDK may replace the in-memory scope during discovery. A
+        # registered client's explicit scope remains the user's choice.
+        saved = storage.read()
+        configured_scope = (saved.get('client_metadata') or {}).get('scope') if saved.get('custom_oauth_client') else None
+        requested_scope = (configured_scope or self.context.client_metadata.scope or '').strip()
+        if configured_scope:
+            self.context.client_metadata.scope = requested_scope
         if requested_scope:
             # A manually registered client can choose an explicit scope set.
             params['scope'] = requested_scope
@@ -132,6 +144,17 @@ async def make_provider(db, row, callback_url=None):
     metadata_url = saved.get('client_metadata_url') or (urlunsplit((callback.scheme, callback.netloc, CLIENT_METADATA_PATH, '', '')) if callback.scheme == 'https' else None)
     if saved.get('custom_oauth_client'):
         metadata_url = None
+    if saved.get('managed_client') == 'canva' and (row.url != CANVA_MCP_URL or str(metadata.redirect_uris[0]) != CANVA_CALLBACK):
+        raise ValueError('The Cypher Canva client requires its registered callback and server.')
+    # Cypher's registered Canva client is usable only for its exact MCP server
+    # and registered canonical callback. Per-user client choices take priority.
+    if row.url == CANVA_MCP_URL and str(metadata.redirect_uris[0]) == CANVA_CALLBACK:
+        metadata_url = None
+        if canva_client_configured() and (not saved.get('client_info') or saved.get('managed_client') == 'canva'):
+            await configure_client(storage, CANVA_CALLBACK, os.environ['CANVA_OAUTH_CLIENT_ID'].strip(), os.environ['CANVA_OAUTH_CLIENT_SECRET'].strip(), CANVA_READ_SCOPE)
+            await storage.update(managed_client='canva')
+            saved=storage.read()
+            metadata=OAuthClientMetadata.model_validate(saved['client_metadata'])
     # Lovable advertises CIMD but currently rejects unapproved client-ID domains.
     # Its supported alternatives are approved DCR callbacks or a workspace client.
     if urlsplit(row.url).hostname == 'mcp.lovable.dev':

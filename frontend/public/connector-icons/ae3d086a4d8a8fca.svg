@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 240" width="200" height="240" aria-label="Ambix mark">
+  <!-- spout · the cap of the still (the "ambix") -->
+  <polygon points="98,28 66,54 96,65" fill="#FBC282"></polygon>
+  <polygon points="98,28 96,65 134,54" fill="#F4C05A"></polygon>
+  <polygon points="66,54 76,90 96,65" fill="#F0A565"></polygon>
+  <polygon points="96,65 76,90 122,92" fill="#E8904A"></polygon>
+  <polygon points="96,65 122,92 134,54" fill="#C77535"></polygon>
+  <polygon points="66,54 48,92 76,90" fill="#E8904A"></polygon>
+  <polygon points="134,54 122,92 156,92" fill="#A04F30"></polygon>
+  <polygon points="86,38 96,34 92,52" fill="#FDE5BC"></polygon>
+
+  <!-- shoulder -->
+  <polygon points="48,92 62,130 76,90" fill="#B86390"></polygon>
+  <polygon points="48,92 40,138 62,130" fill="#985080"></polygon>
+  <polygon points="76,90 62,130 100,132" fill="#A0527A"></polygon>
+  <polygon points="76,90 100,132 122,92" fill="#7B3F6E"></polygon>
+  <polygon points="122,92 100,132 136,128" fill="#623258"></polygon>
+  <polygon points="122,92 136,128 156,92" fill="#7B3F6E"></polygon>
+  <polygon points="156,92 136,128 164,138" fill="#4A2D43"></polygon>
+
+  <!-- cucurbit -->
+  <polygon points="40,138 50,178 62,130" fill="#4A3680"></polygon>
+  <polygon points="62,130 50,178 78,168" fill="#382778"></polygon>
+  <polygon points="62,130 78,168 100,132" fill="#2D1F5E"></polygon>
+  <polygon points="100,132 78,168 100,192" fill="#241749"></polygon>
+  <polygon points="100,132 100,192 120,168" fill="#1F1448"></polygon>
+  <polygon points="100,132 120,168 136,128" fill="#2D1F5E"></polygon>
+  <polygon points="136,128 120,168 150,178" fill="#1A1035"></polygon>
+  <polygon points="136,128 150,178 164,138" fill="#241749"></polygon>
+
+  <!-- base -->
+  <polygon points="50,178 76,204 78,168" fill="#2D1F5E"></polygon>
+  <polygon points="78,168 76,204 100,192" fill="#1F1448"></polygon>
+  <polygon points="76,204 102,220 100,192" fill="#120A2C"></polygon>
+  <polygon points="102,220 124,204 100,192" fill="#080319"></polygon>
+  <polygon points="100,192 124,204 120,168" fill="#1A1035"></polygon>
+  <polygon points="120,168 124,204 150,178" fill="#120A2C"></polygon>
+</svg>
