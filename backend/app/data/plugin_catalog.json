@@ -3,7 +3,7 @@
     "id": "37a30e4bfcf9dbab",
     "name": "Vercel",
     "url": "https://mcp.vercel.com",
-    "description": "Deployments, projects, logs, and Vercel documentation. Sign in with your Vercel account.",
+    "description": "Inspect projects, deployments, logs, and Vercel documentation.",
     "category": "Development",
     "domains": [
       "vercel.com",
@@ -19,7 +19,7 @@
     "id": "1cbd18bf1818c780",
     "name": "Notion",
     "url": "https://mcp.notion.com/mcp",
-    "description": "Search and work with your Notion workspace. Connect through Notion sign-in.",
+    "description": "Search, read, and update the pages and databases your Notion workspace allows.",
     "category": "Research",
     "domains": [
       "notion.so",
@@ -36,7 +36,7 @@
     "id": "fb39103c7d2edac2",
     "name": "Linear",
     "url": "https://mcp.linear.app/mcp",
-    "description": "Issues, projects, and team workflows in Linear.",
+    "description": "Work with issues, projects, and team workflows in Linear.",
     "category": "Productivity",
     "domains": [
       "linear.app",
@@ -52,7 +52,7 @@
     "id": "f85324490fd53a16",
     "name": "Windsor.ai",
     "url": "https://mcp.windsor.ai/",
-    "description": "Connect Meta Facebook Pages and Instagram, plus YouTube, LinkedIn, TikTok and other supported sources through Windsor.ai. Sign in to Windsor and select the accounts you authorize; saved source grants are reused. Meta model access is separate.",
+    "description": "Connect the accounts you authorize, including Facebook Pages and Instagram. Meta model access is separate.",
     "category": "Business",
     "domains": [
       "windsor.ai",
@@ -64,13 +64,14 @@
     ],
     "source": "https://github.com/windsor-ai/windsor_mcp",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/f85324490fd53a16.ico"
   },
   {
     "id": "5b64146edc1804e6",
     "name": "Figma",
     "url": "https://mcp.figma.com/mcp",
-    "description": "Bring Figma designs and design context into your team’s work.",
+    "description": "Bring Figma files, designs, and component context into your work.",
     "category": "Images & media",
     "domains": [
       "figma.com",
@@ -79,6 +80,50 @@
     "source": "https://developers.figma.com/docs/figma-mcp-server/remote-server-installation/",
     "iconSource": "https://static.figma.com/app/icon/1/favicon.png",
     "auth": "auto",
+    "verification": "not_tested",
+    "icon": "/connector-icons/5b64146edc1804e6.png"
+  },
+  {
+    "id": "canva-official",
+    "name": "Canva",
+    "url": "https://api.canva.com/connect/v1/mcp",
+    "description": "Find and read your Canva designs. Editing and exports need additional permissions.",
+    "category": "Images & media",
+    "domains": [
+      "canva.com",
+      "api.canva.com"
+    ],
+    "source": "https://www.canva.dev/docs/apps/mcp/",
+    "auth": "registered_oauth",
+    "icon": "/connector-icons/canva-official.png",
+    "verification": "not_tested"
+  },
+  {
+    "id": "outlook-email-mintmcp",
+    "name": "Outlook Email · MintMCP",
+    "url": "https://outlook-email.mintmcp.com/mcp",
+    "description": "Search and draft Outlook email using the third-party MintMCP service.",
+    "category": "Productivity",
+    "domains": [
+      "outlook-email.mintmcp.com"
+    ],
+    "source": "https://outlook-email.mintmcp.com/",
+    "auth": "auto",
+    "icon": "/connector-icons/outlook-microsoft.svg",
+    "verification": "not_tested"
+  },
+  {
+    "id": "outlook-calendar-mintmcp",
+    "name": "Outlook Calendar · MintMCP",
+    "url": "https://outlook-calendar.mintmcp.com/mcp",
+    "description": "Review and manage Outlook calendar events through the third-party MintMCP service.",
+    "category": "Productivity",
+    "domains": [
+      "outlook-calendar.mintmcp.com"
+    ],
+    "source": "https://outlook-calendar.mintmcp.com/",
+    "auth": "auto",
+    "icon": "/connector-icons/outlook-microsoft.svg",
     "verification": "not_tested"
   },
   {
@@ -149,7 +194,7 @@
     "id": "17fb03d8b3d8a7db",
     "name": "Supabase",
     "url": "https://mcp.supabase.com/mcp",
-    "description": "MCP server for interacting with the Supabase platform",
+    "description": "Work with your authorized Supabase projects and database tools.",
     "category": "Productivity",
     "domains": [
       "supabase.com",
@@ -158,7 +203,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=com.supabase/mcp",
     "iconSource": "https://supabase.com/favicon/favicon-16x16.png",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/17fb03d8b3d8a7db.png"
   },
   {
     "id": "db14b32d899ecd5d",
@@ -530,7 +576,7 @@
     "id": "2059344e1d575cc4",
     "name": "0si.ai Disclosures",
     "url": "https://app.0si.ai/api/mcp",
-    "description": "Korean (DART/KIND) and US SEC filings with AI summaries, direction labels and market reaction.",
+    "description": "Research Korean and US company filings, disclosures, and market reactions.",
     "category": "Business",
     "domains": [
       "0si.ai",
@@ -546,7 +592,7 @@
     "id": "69d85ae32d5ff134",
     "name": "1ClickWebsite",
     "url": "https://www.1clickwebsite.ai/api/mcp",
-    "description": "Build and edit WordPress websites for local service businesses and run Lead Gen demo-site batches.",
+    "description": "Build and edit WordPress sites and prepare lead-generation demos.",
     "category": "Productivity",
     "domains": [
       "1clickwebsite.ai",
@@ -562,7 +608,7 @@
     "id": "7be495ddeca1ec5f",
     "name": "Aard",
     "url": "https://api.aard.ai/mcp",
-    "description": "Official statistics from 170+ publishers, resolved from natural language with provenance.",
+    "description": "Find official statistics from publishers using natural-language queries.",
     "category": "Productivity",
     "domains": [
       "aard.ai",
@@ -578,7 +624,7 @@
     "id": "983945556a761bc5",
     "name": "ABMeter",
     "url": "https://mcp.abmeter.ai",
-    "description": "Run A/B experiments through your AI assistant. SDKs for Ruby, Python, JS, Node, React Native, Go.",
+    "description": "Run and review A/B experiments through your connected account.",
     "category": "Productivity",
     "domains": [
       "abmeter.ai",
@@ -1334,7 +1380,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.cactal/cactal",
     "iconSource": "https://cdn.cactal.app/website-assets/TxIyGV6L5vqxpJb7nJU49.png",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/1e88271a5dc38428.png"
   },
   {
     "id": "ae931d062295e02f",
@@ -1567,7 +1614,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.clevera/mcp",
     "iconSource": "https://framerusercontent.com/images/3nQPCNvr245IlucyvMlD7T8ryU.png",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/831818adae936bd8.png"
   },
   {
     "id": "64d65539861cee4b",
@@ -1581,7 +1629,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.clipstudio/mcp",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/64d65539861cee4b.png"
   },
   {
     "id": "d9f934ca6c6e0313",
@@ -1610,7 +1659,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.cluvi/mcp",
     "iconSource": "https://cluvi.ai/brand/cluvi/web-app-manifest-512x512.png",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/e820f80ffc165663.png"
   },
   {
     "id": "a2107a2807eecb8e",
@@ -1626,7 +1676,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.cnaps/studio",
     "iconSource": "https://cnaps.ai/images/cnapsai_symbol_344.png",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/a2107a2807eecb8e.png"
   },
   {
     "id": "702364b9562ddcbe",
@@ -1641,7 +1692,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.commsync/commsync",
     "iconSource": "https://commsync.ai/branding/commsync_icon_512.png",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/702364b9562ddcbe.png"
   },
   {
     "id": "5fa0520280bf6b5a",
@@ -1656,7 +1708,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.compelling/mcp",
     "iconSource": "https://framerusercontent.com/images/ghWHjJuIOVi2xjTGsB4BuLwls.png",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/5fa0520280bf6b5a.png"
   },
   {
     "id": "8db599b2e4734f03",
@@ -1671,7 +1724,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.connectmachine/connectmachine",
     "iconSource": "https://mcp.connectmachine.ai/logo.png",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/8db599b2e4734f03.png"
   },
   {
     "id": "0222a3a9691d9261",
@@ -1686,7 +1740,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.connie/connie",
     "iconSource": "https://mcp.connie.ai/apple-touch-icon.png",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/0222a3a9691d9261.png"
   },
   {
     "id": "2c9879f97fd4b854",
@@ -1700,7 +1755,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.contentmaschine/contentmaschine",
     "iconSource": "https://contentmaschine.ai/icons/icon-512.png",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/2c9879f97fd4b854.png"
   },
   {
     "id": "de4fcccd39d75091",
@@ -1715,7 +1771,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.context-link/context-link",
     "iconSource": "https://www.context-link.ai/android-chrome-512x512.png",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/de4fcccd39d75091.png"
   },
   {
     "id": "e74ea550d143e4aa",
@@ -1730,7 +1787,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.contextstudios/mcp",
     "iconSource": "https://www.contextstudios.ai/logos/icon-light-transparent.svg",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/e74ea550d143e4aa.svg"
   },
   {
     "id": "8003d8a39c5b8ca4",
@@ -1745,7 +1803,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.cooperbuild/cooper",
     "iconSource": "https://www.cooperbuild.ai/icon.png",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/8003d8a39c5b8ca4.png"
   },
   {
     "id": "9760dbc3932ec0dc",
@@ -1759,7 +1818,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.cordex.app/cordex",
     "iconSource": "https://app.cordex.ai/icon.png",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/9760dbc3932ec0dc.png"
   },
   {
     "id": "bb6a0d0f9fe0ea79",
@@ -1773,7 +1833,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.coreplex/shopping",
     "iconSource": "https://media.base44.com/images/public/6a9567482e969b1ab43e0c49/865503b9a_IMG_4038.png",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/bb6a0d0f9fe0ea79.png"
   },
   {
     "id": "9fbef4189462c865",
@@ -1788,7 +1849,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.corvio/mcp",
     "iconSource": "https://corvio.ai/corvio-icon-medium-heavy-white-background.png",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/9fbef4189462c865.png"
   },
   {
     "id": "61e7d17bcdcdf9fa",
@@ -1803,7 +1865,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.craterview/mcp",
     "iconSource": "https://craterview.ai/static/mark-180.png",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/61e7d17bcdcdf9fa.png"
   },
   {
     "id": "1b4f018c21d8091a",
@@ -1818,7 +1881,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.createprints/createprints",
     "iconSource": "https://www.createprints.ai/logo512.png",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/1b4f018c21d8091a.png"
   },
   {
     "id": "92eb826edb418826",
@@ -1833,7 +1897,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.crub/mcp",
     "iconSource": "https://brand.ak.dev/crub/icon.svg",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/92eb826edb418826.png"
   },
   {
     "id": "b25e350a1ddb55a6",
@@ -1848,7 +1913,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.cueframe/cueframe",
     "iconSource": "https://cueframe.ai/icon.svg",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/b25e350a1ddb55a6.ico"
   },
   {
     "id": "183677c953f99511",
@@ -1863,7 +1929,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.cybret/findings",
     "iconSource": "https://www.cybret.ai/favicon.png",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/183677c953f99511.png"
   },
   {
     "id": "f85983e7a5903297",
@@ -1877,7 +1944,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.dablock/visibility-index",
     "iconSource": "https://dablock.ai/favicon.svg",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/f85983e7a5903297.svg"
   },
   {
     "id": "8f7f7570927c48d5",
@@ -1891,7 +1959,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.dabyte/visibility-index",
     "iconSource": "https://dabyte.ai/favicon.svg",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/8f7f7570927c48d5.svg"
   },
   {
     "id": "bbe5515863596765",
@@ -1906,7 +1975,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.datagrout/datagrout",
     "iconSource": "https://app.datagrout.ai/images/logo-mark.svg",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/bbe5515863596765.png"
   },
   {
     "id": "5c8542a1f317dbac",
@@ -1921,7 +1991,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.dataparrot/data-parrot",
     "iconSource": "https://dataparrot.ai/apple-touch-icon.png",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/5c8542a1f317dbac.png"
   },
   {
     "id": "a00353302d9a2c43",
@@ -1937,7 +2008,8 @@
     "iconSource": "https://www.decisionlog.ai/brand/decision-log-logo.png",
     "auth": "api_key",
     "verification": "not_tested",
-    "auth_header": "x-mcp-client-id"
+    "auth_header": "x-mcp-client-id",
+    "icon": "/connector-icons/a00353302d9a2c43.png"
   },
   {
     "id": "04e7539301a8577c",
@@ -1952,7 +2024,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.deepledger/mcp",
     "iconSource": "https://deepledger.ai/favicon-512x512.png",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/04e7539301a8577c.png"
   },
   {
     "id": "ce09bffa7afec078",
@@ -1967,7 +2040,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.deepscout/deepscout",
     "iconSource": "https://deepscout.ai/brand/deepscout-icon-512.png",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/ce09bffa7afec078.png"
   },
   {
     "id": "1dd604161328d7b5",
@@ -1998,7 +2072,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.directcase/directcase",
     "iconSource": "https://directcase-cms-uploads.s3.eu-north-1.amazonaws.com/directcase_icon_dark_bg_512x512_6abc10f4c5.png",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/e419b91a95578621.png"
   },
   {
     "id": "44e4e4591d6b32f4",
@@ -2014,7 +2089,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.distilla/mcp",
     "iconSource": "https://agents.distilla.ai/icon.png",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/44e4e4591d6b32f4.png"
   },
   {
     "id": "40563df718c4f1fa",
@@ -2028,7 +2104,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.doklad/mcp",
     "iconSource": "https://doklad.ai/apple-touch-icon.png",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/40563df718c4f1fa.png"
   },
   {
     "id": "d4adb947e2c6cbd3",
@@ -2043,7 +2120,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.dotsy/mcp",
     "iconSource": "https://mcp.dotsy.ai/icon-192.png",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/d4adb947e2c6cbd3.png"
   },
   {
     "id": "8ad0cc12a0c57c02",
@@ -2058,7 +2136,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.drillr/drillr",
     "iconSource": "https://drillr.ai/images/brand/logo_512_optimized.png",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/8ad0cc12a0c57c02.png"
   },
   {
     "id": "9b0ffaf374a4b60a",
@@ -2073,7 +2152,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.edgaze/edgaze",
     "iconSource": "https://www.edgaze.ai/web-app-manifest-512x512.png",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/9b0ffaf374a4b60a.png"
   },
   {
     "id": "f873093fd83495a3",
@@ -2088,7 +2168,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.edgechat/edgepedia",
     "iconSource": "https://www.edgechat.ai/assets/edgechat-chestnut-orange-logo-v2.png",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/f873093fd83495a3.png"
   },
   {
     "id": "c406604806f08061",
@@ -2103,7 +2184,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.eevy/mcp",
     "iconSource": "https://eevy.ai/favicon.svg",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/c406604806f08061.svg"
   },
   {
     "id": "7a5264492503b8cb",
@@ -2117,7 +2199,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.elav8.fala/fala",
     "iconSource": "https://fala.elav8.ai/fala-icon.png",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/7a5264492503b8cb.png"
   },
   {
     "id": "1bea8edc6f87bcdf",
@@ -2132,7 +2215,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.elicitly/pro",
     "iconSource": "https://www.elicitly.ai/favicon.svg",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/1bea8edc6f87bcdf.svg"
   },
   {
     "id": "93ad2b00c4b6f13d",
@@ -2146,7 +2230,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.emisso/connect",
     "iconSource": "https://connect.emisso.ai/icon.svg",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/93ad2b00c4b6f13d.svg"
   },
   {
     "id": "7cda01ea521c13b2",
@@ -2162,7 +2247,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.empiriolabs/mcp",
     "iconSource": "https://empiriolabs.ai/images/icon-dark-512.png",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/7cda01ea521c13b2.png"
   },
   {
     "id": "a15519f516bfd07c",
@@ -2177,7 +2263,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.enokilabs/enoki",
     "iconSource": "https://enokilabs.ai/brand/enoki-mark.svg",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/a15519f516bfd07c.svg"
   },
   {
     "id": "7d16a2cd7f0338cd",
@@ -2191,7 +2278,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.eroq/eroq",
     "iconSource": "https://eroq.ai/logo.png",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/7d16a2cd7f0338cd.png"
   },
   {
     "id": "803277a05d10c01f",
@@ -2206,7 +2294,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.eshmere/tenda",
     "iconSource": "https://mcp.tenda.eshmere.ai/icon.png",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/803277a05d10c01f.png"
   },
   {
     "id": "a50943ed034cc056",
@@ -2221,7 +2310,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.eximagent/eximagent",
     "iconSource": "https://eximagent.ai/logo.png",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/a50943ed034cc056.png"
   },
   {
     "id": "6da4efa8c66e24fa",
@@ -2236,7 +2326,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.falpha/mcp",
     "iconSource": "https://agent.falpha.ai/brand/falpha-icon-light-512.png",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/6da4efa8c66e24fa.png"
   },
   {
     "id": "b157b4606bad8224",
@@ -2251,7 +2342,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.famrelay/famrelay",
     "iconSource": "https://www.famrelay.ai/assets/img/icon-512.png",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/b157b4606bad8224.png"
   },
   {
     "id": "fae2bac6a25bd522",
@@ -2267,7 +2359,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.fantopy/fantopy",
     "iconSource": "https://app.fantopy.ai/favicon.png",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/fae2bac6a25bd522.png"
   },
   {
     "id": "0d07850d33f6b700",
@@ -2283,7 +2376,8 @@
     "iconSource": "https://fastmetal.ai/logo.svg",
     "auth": "api_key",
     "verification": "not_tested",
-    "auth_header": "Authorization"
+    "auth_header": "Authorization",
+    "icon": "/connector-icons/0d07850d33f6b700.svg"
   },
   {
     "id": "70943e494e8791be",
@@ -2298,7 +2392,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.feedboss/feedboss",
     "iconSource": "https://www.feedboss.ai/android-chrome-512x512.png",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/70943e494e8791be.png"
   },
   {
     "id": "6a807207a64256b3",
@@ -2312,7 +2407,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.fenbs/fenbs",
     "iconSource": "https://fenbs.ai/icon.svg",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/6a807207a64256b3.png"
   },
   {
     "id": "d78c3406ce6cb38c",
@@ -2326,7 +2422,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.fgac/fgac",
     "iconSource": "https://fgac.ai/logo-400.png",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/d78c3406ce6cb38c.png"
   },
   {
     "id": "d8374fa51a92d939",
@@ -2341,7 +2438,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.file2markdown/file2markdown",
     "iconSource": "https://www.file2markdown.ai/logo-800.png",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/d8374fa51a92d939.png"
   },
   {
     "id": "a7e6782dca5e2146",
@@ -2356,7 +2454,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.filedone/filedone",
     "iconSource": "https://filedone.ai/icon-maskable-512.png",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/a7e6782dca5e2146.png"
   },
   {
     "id": "9b837b70e2f3ca62",
@@ -2371,7 +2470,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.finstat/finstat",
     "iconSource": "https://finstat.ai/apple-touch-icon.png",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/9b837b70e2f3ca62.png"
   },
   {
     "id": "dd46b542c471f696",
@@ -2387,7 +2487,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.fireflies/fireflies",
     "iconSource": "https://fireflies.ai/icon.png",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/dd46b542c471f696.png"
   },
   {
     "id": "4efae94e7e28bad9",
@@ -2402,7 +2503,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.forkmate/forkmate",
     "iconSource": "https://forkmate.ai/brand/forkmate-icon-512.png",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/4efae94e7e28bad9.png"
   },
   {
     "id": "93741fdfc97d3773",
@@ -2417,7 +2519,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.formist/formist",
     "iconSource": "https://formist.ai/products/formist/favicon.svg",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/93741fdfc97d3773.png"
   },
   {
     "id": "6349456023b16348",
@@ -2432,7 +2535,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.frameo/frameo",
     "iconSource": "https://mcp.frameo.ai/icon.png",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/6349456023b16348.png"
   },
   {
     "id": "b34e7d5b4d3fe06e",
@@ -2446,7 +2550,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.freudly/tests",
     "iconSource": "https://freudly.ai/apple-touch-icon.png",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/b34e7d5b4d3fe06e.png"
   },
   {
     "id": "0bcf4c325cc520a3",
@@ -2460,7 +2565,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.fukushi/dictionary",
     "iconSource": "https://fukushi.ai/icon",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/0bcf4c325cc520a3.png"
   },
   {
     "id": "4540b1e2f7afc64a",
@@ -2475,7 +2581,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.genfeed/genfeed",
     "iconSource": "https://mcp.genfeed.ai/icons/genfeed-512.png",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/4540b1e2f7afc64a.png"
   },
   {
     "id": "3a9ce91d12613991",
@@ -2489,7 +2596,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.get-alfred/alfred",
     "iconSource": "https://get-alfred.ai/favicon.svg",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/3a9ce91d12613991.svg"
   },
   {
     "id": "4aa1efd007b57cd8",
@@ -2503,7 +2611,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.getminds/minds",
     "iconSource": "https://getminds.ai/android-chrome-512x512.png",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/4aa1efd007b57cd8.png"
   },
   {
     "id": "02e66635534e4bf6",
@@ -2518,7 +2627,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.getoneprofile/oneprofile",
     "iconSource": "https://raw.githubusercontent.com/getoneprofile/connectors/main/claude/assets/icon.png",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/02e66635534e4bf6.png"
   },
   {
     "id": "162b4b189c9228ea",
@@ -2532,7 +2642,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.getperspective/mcp",
     "iconSource": "https://raw.githubusercontent.com/Perspective-AI/mcp/main/icon.png",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/162b4b189c9228ea.png"
   },
   {
     "id": "57b31b5d6698e098",
@@ -2547,7 +2658,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.goldbeater/goldbeater",
     "iconSource": "https://goldbeater.ai/press/goldbeater-mark.png",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/57b31b5d6698e098.png"
   },
   {
     "id": "9dc511da618e354e",
@@ -2562,7 +2674,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.gondola/gondola",
     "iconSource": "https://www.gondola.ai/assets/logos/logomark-gold.png",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/9dc511da618e354e.png"
   },
   {
     "id": "c33fc180152323a2",
@@ -2577,7 +2690,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.gosummer/summer",
     "iconSource": "https://gosummer.ai/social/summer-icon-192.png",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/c33fc180152323a2.png"
   },
   {
     "id": "3182b5b82ba69187",
@@ -2591,7 +2705,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.gtinfetch/gtinfetch",
     "iconSource": "https://gtinfetch.ai/icon-512.png",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/3182b5b82ba69187.png"
   },
   {
     "id": "b62a182832a70996",
@@ -2621,7 +2736,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.helpwell/helpwell",
     "iconSource": "https://raw.githubusercontent.com/ChainAI-Org/HelpWell/main/branding/png/helpwell-mark-purple-512.png",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/2ef55f2fcd1b5f27.png"
   },
   {
     "id": "5176b2901c9bd92e",
@@ -2664,7 +2780,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.hypnothera/hypnothera",
     "iconSource": "https://hypnothera.ai/brand/app-icon-1024.png",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/8fe2ddc982fdc603.png"
   },
   {
     "id": "9fcdf9f3ed51afe3",
@@ -2679,7 +2796,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.hypotize/hypotize",
     "iconSource": "https://api.hypotize.ai/icon.png",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/9fcdf9f3ed51afe3.png"
   },
   {
     "id": "dfbe5a888e68ea3f",
@@ -2694,7 +2812,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.hyreflow/hyreflow",
     "iconSource": "https://recruit.hyreflow.ai/favicon.svg",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/dfbe5a888e68ea3f.svg"
   },
   {
     "id": "49a63b44f3882d5c",
@@ -2709,7 +2828,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.imario/imario",
     "iconSource": "https://imario.ai/android-chrome-512x512.png",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/49a63b44f3882d5c.png"
   },
   {
     "id": "8e3f27dfec7b5e65",
@@ -2724,7 +2844,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.immokit/mcp",
     "iconSource": "https://immokit.ai/favicon.svg",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/8e3f27dfec7b5e65.svg"
   },
   {
     "id": "39a795c8231a769b",
@@ -2738,7 +2859,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.immopix/mcp",
     "iconSource": "https://immopix.ai/static/images/v3/icon-512.png",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/39a795c8231a769b.png"
   },
   {
     "id": "6915623a8fc4054a",
@@ -2752,7 +2874,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.inblog/mcp",
     "iconSource": "https://inblog.ai/inblog_favicon.png",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/6915623a8fc4054a.png"
   },
   {
     "id": "5876c1ce0e20c71a",
@@ -2766,7 +2889,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.instabids/instabids",
     "iconSource": "https://instabids.ai/icon-512.png",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/5876c1ce0e20c71a.png"
   },
   {
     "id": "a693a21a936a8a39",
@@ -2781,7 +2905,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.instantclips/instantclips",
     "iconSource": "https://instantclips.ai/assets/instantclips-icon-512.png",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/a693a21a936a8a39.png"
   },
   {
     "id": "4940fa51f193252d",
@@ -2811,7 +2936,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.inventoryhero/inventory-hero",
     "iconSource": "https://www.inventoryhero.ai/icon.svg",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/6c4d2d8de1121ae1.svg"
   },
   {
     "id": "8434bd46bf4f91b1",
@@ -2827,7 +2953,8 @@
     "iconSource": "https://iterant.ai/android-chrome-512x512.png",
     "auth": "api_key",
     "verification": "not_tested",
-    "auth_header": "Authorization"
+    "auth_header": "Authorization",
+    "icon": "/connector-icons/8434bd46bf4f91b1.png"
   },
   {
     "id": "e96e21519ee94ede",
@@ -2844,7 +2971,8 @@
     "iconSource": "https://january.ai/apple-touch-icon.png",
     "auth": "api_key",
     "verification": "not_tested",
-    "auth_header": "Authorization"
+    "auth_header": "Authorization",
+    "icon": "/connector-icons/e96e21519ee94ede.png"
   },
   {
     "id": "95c8dc644e10d866",
@@ -2858,7 +2986,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.jasonlovell/site",
     "iconSource": "https://jasonlovell.ai/apple-icon.png",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/95c8dc644e10d866.png"
   },
   {
     "id": "6c4fa260352b7c4f",
@@ -2872,7 +3001,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.jurisprudencias/case-law",
     "iconSource": "https://jurisprudencias.ai/android-chrome-512x512.png",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/6c4fa260352b7c4f.png"
   },
   {
     "id": "7a97c544831a6bf7",
@@ -2886,7 +3016,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.justautomate/website",
     "iconSource": "https://justautomate.ai/logo-mark.svg",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/7a97c544831a6bf7.png"
   },
   {
     "id": "15b1c056795bffa9",
@@ -2901,7 +3032,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.justdomain/just-domain",
     "iconSource": "https://justdomain.ai/just-icon-512.png",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/15b1c056795bffa9.png"
   },
   {
     "id": "da5057975966fd2d",
@@ -2916,7 +3048,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.justpublish/just-publish",
     "iconSource": "https://justpublish.ai/icon.png",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/da5057975966fd2d.png"
   },
   {
     "id": "7ccf03e61f73b91b",
@@ -2931,7 +3064,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.kaleto/mcp",
     "iconSource": "https://www.kaleto.ai/brand/icon-512.png",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/7ccf03e61f73b91b.png"
   },
   {
     "id": "1a57c311880fd0a3",
@@ -2946,7 +3080,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.kive/mcp",
     "iconSource": "https://mcp.kive.ai/kive_logo_512.png",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/1a57c311880fd0a3.png"
   },
   {
     "id": "fee186750f1bba58",
@@ -2960,7 +3095,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.klaaro/klaaro",
     "iconSource": "https://klaaro.ai/klaaro-ai-logo.png",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/fee186750f1bba58.png"
   },
   {
     "id": "00b8cd127381c4ca",
@@ -2974,7 +3110,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.klox/klox",
     "iconSource": "https://klox.ai/logo512.png",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/00b8cd127381c4ca.png"
   },
   {
     "id": "e2a86792d665ac47",
@@ -2988,7 +3125,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.klyf/klyf",
     "iconSource": "https://klyf.ai/icon.svg",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/e2a86792d665ac47.svg"
   },
   {
     "id": "dc13e6d533956e28",
@@ -3003,7 +3141,8 @@
     "iconSource": "https://knowledgegrid.ai/logo/logo-mark.png",
     "auth": "api_key",
     "verification": "not_tested",
-    "auth_header": "Authorization"
+    "auth_header": "Authorization",
+    "icon": "/connector-icons/dc13e6d533956e28.png"
   },
   {
     "id": "b6e8c74c114652ac",
@@ -3017,7 +3156,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.knowledgeporridge/knowledge-porridge",
     "iconSource": "https://knowledgeporridge.ai/ds/img/icon-512.png",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/b6e8c74c114652ac.png"
   },
   {
     "id": "14d9b9edb971d855",
@@ -3032,7 +3172,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.kognai/golden-kog",
     "iconSource": "https://www.kognai.ai/pay/golden-kog-avatar.png",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/14d9b9edb971d855.png"
   },
   {
     "id": "293834f349667b52",
@@ -3063,7 +3204,8 @@
     "iconSource": "https://koppar.ai/icon-512.png",
     "auth": "api_key",
     "verification": "not_tested",
-    "auth_header": "Authorization"
+    "auth_header": "Authorization",
+    "icon": "/connector-icons/14ab55051209f44c.png"
   },
   {
     "id": "8c7b390610a8972a",
@@ -3078,7 +3220,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.kosmodrom/kosmodrom",
     "iconSource": "https://mcp.kosmodrom.ai/icon.png",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/8c7b390610a8972a.png"
   },
   {
     "id": "9245e0b356c9b146",
@@ -3092,7 +3235,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.kreatorflow/kreatorflow",
     "iconSource": "https://kreatorflow.ai/brand/kreatorflow-logo-mark.png",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/9245e0b356c9b146.png"
   },
   {
     "id": "71a5ed887e3d626e",
@@ -3106,7 +3250,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.kubflow/kubflow",
     "iconSource": "https://kubflow.ai/brand/kubflow-logo.png",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/71a5ed887e3d626e.png"
   },
   {
     "id": "2361923183b35d6a",
@@ -3122,7 +3267,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.kubit/mcp-server",
     "iconSource": "https://mcp.kubit.ai/icon.png",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/2361923183b35d6a.png"
   },
   {
     "id": "1809caebf178c945",
@@ -3138,7 +3284,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.lansy/desk",
     "iconSource": "https://lansy.ai/images/lansy-icon-512.png",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/1809caebf178c945.png"
   },
   {
     "id": "b0c7c0ace7abdf3d",
@@ -3153,7 +3300,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.leadmcp/leadmcp",
     "iconSource": "https://leadmcp.ai/icon.svg",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/b0c7c0ace7abdf3d.svg"
   },
   {
     "id": "5c358a5c7190e8d8",
@@ -3168,7 +3316,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.lenshub/lenshub",
     "iconSource": "https://www.lenshub.ai/icon.svg",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/5c358a5c7190e8d8.svg"
   },
   {
     "id": "f334d2a5f75a090c",
@@ -3183,7 +3332,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.letsship/ship",
     "iconSource": "https://letsship.ai/icon.png",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/f334d2a5f75a090c.png"
   },
   {
     "id": "b86c23e4a7fa258b",
@@ -3198,7 +3348,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.libelus/conector",
     "iconSource": "https://libelus.ai/android-chrome-512x512.png",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/b86c23e4a7fa258b.png"
   },
   {
     "id": "8bbc5ee827abe278",
@@ -3213,7 +3364,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.lifeisagame/conquer-fear",
     "iconSource": "https://lifeisagame.ai/__l5e/assets-v1/bb2affb2-6806-4ac2-b56b-026d32200e0c/app-icon-conquer-fear-128.png",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/8bbc5ee827abe278.png"
   },
   {
     "id": "b9c7a4a1f67e17cc",
@@ -3228,7 +3380,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.lifeisagame/signal-not-noise",
     "iconSource": "https://signal.lifeisagame.ai/icon.png",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/b9c7a4a1f67e17cc.png"
   },
   {
     "id": "7b27a512de19a6bc",
@@ -3258,7 +3411,8 @@
     "iconSource": "https://limitguard.ai/icon-512.png",
     "auth": "api_key",
     "verification": "not_tested",
-    "auth_header": "Authorization"
+    "auth_header": "Authorization",
+    "icon": "/connector-icons/afab1bc3ee6cb26c.png"
   },
   {
     "id": "ae930f5e461e7c9a",
@@ -3273,7 +3427,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.limurse/limurse",
     "iconSource": "https://limurse.ai/assets/favicons/apple-icon-180x180.png",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/ae930f5e461e7c9a.png"
   },
   {
     "id": "db9cb2bf07f76551",
@@ -3288,7 +3443,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.linkitapp/linkit",
     "iconSource": "https://app.linkitapp.ai/icon-512.png",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/db9cb2bf07f76551.png"
   },
   {
     "id": "df2d20b70eaf25cb",
@@ -3303,7 +3459,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.livecrm/livecrm",
     "iconSource": "https://livecrm.ai/assets/connector-icon.png",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/df2d20b70eaf25cb.png"
   },
   {
     "id": "b9c6b60d448d4ce7",
@@ -3319,7 +3476,8 @@
     "iconSource": "https://livegraph.ai/icon.svg",
     "auth": "api_key",
     "verification": "not_tested",
-    "auth_header": "x-api-key"
+    "auth_header": "x-api-key",
+    "icon": "/connector-icons/b9c6b60d448d4ce7.svg"
   },
   {
     "id": "2c301e604b7175d1",
@@ -3333,7 +3491,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.llmintel/model-lifecycle",
     "iconSource": "https://llmintel.ai/logo.svg",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/2c301e604b7175d1.svg"
   },
   {
     "id": "e79336053245dd95",
@@ -3347,7 +3506,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.loafy/loafy",
     "iconSource": "https://loafy.ai/icons/icon-192.png?v=15828dd1",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/e79336053245dd95.png"
   },
   {
     "id": "cfb1fbc09d333cd6",
@@ -3362,7 +3522,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.locul/cloud",
     "iconSource": "https://locul.ai/logo-app.png",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/cfb1fbc09d333cd6.png"
   },
   {
     "id": "8909a690e7365f80",
@@ -3377,7 +3538,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.lunafic/lunafic",
     "iconSource": "https://lunafic.ai/lunafic-single.png",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/8909a690e7365f80.png"
   },
   {
     "id": "c4a5a9e822a310d3",
@@ -3392,7 +3554,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.luw/mcp",
     "iconSource": "https://luvicdn.net/img/luwai-10db78ea2bd139927f8b4f6c2ad1620c/lw-favicon.png?w=256&fm=png",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/c4a5a9e822a310d3.png"
   },
   {
     "id": "21b2703bc7dff41f",
@@ -3406,7 +3569,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.mador/mador",
     "iconSource": "https://mador.ai/apple-icon.png",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/21b2703bc7dff41f.png"
   },
   {
     "id": "aa4ed6ff6b922b22",
@@ -3422,7 +3586,8 @@
     "iconSource": "https://maguyva.ai/icon-192.png",
     "auth": "api_key",
     "verification": "not_tested",
-    "auth_header": "Authorization"
+    "auth_header": "Authorization",
+    "icon": "/connector-icons/aa4ed6ff6b922b22.png"
   },
   {
     "id": "d91d1700e6180d81",
@@ -3437,7 +3602,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.mailbeast/mailbeast",
     "iconSource": "https://mailbeast.ai/android-chrome-512x512.png",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/d91d1700e6180d81.png"
   },
   {
     "id": "48b72b50ffb9c2c8",
@@ -3451,7 +3617,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.mailmcp/mailmcp",
     "iconSource": "https://mailmcp.ai/icon.png",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/48b72b50ffb9c2c8.png"
   },
   {
     "id": "c47cd5793f728011",
@@ -3466,7 +3633,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.makeaivideo/video-generator",
     "iconSource": "https://app.makeaivideo.ai/brand/apple-touch-icon.png",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/c47cd5793f728011.png"
   },
   {
     "id": "911607f811ef9d9a",
@@ -3480,7 +3648,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.mappit/mappit",
     "iconSource": "https://mappit.ai/favicon.svg",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/911607f811ef9d9a.jpg"
   },
   {
     "id": "8649be1decb6b8f4",
@@ -3495,7 +3664,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.mappu/public-travel",
     "iconSource": "https://www.mappu.ai/icons/icon-512x512.png",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/8649be1decb6b8f4.png"
   },
   {
     "id": "e25837cc7004dbb1",
@@ -3509,7 +3679,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.mapsdata/mapsdata",
     "iconSource": "https://mapsdata.ai/static/icons/icon-512.png",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/e25837cc7004dbb1.png"
   },
   {
     "id": "0b7d46be0603ba58",
@@ -3524,7 +3695,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.marketcore/mcp",
     "iconSource": "https://mcp.marcora.ai/favicon.png",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/0b7d46be0603ba58.png"
   },
   {
     "id": "6ef84c317e89c62d",
@@ -3539,7 +3711,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.meetdarwin/darwin",
     "iconSource": "https://www.meetdarwin.ai/brand/icons/v2/favicon.svg",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/6ef84c317e89c62d.svg"
   },
   {
     "id": "6c134ed3a47dc27a",
@@ -3554,7 +3727,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.meeting/memo-mcp",
     "iconSource": "https://meeting.ai/apple-touch-icon.png",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/6c134ed3a47dc27a.png"
   },
   {
     "id": "8a43436bab3205bf",
@@ -3570,7 +3744,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.meetsquad/squad",
     "iconSource": "https://assets.meetsquad.ai/images/squad-icon.png",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/8a43436bab3205bf.png"
   },
   {
     "id": "5ecb9970a852960d",
@@ -3598,7 +3773,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.memozzang/memozzang",
     "iconSource": "https://memozzang.ai/icon.png",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/2855fff74bb43f77.png"
   },
   {
     "id": "9889a0a56bee12df",
@@ -3613,7 +3789,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.metabind/banking-assistant",
     "iconSource": "https://cdn.metabind.ai/IgJH0BzIn4LlfnCbcDc7/GLbHk5i3GLlIYcF63XFl/assets/KmzF1pF5Q1gHeE8G0pQy/finance-icon-2%20(2).png",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/9889a0a56bee12df.png"
   },
   {
     "id": "2e28a421200f639b",
@@ -3643,7 +3820,8 @@
     "iconSource": "https://raw.githubusercontent.com/miniDesk/minidesk-mcp/main/logo.png",
     "auth": "api_key",
     "verification": "not_tested",
-    "auth_header": "Authorization"
+    "auth_header": "Authorization",
+    "icon": "/connector-icons/3ba0f66ec791d556.png"
   },
   {
     "id": "62373be0b0d573d7",
@@ -3657,7 +3835,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.miso.mcp.wikinews/wikinews",
     "iconSource": "https://wikinews.mcp.miso.ai/.well-known/mcp-server-card/icon.png",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/62373be0b0d573d7.png"
   },
   {
     "id": "2f4e39039df8d5bf",
@@ -3673,7 +3852,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.modelrunner/mcp",
     "iconSource": "https://modelrunner.ai/favicons/android-chrome-192x192.png",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/2f4e39039df8d5bf.png"
   },
   {
     "id": "ab066e856dc68a50",
@@ -3688,7 +3868,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.monolithos/cloud-memory",
     "iconSource": "https://api.monolithos.ai/api/shadow/brand/logo-v1.png",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/ab066e856dc68a50.png"
   },
   {
     "id": "e1c9a180ad5de8ea",
@@ -3702,7 +3883,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.moonlings/moonlings",
     "iconSource": "https://moonlings.ai/icon.svg",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/e1c9a180ad5de8ea.svg"
   },
   {
     "id": "1f5fb45c96d06530",
@@ -3716,7 +3898,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.morelike/morelike",
     "iconSource": "https://morelike.ai/logo.png",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/1f5fb45c96d06530.png"
   },
   {
     "id": "eb7337cfcf065fc0",
@@ -3731,7 +3914,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.motiblog/mcp",
     "iconSource": "https://motiblog.ai/logo-icon-light.png",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/eb7337cfcf065fc0.png"
   },
   {
     "id": "786154806a7eba6a",
@@ -3746,7 +3930,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.mypenny/mypenny",
     "iconSource": "https://app.mypenny.ai/mypenny-coin-128.png",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/786154806a7eba6a.png"
   },
   {
     "id": "b18580460bb12d98",
@@ -3761,7 +3946,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.myporta/myporta",
     "iconSource": "https://www.myporta.ai/myporta-app-icon.png",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/b18580460bb12d98.png"
   },
   {
     "id": "275c5aed7ac3a146",
@@ -3777,7 +3963,8 @@
     "iconSource": "https://www.natalchart.ai/icons/natalchart-512.png",
     "auth": "api_key",
     "verification": "not_tested",
-    "auth_header": "Authorization"
+    "auth_header": "Authorization",
+    "icon": "/connector-icons/275c5aed7ac3a146.png"
   },
   {
     "id": "aacd682d01473ee7",
@@ -3793,7 +3980,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.nativeport/mcp",
     "iconSource": "https://nativeport.ai/img/brand/nativeport-badge-512.png",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/aacd682d01473ee7.png"
   },
   {
     "id": "5f58624a65dc63b6",
@@ -3808,7 +3996,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.naturali/naturali",
     "iconSource": "https://naturali.ai/icon.svg",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/5f58624a65dc63b6.svg"
   },
   {
     "id": "bdf4068d7992ed78",
@@ -3822,7 +4011,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.naumu/mcp",
     "iconSource": "https://cdn.naumu.ai/brand/icon-256.png",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/bdf4068d7992ed78.png"
   },
   {
     "id": "067cf8cd99985a32",
@@ -3837,7 +4027,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.neopress/mcp",
     "iconSource": "https://app.neopress.ai/img/favicon.png",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/067cf8cd99985a32.png"
   },
   {
     "id": "c0c826805ea059c6",
@@ -3852,7 +4043,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.nerdit/nerdit",
     "iconSource": "https://nerdit.ai/logo.svg",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/c0c826805ea059c6.png"
   },
   {
     "id": "6c4d4461a824f2e1",
@@ -3866,7 +4058,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.newdesk/newdesk",
     "iconSource": "https://newdesk.ai/favicon.svg",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/6c4d4461a824f2e1.svg"
   },
   {
     "id": "6760b9fe9942b4fc",
@@ -3880,7 +4073,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.nitrino/nitrino",
     "iconSource": "https://nitrino.ai/icon-512.png",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/6760b9fe9942b4fc.png"
   },
   {
     "id": "0050e25f42a74948",
@@ -3895,7 +4089,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.nyayassist/nyayassist",
     "iconSource": "https://raw.githubusercontent.com/NyayAssist/nyayassist-mcp/main/assets/logo-512.png",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/0050e25f42a74948.png"
   },
   {
     "id": "daac0c13fc5727f6",
@@ -3910,7 +4105,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.obris/mcp",
     "iconSource": "https://raw.githubusercontent.com/obris-dev/obris-mcp/main/icon.svg",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/daac0c13fc5727f6.ico"
   },
   {
     "id": "230fe02995dc60b5",
@@ -3925,7 +4121,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.oceantoken/mcp",
     "iconSource": "https://mcp.oceantoken.ai/static/logo.png",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/230fe02995dc60b5.png"
   },
   {
     "id": "3cc2d7ef054dc625",
@@ -3940,7 +4137,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.okforest/okforest",
     "iconSource": "https://www.okforest.ai/favicon.svg",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/3cc2d7ef054dc625.svg"
   },
   {
     "id": "f7d2654512d9c71d",
@@ -3954,7 +4152,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.okibi/porch",
     "iconSource": "https://porch.okibi.ai/icon-512.png",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/f7d2654512d9c71d.png"
   },
   {
     "id": "77ad4aa237f6fa41",
@@ -3969,7 +4168,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.olhary/olhary",
     "iconSource": "https://olhary.ai/icon-512.png",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/77ad4aa237f6fa41.png"
   },
   {
     "id": "ffb4966db00a19ab",
@@ -3984,7 +4184,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.onsomble/onsomble",
     "iconSource": "https://raw.githubusercontent.com/Onsomble-ai/onsomble-claude-plugin/main/icon.png",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/ffb4966db00a19ab.png"
   },
   {
     "id": "ac727089cb2da45b",
@@ -3999,7 +4200,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.oobeprotocol.sap.mcp/sap-mcp",
     "iconSource": "https://mcp.sap.oobeprotocol.ai/favicon.png",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/ac727089cb2da45b.png"
   },
   {
     "id": "7b0eef93a01237f9",
@@ -4014,7 +4216,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.openarx/openarx",
     "iconSource": "https://openarx.ai/openarx-logo.png",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/7b0eef93a01237f9.png"
   },
   {
     "id": "d3f0d64845da2753",
@@ -4030,7 +4233,8 @@
     "iconSource": "https://openaso.ai/icon.svg",
     "auth": "api_key",
     "verification": "not_tested",
-    "auth_header": "Authorization"
+    "auth_header": "Authorization",
+    "icon": "/connector-icons/d3f0d64845da2753.svg"
   },
   {
     "id": "7a1d9d0edd96389c",
@@ -4044,7 +4248,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.opencancer/opencancer",
     "iconSource": "https://opencancer.ai/connector-icon-512.png",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/7a1d9d0edd96389c.png"
   },
   {
     "id": "9ad79535482790cc",
@@ -4059,7 +4264,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.fathom.api/mcp",
     "iconSource": "https://storage.googleapis.com/fathom-static-web-assets/pages/mcp-registry/favicon.png",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/9ad79535482790cc.png"
   },
   {
     "id": "1b4ae430087c490d",
@@ -4074,13 +4280,14 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.jeda/jeda-ai",
     "iconSource": "https://mcp.jeda.ai/icon.svg",
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/1b4ae430087c490d.png"
   },
   {
     "id": "c4f32584a4f30ad2",
     "name": "Supabase",
     "url": "https://api.mcp.ai/p_supabase",
-    "description": "Your Supabase account in natural language: run SQL, apply migrations, manage tables, storage, edge f",
+    "description": "Work with your authorized Supabase projects and database tools.",
     "category": "Productivity",
     "domains": [
       "mcp.ai",
@@ -4089,7 +4296,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=io.github.mcp-dir/supabase-mcp",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/c4f32584a4f30ad2.ico"
   },
   {
     "id": "6132d691cf64979c",
@@ -4132,7 +4340,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.b77/apple-search-ads",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/363543b64d1f151f.png"
   },
   {
     "id": "34a8c2e65e839122",
@@ -4162,7 +4371,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.blopus/search",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/7c515992beb66a59.png"
   },
   {
     "id": "540b317c900e113b",
@@ -4176,7 +4386,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.buzzsearch/mcp",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/540b317c900e113b.png"
   },
   {
     "id": "39b3b3c7a4034025",
@@ -4191,7 +4402,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.com.mcp/skills-search",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/39b3b3c7a4034025.ico"
   },
   {
     "id": "62a524a102d35e25",
@@ -4206,7 +4418,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.findip/patent-search",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/62a524a102d35e25.ico"
   },
   {
     "id": "ff6df35762f4a3ff",
@@ -4221,7 +4434,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.foliora/search",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/ff6df35762f4a3ff.png"
   },
   {
     "id": "5a4f607065a83b8b",
@@ -4235,7 +4449,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.hivehall/shared-research",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/5a4f607065a83b8b.png"
   },
   {
     "id": "eb89e9767cbe7eb7",
@@ -4249,7 +4464,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.invexia/research",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/eb89e9767cbe7eb7.png"
   },
   {
     "id": "510a6f772fe67627",
@@ -4264,7 +4480,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.jobero/job-search",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/510a6f772fe67627.png"
   },
   {
     "id": "84043d90c6940096",
@@ -4279,7 +4496,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.law.mcp/lawyer-search",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/84043d90c6940096.ico"
   },
   {
     "id": "d38fd00e62b6cff2",
@@ -4307,7 +4525,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.nothumansearch/search",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/04d603fa9e65c862.svg"
   },
   {
     "id": "63661c4fc57d1dab",
@@ -4323,7 +4542,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.roopslaw/legalsearch",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/63661c4fc57d1dab.png"
   },
   {
     "id": "5264abf339ac0bae",
@@ -4337,7 +4557,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.searcheros/searcher-os",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/5264abf339ac0bae.png"
   },
   {
     "id": "8c0b71018d9bf5de",
@@ -4351,7 +4572,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.searchit-agent/models-catalog",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/8c0b71018d9bf5de.png"
   },
   {
     "id": "b0aabc77a4bed981",
@@ -4365,7 +4587,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.trycanonical/company-search",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/b0aabc77a4bed981.png"
   },
   {
     "id": "9f48ebdbc0dd4efa",
@@ -4381,7 +4604,8 @@
     "iconSource": null,
     "auth": "api_key",
     "verification": "not_tested",
-    "auth_header": "Authorization"
+    "auth_header": "Authorization",
+    "icon": "/connector-icons/9f48ebdbc0dd4efa.png"
   },
   {
     "id": "a91d0200cb02c780",
@@ -4396,7 +4620,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.userintuition/research",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/a91d0200cb02c780.png"
   },
   {
     "id": "44614599dac87274",
@@ -4411,7 +4636,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=app.dealermax/public-search",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/44614599dac87274.png"
   },
   {
     "id": "e4ae9ca9da8f5a8e",
@@ -4425,7 +4651,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=app.deepsearch/deepsearch",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/e4ae9ca9da8f5a8e.png"
   },
   {
     "id": "999f0e7acb8cfd53",
@@ -4439,7 +4666,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=app.frtracker/regulatory-research",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/999f0e7acb8cfd53.png"
   },
   {
     "id": "8cfe936f89f69413",
@@ -4453,7 +4681,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=app.mcpharbor/mcp-harbor-search",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/8cfe936f89f69413.png"
   },
   {
     "id": "5fc2f595bd0bec49",
@@ -4468,7 +4697,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=app.offendersearch/offendersearch",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/5fc2f595bd0bec49.png"
   },
   {
     "id": "9b5596cac84241ce",
@@ -4482,7 +4712,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=app.onesvibe/search",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/9b5596cac84241ce.ico"
   },
   {
     "id": "a4795151bced619b",
@@ -4497,7 +4728,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=cc.ssearch/search",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/a4795151bced619b.svg"
   },
   {
     "id": "225ee492fa24de78",
@@ -4512,7 +4744,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=co.chinaready/search",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/225ee492fa24de78.png"
   },
   {
     "id": "1cdeed7bf0be0e40",
@@ -4527,13 +4760,14 @@
     "source": "https://registry.modelcontextprotocol.io/?q=co.pulselake/simulation-research",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/1cdeed7bf0be0e40.png"
   },
   {
     "id": "407242854863615d",
     "name": "101 Soundboards",
     "url": "https://www.101soundboards.com/mcp/search",
-    "description": "Search millions of sound and soundboards on 101soundboards.com",
+    "description": "Search the 101 Soundboards collection for sounds and soundboards.",
     "category": "Research",
     "domains": [
       "www.101soundboards.com"
@@ -4584,7 +4818,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=com.al-taswia.www/iraqi-law-research",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/75475bd9cfc6db4c.png"
   },
   {
     "id": "ed93cae539f41b87",
@@ -4599,7 +4834,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=com.algo-trade-analytics/research",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/ed93cae539f41b87.png"
   },
   {
     "id": "2c4fd7ae784d8583",
@@ -4613,7 +4849,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=com.alpha402x/research",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/2c4fd7ae784d8583.png"
   },
   {
     "id": "65391960f74d8a15",
@@ -4629,7 +4866,8 @@
     "iconSource": null,
     "auth": "api_key",
     "verification": "not_tested",
-    "auth_header": "x-api-key"
+    "auth_header": "x-api-key",
+    "icon": "/connector-icons/65391960f74d8a15.png"
   },
   {
     "id": "d60220d33b00ba06",
@@ -4671,7 +4909,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=com.crawdar/business-research",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/144050e592236d02.svg"
   },
   {
     "id": "3ce1c8d5ec792f45",
@@ -4685,7 +4924,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=com.curatorsearch/jobs",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/3ce1c8d5ec792f45.png"
   },
   {
     "id": "f30f3b0ae869380a",
@@ -4699,7 +4939,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=com.cymetica/event-trader-research",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/f30f3b0ae869380a.png"
   },
   {
     "id": "c881c3675f4919c8",
@@ -4728,7 +4969,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=com.discordservers/search",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/b0099c92833b8fe3.png"
   },
   {
     "id": "9cd81bedaf843061",
@@ -4743,7 +4985,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=com.edgedepth/research",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/9cd81bedaf843061.png"
   },
   {
     "id": "4e5038a4ee00b8dc",
@@ -4757,7 +5000,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=com.evryroom/property-search",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/4e5038a4ee00b8dc.png"
   },
   {
     "id": "94c6f053a1bf02e9",
@@ -4787,7 +5031,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=com.garagesalessearch.www/directory",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/f79900d1e2e42931.svg"
   },
   {
     "id": "017bc5607212a198",
@@ -4802,7 +5047,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=com.insightfulpipe/airtable",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/017bc5607212a198.png"
   },
   {
     "id": "e9a09ac9f8f56317",
@@ -4817,7 +5063,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=io.github.pipeworx-io/airtable",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/e9a09ac9f8f56317.png"
   },
   {
     "id": "1a22de93afd69427",
@@ -4831,7 +5078,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=com.modevc/firm-salesforce-ventures",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/1a22de93afd69427.png"
   },
   {
     "id": "47dcb336af169298",
@@ -4846,7 +5094,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ac.inference.sh/mcp",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/47dcb336af169298.png"
   },
   {
     "id": "af31e0e8afb6bfb8",
@@ -4860,7 +5109,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=academy.apexai/apex-ai-academy",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/af31e0e8afb6bfb8.svg"
   },
   {
     "id": "cbf2049430c50fa8",
@@ -4875,7 +5125,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ad.getle/leads",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/cbf2049430c50fa8.png"
   },
   {
     "id": "840468f62d79747a",
@@ -4890,7 +5141,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ad.inside/inside-ads",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/840468f62d79747a.png"
   },
   {
     "id": "9443ab886276db8b",
@@ -4904,7 +5156,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ae.brainy/grocery-prices",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/9443ab886276db8b.png"
   },
   {
     "id": "87a0215660d4325d",
@@ -4919,7 +5172,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ae.datadubai/dubai-real-estate",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/87a0215660d4325d.png"
   },
   {
     "id": "193ec671f4b3c2ec",
@@ -4934,7 +5188,8 @@
     "iconSource": null,
     "auth": "api_key",
     "verification": "not_tested",
-    "auth_header": "Authorization"
+    "auth_header": "Authorization",
+    "icon": "/connector-icons/193ec671f4b3c2ec.png"
   },
   {
     "id": "16cd3147a1fb0499",
@@ -4964,7 +5219,8 @@
     "iconSource": null,
     "auth": "api_key",
     "verification": "not_tested",
-    "auth_header": "Authorization"
+    "auth_header": "Authorization",
+    "icon": "/connector-icons/91748b15f7242e1c.png"
   },
   {
     "id": "080eb55643f26382",
@@ -4994,7 +5250,8 @@
     "iconSource": null,
     "auth": "api_key",
     "verification": "not_tested",
-    "auth_header": "Authorization"
+    "auth_header": "Authorization",
+    "icon": "/connector-icons/d06c15457e98ec8c.png"
   },
   {
     "id": "0ab3287c5fc33c6e",
@@ -5008,7 +5265,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=aero.events/events",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/0ab3287c5fc33c6e.png"
   },
   {
     "id": "d321fce0eb562987",
@@ -5023,7 +5281,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ag.hood/name-service",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/d321fce0eb562987.jpg"
   },
   {
     "id": "f5ea785665b4a9a9",
@@ -5085,7 +5344,7 @@
     "id": "856721e825aaccb9",
     "name": "1325.AI",
     "url": "https://agoclnqfyinwjxdmjnns.supabase.co/functions/v1/mcp",
-    "description": "Verified directory of 47,000+ Black-owned U.S. businesses. Search, profiles, maps, rewards.",
+    "description": "Find and explore Black-owned businesses in the 1325.AI directory.",
     "category": "Research",
     "domains": [
       "1325.ai",
@@ -5094,7 +5353,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.1325/mcp",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/856721e825aaccb9.png"
   },
   {
     "id": "c36a3ccafbf96b7e",
@@ -5108,13 +5368,14 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.1court.state/court-directory",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/c36a3ccafbf96b7e.png"
   },
   {
     "id": "aa28801ff7b71746",
     "name": "69.ai",
     "url": "https://69ai.ai/mcp",
-    "description": "Relationship network for AI agents and people: register, match, chat, dinner ideas, virtual gifts.",
+    "description": "Explore its network for agents and people, including profiles and messages.",
     "category": "Productivity",
     "domains": [
       "69ai.ai"
@@ -5137,13 +5398,14 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.aarna/atars-mcp",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/397983e69ed229cf.png"
   },
   {
     "id": "217911c76958acb5",
     "name": "Adako: ad ops for AI assistants",
     "url": "https://adako.ai/mcp",
-    "description": "Google, Meta, LinkedIn and ChatGPT Ads for AI assistants. Every change needs your approval.",
+    "description": "Review and manage advertising campaigns across supported ad platforms.",
     "category": "Productivity",
     "domains": [
       "adako.ai"
@@ -5151,7 +5413,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.adako/ads",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/217911c76958acb5.png"
   },
   {
     "id": "02452b8b0412053d",
@@ -5165,7 +5428,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.adkix/adkix",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/02452b8b0412053d.png"
   },
   {
     "id": "ae199f5c229bf4e5",
@@ -5179,7 +5443,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.adrails/adrails",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/ae199f5c229bf4e5.png"
   },
   {
     "id": "c89a5e1eac939dec",
@@ -5194,7 +5459,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.adrio/adrio",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/c89a5e1eac939dec.png"
   },
   {
     "id": "3675955b271db095",
@@ -5209,7 +5475,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.adsap/adsap",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/3675955b271db095.png"
   },
   {
     "id": "528242ffe9b9a056",
@@ -5223,7 +5490,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.advisorsai/service-navigator",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/528242ffe9b9a056.png"
   },
   {
     "id": "a76aaeb8b444ab9f",
@@ -5239,7 +5507,8 @@
     "iconSource": null,
     "auth": "api_key",
     "verification": "not_tested",
-    "auth_header": "Authorization"
+    "auth_header": "Authorization",
+    "icon": "/connector-icons/a76aaeb8b444ab9f.png"
   },
   {
     "id": "0ec8f666c7c4e478",
@@ -5255,7 +5524,8 @@
     "iconSource": null,
     "auth": "api_key",
     "verification": "not_tested",
-    "auth_header": "Authorization"
+    "auth_header": "Authorization",
+    "icon": "/connector-icons/0ec8f666c7c4e478.png"
   },
   {
     "id": "9b32c8a67074e978",
@@ -5269,7 +5539,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.afg/afg",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/9b32c8a67074e978.png"
   },
   {
     "id": "bef7b07757e77d97",
@@ -5298,7 +5569,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.agentboard/agentboard",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/89334b6ae3243e4e.svg"
   },
   {
     "id": "e83a3d592605dc68",
@@ -5313,7 +5585,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.agentdm/agentdm",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/e83a3d592605dc68.png"
   },
   {
     "id": "a36f138754e21f19",
@@ -5343,7 +5616,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.agentic-news/mcp",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/c54eadefd3742d31.png"
   },
   {
     "id": "2d2575023bf049ad",
@@ -5387,7 +5661,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.agenticfabricationnetwork/ufp",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/db3010688319f7eb.png"
   },
   {
     "id": "d92826927015a546",
@@ -5403,7 +5678,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.agenticshelf/graffeo",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/d92826927015a546.png"
   },
   {
     "id": "977dc2cf686645e4",
@@ -5432,7 +5708,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.agentlookups/counterscript",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/dd2c3869e34da13c.svg"
   },
   {
     "id": "5f9bb98ffa45d7ea",
@@ -5446,7 +5723,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.agentlookups/greenlight",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/5f9bb98ffa45d7ea.svg"
   },
   {
     "id": "ca5a5fcdc8fec39a",
@@ -5460,7 +5738,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.agentlookups/groundrules",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/ca5a5fcdc8fec39a.svg"
   },
   {
     "id": "e4737c6c08d0e753",
@@ -5474,7 +5753,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.agentlookups/groundtruth",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/e4737c6c08d0e753.svg"
   },
   {
     "id": "7279f3c88a683782",
@@ -5488,7 +5768,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.agentlookups/plumbline",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/7279f3c88a683782.svg"
   },
   {
     "id": "72c9802eb6cf77d0",
@@ -5502,7 +5783,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.agentlookups/spoon-scout",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/72c9802eb6cf77d0.svg"
   },
   {
     "id": "ebf7dd27800b023a",
@@ -5517,7 +5799,8 @@
     "iconSource": null,
     "auth": "api_key",
     "verification": "not_tested",
-    "auth_header": "Authorization"
+    "auth_header": "Authorization",
+    "icon": "/connector-icons/ebf7dd27800b023a.png"
   },
   {
     "id": "fa3fa1cb5c345d30",
@@ -5533,7 +5816,8 @@
     "iconSource": null,
     "auth": "api_key",
     "verification": "not_tested",
-    "auth_header": "Authorization"
+    "auth_header": "Authorization",
+    "icon": "/connector-icons/fa3fa1cb5c345d30.svg"
   },
   {
     "id": "9a46db45d5fb83d0",
@@ -5548,7 +5832,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.agentui/apps",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/9a46db45d5fb83d0.png"
   },
   {
     "id": "79e7905bbb19b146",
@@ -5593,7 +5878,8 @@
     "iconSource": null,
     "auth": "api_key",
     "verification": "not_tested",
-    "auth_header": "Authorization"
+    "auth_header": "Authorization",
+    "icon": "/connector-icons/3789608c886712bf.ico"
   },
   {
     "id": "4e572bf607de4996",
@@ -5652,7 +5938,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.aimentiontracker/mcp",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/86d60a41bb4ad56f.png"
   },
   {
     "id": "bcd6b8dd84c17aea",
@@ -5682,7 +5969,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.aislabs/cve",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/feb229ac0da36d41.svg"
   },
   {
     "id": "c69817447dae5732",
@@ -5727,7 +6015,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.alphabazaar/arena",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/9edc0fb290126b4b.png"
   },
   {
     "id": "3a26121581195bc3",
@@ -5742,7 +6031,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.alpic.alpix/Alpix",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/3a26121581195bc3.png"
   },
   {
     "id": "ae3d086a4d8a8fca",
@@ -5757,7 +6047,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.ambix/ambix",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/ae3d086a4d8a8fca.svg"
   },
   {
     "id": "be55acb137b767ac",
@@ -5772,7 +6063,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.amdahl/amdahl",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/be55acb137b767ac.svg"
   },
   {
     "id": "44700875edd0c1c1",
@@ -5786,7 +6078,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.analyticslegends/sap-analytics",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/44700875edd0c1c1.png"
   },
   {
     "id": "59d41e60a9e6430b",
@@ -5801,7 +6094,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.annsa/annsa",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/59d41e60a9e6430b.png"
   },
   {
     "id": "5b2e0ad0d8a4a17e",
@@ -5816,7 +6110,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.anomalyarmor/armor-mcp",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/5b2e0ad0d8a4a17e.ico"
   },
   {
     "id": "b40d98b6fec71467",
@@ -5830,7 +6125,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.anywhereintelligence/switchboard",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/b40d98b6fec71467.png"
   },
   {
     "id": "da0fb5e21a391abe",
@@ -5845,7 +6141,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.apatero/studio",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/da0fb5e21a391abe.png"
   },
   {
     "id": "28b58debdb73ae5a",
@@ -5859,7 +6156,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.apir/verify",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/28b58debdb73ae5a.png"
   },
   {
     "id": "9e6c7f4e52474f11",
@@ -5873,7 +6171,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.arabickeyboard/name-calligraphy",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/9e6c7f4e52474f11.png"
   },
   {
     "id": "32ab4fb3b083018a",
@@ -5887,7 +6186,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.archome/archome",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/32ab4fb3b083018a.webp"
   },
   {
     "id": "0b01ebd7cd8a49a8",
@@ -5901,7 +6201,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.arclan/registry",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/0b01ebd7cd8a49a8.svg"
   },
   {
     "id": "5990de195db11012",
@@ -5916,7 +6217,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.arcreport/ask",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/5990de195db11012.png"
   },
   {
     "id": "d37abf374229cfd9",
@@ -5931,7 +6233,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.arihaan/jobs",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/d37abf374229cfd9.ico"
   },
   {
     "id": "3a5e34ddd5da4d98",
@@ -5946,7 +6249,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.arpi/arpi-mcp",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/3a5e34ddd5da4d98.png"
   },
   {
     "id": "83ef4f6317f7a5f8",
@@ -5962,7 +6266,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.arvx/arvx",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/83ef4f6317f7a5f8.png"
   },
   {
     "id": "71bff0fd55aec3e2",
@@ -5976,7 +6281,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.askatria/atria",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/71bff0fd55aec3e2.ico"
   },
   {
     "id": "11914e0af14c45cf",
@@ -5990,7 +6296,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.askline/askline",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/11914e0af14c45cf.png"
   },
   {
     "id": "78e4aa18e5b8a5d9",
@@ -6021,7 +6328,8 @@
     "iconSource": null,
     "auth": "api_key",
     "verification": "not_tested",
-    "auth_header": "Authorization"
+    "auth_header": "Authorization",
+    "icon": "/connector-icons/807025105625b26f.svg"
   },
   {
     "id": "0542bab09d973ab6",
@@ -6036,7 +6344,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.atalay/mcp",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/0542bab09d973ab6.png"
   },
   {
     "id": "4e1ca39d1ea835f6",
@@ -6051,7 +6360,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.athaus/immobiliensuche",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/4e1ca39d1ea835f6.png"
   },
   {
     "id": "768eb359cb91bfd3",
@@ -6066,7 +6376,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.athaus/makler",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/768eb359cb91bfd3.png"
   },
   {
     "id": "fd102bcb857bc9c4",
@@ -6080,7 +6391,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.atlier/project-desk",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/fd102bcb857bc9c4.png"
   },
   {
     "id": "8bd9e1107e360522",
@@ -6126,7 +6438,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.audiomap/audiomap",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/aa72101c171dfd35.png"
   },
   {
     "id": "a8c4d8bceefadf7a",
@@ -6140,7 +6453,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.audo/audo",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/a8c4d8bceefadf7a.png"
   },
   {
     "id": "4643153725a3fd61",
@@ -6155,7 +6469,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.augenix/build",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/4643153725a3fd61.png"
   },
   {
     "id": "72282f565e57e7ac",
@@ -6183,7 +6498,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.aunoo/agentic",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/e982d99bbc8400a2.ico"
   },
   {
     "id": "f8f5ec9ee8248bd4",
@@ -6200,7 +6516,8 @@
     "iconSource": null,
     "auth": "api_key",
     "verification": "not_tested",
-    "auth_header": "Authorization"
+    "auth_header": "Authorization",
+    "icon": "/connector-icons/f8f5ec9ee8248bd4.png"
   },
   {
     "id": "ae5c02b56ed557b8",
@@ -6214,7 +6531,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.autoblogging/autoblogging",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/ae5c02b56ed557b8.png"
   },
   {
     "id": "b4c1ac88f1fe4ef8",
@@ -6229,7 +6547,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.autoposter/autoposter",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/b4c1ac88f1fe4ef8.png"
   },
   {
     "id": "36b853e49164ae2f",
@@ -6244,7 +6563,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.autoposting/autoposting",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/36b853e49164ae2f.png"
   },
   {
     "id": "f4b270a753600177",
@@ -6258,7 +6578,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.autovox/autovox",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/f4b270a753600177.png"
   },
   {
     "id": "8901525ca02e56a8",
@@ -6273,7 +6594,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.autron/autron",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/8901525ca02e56a8.png"
   },
   {
     "id": "246aedab526c1c0c",
@@ -6289,7 +6611,8 @@
     "iconSource": null,
     "auth": "api_key",
     "verification": "not_tested",
-    "auth_header": "Authorization"
+    "auth_header": "Authorization",
+    "icon": "/connector-icons/246aedab526c1c0c.png"
   },
   {
     "id": "112d819522742188",
@@ -6303,7 +6626,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.aviado/health",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/112d819522742188.png"
   },
   {
     "id": "f4c232bb79593613",
@@ -6332,7 +6656,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.axonagentic/neuroautomata",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/eb92cbc7cda4470d.ico"
   },
   {
     "id": "a27acba80c835015",
@@ -6347,7 +6672,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.azquo/azquo",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/a27acba80c835015.png"
   },
   {
     "id": "28b494f9307901a3",
@@ -6407,7 +6733,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.b77/fibalo",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/1434a0fe20369706.png"
   },
   {
     "id": "86c82265009591f8",
@@ -6437,7 +6764,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.b77/google-ads",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/441b39bc62fe8633.png"
   },
   {
     "id": "2a5705a5a47172a3",
@@ -6482,7 +6810,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.b77/knowledge-base",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/5d7e42736789230f.png"
   },
   {
     "id": "d3f233d9560774d6",
@@ -6527,7 +6856,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.b77/teamwork",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/4e015eff7cab4191.png"
   },
   {
     "id": "247120e9859aeb1d",
@@ -6572,7 +6902,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.balancos/mcp",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/96f6667d33fa69c0.png"
   },
   {
     "id": "42e14eb377099602",
@@ -6601,7 +6932,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.bankrolled/agent-hub",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/5cc2518d652f586b.jpg"
   },
   {
     "id": "433537aec8fde738",
@@ -6617,7 +6949,8 @@
     "iconSource": null,
     "auth": "api_key",
     "verification": "not_tested",
-    "auth_header": "Authorization"
+    "auth_header": "Authorization",
+    "icon": "/connector-icons/433537aec8fde738.png"
   },
   {
     "id": "443aa011af344d4b",
@@ -6632,7 +6965,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.bcited/bcited",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/443aa011af344d4b.png"
   },
   {
     "id": "c44f363b5f26233f",
@@ -6646,7 +6980,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.beatbandit/beatbandit",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/c44f363b5f26233f.png"
   },
   {
     "id": "794715dba82a6cd1",
@@ -6660,7 +6995,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.beevr/beevr",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/794715dba82a6cd1.png"
   },
   {
     "id": "56f5b171802c0f6c",
@@ -6674,7 +7010,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.benchgecko/benchgecko",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/56f5b171802c0f6c.png"
   },
   {
     "id": "bd4afb01e8fdddfd",
@@ -6689,7 +7026,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.benroberts/b4-index",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/bd4afb01e8fdddfd.svg"
   },
   {
     "id": "229d08d9b0c396cb",
@@ -6703,7 +7041,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.betterpost/server",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/229d08d9b0c396cb.png"
   },
   {
     "id": "4cca1c526a32cc31",
@@ -6717,7 +7056,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.bezal/local-commerce",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/4cca1c526a32cc31.png"
   },
   {
     "id": "7f5b6a56c2ecbb02",
@@ -6748,7 +7088,8 @@
     "iconSource": null,
     "auth": "api_key",
     "verification": "not_tested",
-    "auth_header": "X-Api-Key"
+    "auth_header": "X-Api-Key",
+    "icon": "/connector-icons/ce58f7e5dba52b42.png"
   },
   {
     "id": "9188611bf3bbaff0",
@@ -6806,7 +7147,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.bluenexus/universal-mcp",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/ffc75a56c0847be4.png"
   },
   {
     "id": "043cac870645707f",
@@ -6821,7 +7163,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.bodenrichtwert/mcp",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/043cac870645707f.png"
   },
   {
     "id": "37c4a5eda60f0a6a",
@@ -6892,7 +7235,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.boon/boon",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/7abbd2ba0ebedf85.png"
   },
   {
     "id": "9bb78baa139078dd",
@@ -6906,7 +7250,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.booqer/booqer",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/9bb78baa139078dd.png"
   },
   {
     "id": "3d78c043e46774ef",
@@ -6920,7 +7265,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.borealhost/mcp",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/3d78c043e46774ef.png"
   },
   {
     "id": "6c526ecf6d08b772",
@@ -6935,7 +7281,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.botinfo/robot-market-data",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/6c526ecf6d08b772.png"
   },
   {
     "id": "e742a173e323c903",
@@ -6951,7 +7298,8 @@
     "iconSource": null,
     "auth": "api_key",
     "verification": "not_tested",
-    "auth_header": "Authorization"
+    "auth_header": "Authorization",
+    "icon": "/connector-icons/e742a173e323c903.png"
   },
   {
     "id": "a8872aef8edef783",
@@ -6965,7 +7313,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.brainattic/knowledge-base",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/a8872aef8edef783.png"
   },
   {
     "id": "486df50631a7d964",
@@ -6979,7 +7328,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.bringyour/bringyour",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/486df50631a7d964.svg"
   },
   {
     "id": "5838aac513603a4c",
@@ -7008,7 +7358,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.buildwithorbit/orbit",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/bdeac8e6c93a6d8f.png"
   },
   {
     "id": "1728e5daf43d2490",
@@ -7022,7 +7373,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.bunzee/bunzee",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/1728e5daf43d2490.webp"
   },
   {
     "id": "cf844e2c6c82a9ab",
@@ -7066,7 +7418,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.caimera/workflows",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/96863303378ff41c.png"
   },
   {
     "id": "ed7d217d67065f7d",
@@ -7080,7 +7433,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.calaf/calaf",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/ed7d217d67065f7d.png"
   },
   {
     "id": "cc1c7f5057a43e76",
@@ -7095,7 +7449,8 @@
     "iconSource": null,
     "auth": "api_key",
     "verification": "not_tested",
-    "auth_header": "Authorization"
+    "auth_header": "Authorization",
+    "icon": "/connector-icons/cc1c7f5057a43e76.png"
   },
   {
     "id": "9b6e06067a7e69b8",
@@ -7110,7 +7465,8 @@
     "iconSource": null,
     "auth": "api_key",
     "verification": "not_tested",
-    "auth_header": "Authorization"
+    "auth_header": "Authorization",
+    "icon": "/connector-icons/9b6e06067a7e69b8.png"
   },
   {
     "id": "1248b19609e84fc9",
@@ -7125,7 +7481,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.calven/mcp",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/1248b19609e84fc9.png"
   },
   {
     "id": "a3f6f5a9d86e6fdf",
@@ -7183,7 +7540,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.caybl/caybl",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/99a5ca3a0956705b.png"
   },
   {
     "id": "e54b696689b950e4",
@@ -7198,7 +7556,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.ccapi/mcp",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/e54b696689b950e4.svg"
   },
   {
     "id": "cd6de4cf8407835f",
@@ -7213,7 +7572,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.celesto/mcp",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/cd6de4cf8407835f.ico"
   },
   {
     "id": "4f7d9ea5115fd645",
@@ -7227,7 +7587,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.cerebrium/docs",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/4f7d9ea5115fd645.png"
   },
   {
     "id": "36402703e07bfa94",
@@ -7242,7 +7603,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.chatley/chatley",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/36402703e07bfa94.ico"
   },
   {
     "id": "ef479132795d1f0c",
@@ -7256,7 +7618,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.chatterlab/chatterlab",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/ef479132795d1f0c.svg"
   },
   {
     "id": "dcdb19c37f645630",
@@ -7270,7 +7633,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.chatthing/chat-thing",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/dcdb19c37f645630.png"
   },
   {
     "id": "7247ac0f9840d7d4",
@@ -7284,7 +7648,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.childadhd/library",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/7247ac0f9840d7d4.png"
   },
   {
     "id": "9a20fb7e9ca2403b",
@@ -7298,7 +7663,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.childanxiety/library",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/9a20fb7e9ca2403b.png"
   },
   {
     "id": "1844df5413ca5538",
@@ -7312,7 +7678,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.childpsychiatry/library",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/1844df5413ca5538.png"
   },
   {
     "id": "657f296b5d7089cc",
@@ -7328,7 +7695,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.chinaapi/chinaapi",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/657f296b5d7089cc.png"
   },
   {
     "id": "2f13ad6dcbf1ad68",
@@ -7358,7 +7726,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.chipp/alchemist-cloud-tickets",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/c2fa8a5de20f6184.png"
   },
   {
     "id": "6bb645baa0c8f401",
@@ -7375,7 +7744,8 @@
     "iconSource": null,
     "auth": "api_key",
     "verification": "not_tested",
-    "auth_header": "Authorization"
+    "auth_header": "Authorization",
+    "icon": "/connector-icons/6bb645baa0c8f401.svg"
   },
   {
     "id": "9a855117034b3031",
@@ -7389,7 +7759,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.circleback/circleback",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/9a855117034b3031.png"
   },
   {
     "id": "15799b1c4a9195f9",
@@ -7405,7 +7776,8 @@
     "iconSource": null,
     "auth": "api_key",
     "verification": "not_tested",
-    "auth_header": "Authorization"
+    "auth_header": "Authorization",
+    "icon": "/connector-icons/15799b1c4a9195f9.png"
   },
   {
     "id": "fd8d7c90ef68b665",
@@ -7420,7 +7792,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.clarid/compliance",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/fd8d7c90ef68b665.png"
   },
   {
     "id": "63d89004fdff3c60",
@@ -7435,7 +7808,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.clarid/hmda",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/63d89004fdff3c60.png"
   },
   {
     "id": "5a52013b36675349",
@@ -7450,7 +7824,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.claritytrack/claritytrack",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/5a52013b36675349.png"
   },
   {
     "id": "cf48f438a71109f8",
@@ -7466,7 +7841,8 @@
     "iconSource": null,
     "auth": "api_key",
     "verification": "not_tested",
-    "auth_header": "Authorization"
+    "auth_header": "Authorization",
+    "icon": "/connector-icons/cf48f438a71109f8.png"
   },
   {
     "id": "1487b2fc1f8ca78d",
@@ -7480,7 +7856,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.clearvoyance/clearvoyance",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/1487b2fc1f8ca78d.png"
   },
   {
     "id": "96c42dcf52a7d111",
@@ -7495,7 +7872,8 @@
     "source": "https://registry.modelcontextprotocol.io/?q=ai.clevra/clevra",
     "iconSource": null,
     "auth": "auto",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/96c42dcf52a7d111.png"
   },
   {
     "id": "gmailmcp",
@@ -7628,6 +8006,7 @@
     "iconSource": "https://akta.pro/favicon.ico",
     "auth": "api_key",
     "auth_header": "x-api-key",
-    "verification": "not_tested"
+    "verification": "not_tested",
+    "icon": "/connector-icons/c4bf5724e3e1e8e2.png"
   }
 ]

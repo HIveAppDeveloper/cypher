@@ -1,0 +1,7 @@
+# Canva MCP connection
+
+Cypher uses Canva's hosted MCP endpoint at `https://api.canva.com/connect/v1/mcp`. Canva requires a registered developer-portal OAuth client and each user authorizes their own Canva account. Follow [Canva's MCP setup](https://www.canva.dev/docs/apps/quickstart/) and register the callback `https://cypher-agent.vercel.app/api/plugin-oauth/callback`.
+
+The installation owner can configure `CANVA_OAUTH_CLIENT_ID` and `CANVA_OAUTH_CLIENT_SECRET` securely on the existing deployment. Both must be present before the catalog advertises the shared client as configured. The secret stays server-side and is encrypted in each authorization record; access and refresh tokens are tenant-scoped. An explicitly supplied registered client takes precedence. The shared client is bound to the exact endpoint and callback, and reconnecting uses the current configured client. The initial authorization asks for the MCP-advertised `design:meta:read` and `design:content:read` scopes. Other Canva tools may require additional permissions or plan features; a listing, login prompt, or tool discovery does not prove a particular operation succeeded.
+
+Without an app-owned client, the catalog offers administrator setup using a separately registered client. Do not put secrets in source, URLs, logs, or messages. The integration has controlled SDK and isolation tests; real Canva access requires a registered client, user consent, and a successful read.

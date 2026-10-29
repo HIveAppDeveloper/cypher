@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="360" height="96" viewBox="0 0 360 96" role="img" aria-label="FastMetal">
+  <rect width="360" height="96" rx="16" fill="#0a0a0a" />
+  <g transform="translate(24,28) scale(2)">
+    <path d="M9 1 16.8 5.5V14.5L9 19 1.2 14.5V5.5Z" fill="none" stroke="#fafafa" stroke-width="1.3" />
+    <path d="M9 6 12.5 8V12L9 14 5.5 12V8Z" fill="#fafafa" opacity=".9" />
+  </g>
+  <text x="74" y="62" font-family="Arial, Helvetica, sans-serif" font-size="40" font-weight="700" letter-spacing="-1" fill="#fafafa">FastMetal</text>
+</svg>

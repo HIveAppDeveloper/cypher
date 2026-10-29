@@ -1,0 +1,2323 @@
+{
+  "purpose": "Publisher-provided marks for identifying connected services. Trademarks belong to their owners.",
+  "assets": [
+    {
+      "id": "5b64146edc1804e6",
+      "source": "https://static.figma.com/app/icon/1/favicon.png",
+      "retrieved_from": "https://static.figma.com/app/icon/1/favicon.png",
+      "sha256": "53bff40abbfb9207233f0322f2329250b7d4e34617be84f4cecce5ee4a5d626f"
+    },
+    {
+      "id": "1e88271a5dc38428",
+      "source": "https://cdn.cactal.app/website-assets/TxIyGV6L5vqxpJb7nJU49.png",
+      "retrieved_from": "https://cdn.cactal.app/website-assets/TxIyGV6L5vqxpJb7nJU49.png",
+      "sha256": "db902a3451c301682da3404da256377c99d4a4715265e3158774ef9aa84b43c8"
+    },
+    {
+      "id": "831818adae936bd8",
+      "source": "https://framerusercontent.com/images/3nQPCNvr245IlucyvMlD7T8ryU.png",
+      "retrieved_from": "https://framerusercontent.com/images/3nQPCNvr245IlucyvMlD7T8ryU.png",
+      "sha256": "b0725d44688be59ac46741dd53f6ea3f88d50db3a4c1346d95421e0e60c1c474"
+    },
+    {
+      "id": "e820f80ffc165663",
+      "source": "https://cluvi.ai/brand/cluvi/web-app-manifest-512x512.png",
+      "retrieved_from": "https://cluvi.ai/brand/cluvi/web-app-manifest-512x512.png",
+      "sha256": "384c4a67710522c7412ab61aef2c4bd67a953b0f0eb34cececc11bd8ca085cd9"
+    },
+    {
+      "id": "a2107a2807eecb8e",
+      "source": "https://cnaps.ai/images/cnapsai_symbol_344.png",
+      "retrieved_from": "https://cnaps.ai/images/cnapsai_symbol_344.png",
+      "sha256": "53f073801900d96761f15501d7cd87a8e9622fd33218b982a82c97c8e67623a4"
+    },
+    {
+      "id": "702364b9562ddcbe",
+      "source": "https://commsync.ai/branding/commsync_icon_512.png",
+      "retrieved_from": "https://commsync.ai/branding/commsync_icon_512.png",
+      "sha256": "0e75ebba008a7c9b38852058264ab7317a1e462f3cd17e30a354bb42bd203eab"
+    },
+    {
+      "id": "5fa0520280bf6b5a",
+      "source": "https://framerusercontent.com/images/ghWHjJuIOVi2xjTGsB4BuLwls.png",
+      "retrieved_from": "https://framerusercontent.com/images/ghWHjJuIOVi2xjTGsB4BuLwls.png",
+      "sha256": "a22cccf50902b3de4959354ee105d1b04d0e0bb778c2618c4a307774c0ce51eb"
+    },
+    {
+      "id": "8db599b2e4734f03",
+      "source": "https://mcp.connectmachine.ai/logo.png",
+      "retrieved_from": "https://mcp.connectmachine.ai/logo.png",
+      "sha256": "17ed6f52af75ca425c9a8599d19eb7413779d3ded918b180993d626c5723c94f"
+    },
+    {
+      "id": "0222a3a9691d9261",
+      "source": "https://mcp.connie.ai/apple-touch-icon.png",
+      "retrieved_from": "https://mcp.connie.ai/apple-touch-icon.png",
+      "sha256": "6e9d481538de9e559ce2ba411fcf33709855b8ad93d43439890ac0c4639a26d0"
+    },
+    {
+      "id": "2c9879f97fd4b854",
+      "source": "https://contentmaschine.ai/icons/icon-512.png",
+      "retrieved_from": "https://contentmaschine.ai/icons/icon-512.png",
+      "sha256": "24dae8417e1965341b123ada2dca369dad627bc9d3bcc59d93b46f8a58c8d06c"
+    },
+    {
+      "id": "de4fcccd39d75091",
+      "source": "https://www.context-link.ai/android-chrome-512x512.png",
+      "retrieved_from": "https://www.context-link.ai/android-chrome-512x512.png",
+      "sha256": "9bd288941d911799833a1e4653f72a02e24730ef185f0b6a65f332fcdcd85dfc"
+    },
+    {
+      "id": "e74ea550d143e4aa",
+      "source": "https://www.contextstudios.ai/logos/icon-light-transparent.svg",
+      "retrieved_from": "https://www.contextstudios.ai/logos/icon-light-transparent.svg",
+      "sha256": "4a0512e19069692ed9a8ff996e0afa8326aa576544d51bd16dae7351505eae52"
+    },
+    {
+      "id": "8003d8a39c5b8ca4",
+      "source": "https://www.cooperbuild.ai/icon.png",
+      "retrieved_from": "https://www.cooperbuild.ai/icon.png",
+      "sha256": "fbcaed5199a0f855fd75802d135cb777ed3a56bde6f5738379481d077899820b"
+    },
+    {
+      "id": "9760dbc3932ec0dc",
+      "source": "https://app.cordex.ai/icon.png",
+      "retrieved_from": "https://app.cordex.ai/icon.png",
+      "sha256": "0fe928d19f70835fbf7c5b673d974ac8f5a5c877aa333856bbcd1f71cd42439b"
+    },
+    {
+      "id": "bb6a0d0f9fe0ea79",
+      "source": "https://media.base44.com/images/public/6a9567482e969b1ab43e0c49/865503b9a_IMG_4038.png",
+      "retrieved_from": "https://media.base44.com/images/public/6a9567482e969b1ab43e0c49/865503b9a_IMG_4038.png",
+      "sha256": "c6f329885fa6eb77b51fd8fc5f24e9bb4d92a500849152194540d5ba71b93b22"
+    },
+    {
+      "id": "9fbef4189462c865",
+      "source": "https://corvio.ai/corvio-icon-medium-heavy-white-background.png",
+      "retrieved_from": "https://corvio.ai/corvio-icon-medium-heavy-white-background.png",
+      "sha256": "1bd8df1c9f9b1bd531ade17ff6e1435687d91da6484205be0c4e09e3fa0563c9"
+    },
+    {
+      "id": "61e7d17bcdcdf9fa",
+      "source": "https://craterview.ai/static/mark-180.png",
+      "retrieved_from": "https://craterview.ai/static/mark-180.png",
+      "sha256": "7bb27f280b09a8185631243738f9aaf5b3af3a814ca2b40df6cc4c3357f7f05d"
+    },
+    {
+      "id": "1b4f018c21d8091a",
+      "source": "https://www.createprints.ai/logo512.png",
+      "retrieved_from": "https://www.createprints.ai/logo512.png",
+      "sha256": "4af0136cae448f95254a1fbfc9811d7f87d51383c0beae467380c9ab550ac9cb"
+    },
+    {
+      "id": "183677c953f99511",
+      "source": "https://www.cybret.ai/favicon.png",
+      "retrieved_from": "https://www.cybret.ai/favicon.png",
+      "sha256": "342023cad62bb0534dc7d013e56b660aba5838aaea6283b566835ececbeb8589"
+    },
+    {
+      "id": "f85983e7a5903297",
+      "source": "https://dablock.ai/favicon.svg",
+      "retrieved_from": "https://dablock.ai/favicon.svg",
+      "sha256": "729cd87a9fc6c1d02532809cdb8783b163a2d0e489064c2dad056bd9bf503c6e"
+    },
+    {
+      "id": "8f7f7570927c48d5",
+      "source": "https://dabyte.ai/favicon.svg",
+      "retrieved_from": "https://dabyte.ai/favicon.svg",
+      "sha256": "064603401d436cd6deca170f2128744e5287877b5dc59c4273c719ab9a5ff30a"
+    },
+    {
+      "id": "5c8542a1f317dbac",
+      "source": "https://dataparrot.ai/apple-touch-icon.png",
+      "retrieved_from": "https://dataparrot.ai/apple-touch-icon.png",
+      "sha256": "8a54dcac0f031a738ea4b60aa76374b92b755320906b980ae1ef1316e0fc3b66"
+    },
+    {
+      "id": "04e7539301a8577c",
+      "source": "https://deepledger.ai/favicon-512x512.png",
+      "retrieved_from": "https://deepledger.ai/favicon-512x512.png",
+      "sha256": "bb095d86cd19baa76ca482813a8e6b6981274043aa8feaacd99a1c59aaddb361"
+    },
+    {
+      "id": "ce09bffa7afec078",
+      "source": "https://deepscout.ai/brand/deepscout-icon-512.png",
+      "retrieved_from": "https://deepscout.ai/brand/deepscout-icon-512.png",
+      "sha256": "b8899022a00b1ec86d58a9ae89be36b0a12781f42aba9ccfccc5a3f4e70d570a"
+    },
+    {
+      "id": "e419b91a95578621",
+      "source": "https://directcase-cms-uploads.s3.eu-north-1.amazonaws.com/directcase_icon_dark_bg_512x512_6abc10f4c5.png",
+      "retrieved_from": "https://directcase-cms-uploads.s3.eu-north-1.amazonaws.com/directcase_icon_dark_bg_512x512_6abc10f4c5.png",
+      "sha256": "dec26e2ed5ac14d90594038e1654d0cbc31b1d3954841fa769544f042c4b7a78"
+    },
+    {
+      "id": "44e4e4591d6b32f4",
+      "source": "https://agents.distilla.ai/icon.png",
+      "retrieved_from": "https://agents.distilla.ai/icon.png",
+      "sha256": "5a1111e9a05398a127243ae991596757334fe3b2cba55284513cab273837671b"
+    },
+    {
+      "id": "40563df718c4f1fa",
+      "source": "https://doklad.ai/apple-touch-icon.png",
+      "retrieved_from": "https://doklad.ai/apple-touch-icon.png",
+      "sha256": "2cb3d00660005c88574c132c38462d0006da640c9d289ca5f0eab815929eb71a"
+    },
+    {
+      "id": "d4adb947e2c6cbd3",
+      "source": "https://mcp.dotsy.ai/icon-192.png",
+      "retrieved_from": "https://mcp.dotsy.ai/icon-192.png",
+      "sha256": "0e984c143aee6b281556617fb8f4fd12849fc30d7130b6dac9c2fb662065a7d9"
+    },
+    {
+      "id": "8ad0cc12a0c57c02",
+      "source": "https://drillr.ai/images/brand/logo_512_optimized.png",
+      "retrieved_from": "https://drillr.ai/images/brand/logo_512_optimized.png",
+      "sha256": "7a5291a34258d6b54d6ac9fbe161458238dc71f77172171ae4a827fc45a4d317"
+    },
+    {
+      "id": "9b0ffaf374a4b60a",
+      "source": "https://www.edgaze.ai/web-app-manifest-512x512.png",
+      "retrieved_from": "https://www.edgaze.ai/web-app-manifest-512x512.png",
+      "sha256": "ac49e761fabe9f4a96fa202a4f654912b3c83baeb9a8f4418894fb421c97b7f5"
+    },
+    {
+      "id": "f873093fd83495a3",
+      "source": "https://www.edgechat.ai/assets/edgechat-chestnut-orange-logo-v2.png",
+      "retrieved_from": "https://www.edgechat.ai/assets/edgechat-chestnut-orange-logo-v2.png",
+      "sha256": "6493bb93bd5aa90171aaf32ed1eb51c696e2fae5e1c1b5f975a983f668309941"
+    },
+    {
+      "id": "c406604806f08061",
+      "source": "https://eevy.ai/favicon.svg",
+      "retrieved_from": "https://eevy.ai/favicon.svg",
+      "sha256": "6885bced510cc2e46dd56825d975f5bfd14faf57010dd1efccd8f5298b5dc498"
+    },
+    {
+      "id": "7a5264492503b8cb",
+      "source": "https://fala.elav8.ai/fala-icon.png",
+      "retrieved_from": "https://fala.elav8.ai/fala-icon.png",
+      "sha256": "bcf06f58ef54172c6b2409762c16e9d5d8dc0a9f470c19f20350d008ef578361"
+    },
+    {
+      "id": "1bea8edc6f87bcdf",
+      "source": "https://www.elicitly.ai/favicon.svg",
+      "retrieved_from": "https://www.elicitly.ai/favicon.svg",
+      "sha256": "a4c98d74411589784e8831afe9af69a063133adea526898343a32e05c6d908cd"
+    },
+    {
+      "id": "93ad2b00c4b6f13d",
+      "source": "https://connect.emisso.ai/icon.svg",
+      "retrieved_from": "https://connect.emisso.ai/icon.svg",
+      "sha256": "c2df2acdda25086352c0aa452520d162689ecd0496b50b9a29883d48cf35d350"
+    },
+    {
+      "id": "7cda01ea521c13b2",
+      "source": "https://empiriolabs.ai/images/icon-dark-512.png",
+      "retrieved_from": "https://empiriolabs.ai/images/icon-dark-512.png",
+      "sha256": "174c707b133081e2d7d45f6c0d309167159b8d6e053b809fb30591bb76a16c27"
+    },
+    {
+      "id": "a15519f516bfd07c",
+      "source": "https://enokilabs.ai/brand/enoki-mark.svg",
+      "retrieved_from": "https://enokilabs.ai/brand/enoki-mark.svg",
+      "sha256": "8d2b2bf58720c3be359f531fa752b1b72dca4adf98def03acfac056f1d588f99"
+    },
+    {
+      "id": "7d16a2cd7f0338cd",
+      "source": "https://eroq.ai/logo.png",
+      "retrieved_from": "https://eroq.ai/logo.png",
+      "sha256": "a5da5c733a1897bbfa443b6486ef4555c661d21e0aec51659c90996c6e88a143"
+    },
+    {
+      "id": "803277a05d10c01f",
+      "source": "https://mcp.tenda.eshmere.ai/icon.png",
+      "retrieved_from": "https://mcp.tenda.eshmere.ai/icon.png",
+      "sha256": "4a056251b27552a6c5ac52914f6b8c29348db3b141a14b73bbfbf5cc1bb16bcc"
+    },
+    {
+      "id": "a50943ed034cc056",
+      "source": "https://eximagent.ai/logo.png",
+      "retrieved_from": "https://eximagent.ai/logo.png",
+      "sha256": "af313e6012c5ec47f309137d5a2a2de7f9413e7c06e7cd4d3a1fc0342b14123a"
+    },
+    {
+      "id": "6da4efa8c66e24fa",
+      "source": "https://agent.falpha.ai/brand/falpha-icon-light-512.png",
+      "retrieved_from": "https://agent.falpha.ai/brand/falpha-icon-light-512.png",
+      "sha256": "e910cad09df6a445f24053ffd3ede6ec5e3a36caf54dc68cd9a819aab2659c58"
+    },
+    {
+      "id": "b157b4606bad8224",
+      "source": "https://www.famrelay.ai/assets/img/icon-512.png",
+      "retrieved_from": "https://www.famrelay.ai/assets/img/icon-512.png",
+      "sha256": "c68b50005eb0d94952dc35ea4190710f4cb31936b9582a8971e160cb499f0f21"
+    },
+    {
+      "id": "fae2bac6a25bd522",
+      "source": "https://app.fantopy.ai/favicon.png",
+      "retrieved_from": "https://app.fantopy.ai/favicon.png",
+      "sha256": "9562c6b4d04facc542e7070c764c325a7ea9590ad5c4be661a837dbcd8da11bf"
+    },
+    {
+      "id": "0d07850d33f6b700",
+      "source": "https://fastmetal.ai/logo.svg",
+      "retrieved_from": "https://fastmetal.ai/logo.svg",
+      "sha256": "955688658395bdd37f6443963069933207cb7d6a638e9f9c94170591f9361469"
+    },
+    {
+      "id": "70943e494e8791be",
+      "source": "https://www.feedboss.ai/android-chrome-512x512.png",
+      "retrieved_from": "https://www.feedboss.ai/android-chrome-512x512.png",
+      "sha256": "f0937371a4c685be331100ac0abd6da95726368cfaa421b54e243afc0eccb832"
+    },
+    {
+      "id": "d78c3406ce6cb38c",
+      "source": "https://fgac.ai/logo-400.png",
+      "retrieved_from": "https://fgac.ai/logo-400.png",
+      "sha256": "5387b3e55ed4d7907c14ffa4ab12297452b024af1a93d4520230dc9ec1cb978d"
+    },
+    {
+      "id": "d8374fa51a92d939",
+      "source": "https://www.file2markdown.ai/logo-800.png",
+      "retrieved_from": "https://www.file2markdown.ai/logo-800.png",
+      "sha256": "4cbe1e76c37dc1385d5e741d382d3bce496b9cb51e4d025164f05366626d5d71"
+    },
+    {
+      "id": "a7e6782dca5e2146",
+      "source": "https://filedone.ai/icon-maskable-512.png",
+      "retrieved_from": "https://filedone.ai/icon-maskable-512.png",
+      "sha256": "5c3d09bacc9b06440656035b410e9db4c2ec4fad7b6258bbd7a40a086d4292ef"
+    },
+    {
+      "id": "9b837b70e2f3ca62",
+      "source": "https://finstat.ai/apple-touch-icon.png",
+      "retrieved_from": "https://finstat.ai/apple-touch-icon.png",
+      "sha256": "45d4ed9b5e5a0e71775e58c2531bb76101dcb9ce7928ac78808f33b44793766f"
+    },
+    {
+      "id": "dd46b542c471f696",
+      "source": "https://fireflies.ai/icon.png",
+      "retrieved_from": "https://fireflies.ai/icon.png",
+      "sha256": "ae4bf3e2208a6e3eebf4b33e469f0eb8fdfb0393a4873cffeb70aa1b1f5bee9d"
+    },
+    {
+      "id": "4efae94e7e28bad9",
+      "source": "https://forkmate.ai/brand/forkmate-icon-512.png",
+      "retrieved_from": "https://forkmate.ai/brand/forkmate-icon-512.png",
+      "sha256": "5c6f7acd46027e5fed01b2511c261d4d04d36d746dd1cb502b59f845ebb4da0c"
+    },
+    {
+      "id": "6349456023b16348",
+      "source": "https://mcp.frameo.ai/icon.png",
+      "retrieved_from": "https://mcp.frameo.ai/icon.png",
+      "sha256": "fe12b184286a8c02ab60959ffc4237507352b4df9a9d48a603f1f4c6ad4509f6"
+    },
+    {
+      "id": "b34e7d5b4d3fe06e",
+      "source": "https://freudly.ai/apple-touch-icon.png",
+      "retrieved_from": "https://freudly.ai/apple-touch-icon.png",
+      "sha256": "778779e9f8dfc0504f976a99589089ec4a9d12b6305274380d78498d7c4e6af4"
+    },
+    {
+      "id": "0bcf4c325cc520a3",
+      "source": "https://fukushi.ai/icon",
+      "retrieved_from": "https://fukushi.ai/icon",
+      "sha256": "6af6d52d5d51b9b08177a3e4674a9c9b14642c5d2a259821decf417c9659781c"
+    },
+    {
+      "id": "4540b1e2f7afc64a",
+      "source": "https://mcp.genfeed.ai/icons/genfeed-512.png",
+      "retrieved_from": "https://mcp.genfeed.ai/icons/genfeed-512.png",
+      "sha256": "11a389eb54d4419af75e24ff167e22d2aee3ed822d490b0e1fa5f3f1eac5efde"
+    },
+    {
+      "id": "3a9ce91d12613991",
+      "source": "https://get-alfred.ai/favicon.svg",
+      "retrieved_from": "https://get-alfred.ai/favicon.svg",
+      "sha256": "5565779440d9f6378ea38f54b099324a0f6c71558849c5ce061ed36d5686f544"
+    },
+    {
+      "id": "4aa1efd007b57cd8",
+      "source": "https://getminds.ai/android-chrome-512x512.png",
+      "retrieved_from": "https://getminds.ai/android-chrome-512x512.png",
+      "sha256": "750cf5340339a81539543fa231f3035c84350dec885dfac519a53691348c571a"
+    },
+    {
+      "id": "02e66635534e4bf6",
+      "source": "https://raw.githubusercontent.com/getoneprofile/connectors/main/claude/assets/icon.png",
+      "retrieved_from": "https://raw.githubusercontent.com/getoneprofile/connectors/main/claude/assets/icon.png",
+      "sha256": "8a4ccfc9d1f9405fbefebd7c902590cf6dbbc901a4d4a267befc5908f6d7272e"
+    },
+    {
+      "id": "162b4b189c9228ea",
+      "source": "https://raw.githubusercontent.com/Perspective-AI/mcp/main/icon.png",
+      "retrieved_from": "https://raw.githubusercontent.com/Perspective-AI/mcp/main/icon.png",
+      "sha256": "268b641d904b374e7e7fb27bdc71ae7be0af61e8a36e106723560e090b3ff76d"
+    },
+    {
+      "id": "57b31b5d6698e098",
+      "source": "https://goldbeater.ai/press/goldbeater-mark.png",
+      "retrieved_from": "https://goldbeater.ai/press/goldbeater-mark.png",
+      "sha256": "e238bb78054f5606022d2b06f72e241c64cd99b124118f32d76e8f570249bc78"
+    },
+    {
+      "id": "9dc511da618e354e",
+      "source": "https://www.gondola.ai/assets/logos/logomark-gold.png",
+      "retrieved_from": "https://www.gondola.ai/assets/logos/logomark-gold.png",
+      "sha256": "3b6c6fbbdcc4e0e62be56612fec9d8bcfb2763bd1b0be3cd58f6be58bb2c4816"
+    },
+    {
+      "id": "c33fc180152323a2",
+      "source": "https://gosummer.ai/social/summer-icon-192.png",
+      "retrieved_from": "https://gosummer.ai/social/summer-icon-192.png",
+      "sha256": "3bea8410ec7b9e8e84bf19da3a874bcbf41683d3243f855b1a388bdf0cc2c453"
+    },
+    {
+      "id": "3182b5b82ba69187",
+      "source": "https://gtinfetch.ai/icon-512.png",
+      "retrieved_from": "https://gtinfetch.ai/icon-512.png",
+      "sha256": "5e6ea5d78274a668ddeaf28249747e39dc0a2bbdc4144985e4192a718eee1f45"
+    },
+    {
+      "id": "2ef55f2fcd1b5f27",
+      "source": "https://raw.githubusercontent.com/ChainAI-Org/HelpWell/main/branding/png/helpwell-mark-purple-512.png",
+      "retrieved_from": "https://raw.githubusercontent.com/ChainAI-Org/HelpWell/main/branding/png/helpwell-mark-purple-512.png",
+      "sha256": "4bf47571b98aa95b01567a57299a1f6bafa1b97ddab6117b265f0ac6b35ed7eb"
+    },
+    {
+      "id": "9fcdf9f3ed51afe3",
+      "source": "https://api.hypotize.ai/icon.png",
+      "retrieved_from": "https://api.hypotize.ai/icon.png",
+      "sha256": "4f4efafde6c05206bf43c6d9e90bbc8bb3928ef1ed8a601f8f9032680f9c2676"
+    },
+    {
+      "id": "dfbe5a888e68ea3f",
+      "source": "https://recruit.hyreflow.ai/favicon.svg",
+      "retrieved_from": "https://recruit.hyreflow.ai/favicon.svg",
+      "sha256": "210a7cda24b394724e8c590d129be2e9f0fe65d3bf692490bf5e889b68e95085"
+    },
+    {
+      "id": "49a63b44f3882d5c",
+      "source": "https://imario.ai/android-chrome-512x512.png",
+      "retrieved_from": "https://imario.ai/android-chrome-512x512.png",
+      "sha256": "a301e5a1a02bbd0960d119330dfc2dc071f34d00d63d2394b61afe423832768c"
+    },
+    {
+      "id": "8e3f27dfec7b5e65",
+      "source": "https://immokit.ai/favicon.svg",
+      "retrieved_from": "https://immokit.ai/favicon.svg",
+      "sha256": "06897ed8d3fde4d8b9bc37fbbddaed97a173a1a3101df2c95abce53b9f93b83d"
+    },
+    {
+      "id": "39a795c8231a769b",
+      "source": "https://immopix.ai/static/images/v3/icon-512.png",
+      "retrieved_from": "https://immopix.ai/static/images/v3/icon-512.png",
+      "sha256": "37e86d111b0856542c8de9987202b76842eb565f5736e22f01c85b5023d6d53a"
+    },
+    {
+      "id": "6915623a8fc4054a",
+      "source": "https://inblog.ai/inblog_favicon.png",
+      "retrieved_from": "https://inblog.ai/inblog_favicon.png",
+      "sha256": "139cb7869654a4e74a996415166cd02644be4022cc7b5537700d7fd07fe88ff1"
+    },
+    {
+      "id": "5876c1ce0e20c71a",
+      "source": "https://instabids.ai/icon-512.png",
+      "retrieved_from": "https://instabids.ai/icon-512.png",
+      "sha256": "2369bdd2c3460728fc5f6de98cf1bd5fdb9f7cd2d1728492457f595e281480d0"
+    },
+    {
+      "id": "a693a21a936a8a39",
+      "source": "https://instantclips.ai/assets/instantclips-icon-512.png",
+      "retrieved_from": "https://instantclips.ai/assets/instantclips-icon-512.png",
+      "sha256": "3d1dfc65f6500ffd40e328d9dfdb2bc2f0c0a30679edb9ca173a22035e5b9316"
+    },
+    {
+      "id": "6c4d2d8de1121ae1",
+      "source": "https://www.inventoryhero.ai/icon.svg",
+      "retrieved_from": "https://www.inventoryhero.ai/icon.svg",
+      "sha256": "c26dab50a18aa7cbe9902cd1e3433530a9bd9dd76f0a55606403aa0877e32e84"
+    },
+    {
+      "id": "8434bd46bf4f91b1",
+      "source": "https://iterant.ai/android-chrome-512x512.png",
+      "retrieved_from": "https://cdn.iterant.ai/brand_assets/brand_assets/b63c3daa-1773-493c-acdc-1259c9e20049/d546ff3f5ea2d52113427e1c8d6fcc2a.png",
+      "sha256": "d546ff3f5ea2d52113427e1c8d6fcc2a01a57745a894a029264b2da5623d3eff"
+    },
+    {
+      "id": "e96e21519ee94ede",
+      "source": "https://january.ai/apple-touch-icon.png",
+      "retrieved_from": "https://january.ai/apple-touch-icon.png",
+      "sha256": "751ab804f541fd534f83155ad814914b83d21571749ae3974515080182be2860"
+    },
+    {
+      "id": "95c8dc644e10d866",
+      "source": "https://jasonlovell.ai/apple-icon.png",
+      "retrieved_from": "https://jasonlovell.ai/apple-icon.png",
+      "sha256": "c631e571faeec696d4294655db418a90fa0a74587b1579cf6d69b4c7809f02e7"
+    },
+    {
+      "id": "6c4fa260352b7c4f",
+      "source": "https://jurisprudencias.ai/android-chrome-512x512.png",
+      "retrieved_from": "https://jurisprudencias.ai/android-chrome-512x512.png",
+      "sha256": "3edff62e215adbdd986c666c03b00cdf68f53496d69f57a51c21afa9030cf175"
+    },
+    {
+      "id": "15b1c056795bffa9",
+      "source": "https://justdomain.ai/just-icon-512.png",
+      "retrieved_from": "https://justdomain.ai/just-icon-512.png",
+      "sha256": "3a73c1f2e9332724b642dda8e56c33330cc318f789d86405bbfb4935cc6c7b4c"
+    },
+    {
+      "id": "da5057975966fd2d",
+      "source": "https://justpublish.ai/icon.png",
+      "retrieved_from": "https://justpublish.ai/icon.png",
+      "sha256": "40342cec2d4a3e4f72b293034bf32cabc8f966bbfdb61ce4551fb320ff4df17c"
+    },
+    {
+      "id": "7ccf03e61f73b91b",
+      "source": "https://www.kaleto.ai/brand/icon-512.png",
+      "retrieved_from": "https://www.kaleto.ai/brand/icon-512.png",
+      "sha256": "a431d7a37a6884ddb14aca386301a31be24bfd8632c713ab296c6b4cb36340e0"
+    },
+    {
+      "id": "1a57c311880fd0a3",
+      "source": "https://mcp.kive.ai/kive_logo_512.png",
+      "retrieved_from": "https://mcp.kive.ai/kive_logo_512.png",
+      "sha256": "b88f5c9ee3344eaff48cca929441ab6f3308ebe40cf5b74939c79f9b3448a721"
+    },
+    {
+      "id": "fee186750f1bba58",
+      "source": "https://klaaro.ai/klaaro-ai-logo.png",
+      "retrieved_from": "https://klaaro.ai/klaaro-ai-logo.png",
+      "sha256": "cb82ef0ed8822d11167491e4fc40b11f12d235e9bc64f61d41925793d737dc9f"
+    },
+    {
+      "id": "00b8cd127381c4ca",
+      "source": "https://klox.ai/logo512.png",
+      "retrieved_from": "https://klox.ai/logo512.png",
+      "sha256": "72219fd7049a8d8ed87b923081f6e48467734d8206e3f07f4b2f7dd3c66da3ac"
+    },
+    {
+      "id": "e2a86792d665ac47",
+      "source": "https://klyf.ai/icon.svg",
+      "retrieved_from": "https://klyf.ai/icon.svg",
+      "sha256": "f4fbc246e2740accb10f0e609d6d89c24b6696e05b171f44d74bd1536cf34b57"
+    },
+    {
+      "id": "dc13e6d533956e28",
+      "source": "https://knowledgegrid.ai/logo/logo-mark.png",
+      "retrieved_from": "https://knowledgegrid.ai/logo/logo-mark.png",
+      "sha256": "bb8e576c7d392bf6e20af6ea095e4b8b889c43f3e80e40c392fbe8299b8929e8"
+    },
+    {
+      "id": "b6e8c74c114652ac",
+      "source": "https://knowledgeporridge.ai/ds/img/icon-512.png",
+      "retrieved_from": "https://knowledgeporridge.ai/ds/img/icon-512.png",
+      "sha256": "c9e322282c10b7733099a3c1874150c571ef1cc58a69371adf0cd5cbff651545"
+    },
+    {
+      "id": "14d9b9edb971d855",
+      "source": "https://www.kognai.ai/pay/golden-kog-avatar.png",
+      "retrieved_from": "https://www.kognai.ai/pay/golden-kog-avatar.png",
+      "sha256": "a415cf2989568ec474cb0ed9c5859cfaacc4a3b02d8ebdac4d930bf9227b5318"
+    },
+    {
+      "id": "14ab55051209f44c",
+      "source": "https://koppar.ai/icon-512.png",
+      "retrieved_from": "https://koppar.ai/icon-512.png",
+      "sha256": "6a45b600fdb6fc039df871966569e3c64264fb4582e51292d789387efdb82d55"
+    },
+    {
+      "id": "8c7b390610a8972a",
+      "source": "https://mcp.kosmodrom.ai/icon.png",
+      "retrieved_from": "https://mcp.kosmodrom.ai/icon.png",
+      "sha256": "9699eabe56a9aeeb5130da141d9110379614a5f936ab6bd4182f26e1551c9725"
+    },
+    {
+      "id": "9245e0b356c9b146",
+      "source": "https://kreatorflow.ai/brand/kreatorflow-logo-mark.png",
+      "retrieved_from": "https://kreatorflow.ai/brand/kreatorflow-logo-mark.png",
+      "sha256": "f3cae5612b2a5a5e913ab14213438df449e6fa8d425c660a355996cd9f49872c"
+    },
+    {
+      "id": "71a5ed887e3d626e",
+      "source": "https://kubflow.ai/brand/kubflow-logo.png",
+      "retrieved_from": "https://kubflow.ai/brand/kubflow-logo.png",
+      "sha256": "408a55a4f7c59172f5df302ab7bdbae8e34cb896b59116087bf5cfbddb1d8da9"
+    },
+    {
+      "id": "2361923183b35d6a",
+      "source": "https://mcp.kubit.ai/icon.png",
+      "retrieved_from": "https://mcp.kubit.ai/icon.png",
+      "sha256": "be4d57a68ec3d31bacddb3ebcdbad3bbae2d2fc793c99a331765a0d1ed6d936f"
+    },
+    {
+      "id": "1809caebf178c945",
+      "source": "https://lansy.ai/images/lansy-icon-512.png",
+      "retrieved_from": "https://lansy.ai/images/lansy-icon-512.png",
+      "sha256": "4b7c5b0c5049ae67928c7b7116293b8999efa0b6b9afe84688daaa7459b0354e"
+    },
+    {
+      "id": "b0c7c0ace7abdf3d",
+      "source": "https://leadmcp.ai/icon.svg",
+      "retrieved_from": "https://leadmcp.ai/icon.svg",
+      "sha256": "fe8418ab918ed895b09421c3b7d53cdca80268773d067537d488b3c7653d1213"
+    },
+    {
+      "id": "5c358a5c7190e8d8",
+      "source": "https://www.lenshub.ai/icon.svg",
+      "retrieved_from": "https://www.lenshub.ai/icon.svg",
+      "sha256": "ff02d39e8c0d422df0feaeb80060d547116b59ca8338e333b9f4e6fb8ead39e6"
+    },
+    {
+      "id": "f334d2a5f75a090c",
+      "source": "https://letsship.ai/icon.png",
+      "retrieved_from": "https://letsship.ai/icon.png",
+      "sha256": "36bdb1440aa569c0103251e4a2183e984c37a7e7c1b5b61cb510eedad7220282"
+    },
+    {
+      "id": "b86c23e4a7fa258b",
+      "source": "https://libelus.ai/android-chrome-512x512.png",
+      "retrieved_from": "https://libelus.ai/android-chrome-512x512.png",
+      "sha256": "fa1d4e165d4af421362dfbc4532e217bec8b592b26cb1773e77a100a715641da"
+    },
+    {
+      "id": "8bbc5ee827abe278",
+      "source": "https://lifeisagame.ai/__l5e/assets-v1/bb2affb2-6806-4ac2-b56b-026d32200e0c/app-icon-conquer-fear-128.png",
+      "retrieved_from": "https://lifeisagame.ai/__l5e/assets-v1/bb2affb2-6806-4ac2-b56b-026d32200e0c/app-icon-conquer-fear-128.png",
+      "sha256": "d7d6d30cb1bb6f5719e64d0b590686970db526250bc42de3352af146611e487c"
+    },
+    {
+      "id": "b9c7a4a1f67e17cc",
+      "source": "https://signal.lifeisagame.ai/icon.png",
+      "retrieved_from": "https://signal.lifeisagame.ai/icon.png",
+      "sha256": "40cd4e66a8f7fce95ce302077132791ec34e8abec60a3074e6de4f443d599ecf"
+    },
+    {
+      "id": "afab1bc3ee6cb26c",
+      "source": "https://limitguard.ai/icon-512.png",
+      "retrieved_from": "https://limitguard.ai/icon-512.png",
+      "sha256": "8ab4b037742d2bafcbf270c4021af4ef363cac680824d19dfd58710a1ffed6c2"
+    },
+    {
+      "id": "ae930f5e461e7c9a",
+      "source": "https://limurse.ai/assets/favicons/apple-icon-180x180.png",
+      "retrieved_from": "https://limurse.ai/assets/favicons/apple-icon-180x180.png",
+      "sha256": "b707c80d765b70b03a9ede00bf429f745af1a45081e407feaf632414627eabca"
+    },
+    {
+      "id": "db9cb2bf07f76551",
+      "source": "https://app.linkitapp.ai/icon-512.png",
+      "retrieved_from": "https://app.linkitapp.ai/icon-512.png",
+      "sha256": "cb1ff35fdf735f7a499ace64bae57e63da4b64047435f1e88314e3c210239107"
+    },
+    {
+      "id": "df2d20b70eaf25cb",
+      "source": "https://livecrm.ai/assets/connector-icon.png",
+      "retrieved_from": "https://livecrm.ai/assets/connector-icon.png",
+      "sha256": "a07a945d9c58eebb8d9deec2f74b183708c73700e7a7473d91a04fba96ca9195"
+    },
+    {
+      "id": "b9c6b60d448d4ce7",
+      "source": "https://livegraph.ai/icon.svg",
+      "retrieved_from": "https://livegraph.ai/icon.svg",
+      "sha256": "580df6c5ddb5f582c6454439cd7445e8ac426bd3858d26bad77c1e26ba10b815"
+    },
+    {
+      "id": "2c301e604b7175d1",
+      "source": "https://llmintel.ai/logo.svg",
+      "retrieved_from": "https://llmintel.ai/logo.svg",
+      "sha256": "3dfb515203ecb6de537191e423a771fdd9f85ecfc8936ab9f79a0eca77675cb6"
+    },
+    {
+      "id": "e79336053245dd95",
+      "source": "https://loafy.ai/icons/icon-192.png",
+      "retrieved_from": "https://loafy.ai/icons/icon-192.png",
+      "sha256": "72a5b7883cd99d01652eae3fd4372008240bdf39b658e27361de1c7bb98ae505",
+      "source_query_redacted": true,
+      "retrieved_from_query_redacted": true
+    },
+    {
+      "id": "cfb1fbc09d333cd6",
+      "source": "https://locul.ai/logo-app.png",
+      "retrieved_from": "https://locul.ai/logo-app.png",
+      "sha256": "b9ce20b2b40787d3d6d3d3a91c73af4c6168406c7d48aee0eecf9623cc38478a"
+    },
+    {
+      "id": "8909a690e7365f80",
+      "source": "https://lunafic.ai/lunafic-single.png",
+      "retrieved_from": "https://lunafic.ai/lunafic-single.png",
+      "sha256": "a4cf5b56355ce5ee657618d8d7922c6eb671e788668dab36629983dbb498c7c3"
+    },
+    {
+      "id": "c4a5a9e822a310d3",
+      "source": "https://luvicdn.net/img/luwai-10db78ea2bd139927f8b4f6c2ad1620c/lw-favicon.png",
+      "retrieved_from": "https://luvicdn.net/img/luwai-10db78ea2bd139927f8b4f6c2ad1620c/lw-favicon.png",
+      "sha256": "5fc7a0307c2836beb8bf046d89534aee5f60b5bafb8eb27fd8e86e95b92a2375",
+      "source_query_redacted": true,
+      "retrieved_from_query_redacted": true
+    },
+    {
+      "id": "21b2703bc7dff41f",
+      "source": "https://mador.ai/apple-icon.png",
+      "retrieved_from": "https://mador.ai/apple-icon.png",
+      "sha256": "a92b648ba10284a5f1063a07d01e3198adfae6be60a37bd7ab760c4f0d62c5f6"
+    },
+    {
+      "id": "aa4ed6ff6b922b22",
+      "source": "https://maguyva.ai/icon-192.png",
+      "retrieved_from": "https://maguyva.ai/icon-192.png",
+      "sha256": "c4d43c4fb55ad852972e126a0fa6ec4efc337cfdeae56905658fdd2cca02731d"
+    },
+    {
+      "id": "d91d1700e6180d81",
+      "source": "https://mailbeast.ai/android-chrome-512x512.png",
+      "retrieved_from": "https://mailbeast.ai/android-chrome-512x512.png",
+      "sha256": "5c1a6ccc2707227f7323dd63f764c555eb01f6b1cff8cc0f79cecd8d2e6c1f08"
+    },
+    {
+      "id": "48b72b50ffb9c2c8",
+      "source": "https://mailmcp.ai/icon.png",
+      "retrieved_from": "https://mailmcp.ai/icon.png",
+      "sha256": "f123ba06447094517ad364d38990d094a63c4af75ba0a56d87465c3ddc215a4a"
+    },
+    {
+      "id": "c47cd5793f728011",
+      "source": "https://app.makeaivideo.ai/brand/apple-touch-icon.png",
+      "retrieved_from": "https://app.makeaivideo.ai/brand/apple-touch-icon.png",
+      "sha256": "a5ea970bc0c4eb7a9984f3010ecd5adcc4d9cfa3d3393f12f7eb84b190252af5"
+    },
+    {
+      "id": "8649be1decb6b8f4",
+      "source": "https://www.mappu.ai/icons/icon-512x512.png",
+      "retrieved_from": "https://www.mappu.ai/icons/icon-512x512.png",
+      "sha256": "9feb2fab91ed106e41301d78e9d43d91f48d0a17ab82034881ffb78c1884fd96"
+    },
+    {
+      "id": "e25837cc7004dbb1",
+      "source": "https://mapsdata.ai/static/icons/icon-512.png",
+      "retrieved_from": "https://mapsdata.ai/static/icons/icon-512.png",
+      "sha256": "2700f2495b814766a3262d8bc0bd181170b6bdc17dcc53131a2bee56ba970cd2"
+    },
+    {
+      "id": "0b7d46be0603ba58",
+      "source": "https://mcp.marcora.ai/favicon.png",
+      "retrieved_from": "https://mcp.marcora.ai/favicon.png",
+      "sha256": "3f7ae1e34ee92cdfe02df3dae6eacf393b223b66097a623c786e2fcf8550fdb2"
+    },
+    {
+      "id": "6ef84c317e89c62d",
+      "source": "https://www.meetdarwin.ai/brand/icons/v2/favicon.svg",
+      "retrieved_from": "https://www.meetdarwin.ai/brand/icons/v2/favicon.svg",
+      "sha256": "d09fa800b9d179756a5071d66021a46ae84b3ad5aa93d84aba2bc2e0a0d0f4d8"
+    },
+    {
+      "id": "6c134ed3a47dc27a",
+      "source": "https://meeting.ai/apple-touch-icon.png",
+      "retrieved_from": "https://meeting.ai/apple-touch-icon.png",
+      "sha256": "9bd7c7024337e28183f3d5b7b9f8abf320201b0c17c0aa35688ec0102b657f3d"
+    },
+    {
+      "id": "8a43436bab3205bf",
+      "source": "https://assets.meetsquad.ai/images/squad-icon.png",
+      "retrieved_from": "https://assets.meetsquad.ai/images/squad-icon.png",
+      "sha256": "ca14710063629799c08d05ae68fda6e20a9dfe1cfcc165e365aed53b0a2e4002"
+    },
+    {
+      "id": "2855fff74bb43f77",
+      "source": "https://memozzang.ai/icon.png",
+      "retrieved_from": "https://memozzang.ai/icon.png",
+      "sha256": "40761807ec0896604f612edbd7702c64442fa94fe23e5e981b07affa17167db7"
+    },
+    {
+      "id": "9889a0a56bee12df",
+      "source": "https://cdn.metabind.ai/IgJH0BzIn4LlfnCbcDc7/GLbHk5i3GLlIYcF63XFl/assets/KmzF1pF5Q1gHeE8G0pQy/finance-icon-2%20(2).png",
+      "retrieved_from": "https://cdn.metabind.ai/IgJH0BzIn4LlfnCbcDc7/GLbHk5i3GLlIYcF63XFl/assets/KmzF1pF5Q1gHeE8G0pQy/finance-icon-2%20(2).png",
+      "sha256": "c5b24eb70af7a8531e7496eabbfa9e05bdc0024e0b2f1cd7e2e283ee21674d18"
+    },
+    {
+      "id": "3ba0f66ec791d556",
+      "source": "https://raw.githubusercontent.com/miniDesk/minidesk-mcp/main/logo.png",
+      "retrieved_from": "https://raw.githubusercontent.com/miniDesk/minidesk-mcp/main/logo.png",
+      "sha256": "d7ced64aa1c2ff3240729ec84538e433ee4a6a7ab80c74b4c6a0830c10c8c802"
+    },
+    {
+      "id": "62373be0b0d573d7",
+      "source": "https://wikinews.mcp.miso.ai/.well-known/mcp-server-card/icon.png",
+      "retrieved_from": "https://wikinews.mcp.miso.ai/.well-known/mcp-server-card/icon.png",
+      "sha256": "f578476c957ee97fe771fadcfb28697d74d986ee6392927f562395d8b6d8c857"
+    },
+    {
+      "id": "2f4e39039df8d5bf",
+      "source": "https://modelrunner.ai/favicons/android-chrome-192x192.png",
+      "retrieved_from": "https://modelrunner.ai/favicons/android-chrome-192x192.png",
+      "sha256": "359fdc381744966d3f185a1240bbac6ee66b6f22164e696d9080cdb6543a34f9"
+    },
+    {
+      "id": "ab066e856dc68a50",
+      "source": "https://api.monolithos.ai/api/shadow/brand/logo-v1.png",
+      "retrieved_from": "https://api.monolithos.ai/api/shadow/brand/logo-v1.png",
+      "sha256": "aeec0339f30385ff4bc4a11c8dea865c79d3891bb767c358368d17c4b151bcd8"
+    },
+    {
+      "id": "e1c9a180ad5de8ea",
+      "source": "https://moonlings.ai/icon.svg",
+      "retrieved_from": "https://moonlings.ai/icon.svg",
+      "sha256": "c4ddc2433af51273b8e11f2e6559e9bf3b9defbe68f2b87d15a5e3d49c64a2b4"
+    },
+    {
+      "id": "1f5fb45c96d06530",
+      "source": "https://morelike.ai/logo.png",
+      "retrieved_from": "https://morelike.ai/logo.png",
+      "sha256": "7ce8d7a1704fc0eaec50de2384913d8342832306f7af186e0e2773a50033ce69"
+    },
+    {
+      "id": "eb7337cfcf065fc0",
+      "source": "https://motiblog.ai/logo-icon-light.png",
+      "retrieved_from": "https://motiblog.ai/logo-icon-light.png",
+      "sha256": "a3045b7bd48c581f7b6e8025b663e2148aff18bd1ed7dd89ef7662130546c10d"
+    },
+    {
+      "id": "786154806a7eba6a",
+      "source": "https://app.mypenny.ai/mypenny-coin-128.png",
+      "retrieved_from": "https://app.mypenny.ai/mypenny-coin-128.png",
+      "sha256": "ffca784582dd5c31daea6d496e29ec0daa4d99e399f77c715ff043b208cffe7c"
+    },
+    {
+      "id": "b18580460bb12d98",
+      "source": "https://www.myporta.ai/myporta-app-icon.png",
+      "retrieved_from": "https://www.myporta.ai/myporta-app-icon.png",
+      "sha256": "91b54b13ad2005407386f789256e8af78f9401c079c9a4d16575d2823f79b1ae"
+    },
+    {
+      "id": "275c5aed7ac3a146",
+      "source": "https://www.natalchart.ai/icons/natalchart-512.png",
+      "retrieved_from": "https://www.natalchart.ai/icons/natalchart-512.png",
+      "sha256": "8238f297092127203acf8a755212f0a885cef610cbac1266cb2cb17ab75ed221"
+    },
+    {
+      "id": "aacd682d01473ee7",
+      "source": "https://nativeport.ai/img/brand/nativeport-badge-512.png",
+      "retrieved_from": "https://nativeport.ai/img/brand/nativeport-badge-512.png",
+      "sha256": "ff2bbf174fcb6ad9a8e506ad3ddb0a4d571b04d1b5f677bfee75911aa50416f5"
+    },
+    {
+      "id": "5f58624a65dc63b6",
+      "source": "https://naturali.ai/icon.svg",
+      "retrieved_from": "https://naturali.ai/icon.svg",
+      "sha256": "418715dcbc7feea82fbbb9e761e96b546169e6f1773ae408c488f3d8c710d098"
+    },
+    {
+      "id": "bdf4068d7992ed78",
+      "source": "https://cdn.naumu.ai/brand/icon-256.png",
+      "retrieved_from": "https://cdn.naumu.ai/brand/icon-256.png",
+      "sha256": "8f2709be6424ab42de365a655eb8c07484d28dd3dadfe8dc98517629c1728525"
+    },
+    {
+      "id": "067cf8cd99985a32",
+      "source": "https://app.neopress.ai/img/favicon.png",
+      "retrieved_from": "https://app.neopress.ai/img/favicon.png",
+      "sha256": "cc568fd527449820253c1e7ce85b70f31f3766f49582b7edc6394f277eca174f"
+    },
+    {
+      "id": "6c4d4461a824f2e1",
+      "source": "https://newdesk.ai/favicon.svg",
+      "retrieved_from": "https://newdesk.ai/favicon.svg",
+      "sha256": "23a033f00c65eed7581e301983a66f9355f9eb419292bb2a5171056df42c10b4"
+    },
+    {
+      "id": "6760b9fe9942b4fc",
+      "source": "https://nitrino.ai/icon-512.png",
+      "retrieved_from": "https://nitrino.ai/icon-512.png",
+      "sha256": "47d1c97500a2984eca3eb95424d95a690bd0c37bb7abde097a46932f6881e1f9"
+    },
+    {
+      "id": "0050e25f42a74948",
+      "source": "https://raw.githubusercontent.com/NyayAssist/nyayassist-mcp/main/assets/logo-512.png",
+      "retrieved_from": "https://raw.githubusercontent.com/NyayAssist/nyayassist-mcp/main/assets/logo-512.png",
+      "sha256": "c892884e25598b984f74b65020d3f73b92135ecae7a070538e2f266946e28227"
+    },
+    {
+      "id": "230fe02995dc60b5",
+      "source": "https://mcp.oceantoken.ai/static/logo.png",
+      "retrieved_from": "https://mcp.oceantoken.ai/static/logo.png",
+      "sha256": "a165d4399a2d2ac7d26d7480062c40f858cbf03d7838d86744883dae04cddcd1"
+    },
+    {
+      "id": "3cc2d7ef054dc625",
+      "source": "https://www.okforest.ai/favicon.svg",
+      "retrieved_from": "https://www.okforest.ai/favicon.svg",
+      "sha256": "10a960fddb09475b193b3dd494c509829792c051c12f95179494d68421fc9adc"
+    },
+    {
+      "id": "f7d2654512d9c71d",
+      "source": "https://porch.okibi.ai/icon-512.png",
+      "retrieved_from": "https://porch.okibi.ai/icon-512.png",
+      "sha256": "5d1436f9dbdc2ef17c1da924a90cc4885be5cbe0a4450cbd5997ffaa761ace03"
+    },
+    {
+      "id": "77ad4aa237f6fa41",
+      "source": "https://olhary.ai/icon-512.png",
+      "retrieved_from": "https://olhary.ai/icon-512.png",
+      "sha256": "ccdfb5909a780acef75b02a5b7d4735dccd58158559f5675f76e77d5f68edd70"
+    },
+    {
+      "id": "ffb4966db00a19ab",
+      "source": "https://raw.githubusercontent.com/Onsomble-ai/onsomble-claude-plugin/main/icon.png",
+      "retrieved_from": "https://raw.githubusercontent.com/Onsomble-ai/onsomble-claude-plugin/main/icon.png",
+      "sha256": "284865ddefb2e045f5af7858a4514afd0047d3accb22ff3c1992cc6a5b1d1838"
+    },
+    {
+      "id": "ac727089cb2da45b",
+      "source": "https://mcp.sap.oobeprotocol.ai/favicon.png",
+      "retrieved_from": "https://mcp.sap.oobeprotocol.ai/favicon.png",
+      "sha256": "63a1d92f7dc8bcf94b2a32a5d982d9088dae27767524dfbd53f054d9c4254e7c"
+    },
+    {
+      "id": "7b0eef93a01237f9",
+      "source": "https://openarx.ai/openarx-logo.png",
+      "retrieved_from": "https://openarx.ai/openarx-logo.png",
+      "sha256": "b2ee3ddb5a49f1572ead1978da002621e8f73ac544d8f1949bbd00cf13405a6d"
+    },
+    {
+      "id": "d3f0d64845da2753",
+      "source": "https://openaso.ai/icon.svg",
+      "retrieved_from": "https://openaso.ai/icon.svg",
+      "sha256": "bbe8e32925df49f89ded7da216fc1b5722026b7e546ae7706439989a37df2da0"
+    },
+    {
+      "id": "7a1d9d0edd96389c",
+      "source": "https://opencancer.ai/connector-icon-512.png",
+      "retrieved_from": "https://opencancer.ai/connector-icon-512.png",
+      "sha256": "32bd81794a187b1f5d3ea6b15cbd0af187ac58764322ad03b084ed0cb8cc282e"
+    },
+    {
+      "id": "9ad79535482790cc",
+      "source": "https://storage.googleapis.com/fathom-static-web-assets/pages/mcp-registry/favicon.png",
+      "retrieved_from": "https://storage.googleapis.com/fathom-static-web-assets/pages/mcp-registry/favicon.png",
+      "sha256": "01f3c0d6fc60487cda768d5f640bd091e71b11ecf5300f9b666ae73563e74de9"
+    },
+    {
+      "id": "c4bf5724e3e1e8e2",
+      "source": "https://akta.pro/favicon.ico",
+      "retrieved_from": "https://akta.pro/favicon.ico",
+      "sha256": "151df510541b106f17acb232421e95d0b2afef2894aa52bbed705e06890c9e2f"
+    },
+    {
+      "id": "f85324490fd53a16",
+      "publisher_page": "https://onboard.windsor.ai/",
+      "source": "https://static-onboard.windsor.ai/static/img/favicon.ico",
+      "retrieved_from": "https://static-onboard.windsor.ai/static/img/favicon.ico",
+      "sha256": "8d066902f9eb2eda1f0e8f4338275fd2bcca17073aad8902be3d797e438fc900"
+    },
+    {
+      "id": "92eb826edb418826",
+      "publisher_page": "https://crub.ai/",
+      "source": "https://crub.ai/apple-icon.png",
+      "retrieved_from": "https://crub.ai/apple-icon.png",
+      "sha256": "62753f0bf0a476f295554eb0eb25bc312b3f97876ea282f9572670c1ceffc3b9"
+    },
+    {
+      "id": "b25e350a1ddb55a6",
+      "publisher_page": "https://cueframe.ai/",
+      "source": "https://cueframe.ai/favicon.ico",
+      "retrieved_from": "https://cueframe.ai/favicon.ico",
+      "sha256": "2c6eaa9e4366d598fd3dfe68e8466ec7660b3e207d7777ddb7410d3265fe1d7b",
+      "source_query_redacted": true,
+      "retrieved_from_query_redacted": true
+    },
+    {
+      "id": "bbe5515863596765",
+      "publisher_page": "https://datagrout.ai/",
+      "source": "https://media.base44.com/images/public/68eadd766119b64d13710a59/284e9afe8_favicon_dg.png",
+      "retrieved_from": "https://media.base44.com/images/public/68eadd766119b64d13710a59/284e9afe8_favicon_dg.png",
+      "sha256": "6a63557155a86c2b28866d9a258722a5963ba2792b963e03471ec20784c2058c"
+    },
+    {
+      "id": "a00353302d9a2c43",
+      "publisher_page": "https://www.decisionlog.ai/",
+      "source": "https://www.decisionlog.ai/apple-icon.png",
+      "retrieved_from": "https://www.decisionlog.ai/apple-icon.png",
+      "sha256": "e0dad22a1286f676401ea361a5dcd53c2af164e03c640656dbf4d61f6a3efea4",
+      "source_query_redacted": true,
+      "retrieved_from_query_redacted": true
+    },
+    {
+      "id": "6a807207a64256b3",
+      "publisher_page": "https://fenbs.ai/",
+      "source": "https://fenbs.ai/apple-icon.png",
+      "retrieved_from": "https://fenbs.ai/apple-icon.png",
+      "sha256": "0475fea4594ae58fe85a79a0cb6d8ef42dd5076dd8b19f865113546d1846fd2b",
+      "source_query_redacted": true,
+      "retrieved_from_query_redacted": true
+    },
+    {
+      "id": "93741fdfc97d3773",
+      "publisher_page": "https://formist.ai/",
+      "source": "https://formist.ai/products/formist/apple-touch-icon.png",
+      "retrieved_from": "https://formist.ai/products/formist/apple-touch-icon.png",
+      "sha256": "f9a9bc049beb79994c26d6302b894131c888d2a6aac50b86ebbaddaf5348ac63"
+    },
+    {
+      "id": "7a97c544831a6bf7",
+      "publisher_page": "https://justautomate.ai/",
+      "source": "https://justautomate.ai/assets/apple-touch-icon.png",
+      "retrieved_from": "https://justautomate.ai/assets/apple-touch-icon.png",
+      "sha256": "5355cd34d25d49b7db6aab114a92656dc81230107463da3c903932690f9e9bc8"
+    },
+    {
+      "id": "911607f811ef9d9a",
+      "publisher_page": "https://mappit.ai/",
+      "source": "https://mappit.ai/icons/Mappit-Outline-Square-256x256.jpg",
+      "retrieved_from": "https://mappit.ai/icons/Mappit-Outline-Square-256x256.jpg",
+      "sha256": "d93cef7a34bf7173057c8621405d2fd1e82821a2096daadbf01a468ebea6b2c5"
+    },
+    {
+      "id": "c0c826805ea059c6",
+      "publisher_page": "https://nerdit.ai/",
+      "source": "https://nerdit.ai/apple-touch-icon.png",
+      "retrieved_from": "https://nerdit.ai/apple-touch-icon.png",
+      "sha256": "79986485a1ac470b5d649511513399e9594c19b15d075d35d000a370c53b4b84"
+    },
+    {
+      "id": "daac0c13fc5727f6",
+      "publisher_page": "https://obris.ai/",
+      "source": "https://obris.ai/favicon.ico",
+      "retrieved_from": "https://obris.ai/favicon.ico",
+      "sha256": "56e379aa6f52cc1583d8dbd5de7d8db7071a3ffd3b8dc633b1d62fc1de2689cc",
+      "source_query_redacted": true,
+      "retrieved_from_query_redacted": true
+    },
+    {
+      "id": "c4f32584a4f30ad2",
+      "publisher_page": "https://mcp.ai/",
+      "source": "https://mcp.ai/favicon.ico",
+      "retrieved_from": "https://mcp.ai/favicon.ico",
+      "sha256": "741dc7396ade68052a76478d771a03a68fedfcf527dde7b11ee358c20177d29c"
+    },
+    {
+      "id": "7c515992beb66a59",
+      "publisher_page": "https://blopus.ai/",
+      "source": "https://blopus.ai/favicon.png",
+      "retrieved_from": "https://blopus.ai/favicon.png",
+      "sha256": "68558770820bee92a5e5d1bce311ae10f8a041acf270071c35d1cb7684dbab6c"
+    },
+    {
+      "id": "ff6df35762f4a3ff",
+      "publisher_page": "https://www.foliora.ai/",
+      "source": "https://www.foliora.ai/apple-touch-icon.png",
+      "retrieved_from": "https://www.foliora.ai/apple-touch-icon.png",
+      "sha256": "c0adf36b41d46052bc2ccba2d0db9c2c807a4d01b5da66683b642b6972d4ddc2"
+    },
+    {
+      "id": "5a4f607065a83b8b",
+      "publisher_page": "https://hivehall.ai/",
+      "source": "https://hivehall.ai/apple-touch-icon.png",
+      "retrieved_from": "https://hivehall.ai/apple-touch-icon.png",
+      "sha256": "13f9a9f4359b364caff884aa3ac6d30f5451de87c20ecfd1d52bc3aef2614556"
+    },
+    {
+      "id": "eb89e9767cbe7eb7",
+      "publisher_page": "https://invexia.ai/",
+      "source": "https://invexia.ai/branding/invexia-touch.png",
+      "retrieved_from": "https://invexia.ai/branding/invexia-touch.png",
+      "sha256": "59d33c971a70c4bc2ab0629af2a186a000ffd8e3fe229efec8d0b716bcf594f8"
+    },
+    {
+      "id": "510a6f772fe67627",
+      "publisher_page": "https://jobherder.com/",
+      "source": "https://jobherder.com/apple-touch-icon.png",
+      "retrieved_from": "https://jobherder.com/apple-touch-icon.png",
+      "sha256": "9c67cc693a7c904f32500b56db1a443fa2058ea7ceb899c68ba0a5db680debee"
+    },
+    {
+      "id": "84043d90c6940096",
+      "publisher_page": "https://law.ai/",
+      "source": "https://law.ai/favicon.ico",
+      "retrieved_from": "https://law.ai/favicon.ico",
+      "sha256": "ae53ed4a6fed472c6aea8f228d53a6eedd3263671a8a5178b4731fc67ece42ea"
+    },
+    {
+      "id": "04d603fa9e65c862",
+      "publisher_page": "https://nothumansearch.ai/",
+      "source": "https://nothumansearch.ai/static/img/logo.svg",
+      "retrieved_from": "https://nothumansearch.ai/static/img/logo.svg",
+      "sha256": "622a16de3ff174a7976a4c29629658dc7c71b311e17dd940a9c7614ac4038c60"
+    },
+    {
+      "id": "63661c4fc57d1dab",
+      "publisher_page": "https://www.roopslawassist.com/",
+      "source": "https://www.roopslawassist.com/favicon.png",
+      "retrieved_from": "https://www.roopslawassist.com/favicon.png",
+      "sha256": "8834189e04f6189abe034617f674496a939052990725ed4c087e64772a626b52"
+    },
+    {
+      "id": "8c0b71018d9bf5de",
+      "publisher_page": "https://models.searchit-agent.ai/",
+      "source": "https://models.searchit-agent.ai/assets/favicon.png",
+      "retrieved_from": "https://models.searchit-agent.ai/assets/favicon.png",
+      "sha256": "8793159210f51961e0ab96a7cbf8fad206f5a1cc8ca2328b05a369a8c64daa0d"
+    },
+    {
+      "id": "b0aabc77a4bed981",
+      "publisher_page": "https://trycanonical.ai/",
+      "source": "https://trycanonical.ai/static/apple-touch-icon.png",
+      "retrieved_from": "https://trycanonical.ai/static/apple-touch-icon.png",
+      "sha256": "4a4bdfef5a5bcc5e7971dcacc3d51cd7a24b9a11b238a979e73dc0a1cdd477ec"
+    },
+    {
+      "id": "a91d0200cb02c780",
+      "publisher_page": "https://www.userintuition.ai/",
+      "source": "https://www.userintuition.ai/apple-touch-icon.png",
+      "retrieved_from": "https://www.userintuition.ai/apple-touch-icon.png",
+      "sha256": "9c28fd3cedc3936cd9548406eaf4ff219b544ce9053dab960017c2e1cda41624"
+    },
+    {
+      "id": "44614599dac87274",
+      "publisher_page": "https://dealermax.app/",
+      "source": "https://dealermax.app/apple-touch-icon.png",
+      "retrieved_from": "https://dealermax.app/apple-touch-icon.png",
+      "sha256": "787f17fb0fbbf69e594b149482c0145e04732ff0b636c9386029fb92ce892bfe",
+      "source_query_redacted": true,
+      "retrieved_from_query_redacted": true
+    },
+    {
+      "id": "8cfe936f89f69413",
+      "publisher_page": "https://mcpharbor.app/",
+      "source": "https://mcpharbor.app/apple-touch-icon.png",
+      "retrieved_from": "https://mcpharbor.app/apple-touch-icon.png",
+      "sha256": "ae3abe7f9672b5f751154a51115e6f5b63cb449b7015beeaabbdcedaf63dd746"
+    },
+    {
+      "id": "a4795151bced619b",
+      "publisher_page": "https://ssearch.cc/",
+      "source": "https://ssearch.cc/favicon.svg",
+      "retrieved_from": "https://ssearch.cc/favicon.svg",
+      "sha256": "99f8260e86dfdf261354fe942340381311003ae69cf408ac7a347e392c559e1d"
+    },
+    {
+      "id": "225ee492fa24de78",
+      "publisher_page": "https://chinaready.co/",
+      "source": "https://chinaready.co/apple-touch-icon.png",
+      "retrieved_from": "https://chinaready.co/apple-touch-icon.png",
+      "sha256": "3e51b2c645de31e86337a1f09020f0eef1dec1e5b472c8d58a9f8390a174625a"
+    },
+    {
+      "id": "1cdeed7bf0be0e40",
+      "publisher_page": "https://www.pulselake.co/",
+      "source": "https://www.pulselake.co/assets/favicon.png",
+      "retrieved_from": "https://www.pulselake.co/assets/favicon.png",
+      "sha256": "181814061d159c3483d32f9c7f20eb7d604ac75e63aaf24089567c832409a90f"
+    },
+    {
+      "id": "75475bd9cfc6db4c",
+      "publisher_page": "https://www.al-taswia.com/",
+      "source": "https://www.al-taswia.com/assets/favicon/apple-touch-icon.png",
+      "retrieved_from": "https://www.al-taswia.com/assets/favicon/apple-touch-icon.png",
+      "sha256": "92c46eb9fa4ecd2f40b2d00776af829e8c1b7f4a6d838c1c9f478b1ac4226838"
+    },
+    {
+      "id": "2c4fd7ae784d8583",
+      "publisher_page": "https://alpha402x.com/",
+      "source": "https://alpha402x.com/apple-touch-icon.png",
+      "retrieved_from": "https://alpha402x.com/apple-touch-icon.png",
+      "sha256": "8ddffda691f8e85d191ada31ac436bcf716693bff488122b156510ced7708fba"
+    },
+    {
+      "id": "65391960f74d8a15",
+      "publisher_page": "https://andiai.com/",
+      "source": "https://andiai.com/apple-touch-icon.png",
+      "retrieved_from": "https://andiai.com/apple-touch-icon.png",
+      "sha256": "08605830e6bfb2b64418afcf2e5b266e19bebdc592fcaba342f20123d575b710"
+    },
+    {
+      "id": "144050e592236d02",
+      "publisher_page": "https://crawdar.com/",
+      "source": "https://crawdar.com/icon.svg",
+      "retrieved_from": "https://crawdar.com/icon.svg",
+      "sha256": "ffeb299be7966a50e976e9ef43f122f3ea6bd09ade269c6e4840b5e08814f57f"
+    },
+    {
+      "id": "3ce1c8d5ec792f45",
+      "publisher_page": "https://curatorsearch.com/",
+      "source": "https://curatorsearch.com/apple-icon.png",
+      "retrieved_from": "https://curatorsearch.com/apple-icon.png",
+      "sha256": "4aeab5ad2bc19e7e2d5848fddc39ed76d6ea5c5864c4c4c9e6a33511dc832efc",
+      "source_query_redacted": true,
+      "retrieved_from_query_redacted": true
+    },
+    {
+      "id": "f30f3b0ae869380a",
+      "publisher_page": "https://cymetica.com/",
+      "source": "https://cymetica.com/static/icons/icon-180x180.png",
+      "retrieved_from": "https://cymetica.com/static/icons/icon-180x180.png",
+      "sha256": "7c72dc2ca7f8f9810547e7e6c80907e00755718c701133182fda3ed7d988454d"
+    },
+    {
+      "id": "b0099c92833b8fe3",
+      "publisher_page": "https://discordservers.com/",
+      "source": "https://discordservers.com/apple-touch-icon.png",
+      "retrieved_from": "https://discordservers.com/apple-touch-icon.png",
+      "sha256": "d6c3901c80cf9262b94a4475c46da73c413fac35a0a33ac76ee512421ace33b0"
+    },
+    {
+      "id": "9cd81bedaf843061",
+      "publisher_page": "https://edgedepth.com/",
+      "source": "https://media.edgedepth.com/marketing/dc20e813bdd4fc02801952e79693f383330f36a2e007bea90a7763afd9cc09af.png",
+      "retrieved_from": "https://media.edgedepth.com/marketing/dc20e813bdd4fc02801952e79693f383330f36a2e007bea90a7763afd9cc09af.png",
+      "sha256": "dc20e813bdd4fc02801952e79693f383330f36a2e007bea90a7763afd9cc09af",
+      "source_query_redacted": true,
+      "retrieved_from_query_redacted": true
+    },
+    {
+      "id": "f79900d1e2e42931",
+      "publisher_page": "https://www.garagesalessearch.com/",
+      "source": "https://www.garagesalessearch.com/icon.svg",
+      "retrieved_from": "https://www.garagesalessearch.com/icon.svg",
+      "sha256": "ab26e3cc9ffc385e5393e41344cc99d10b2b70d89714355a59e882dfb6035194",
+      "source_query_redacted": true,
+      "retrieved_from_query_redacted": true
+    },
+    {
+      "id": "017bc5607212a198",
+      "publisher_page": "https://insightfulpipe.com/",
+      "source": "https://insightfulpipe.com/apple-touch-icon.png",
+      "retrieved_from": "https://insightfulpipe.com/apple-touch-icon.png",
+      "sha256": "ff80b71ad8afdfef33f4fb1686bbf05729a18ae654234d310967ecdca8e63a74"
+    },
+    {
+      "id": "e9a09ac9f8f56317",
+      "publisher_page": "https://pipeworx.io/",
+      "source": "https://pipeworx.io/pipeworx-logo.png",
+      "retrieved_from": "https://pipeworx.io/pipeworx-logo.png",
+      "sha256": "c868f238c19e0bf6c48a94c561425fe0acd34154ee8ccf41d31db501bce2c3c8",
+      "source_query_redacted": true,
+      "retrieved_from_query_redacted": true
+    },
+    {
+      "id": "1a22de93afd69427",
+      "publisher_page": "https://modevc.com/",
+      "source": "https://modevc.com/apple-touch-icon.png",
+      "retrieved_from": "https://modevc.com/apple-touch-icon.png",
+      "sha256": "5abd24bbf07f8282c22bbb32c434abd90a7e51c44a9e13088292647e24f4de87"
+    },
+    {
+      "id": "47dcb336af169298",
+      "publisher_page": "https://inference.sh/",
+      "source": "https://inference.sh/apple-touch-icon.png",
+      "retrieved_from": "https://inference.sh/apple-touch-icon.png",
+      "sha256": "f745cbe5af282fa87d657dd24f79d03cf4d1b1a182804dcd3d2c0fd68b256686"
+    },
+    {
+      "id": "af31e0e8afb6bfb8",
+      "publisher_page": "https://apexai.academy/",
+      "source": "https://apexai.academy/favicon.svg",
+      "retrieved_from": "https://apexai.academy/favicon.svg",
+      "sha256": "e95ffee0d4912bf13c7fbed3712c64ac9a64b9a30a0c1ea616f90c90a3d2819d"
+    },
+    {
+      "id": "840468f62d79747a",
+      "publisher_page": "https://app.inside.ad/",
+      "source": "https://app.inside.ad/apple-touch-icon.png",
+      "retrieved_from": "https://app.inside.ad/apple-touch-icon.png",
+      "sha256": "129c813a03714887996807d10bda4add35cf729d6349b7019aea1c36bdaf92a4"
+    },
+    {
+      "id": "9443ab886276db8b",
+      "publisher_page": "https://prices.brainy.ae/",
+      "source": "https://prices.brainy.ae/apple-touch-icon.png",
+      "retrieved_from": "https://prices.brainy.ae/apple-touch-icon.png",
+      "sha256": "1d91d334692134a75da2ce9e90d5f2cda75ed4b4f9bf3d0370413bf65ad9ff44"
+    },
+    {
+      "id": "87a0215660d4325d",
+      "publisher_page": "https://datadubai.ae/",
+      "source": "https://datadubai.ae/apple-touch-icon.png",
+      "retrieved_from": "https://datadubai.ae/apple-touch-icon.png",
+      "sha256": "9a965738abcde21882563edc6d89ee6d1ec22bd438a7838d1eecc2ed5cd4a1fa"
+    },
+    {
+      "id": "193ec671f4b3c2ec",
+      "publisher_page": "https://easyvoice.ae/",
+      "source": "https://easyvoice.ae/apple-icon.png",
+      "retrieved_from": "https://easyvoice.ae/apple-icon.png",
+      "sha256": "b8691545fe430bf2a0d0dea380160a65c3e2485b6d3bc624f29f51664563cf89",
+      "source_query_redacted": true,
+      "retrieved_from_query_redacted": true
+    },
+    {
+      "id": "d06c15457e98ec8c",
+      "publisher_page": "https://vera.waggle.ae/",
+      "source": "https://vera.waggle.ae/brand/vera-apple-touch.png",
+      "retrieved_from": "https://vera.waggle.ae/brand/vera-apple-touch.png",
+      "sha256": "ed674e19099cf5cd6166711c80c2c5fa294cb9e5ff54ac6ed85dfedfe7c7259e",
+      "source_query_redacted": true,
+      "retrieved_from_query_redacted": true
+    },
+    {
+      "id": "d321fce0eb562987",
+      "publisher_page": "https://www.hood.ag/",
+      "source": "https://www.hood.ag/logo2bg.jpg",
+      "retrieved_from": "https://www.hood.ag/logo2bg.jpg",
+      "sha256": "e250da3dd3cd86a5227be1ee9df7a4800dbaf65a6ad42e01c67e3ee1e9d2c410"
+    },
+    {
+      "id": "397983e69ed229cf",
+      "publisher_page": "https://aarna.ai/",
+      "source": "https://aarna.ai/apple-icon.png",
+      "retrieved_from": "https://aarna.ai/apple-icon.png",
+      "sha256": "16f1de44a0a79957790dadfa8cbb4bd551cf5cdf7af4b7d7f04581a97f405d9d",
+      "source_query_redacted": true,
+      "retrieved_from_query_redacted": true
+    },
+    {
+      "id": "217911c76958acb5",
+      "publisher_page": "https://adako.ai/",
+      "source": "https://adako.ai/apple-icon.png",
+      "retrieved_from": "https://adako.ai/apple-icon.png",
+      "sha256": "00e4cf10962d78bbec29d9bab4c032af1c4897ffc4ef7f6c6a802488231e4c1a",
+      "source_query_redacted": true,
+      "retrieved_from_query_redacted": true
+    },
+    {
+      "id": "02452b8b0412053d",
+      "publisher_page": "https://adkix.ai/",
+      "source": "https://adkix.ai/apple-icon.png",
+      "retrieved_from": "https://adkix.ai/apple-icon.png",
+      "sha256": "691916473ae45c6c58fdcd3949202e619cf242e3d9ec005e28f3ff3f67067ba5",
+      "source_query_redacted": true,
+      "retrieved_from_query_redacted": true
+    },
+    {
+      "id": "528242ffe9b9a056",
+      "publisher_page": "https://advisorsai.ai/",
+      "source": "https://advisorsai.ai/logo-emblem.png",
+      "retrieved_from": "https://advisorsai.ai/logo-emblem.png",
+      "sha256": "f1133ca31f4ba2d036f143d285711b9bdb7e9c4d77f13c8216291a2ed0087138"
+    },
+    {
+      "id": "a76aaeb8b444ab9f",
+      "publisher_page": "https://adweave.ai/",
+      "source": "https://adweave.ai/apple-icon.png",
+      "retrieved_from": "https://adweave.ai/apple-icon.png",
+      "sha256": "7903e9e57d67f8c80e3d4f43f8098f9205aeee9857112f0bcdb310fbbbca8ad8",
+      "source_query_redacted": true,
+      "retrieved_from_query_redacted": true
+    },
+    {
+      "id": "9b32c8a67074e978",
+      "publisher_page": "https://afg.ai/",
+      "source": "https://afg.ai/pivot/assets/icons/apple-touch-icon.png",
+      "retrieved_from": "https://afg.ai/pivot/assets/icons/apple-touch-icon.png",
+      "sha256": "051f1cccdce4fc1206ea03ffb374c5ce7da839bd2b05ffd3dad7dfcf68a770df"
+    },
+    {
+      "id": "89334b6ae3243e4e",
+      "publisher_page": "https://www.agentboard.ai/",
+      "source": "https://www.agentboard.ai/favicon.svg",
+      "retrieved_from": "https://www.agentboard.ai/favicon.svg",
+      "sha256": "019fb24324d7ea705af3472f52969c8d21ff6c3bbf90bf191b1319e956bb1402"
+    },
+    {
+      "id": "e83a3d592605dc68",
+      "publisher_page": "https://agentdm.ai/",
+      "source": "https://agentdm.ai/apple-icon.png",
+      "retrieved_from": "https://agentdm.ai/apple-icon.png",
+      "sha256": "15e29522eec1c687b38595d48cee2adca4c798c1a9ac944e3cc7477d8ece3734",
+      "source_query_redacted": true,
+      "retrieved_from_query_redacted": true
+    },
+    {
+      "id": "c54eadefd3742d31",
+      "publisher_page": "https://agentic-news.ai/",
+      "source": "https://agentic-news.ai/apple-icon.png",
+      "retrieved_from": "https://agentic-news.ai/apple-icon.png",
+      "sha256": "bd10d0e3f1fac4a03f787bcb65f29d455a6eef12373909aac258fb7ee00e4c28"
+    },
+    {
+      "id": "db3010688319f7eb",
+      "publisher_page": "https://agenticfabricationnetwork.ai/",
+      "source": "https://agenticfabricationnetwork.ai/favicon.ico",
+      "retrieved_from": "https://agenticfabricationnetwork.ai/favicon.ico",
+      "sha256": "6c51d54754ebfebbc8a711b665540ef7222c4072e7895ffc8b00728ac301a8fb"
+    },
+    {
+      "id": "dd2c3869e34da13c",
+      "publisher_page": "https://rx.agentlookups.ai/",
+      "source": "https://rx.agentlookups.ai/favicon.svg",
+      "retrieved_from": "https://rx.agentlookups.ai/favicon.svg",
+      "sha256": "4ca1b54bb156d9d954ef4e91471b0d98179ab810ee401a8f92b371a7d617f2cd"
+    },
+    {
+      "id": "5f9bb98ffa45d7ea",
+      "publisher_page": "https://solar.agentlookups.ai/",
+      "source": "https://solar.agentlookups.ai/favicon.svg",
+      "retrieved_from": "https://solar.agentlookups.ai/favicon.svg",
+      "sha256": "79f5dec1444848c0db8216608fec10ef209501df8445897d9d0200642d1ba946"
+    },
+    {
+      "id": "ca5a5fcdc8fec39a",
+      "publisher_page": "https://law.agentlookups.ai/",
+      "source": "https://law.agentlookups.ai/favicon.svg",
+      "retrieved_from": "https://law.agentlookups.ai/favicon.svg",
+      "sha256": "1c74d61f18a9ed90f3c08c8a192fd88ab52628b9dc796620972aeb56c777a917"
+    },
+    {
+      "id": "e4737c6c08d0e753",
+      "publisher_page": "https://env.agentlookups.ai/",
+      "source": "https://env.agentlookups.ai/favicon.svg",
+      "retrieved_from": "https://env.agentlookups.ai/favicon.svg",
+      "sha256": "d43c790a3ea9d8e60574611eec430c2a627b3c329f69e68bb40dafef91108c84"
+    },
+    {
+      "id": "7279f3c88a683782",
+      "publisher_page": "https://contractors.agentlookups.ai/",
+      "source": "https://contractors.agentlookups.ai/favicon.svg",
+      "retrieved_from": "https://contractors.agentlookups.ai/favicon.svg",
+      "sha256": "2bbeeb46b557f3d254add500bb19fee0a071d6b9e8f333a5fb5d4392887e1590"
+    },
+    {
+      "id": "72c9802eb6cf77d0",
+      "publisher_page": "https://food.agentlookups.ai/",
+      "source": "https://food.agentlookups.ai/favicon.svg",
+      "retrieved_from": "https://food.agentlookups.ai/favicon.svg",
+      "sha256": "92604f15a5012cf30391de53b82f8ffeaf52ec901fe41473c205764748442d1e"
+    },
+    {
+      "id": "ebf7dd27800b023a",
+      "publisher_page": "https://agentmash.ai/",
+      "source": "https://agentmash.ai/brand/icon-am-180.png",
+      "retrieved_from": "https://agentmash.ai/brand/icon-am-180.png",
+      "sha256": "213667edea9c2339f48826b76548ad349b82bea3fe1f92c4b8544beea2c05a5d"
+    },
+    {
+      "id": "fa3fa1cb5c345d30",
+      "publisher_page": "https://agentmesh.ai/",
+      "source": "https://agentmesh.ai/favicon.svg",
+      "retrieved_from": "https://agentmesh.ai/favicon.svg",
+      "sha256": "7bcf42782a4862eee1011eedc4e1bf6e24a1b6bc423803b2114f973a96bc5a65"
+    },
+    {
+      "id": "9a46db45d5fb83d0",
+      "publisher_page": "https://www.agentui.ai/en/",
+      "source": "https://www.agentui.ai/apple-touch-icon.png",
+      "retrieved_from": "https://www.agentui.ai/apple-touch-icon.png",
+      "sha256": "2a7952b6ae2f4830f92336dec4ee377ab3c79775fe74bddf6ede4c912d5dcb8d"
+    },
+    {
+      "id": "3789608c886712bf",
+      "publisher_page": "https://app.ai-advisors.ai/login",
+      "source": "https://app.ai-advisors.ai/favicon.ico",
+      "retrieved_from": "https://app.ai-advisors.ai/favicon.ico",
+      "sha256": "cde0050e3679e2e18575079de031e3cadbdd27f052bd4e515b3ec3911f4153d6"
+    },
+    {
+      "id": "feb229ac0da36d41",
+      "publisher_page": "https://aislabs.ai/",
+      "source": "https://aislabs.ai/favicon.svg",
+      "retrieved_from": "https://aislabs.ai/favicon.svg",
+      "sha256": "9e90f9f437a43352213c83aa698b8b6c4e473e35c1dfa040b6a2bda7a0a0a172"
+    },
+    {
+      "id": "9edc0fb290126b4b",
+      "publisher_page": "https://www.alphabazaar.ai/",
+      "source": "https://www.alphabazaar.ai/alpha-bazaar-logo.png",
+      "retrieved_from": "https://www.alphabazaar.ai/alpha-bazaar-logo.png",
+      "sha256": "1dab94d6a5c61c139f139f8e26a787a44189863ce29458226e5754b49f78ce03"
+    },
+    {
+      "id": "ae3d086a4d8a8fca",
+      "publisher_page": "https://ambix.ai/",
+      "source": "https://ambix.ai/ambix-mark.svg",
+      "retrieved_from": "https://ambix.ai/ambix-mark.svg",
+      "sha256": "5859092c478abe1d56b4af3006c09afdbbc9b5aa73170781a06b4b9b801053d7"
+    },
+    {
+      "id": "be55acb137b767ac",
+      "publisher_page": "https://docs.amdahl.ai/",
+      "source": "https://docs.amdahl.ai/icon.svg",
+      "retrieved_from": "https://docs.amdahl.ai/icon.svg",
+      "sha256": "18bfcce683bf952f5b7f4753963f8e44a850219b1c9e464e163b500bb3710cdf",
+      "source_query_redacted": true,
+      "retrieved_from_query_redacted": true
+    },
+    {
+      "id": "44700875edd0c1c1",
+      "publisher_page": "https://analyticslegends.ai/",
+      "source": "https://analyticslegends.ai/apple-touch-icon.png",
+      "retrieved_from": "https://analyticslegends.ai/apple-touch-icon.png",
+      "sha256": "24620a9623c79b7c0614f23414c4d641eb3dcdac8a245b58c625b4a654f241f6",
+      "source_query_redacted": true,
+      "retrieved_from_query_redacted": true
+    },
+    {
+      "id": "59d41e60a9e6430b",
+      "publisher_page": "https://annsa.ai/",
+      "source": "https://annsa.ai/apple-touch-icon.png",
+      "retrieved_from": "https://annsa.ai/apple-touch-icon.png",
+      "sha256": "d6857395a8c53c4dc36c05a8f0cfd5ea58b301960b064325947f41b48d8f34aa"
+    },
+    {
+      "id": "5b2e0ad0d8a4a17e",
+      "publisher_page": "https://www.anomalyarmor.ai/",
+      "source": "https://www.anomalyarmor.ai/favicon.ico",
+      "retrieved_from": "https://www.anomalyarmor.ai/favicon.ico",
+      "sha256": "595f285636250914f54fa6ec4d50659ed7c9688db937c2a5dcecc78315654534"
+    },
+    {
+      "id": "b40d98b6fec71467",
+      "publisher_page": "https://switchboard.anywhereintelligence.ai/",
+      "source": "https://switchboard.anywhereintelligence.ai/apple-icon",
+      "retrieved_from": "https://switchboard.anywhereintelligence.ai/apple-icon",
+      "sha256": "e30a66334d204e9f39bbedf91762f7b891657ffe434ee2421f09239dd610757f",
+      "source_query_redacted": true,
+      "retrieved_from_query_redacted": true
+    },
+    {
+      "id": "da0fb5e21a391abe",
+      "publisher_page": "https://apatero.ai/",
+      "source": "https://apatero.ai/Favicon.png",
+      "retrieved_from": "https://apatero.ai/Favicon.png",
+      "sha256": "b86f1ff23eb0059a318b2dcbf95cda1315f6cf5294c555d02d064c6953f3ff77"
+    },
+    {
+      "id": "28b58debdb73ae5a",
+      "publisher_page": "https://apir.ai/",
+      "source": "https://apir.ai/apple-touch-icon.png",
+      "retrieved_from": "https://apir.ai/apple-touch-icon.png",
+      "sha256": "932f866ea63de75807def89e2a2680cd9c765469cfd39a3d3db90936a20e2570"
+    },
+    {
+      "id": "9e6c7f4e52474f11",
+      "publisher_page": "https://arabickeyboard.ai/",
+      "source": "https://arabickeyboard.ai/apple-touch-icon.png",
+      "retrieved_from": "https://arabickeyboard.ai/apple-touch-icon.png",
+      "sha256": "c4413dc3c45cc12d1621e42d95b6f85c12a0b1badb0cbd9c38c90b7dd0a7b665"
+    },
+    {
+      "id": "32ab4fb3b083018a",
+      "publisher_page": "https://archome.ai/",
+      "source": "https://archome.ai/favicon.webp",
+      "retrieved_from": "https://archome.ai/favicon.webp",
+      "sha256": "e46f0fadabcb8923baa0d408cd78224e728d6b5cf013322e6c7ca9dff3829610"
+    },
+    {
+      "id": "0b01ebd7cd8a49a8",
+      "publisher_page": "https://arclan.ai/",
+      "source": "https://arclan.ai/favicon.svg",
+      "retrieved_from": "https://arclan.ai/favicon.svg",
+      "sha256": "6fa28028c21cdce6564612720d9ce97fcd3e8a38c64192698a37e6ccc4c323fd"
+    },
+    {
+      "id": "5990de195db11012",
+      "publisher_page": "https://www.arcreport.ai/",
+      "source": "https://www.arcreport.ai/apple-icon.png",
+      "retrieved_from": "https://www.arcreport.ai/apple-icon.png",
+      "sha256": "0046d5f8361e74a66aaf3ba071a4e1b521c4f889bdeda082dd9fcee810ae64d8",
+      "source_query_redacted": true,
+      "retrieved_from_query_redacted": true
+    },
+    {
+      "id": "3a5e34ddd5da4d98",
+      "publisher_page": "https://www.arpi.ai/en",
+      "source": "https://www.arpi.ai/meta/favicon.png",
+      "retrieved_from": "https://www.arpi.ai/meta/favicon.png",
+      "sha256": "95bf337422aca46f3b158ad45f225078689b174056d82336cbcccf6750dcf6c1"
+    },
+    {
+      "id": "83ef4f6317f7a5f8",
+      "publisher_page": "https://developer.arvx.ai/",
+      "source": "https://developer.arvx.ai/apple-touch-icon.png",
+      "retrieved_from": "https://developer.arvx.ai/apple-touch-icon.png",
+      "sha256": "92515a2189a9309c9db04a629fa6164ced06b16794e98985084663d4b4916e4d"
+    },
+    {
+      "id": "71bff0fd55aec3e2",
+      "publisher_page": "https://askatria.ai/",
+      "source": "https://askatria.ai/Favicon_darkUI.ico",
+      "retrieved_from": "https://askatria.ai/Favicon_darkUI.ico",
+      "sha256": "369bcef280d23eaa64a06a3d65d264d244c4400b3e449fcd262c05474d3df1bc"
+    },
+    {
+      "id": "11914e0af14c45cf",
+      "publisher_page": "https://askline.ai/",
+      "source": "https://askline.ai/apple-icon",
+      "retrieved_from": "https://askline.ai/apple-icon",
+      "sha256": "6fc3f4774f4b1557671ad7674386e11ca52868c8c3816347daa683678facd74b",
+      "source_query_redacted": true,
+      "retrieved_from_query_redacted": true
+    },
+    {
+      "id": "807025105625b26f",
+      "publisher_page": "https://atako.ai/",
+      "source": "https://atako.ai/aiygent.svg",
+      "retrieved_from": "https://atako.ai/aiygent.svg",
+      "sha256": "c8a61397ed9fdb17a15a6991d0ce83911cd32e6c89e93df712f1f02190c9d7db"
+    },
+    {
+      "id": "0542bab09d973ab6",
+      "publisher_page": "https://mcp.atalay.ai/",
+      "source": "https://mcp.atalay.ai/apple-touch-icon.png",
+      "retrieved_from": "https://mcp.atalay.ai/apple-touch-icon.png",
+      "sha256": "452be58232369cf57d807fbf3e0e6398bf06572c1a73cd0828d24107b1826af4"
+    },
+    {
+      "id": "4e1ca39d1ea835f6",
+      "publisher_page": "https://docs.athaus.ai/",
+      "source": "https://docs.athaus.ai/apple-icon.png",
+      "retrieved_from": "https://docs.athaus.ai/apple-icon.png",
+      "sha256": "732a3fd31a9071ba42e38434f4633a58275e2473d4c7558cb9de4fbe59c7c875",
+      "source_query_redacted": true,
+      "retrieved_from_query_redacted": true
+    },
+    {
+      "id": "768eb359cb91bfd3",
+      "publisher_page": "https://docs.athaus.ai/",
+      "source": "https://docs.athaus.ai/apple-icon.png",
+      "retrieved_from": "https://docs.athaus.ai/apple-icon.png",
+      "sha256": "732a3fd31a9071ba42e38434f4633a58275e2473d4c7558cb9de4fbe59c7c875",
+      "source_query_redacted": true,
+      "retrieved_from_query_redacted": true
+    },
+    {
+      "id": "4643153725a3fd61",
+      "publisher_page": "https://augenix.ai/",
+      "source": "https://augenix.ai/apple-touch-icon.png",
+      "retrieved_from": "https://augenix.ai/apple-touch-icon.png",
+      "sha256": "ddd804a51c72e71cca47bc6984e4e9835e876e36cc0f6e9a7b320f8dde2592f5"
+    },
+    {
+      "id": "e982d99bbc8400a2",
+      "publisher_page": "https://agentic.aunoo.ai/agentic",
+      "source": "https://agentic.aunoo.ai/favicon.ico",
+      "retrieved_from": "https://agentic.aunoo.ai/favicon.ico",
+      "sha256": "77a3e7ec5db1341512e6abc55c3f01f20d851c855cf1a575cf081f26c7052273"
+    },
+    {
+      "id": "f8f5ec9ee8248bd4",
+      "publisher_page": "https://docs.auralogs.ai/",
+      "source": "https://docs.auralogs.ai/apple-touch-icon.png",
+      "retrieved_from": "https://docs.auralogs.ai/apple-touch-icon.png",
+      "sha256": "76b2e4127da6f392fc2e59bbbbbda909b00994ed50f01b8192db4ff141cd15eb"
+    },
+    {
+      "id": "ae5c02b56ed557b8",
+      "publisher_page": "https://autoblogging.ai/",
+      "source": "https://autoblogging.ai/wp-content/uploads/2025/08/AB-new-logo-1-300x300.png",
+      "retrieved_from": "https://autoblogging.ai/wp-content/uploads/2025/08/AB-new-logo-1-300x300.png",
+      "sha256": "8c9a9fcdc702244343b80f150e298bc912bf342393d6261f64f70f383e3289dd"
+    },
+    {
+      "id": "b4c1ac88f1fe4ef8",
+      "publisher_page": "https://autoposter.ai/",
+      "source": "https://autoposter.ai/apple-touch-icon.png",
+      "retrieved_from": "https://autoposter.ai/apple-touch-icon.png",
+      "sha256": "80b41feb505bd33426b0431746a10a5a8f8c8f646ee451de9f73fa8baabd6fcb"
+    },
+    {
+      "id": "36b853e49164ae2f",
+      "publisher_page": "https://app.autoposting.ai/",
+      "source": "https://app.autoposting.ai/favicon-dark.png",
+      "retrieved_from": "https://app.autoposting.ai/favicon-dark.png",
+      "sha256": "1570833ac0c121a7f2ee40b6fc9b4276358424b6f5cd7055c548e59a68690b44",
+      "source_query_redacted": true,
+      "retrieved_from_query_redacted": true
+    },
+    {
+      "id": "8901525ca02e56a8",
+      "publisher_page": "https://autron.ai/",
+      "source": "https://autron.ai/apple-icon.png",
+      "retrieved_from": "https://autron.ai/apple-icon.png",
+      "sha256": "f68f2d4c34f9d83699987c74c682eb400011da4c980dca827d0002d6a901ddb6"
+    },
+    {
+      "id": "112d819522742188",
+      "publisher_page": "https://aviado.ai/",
+      "source": "https://aviado.ai/aviado-icon.png",
+      "retrieved_from": "https://aviado.ai/aviado-icon.png",
+      "sha256": "e7009d648cfd3e904a81d69e13e966c9825ccd3b5bd734a92a1c658e36a64846"
+    },
+    {
+      "id": "eb92cbc7cda4470d",
+      "publisher_page": "https://neuroautomata.axonagentic.ai/",
+      "source": "https://neuroautomata.axonagentic.ai/favicon.ico",
+      "retrieved_from": "https://neuroautomata.axonagentic.ai/favicon.ico",
+      "sha256": "b15223fbcbd3b2924a4234b4b90fa1d38c3fe4b7a235f17b0cd32d2441797804"
+    },
+    {
+      "id": "a27acba80c835015",
+      "publisher_page": "https://www.azquo.com/",
+      "source": "https://www.azquo.com/wp-content/uploads/2026/01/cropped-Azquo-site-icon-180x180.png",
+      "retrieved_from": "https://www.azquo.com/wp-content/uploads/2026/01/cropped-Azquo-site-icon-180x180.png",
+      "sha256": "7443794ad0e41f610ff753a8ac158ed3b95ca0fae8fc6719d92cc416523726e2"
+    },
+    {
+      "id": "1434a0fe20369706",
+      "publisher_page": "https://fibalo.de/",
+      "source": "https://fibalo.de/apple-touch-icon.png",
+      "retrieved_from": "https://fibalo.de/apple-touch-icon.png",
+      "sha256": "04dd54c230581d228e8e438bab2ea588bedd602f9e5596775f8262a4389017aa"
+    },
+    {
+      "id": "96f6667d33fa69c0",
+      "publisher_page": "https://balancos.ai/",
+      "source": "https://balancos.ai/apple-touch-icon.png",
+      "retrieved_from": "https://balancos.ai/apple-touch-icon.png",
+      "sha256": "c8150729f88b7dd579d543e13ef1e3d88ef0dfbbf0e5c9449e346d1c290701bb"
+    },
+    {
+      "id": "5cc2518d652f586b",
+      "publisher_page": "https://bankrolled.ai/",
+      "source": "https://bankrolled.ai/wp-content/uploads/2026/08/cropped-mark-cropped-180x180.jpg",
+      "retrieved_from": "https://bankrolled.ai/wp-content/uploads/2026/08/cropped-mark-cropped-180x180.jpg",
+      "sha256": "088661cb09d520d2583c9081c5de1501bbd1c6eca926ab05a7c38a343162bcdb"
+    },
+    {
+      "id": "433537aec8fde738",
+      "publisher_page": "https://api.bareun.ai/",
+      "source": "https://api.bareun.ai/assets/bareun.png",
+      "retrieved_from": "https://api.bareun.ai/assets/bareun.png",
+      "sha256": "0769e75116da3a23cf7b0f994d2b89fd783226c424f281d8097a2a321b25884f"
+    },
+    {
+      "id": "443aa011af344d4b",
+      "publisher_page": "https://bcited.ai/",
+      "source": "https://bcited.ai/apple-icon",
+      "retrieved_from": "https://bcited.ai/apple-icon",
+      "sha256": "70066952a669a8c1341117ed2857594e0a5390c5e199742405345e86056b2697",
+      "source_query_redacted": true,
+      "retrieved_from_query_redacted": true
+    },
+    {
+      "id": "c44f363b5f26233f",
+      "publisher_page": "https://beatbandit.ai/",
+      "source": "https://beatbandit.ai/favicon/apple-touch-icon.png",
+      "retrieved_from": "https://beatbandit.ai/favicon/apple-touch-icon.png",
+      "sha256": "a239dba8d3669cfd4c1bdc7fe6120a4bd2b672236f3ca294683fde359fe856c7"
+    },
+    {
+      "id": "794715dba82a6cd1",
+      "publisher_page": "https://beevr.ai/",
+      "source": "https://beevr.ai/favicon/apple-icon-180x180.png",
+      "retrieved_from": "https://beevr.ai/favicon/apple-icon-180x180.png",
+      "sha256": "5e7052a80bd319b0f1b25c55ec1206476ddbea35ba3194963095647be4e3dff4"
+    },
+    {
+      "id": "bd4afb01e8fdddfd",
+      "publisher_page": "https://www.benroberts.ai/",
+      "source": "https://www.benroberts.ai/favicon.svg",
+      "retrieved_from": "https://www.benroberts.ai/favicon.svg",
+      "sha256": "a7c07c5fc9255e522e51cc000e64edaf135db0752e215b633c1b5ebaf8763812"
+    },
+    {
+      "id": "229d08d9b0c396cb",
+      "publisher_page": "https://betterpost.ai/",
+      "source": "https://betterpost.ai/favicon-256.png",
+      "retrieved_from": "https://betterpost.ai/favicon-256.png",
+      "sha256": "6a142b15fcd7f6fc0a16b0b75aacef930fe38945daeafea6e826ce563f3c26e7"
+    },
+    {
+      "id": "4cca1c526a32cc31",
+      "publisher_page": "https://bezal.ai/login",
+      "source": "https://bezal.ai/apple-icon",
+      "retrieved_from": "https://bezal.ai/apple-icon",
+      "sha256": "7447bdb8e7c8b7e77fd6b4f53c07eee6622407053fa48acf92cc57326d2ffbb2",
+      "source_query_redacted": true,
+      "retrieved_from_query_redacted": true
+    },
+    {
+      "id": "ce58f7e5dba52b42",
+      "publisher_page": "https://bindry.ai/",
+      "source": "https://bindry.ai/apple-touch-icon.png",
+      "retrieved_from": "https://bindry.ai/apple-touch-icon.png",
+      "sha256": "c240c915b353815b1360697ec6da02faeb84dd103800688bdf94f637ff5391e2"
+    },
+    {
+      "id": "ffc75a56c0847be4",
+      "publisher_page": "https://bluenexus.ai/",
+      "source": "https://bluenexus.ai/img/apple-touch-icon.png",
+      "retrieved_from": "https://bluenexus.ai/img/apple-touch-icon.png",
+      "sha256": "563cf36d46abd932e26e250f6a262e57a275b519d31d0c9adbd76e71ae98d9c4"
+    },
+    {
+      "id": "043cac870645707f",
+      "publisher_page": "https://bodenrichtwert.ai/",
+      "source": "https://bodenrichtwert.ai/apple-touch-icon.png",
+      "retrieved_from": "https://bodenrichtwert.ai/apple-touch-icon.png",
+      "sha256": "0535b2c2e81f28931ae636c1bc2a90a49aa902428c892cc699970f5dbb89ba06"
+    },
+    {
+      "id": "7abbd2ba0ebedf85",
+      "publisher_page": "https://boon.ai/",
+      "source": "https://boon.ai/brand/apple-touch-icon.png",
+      "retrieved_from": "https://boon.ai/brand/apple-touch-icon.png",
+      "sha256": "5a09297e96db7457b8cd1beafef9fd658b4a7070105fdee9d185531a46b55db6"
+    },
+    {
+      "id": "9bb78baa139078dd",
+      "publisher_page": "https://booqer.ai/",
+      "source": "https://booqer.ai/apple-touch-icon.png",
+      "retrieved_from": "https://booqer.ai/apple-touch-icon.png",
+      "sha256": "0f73d68a48c418b1624397dc9b690216812c5a1110ba02929c0aa268bcaf7bf8",
+      "source_query_redacted": true,
+      "retrieved_from_query_redacted": true
+    },
+    {
+      "id": "3d78c043e46774ef",
+      "publisher_page": "https://borealhost.ai/",
+      "source": "https://borealhost.ai/static/img/favicon-180.f45ed1f4c39d.png",
+      "retrieved_from": "https://borealhost.ai/static/img/favicon-180.f45ed1f4c39d.png",
+      "sha256": "ad78bdd91b47fb180295ac3d140d0d74e6f127f2037a2fb94f6695c562ed10e4"
+    },
+    {
+      "id": "6c526ecf6d08b772",
+      "publisher_page": "https://botinfo.ai/",
+      "source": "https://cdn.prod.website-files.com/663e2d5c1f3e68f94da70063/67053a84864fb1a1e9d5f71e_WebClip.png",
+      "retrieved_from": "https://cdn.prod.website-files.com/663e2d5c1f3e68f94da70063/67053a84864fb1a1e9d5f71e_WebClip.png",
+      "sha256": "7cdb424354cbd2bb3c1db143ffa03991d631e3e728009857d9a8986c7ef4dabe"
+    },
+    {
+      "id": "a8872aef8edef783",
+      "publisher_page": "https://app.brainattic.ai/",
+      "source": "https://app.brainattic.ai/assets/brand/apple-touch-icon.png",
+      "retrieved_from": "https://app.brainattic.ai/assets/brand/apple-touch-icon.png",
+      "sha256": "86bf362b294b4823fd3b2e0f9b8cb62bd173a628caff14ac5be95abf3c13ba10"
+    },
+    {
+      "id": "486df50631a7d964",
+      "publisher_page": "https://bringyour.ai/",
+      "source": "https://bringyour.ai/favicon.svg",
+      "retrieved_from": "https://bringyour.ai/favicon.svg",
+      "sha256": "bf3556b73604a202fc68dee4d2249330dbea0b2870f15356184d262432645ecf"
+    },
+    {
+      "id": "bdeac8e6c93a6d8f",
+      "publisher_page": "https://www.buildwithorbit.ai/welcome",
+      "source": "https://www.buildwithorbit.ai/api/fern-docs/favicon.ico",
+      "retrieved_from": "https://www.buildwithorbit.ai/api/fern-docs/favicon.ico",
+      "sha256": "3d653e5c1a724081c17581658661de05060661e629c903132b44d17357c579a2"
+    },
+    {
+      "id": "1728e5daf43d2490",
+      "publisher_page": "https://bunzee.ai/",
+      "source": "https://d20jzv1ghtxgkk.cloudfront.net/images/apple-touch-icon.webp",
+      "retrieved_from": "https://d20jzv1ghtxgkk.cloudfront.net/images/apple-touch-icon.webp",
+      "sha256": "cddefd36e6be41af64e754999777c5ed37de211e390401acd0954c0a8758711a"
+    },
+    {
+      "id": "96863303378ff41c",
+      "publisher_page": "https://app.caimera.ai/home",
+      "source": "https://app.caimera.ai/favicon-16x16.png",
+      "retrieved_from": "https://app.caimera.ai/favicon-16x16.png",
+      "sha256": "96d32703e51386ec4e91c52f24da7e3a55fab97274a4689ba1edccee604be1f9"
+    },
+    {
+      "id": "ed7d217d67065f7d",
+      "publisher_page": "https://calaf.ai/",
+      "source": "https://calaf.ai/brand/apple-touch-icon-newsreader.png",
+      "retrieved_from": "https://calaf.ai/brand/apple-touch-icon-newsreader.png",
+      "sha256": "1419f5c0d07bab4d3708560c8b8d0020800a6f2d79fbad8b4f6b9751a26f510f"
+    },
+    {
+      "id": "cc1c7f5057a43e76",
+      "publisher_page": "https://calendarmcp.ai/",
+      "source": "https://calendarmcp.ai/apple-touch-icon.png",
+      "retrieved_from": "https://calendarmcp.ai/apple-touch-icon.png",
+      "sha256": "4b4ad391e5cde2e3fb36421991d802cd139e8860a8352644cd26cc598a28aaa8"
+    },
+    {
+      "id": "9b6e06067a7e69b8",
+      "publisher_page": "https://calfeed.ai/",
+      "source": "https://calfeed.ai/apple-icon.png",
+      "retrieved_from": "https://calfeed.ai/apple-icon.png",
+      "sha256": "34eee5ce2deca9a681388c08f8a190e7a52bfa83130093712f86b1e7acd845d0",
+      "source_query_redacted": true,
+      "retrieved_from_query_redacted": true
+    },
+    {
+      "id": "1248b19609e84fc9",
+      "publisher_page": "https://calven.ai/",
+      "source": "https://calven.ai/apple-touch-icon.png",
+      "retrieved_from": "https://calven.ai/apple-touch-icon.png",
+      "sha256": "7ce188b09458d2ed6d4a5bd9f4d77ec6422662b6dd1ef71198994af334588027"
+    },
+    {
+      "id": "99a5ca3a0956705b",
+      "publisher_page": "https://caybl.ai/",
+      "source": "https://caybl.ai/apple-icon.png",
+      "retrieved_from": "https://caybl.ai/apple-icon.png",
+      "sha256": "70f2d249ba61632824b8fde378480af5452b1e50ddae618529105d357e002fb0",
+      "source_query_redacted": true,
+      "retrieved_from_query_redacted": true
+    },
+    {
+      "id": "e54b696689b950e4",
+      "publisher_page": "https://ccapi.ai/",
+      "source": "https://ccapi.ai/logo.svg",
+      "retrieved_from": "https://ccapi.ai/logo.svg",
+      "sha256": "a2b4d171b7950cc69faaf2aa9905a5dd76ddb2b32a15065aa7151645e804a963"
+    },
+    {
+      "id": "dcdb19c37f645630",
+      "publisher_page": "https://app.chatthing.ai/app",
+      "source": "https://app.chatthing.ai/apple-touch-icon-180.png",
+      "retrieved_from": "https://app.chatthing.ai/apple-touch-icon-180.png",
+      "sha256": "51a8bac1ab7305728a2568284ccef36f2de10faf92d6f86b2f4113f3e18c4a32"
+    },
+    {
+      "id": "7247ac0f9840d7d4",
+      "publisher_page": "https://childadhd.ai/",
+      "source": "https://childadhd.ai/childadhd/apple-icon-oikamp",
+      "retrieved_from": "https://childadhd.ai/childadhd/apple-icon-oikamp",
+      "sha256": "1b9e0b60b7030eace1142e6a0f517ba8946cfec2393a7d25a0e7d4593bae53fa",
+      "source_query_redacted": true,
+      "retrieved_from_query_redacted": true
+    },
+    {
+      "id": "9a20fb7e9ca2403b",
+      "publisher_page": "https://childanxiety.ai/",
+      "source": "https://childanxiety.ai/childanxiety/apple-icon-tq8b5u",
+      "retrieved_from": "https://childanxiety.ai/childanxiety/apple-icon-tq8b5u",
+      "sha256": "263fa637105d7b5899fc14f9e48fd82e9f731eea9c9afd963341c7c047842273",
+      "source_query_redacted": true,
+      "retrieved_from_query_redacted": true
+    },
+    {
+      "id": "1844df5413ca5538",
+      "publisher_page": "https://childpsychiatry.ai/",
+      "source": "https://childpsychiatry.ai/childpsychiatry/apple-icon-sknur4",
+      "retrieved_from": "https://childpsychiatry.ai/childpsychiatry/apple-icon-sknur4",
+      "sha256": "7e90cb4d3e4a8b5e1126fc25dccca1694c8bcee008f0bddefdb0a3ebf598d28b",
+      "source_query_redacted": true,
+      "retrieved_from_query_redacted": true
+    },
+    {
+      "id": "657f296b5d7089cc",
+      "publisher_page": "https://chinaapi.ai/",
+      "source": "https://chinaapi.ai/assets/apple-touch-icon.png",
+      "retrieved_from": "https://chinaapi.ai/assets/apple-touch-icon.png",
+      "sha256": "6d4b9ff7813070901e2d6b385c68c29eb72a0a26f767e373c541cbfcc6d38b33"
+    },
+    {
+      "id": "c2fa8a5de20f6184",
+      "publisher_page": "https://chipp.ai/",
+      "source": "https://chipp.ai/favicon.ico",
+      "retrieved_from": "https://chipp.ai/favicon.ico",
+      "sha256": "fabf25849698dd729b131c89c8aa1ddb340f03961667401138622c212e2fde35"
+    },
+    {
+      "id": "6bb645baa0c8f401",
+      "publisher_page": "https://docs.chronary.ai/",
+      "source": "https://docs.chronary.ai/favicon.svg",
+      "retrieved_from": "https://docs.chronary.ai/favicon.svg",
+      "sha256": "de1836921f6193cc3e8372d57eb3cff948fe9d41d02ff766e532779ee70de9a4"
+    },
+    {
+      "id": "15799b1c4a9195f9",
+      "publisher_page": "https://citybook.ai/",
+      "source": "https://citybook.ai/icons/icon-192.png",
+      "retrieved_from": "https://citybook.ai/icons/icon-192.png",
+      "sha256": "25b817dee934a7e4e352d2106d413e9317aa49e2f77069d96a5752f266915f36"
+    },
+    {
+      "id": "fd8d7c90ef68b665",
+      "publisher_page": "https://www.clarid.ai/",
+      "source": "https://www.clarid.ai/favicon.png",
+      "retrieved_from": "https://www.clarid.ai/favicon.png",
+      "sha256": "11b6a0844fc37976f5e641dce162673178f66b10ae5a7ab4a722379a350d9c46"
+    },
+    {
+      "id": "63d89004fdff3c60",
+      "publisher_page": "https://www.clarid.ai/",
+      "source": "https://www.clarid.ai/favicon.png",
+      "retrieved_from": "https://www.clarid.ai/favicon.png",
+      "sha256": "11b6a0844fc37976f5e641dce162673178f66b10ae5a7ab4a722379a350d9c46"
+    },
+    {
+      "id": "5a52013b36675349",
+      "publisher_page": "https://www.claritytrack.ai/",
+      "source": "https://www.claritytrack.ai/apple-touch-icon.png",
+      "retrieved_from": "https://www.claritytrack.ai/apple-touch-icon.png",
+      "sha256": "3666daa2710541da5e0b135b60ee255f139e074c5173125a0cde705964cd0f47",
+      "source_query_redacted": true,
+      "retrieved_from_query_redacted": true
+    },
+    {
+      "id": "cf48f438a71109f8",
+      "publisher_page": "https://clawterminal.ai/",
+      "source": "https://clawterminal.ai/assets/mascot.png",
+      "retrieved_from": "https://clawterminal.ai/assets/mascot.png",
+      "sha256": "4f9716f486839c95ea199cadf4dbf9d7aae65a8aaaa8319b98db052c9671439c"
+    },
+    {
+      "id": "1487b2fc1f8ca78d",
+      "publisher_page": "https://clearvoyance.ai/",
+      "source": "https://clearvoyance.ai/apple-touch-icon.png",
+      "retrieved_from": "https://clearvoyance.ai/apple-touch-icon.png",
+      "sha256": "601775c885c6ffacedcba5616cfd29f5f427652e9e6a046218ed912b0ddc0aca"
+    },
+    {
+      "id": "96c42dcf52a7d111",
+      "publisher_page": "https://clevra.ai/",
+      "source": "https://cdn.prod.website-files.com/68cc7b624d83b2e8ad5f6676/69bde10487c4d9929932ed0a_clevra_logo_256.png",
+      "retrieved_from": "https://cdn.prod.website-files.com/68cc7b624d83b2e8ad5f6676/69bde10487c4d9929932ed0a_clevra_logo_256.png",
+      "sha256": "2a2a79a3d378b5b0e2049d71aa4c242a50874a68466b7a13953ac9b3baf6593d"
+    },
+    {
+      "id": "17fb03d8b3d8a7db",
+      "source": "https://supabase.com/brand-assets/supabase-icon-green-transparent.png",
+      "retrieved_from": "https://supabase.com/brand-assets/supabase-icon-green-transparent.png",
+      "sha256": "8c424a771aad730f80e38b9b1d25b2164c8df73dd6544e992487a9018bf6ddf9",
+      "publisher_page": "https://supabase.com/brand"
+    },
+    {
+      "id": "856721e825aaccb9",
+      "source": "https://1325.ai/favicon.png",
+      "retrieved_from": "https://1325.ai/favicon.png",
+      "publisher_page": "https://1325.ai/press",
+      "sha256": "bca2a7f8874102533f3cde3dedd54f167e6a641007d07b3cdcf19a6c075f6feb"
+    },
+    {
+      "id": "64d65539861cee4b",
+      "publisher_page": "https://clipstudio.ai/",
+      "source": "https://clipstudio.ai/apple-touch-icon.png",
+      "retrieved_from": "https://clipstudio.ai/apple-touch-icon.png",
+      "sha256": "646d140990e948aa079fa3fd2897e9a19f22dc241cb9bbf80c495470e48411ec",
+      "source_query_redacted": true,
+      "retrieved_from_query_redacted": true
+    },
+    {
+      "id": "8fe2ddc982fdc603",
+      "publisher_page": "https://hypnothera.ai/",
+      "source": "https://hypnothera.ai/apple-icon.png",
+      "retrieved_from": "https://hypnothera.ai/apple-icon.png",
+      "sha256": "31e06e20af542fc5a1cbc841f1ac8a41d8e043274e8e7751982b84625fa46141",
+      "source_query_redacted": true,
+      "retrieved_from_query_redacted": true
+    },
+    {
+      "id": "1b4ae430087c490d",
+      "publisher_page": "https://jeda.ai/",
+      "source": "https://jeda.ai/apple-touch-icon.png",
+      "retrieved_from": "https://jeda.ai/apple-touch-icon.png",
+      "sha256": "257f99db0176089ed2d39141eeea986e49378721d9e898b0b8552112ca38565b"
+    },
+    {
+      "id": "363543b64d1f151f",
+      "publisher_page": "https://apple-search-ads.b77.ai/",
+      "source": "https://apple-search-ads.b77.ai/favicon.ico",
+      "retrieved_from": "https://userstatic.com/f/6a4c976b-de75-43ac-a8be-35ce474f9205.png",
+      "sha256": "ab12fd45b39f29a1b05ca03407bc8e17bb33aaf3bf48d2046547db033f9c2868"
+    },
+    {
+      "id": "540b317c900e113b",
+      "publisher_page": "https://buzzsearch.ai/",
+      "source": "https://buzzsearch.ai/buzzsearch/apple-touch-icon.png",
+      "retrieved_from": "https://buzzsearch.ai/buzzsearch/apple-touch-icon.png",
+      "sha256": "a44775bc32d5b7836d4cba509957ea2b5b385a2f7df2653d33e3dcc7855ec004"
+    },
+    {
+      "id": "39b3b3c7a4034025",
+      "publisher_page": "https://run.mcp.com.ai/",
+      "source": "https://run.mcp.com.ai/favicon.ico",
+      "retrieved_from": "https://run.mcp.com.ai/favicon.ico",
+      "sha256": "362a1d5471ebb85a05cfa6b8ea87ab3f4462c4e7c485f6de177e71eba757b589"
+    },
+    {
+      "id": "62a524a102d35e25",
+      "publisher_page": "https://findip.ai/en",
+      "source": "https://findip.ai/favicon.ico",
+      "retrieved_from": "https://findip.ai/favicon.ico",
+      "sha256": "d490c6122d4b0e7f92b4ad3029215bac316a4027a0eb6c50f60bc20c31d780b9"
+    },
+    {
+      "id": "5264abf339ac0bae",
+      "publisher_page": "https://searcheros.ai/",
+      "source": "https://searcheros.ai/apple-icon.png",
+      "retrieved_from": "https://searcheros.ai/apple-icon.png",
+      "sha256": "507dd1e22ffb1984cf3bc8bced0d7fbeb7bdfaa40e0684b021d469e9ec88b82b",
+      "source_query_redacted": true,
+      "retrieved_from_query_redacted": true
+    },
+    {
+      "id": "9f48ebdbc0dd4efa",
+      "publisher_page": "https://typesearch.ai/",
+      "source": "https://typesearch.ai/apple-icon",
+      "retrieved_from": "https://typesearch.ai/apple-icon",
+      "sha256": "28ac2b49fa156f0c62b5a60c8453921b4d8fdceaab713648527fa9c4885eaa73",
+      "source_query_redacted": true,
+      "retrieved_from_query_redacted": true
+    },
+    {
+      "id": "e4ae9ca9da8f5a8e",
+      "publisher_page": "https://deepsearch.app/",
+      "source": "https://deepsearch.app/apple-icon.png",
+      "retrieved_from": "https://deepsearch.app/apple-icon.png",
+      "sha256": "6a84e6fc29c5f10f8c162d2acb6a09f9089145c02ad9896c3799d98648732ce7",
+      "source_query_redacted": true,
+      "retrieved_from_query_redacted": true
+    },
+    {
+      "id": "999f0e7acb8cfd53",
+      "publisher_page": "https://frtracker.app/",
+      "source": "https://frtracker.app/favicon.ico",
+      "retrieved_from": "https://frtracker.app/favicon.ico",
+      "sha256": "6ebe47cc1512e592ddd3b595d210f54643215f8bbe6a091c56aac21934aaea07"
+    },
+    {
+      "id": "5fc2f595bd0bec49",
+      "publisher_page": "https://offendersearch.app/",
+      "source": "https://offendersearch.app/apple-icon.png",
+      "retrieved_from": "https://offendersearch.app/apple-icon.png",
+      "sha256": "466aed0e2ed454c97b8932b013ed9f9b9aef475c85277e659079738f557d45df",
+      "source_query_redacted": true,
+      "retrieved_from_query_redacted": true
+    },
+    {
+      "id": "9b5596cac84241ce",
+      "publisher_page": "https://onesvibe.app/",
+      "source": "https://onesvibe.app/favicon.ico",
+      "retrieved_from": "https://onesvibe.app/favicon.ico",
+      "sha256": "9a0356fc22d3b2b7392185823ea3dc1115bcad76efa05fc6b254ecce255e5909"
+    },
+    {
+      "id": "ed93cae539f41b87",
+      "publisher_page": "https://algo-trade-analytics.com/",
+      "source": "https://algo-trade-analytics.com/apple-touch-icon-152x152.png",
+      "retrieved_from": "https://algo-trade-analytics.com/apple-touch-icon-152x152.png",
+      "sha256": "115f27580b04645aca0ce24762072f59e2b418eb7448093adfd993fdf3b74e8a"
+    },
+    {
+      "id": "4e5038a4ee00b8dc",
+      "publisher_page": "https://evryroom.com/",
+      "source": "https://evryroom.com/apple-icon.png",
+      "retrieved_from": "https://evryroom.com/apple-icon.png",
+      "sha256": "a4e1f6f4b03071b16d320a41c070696e20e4107de5cb7e334319c3952abcca0d",
+      "source_query_redacted": true,
+      "retrieved_from_query_redacted": true
+    },
+    {
+      "id": "cbf2049430c50fa8",
+      "publisher_page": "https://getle.ad/",
+      "source": "https://getle.ad/apple-icon.png",
+      "retrieved_from": "https://getle.ad/apple-icon.png",
+      "sha256": "0fd07e61f8c5865c60a35b58d257754b97f56cc223478279df5b3ff26dd74adc",
+      "source_query_redacted": true,
+      "retrieved_from_query_redacted": true
+    },
+    {
+      "id": "91748b15f7242e1c",
+      "publisher_page": "https://propick.ae/en",
+      "source": "https://propick.ae/apple-touch-icon.png",
+      "retrieved_from": "https://propick.ae/apple-touch-icon.png",
+      "sha256": "93c9dbe930806dd391183d0180e78bb7150edd8a7a13db291acd48151200aa6a"
+    },
+    {
+      "id": "0ab3287c5fc33c6e",
+      "publisher_page": "https://events.aero/",
+      "source": "https://events.aero/favicons/apple-touch-icon.png",
+      "retrieved_from": "https://events.aero/favicons/apple-touch-icon.png",
+      "sha256": "2722b8da467a13e9b177216f419b99d2934722eb175c1febe47b4b1948a98aca"
+    },
+    {
+      "id": "c36a3ccafbf96b7e",
+      "publisher_page": "https://state.1court.ai/",
+      "source": "https://state.1court.ai/apple-icon.png",
+      "retrieved_from": "https://state.1court.ai/apple-icon.png",
+      "sha256": "ade83699841d812f242fc9aa98cce8e0df2117687e6372ac2983c1a25e0bdf5c",
+      "source_query_redacted": true,
+      "retrieved_from_query_redacted": true
+    },
+    {
+      "id": "ae199f5c229bf4e5",
+      "publisher_page": "https://adrails.ai/",
+      "source": "https://adrails.ai/apple-touch-icon.png",
+      "retrieved_from": "https://adrails.ai/apple-touch-icon.png",
+      "sha256": "17b7ae1a2e6a841d1dcaa7bf652f2c32ed47ff08ede312526a2aaf29fd554092"
+    },
+    {
+      "id": "c89a5e1eac939dec",
+      "publisher_page": "https://adrio.ai/",
+      "source": "https://adrio.ai/apple-touch-icon.png",
+      "retrieved_from": "https://adrio.ai/apple-touch-icon.png",
+      "sha256": "2e440ac159c6f2cacea719ac657b0f81bc98fdfe2352d8b65cf7f2ea965de487"
+    },
+    {
+      "id": "3675955b271db095",
+      "publisher_page": "https://adsap.ai/",
+      "source": "https://adsap.ai/apple-touch-icon.png",
+      "retrieved_from": "https://adsap.ai/apple-touch-icon.png",
+      "sha256": "f9fa333f515d0bd05ac8cfb2241883b2a2183cbf3549d9a6c87297c0217eed00"
+    },
+    {
+      "id": "0ec8f666c7c4e478",
+      "publisher_page": "https://www.aetherya.ai/",
+      "source": "https://www.aetherya.ai/logos/newlogoaetherya-veritcal-transparent.png",
+      "retrieved_from": "https://www.aetherya.ai/logos/newlogoaetherya-veritcal-transparent.png",
+      "sha256": "6d90325bf5ba6ed2a3efd6df188b84c35b784d7f82e4e8288ba8dd2fd0ac5e89"
+    },
+    {
+      "id": "d92826927015a546",
+      "publisher_page": "https://graffeo.com/",
+      "source": "https://graffeo.com/cdn/shop/files/graffeo_favicon.png",
+      "retrieved_from": "https://graffeo.com/cdn/shop/files/graffeo_favicon.png",
+      "sha256": "c9a694073fd652881117ea69ee30cd91557e5dc2750964f27c3e92e02102e1e9",
+      "source_query_redacted": true,
+      "retrieved_from_query_redacted": true
+    },
+    {
+      "id": "86d60a41bb4ad56f",
+      "publisher_page": "https://rankhound.ai/",
+      "source": "https://rankhound.ai/brand/apple-touch-icon.png",
+      "retrieved_from": "https://rankhound.ai/brand/apple-touch-icon.png",
+      "sha256": "dfa7649770b9352b0db5abf10bdf01c7cfc72ad5e3e6204281eca261b78802b9"
+    },
+    {
+      "id": "3a26121581195bc3",
+      "publisher_page": "https://alpic.ai/",
+      "source": "https://framerusercontent.com/images/VleVYxbsSjOK10xHhEiS36TjKM.png",
+      "retrieved_from": "https://framerusercontent.com/images/VleVYxbsSjOK10xHhEiS36TjKM.png",
+      "sha256": "715d97c9207fc074fe4e8d7e1c21fe6ed7fe2c97c3243130f31661b4e102ad17"
+    },
+    {
+      "id": "d37abf374229cfd9",
+      "publisher_page": "https://jobs.arihaan.ai/",
+      "source": "https://jobs.arihaan.ai/favicon.ico",
+      "retrieved_from": "https://jobs.arihaan.ai/favicon.ico",
+      "sha256": "0f55e22eafa691e4cb7dfe02f116c99cf07178da1e4610e6ccb6aa9184ad8966"
+    },
+    {
+      "id": "fd102bcb857bc9c4",
+      "publisher_page": "https://atlier.ai/",
+      "source": "https://atlier.ai/icon.png",
+      "retrieved_from": "https://atlier.ai/icon.png",
+      "sha256": "57ee0a835e3cbc152790f9eea5f83aa04a532f4a81584180ba2ba4fb7ea71782"
+    },
+    {
+      "id": "aa72101c171dfd35",
+      "publisher_page": "https://audiomap.ai/es",
+      "source": "https://audiomap.ai/apple-touch-icon.png",
+      "retrieved_from": "https://audiomap.ai/apple-touch-icon.png",
+      "sha256": "3f07ad92aa2b7c32131f1fe740ba976b29605db295355fcf942a0f04b4502753"
+    },
+    {
+      "id": "a8c4d8bceefadf7a",
+      "publisher_page": "https://audo.ai/",
+      "source": "https://audo.ai/apple-icon.png",
+      "retrieved_from": "https://audo.ai/apple-icon.png",
+      "sha256": "0b324aa7db28853a4e1c95dfa1c2c62c33c094ab78bee1095ab2f64238c49cad",
+      "source_query_redacted": true,
+      "retrieved_from_query_redacted": true
+    },
+    {
+      "id": "f4b270a753600177",
+      "publisher_page": "https://autovox.ai/",
+      "source": "https://autovox.ai/apple-icon.png",
+      "retrieved_from": "https://autovox.ai/apple-icon.png",
+      "sha256": "86d4b03acbc8a8bcb69114e42044428511eef3b7f0bb5a8ae41430dc8c65a1a8",
+      "source_query_redacted": true,
+      "retrieved_from_query_redacted": true
+    },
+    {
+      "id": "246aedab526c1c0c",
+      "publisher_page": "https://apify.com/",
+      "source": "https://apify.com/apple-icon.png",
+      "retrieved_from": "https://apify.com/apple-icon.png",
+      "sha256": "cf5aa7716eff4eeea410f5f18ff8aeca637558cc450e834d1d82929343452efe",
+      "source_query_redacted": true,
+      "retrieved_from_query_redacted": true
+    },
+    {
+      "id": "441b39bc62fe8633",
+      "publisher_page": "https://google-ads.b77.ai/",
+      "source": "https://google-ads.b77.ai/favicon.ico",
+      "retrieved_from": "https://userstatic.com/f/64abe30d-151e-4fce-9f18-2a78f5d5412d.png",
+      "sha256": "d63a7b6eb19d85cce17d6b1174b6d33218dcec68043d738a89766a433af2e822"
+    },
+    {
+      "id": "5d7e42736789230f",
+      "publisher_page": "https://knowledge-base.b77.ai/",
+      "source": "https://knowledge-base.b77.ai/favicon.ico",
+      "retrieved_from": "https://userstatic.com/f/38987f4d-5a22-4841-9dea-7f9cdef4e03e.png",
+      "sha256": "ae07eaf272113f6f6bbba419f112ec8e62b3941b44adb0ddf845fcc7ae616ce6"
+    },
+    {
+      "id": "4e015eff7cab4191",
+      "publisher_page": "https://teamwork.b77.ai/",
+      "source": "https://teamwork.b77.ai/favicon.ico",
+      "retrieved_from": "https://userstatic.com/f/f5422d09-25da-4ef7-9cf6-c8f3a3943ded.png",
+      "sha256": "65cd2dfdb2f49ee975d1b9c00ff9a1e020453c9184718416e5d6df037ff3ec39"
+    },
+    {
+      "id": "56f5b171802c0f6c",
+      "publisher_page": "https://benchgecko.ai/",
+      "source": "https://benchgecko.ai/apple-touch-icon.png",
+      "retrieved_from": "https://benchgecko.ai/apple-touch-icon.png",
+      "sha256": "d9956ef805072904077a4965e7b88e34fd84035773b98c49a1d422f676e01e9f"
+    },
+    {
+      "id": "e742a173e323c903",
+      "publisher_page": "https://bowmark.ai/",
+      "source": "https://bowmark.ai/apple-icon",
+      "retrieved_from": "https://bowmark.ai/apple-icon",
+      "sha256": "1f4dc50ed893654d38ed8fb07debaac24622a64311febea3772488ad17453388",
+      "source_query_redacted": true,
+      "retrieved_from_query_redacted": true
+    },
+    {
+      "id": "cd6de4cf8407835f",
+      "publisher_page": "https://celesto.ai/",
+      "source": "https://celesto.ai/favicon.ico",
+      "retrieved_from": "https://celesto.ai/favicon.ico",
+      "sha256": "0dcc64fc759e4a6621807d25d70f95c88c89b7b42a2f3df2c6a00fdbf2ac939a"
+    },
+    {
+      "id": "4f7d9ea5115fd645",
+      "publisher_page": "https://cerebrium.ai/",
+      "source": "https://www.datocms-assets.com/180613/1770487378-iiynr41hlhnjq7vtreipiv8k6eo.png",
+      "retrieved_from": "https://www.datocms-assets.com/180613/1770487378-iiynr41hlhnjq7vtreipiv8k6eo.png",
+      "sha256": "11071b83601277cc5586cd6b42e7dbcfbe646cae4abe6664322f7cfe8afab14a",
+      "source_query_redacted": true,
+      "retrieved_from_query_redacted": true
+    },
+    {
+      "id": "36402703e07bfa94",
+      "publisher_page": "https://chatley.ai/",
+      "source": "https://chatley.ai/favicon.ico",
+      "retrieved_from": "https://chatley.ai/favicon.ico",
+      "sha256": "1aa8e2efd5c213e0db7eeccc04d68fb67047f7cdf1c69d0cfe1090c45ac5578f",
+      "source_query_redacted": true,
+      "retrieved_from_query_redacted": true
+    },
+    {
+      "id": "ef479132795d1f0c",
+      "publisher_page": "https://chatterlab.ai/en",
+      "source": "https://chatterlab.ai/icon.svg",
+      "retrieved_from": "https://chatterlab.ai/icon.svg",
+      "sha256": "0e35efe6870ffb1410271131425cea42cdd8b1eca3f18deb049f1c7d998a5551",
+      "source_query_redacted": true,
+      "retrieved_from_query_redacted": true
+    },
+    {
+      "id": "9a855117034b3031",
+      "publisher_page": "https://circleback.ai/",
+      "source": "https://circleback.ai/apple-touch-icon.png",
+      "retrieved_from": "https://circleback.ai/apple-touch-icon.png",
+      "sha256": "debf4cc62986840c43c255e165fc9486e86926a61cdc2395fde544af48ce83c4"
+    },
+    {
+      "id": "canva-official",
+      "source": "https://www.canva.dev/assets/connect/Canva-logos.zip",
+      "publisher_page": "https://www.canva.dev/docs/apps/rest-apis/brand-guidelines/",
+      "sha256": "26ebc6ba29496598a81f3479aeb283299e91a1d6e6b2a2800db224e7e6349b18",
+      "asset": "Canva Icon logo_128x128.png"
+    },
+    {
+      "id": "outlook-microsoft",
+      "source": "https://res.cdn.office.net/files/fabric-cdn-prod_20230815.001/assets/brand-icons/product/svg/outlook_48x1.svg",
+      "sha256": "0884e0478f7e073163febe67eaff20be97ae38373b0866c9668f81c2f6bd26c2"
+    }
+  ]
+}

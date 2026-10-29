@@ -14,6 +14,35 @@ from .test_workspace_workflows import workspace
 A = {'x-grokbot-user-id': 'ui-contract-owner'}
 B = {'x-grokbot-user-id': 'other-ui-owner'}
 
+@pytest.mark.asyncio
+async def test_shared_canva_client_never_shares_user_tokens_or_flow_status(workspace,monkeypatch):
+    from app.services.plugin_auth import CANVA_MCP_URL, CANVA_CALLBACK, DatabaseTokenStorage, make_provider
+    monkeypatch.setenv('CANVA_OAUTH_CLIENT_ID','fixture-shared-client')
+    monkeypatch.setenv('CANVA_OAUTH_CLIENT_SECRET','fixture-shared-secret')
+    client,sessions=workspace
+    owner=current_tenant_id.set(A['x-grokbot-user-id'])
+    try:
+        async with sessions() as db:
+            first=PluginAuthorization(name='Canva',url=CANVA_MCP_URL,status='awaiting_login',created_at=1)
+            db.add(first);await db.commit();await db.refresh(first)
+            await make_provider(db,first,CANVA_CALLBACK)
+            await DatabaseTokenStorage(db,first).update(tokens={'access_token':'owner-token','token_type':'Bearer'})
+            first_id=first.id
+            assert 'owner-token' not in first.payload and 'fixture-shared-secret' not in first.payload
+    finally:current_tenant_id.reset(owner)
+    other=current_tenant_id.set(B['x-grokbot-user-id'])
+    try:
+        async with sessions() as db:
+            second=PluginAuthorization(name='Canva',url=CANVA_MCP_URL,status='awaiting_login',created_at=1)
+            db.add(second);await db.commit();await db.refresh(second)
+            await make_provider(db,second,CANVA_CALLBACK)
+            assert await DatabaseTokenStorage(db,second).get_tokens() is None
+    finally:current_tenant_id.reset(other)
+    assert (await client.get('/api/plugins/oauth/status/'+first_id,headers=B)).status_code==404
+    response=await client.get('/api/plugins/oauth/status/'+first_id,headers=A)
+    assert response.status_code==200
+    assert 'owner-token' not in response.text and 'fixture-shared-secret' not in response.text
+
 
 @pytest.mark.asyncio
 async def test_connection_list_survives_damaged_credentials_and_oauth(workspace, monkeypatch):

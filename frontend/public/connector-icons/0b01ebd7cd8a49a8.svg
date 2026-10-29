@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Background -->
+  <rect width="512" height="512" fill="#0a0c0e" rx="80"/>
+  <!-- Subtle grid lines matching the site background -->
+  <line x1="0" y1="170" x2="512" y2="170" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
+  <line x1="0" y1="340" x2="512" y2="340" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
+  <line x1="170" y1="0" x2="170" y2="512" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
+  <line x1="340" y1="0" x2="340" y2="512" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
+  <!-- Italic serif "a" in accent green -->
+  <text
+    x="256"
+    y="360"
+    font-family="Georgia, 'Times New Roman', serif"
+    font-size="360"
+    font-weight="400"
+    font-style="italic"
+    text-anchor="middle"
+    fill="#c8f060"
+  >a</text>
+</svg>

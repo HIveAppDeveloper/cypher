@@ -22,6 +22,53 @@ async function connect(p){await p.view.flush();find(p.view.tree,n=>n.type==='but
 
 const linkedPlugin=(verification={status:'not_tested'})=>({id:'linked-account',name:item.name,url:item.url,enabled:true,authenticated:true,tools:[{name:'read_profile',description:'Read an authorized profile',enabled:true}],verification});
 
+test('catalog exposes the configured MCP endpoint and Connect authorizes that exact address',async()=>{
+  let authorization;
+  const p=panel({api:{authorizePlugin:async body=>{authorization=body;return {status:'awaiting_login',flow_id:id,authorization_url:pending.url,name:item.name};},resolvePlugin:async()=>{throw Error('Catalog entries must not be rediscovered');}}});
+  await p.view.flush();
+  const link=find(p.view.tree,n=>n.type==='a'&&n.props?.['aria-label']==='Open Fixture Service MCP server');
+  assert.equal(link.props.href,item.url);
+  assert.equal(link.props.rel,'noopener noreferrer');
+  await connect(p);
+  assert.equal(authorization.url,item.url);
+  assert.match(textOf(p.view.tree),/Continue to Fixture Service/);
+  p.view.unmount();
+});
+
+test('catalog never exposes credential-bearing or non-HTTPS addresses as public MCP links',async()=>{
+  const cases=['https://user:secret@provider.example/mcp','https://provider.example/mcp?token=secret','http://provider.example/mcp'];
+  const p=panel({api:{getPluginCatalog:async()=>cases.map((url,i)=>({...item,id:String(i),name:'Unsafe '+i,url}))}});
+  await p.view.flush();
+  for(let i=0;i<cases.length;i++)assert.equal(find(p.view.tree,n=>n.type==='a'&&n.props?.['aria-label']===`Open Unsafe ${i} MCP server`),undefined);
+  p.view.unmount();
+});
+
+test('Canva uses its saved MCP endpoint and offers registered-client setup before sign-in',async()=>{
+  const canva={...item,id:'canva-official',name:'Canva',url:'https://api.canva.com/connect/v1/mcp',auth:'registered_oauth',source:'https://www.canva.dev/docs/apps/mcp/'};
+  let calls=0,input;
+  const p=panel({api:{getPluginCatalog:async()=>[canva],authorizePlugin:async body=>{calls++;input=body;return {status:'awaiting_login',flow_id:id,authorization_url:pending.url,name:'Canva'};}}});
+  await p.view.flush();find(p.view.tree,n=>n.type==='button'&&n.props?.['aria-label']==='Connect Canva').props.onClick();await p.view.flush();
+  assert.equal(calls,0);
+  assert.match(textOf(p.view.tree),/Sign-in isn’t ready for Canva yet/);
+  assert.equal(find(p.view.tree,n=>n.props?.id==='oauth-callback').props.value,'https://cypher-agent.vercel.app/api/plugin-oauth/callback');
+  const field=label=>find(find(p.view.tree,n=>n.type==='label'&&textOf(n).startsWith(label)),n=>n.type==='input');
+  field('Client ID').props.onChange({target:{value:'fixture-canva-client'}});await p.view.flush();
+  const section=find(p.view.tree,n=>n.props?.className==='plugin-registration');
+  await find(section,n=>n.type==='form').props.onSubmit({preventDefault(){}});await p.view.flush();
+  assert.equal(calls,1);assert.equal(input.url,canva.url);assert.equal(input.oauth_client.client_id,'fixture-canva-client');
+  assert.equal(input.oauth_client.scope,'design:meta:read design:content:read');
+  p.view.unmount();
+});
+
+test('configured Cypher Canva client starts the saved endpoint directly',async()=>{
+  const canva={...item,id:'canva-official',name:'Canva',url:'https://api.canva.com/connect/v1/mcp',auth:'registered_oauth',oauth_client_configured:true};
+  let input;
+  const p=panel({api:{getPluginCatalog:async()=>[canva],authorizePlugin:async body=>{input=body;return {status:'awaiting_login',flow_id:id,authorization_url:pending.url,name:'Canva'};}}});
+  await p.view.flush();find(p.view.tree,n=>n.type==='button'&&n.props?.['aria-label']==='Connect Canva').props.onClick();await p.view.flush();
+  assert.equal(input.url,canva.url);assert.equal(input.oauth_client,undefined);
+  assert.match(textOf(p.view.tree),/Continue to Canva/);p.view.unmount();
+});
+
 test('explicit connection checks its exact returned plugin once and shows verification progress',async()=>{
   const check=deferred();let saved=[],calls=0,authorizations=0;
   const p=panel({api:{getPlugins:async()=>saved,authorizePlugin:async()=>{authorizations++;saved=[linkedPlugin()];return{status:'connected',plugin_id:'linked-account',name:item.name};},testPlugin:async pid=>{assert.equal(pid,'linked-account');calls++;return check.promise;}}});
