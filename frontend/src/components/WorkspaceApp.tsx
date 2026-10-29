@@ -56,7 +56,15 @@ export default function WorkspaceApp({ accountEmail, accountId }: { accountEmail
 
   useEffect(()=>{let active=true;const load=()=>{if(document.hidden)return;void request('/computer/approvals/pending').then(data=>{if(active)setPendingApprovals(data.length);}).catch(()=>{});};load();const timer=setInterval(load,30000);return()=>{active=false;clearInterval(timer);};},[]);
   useEffect(() => { let active = true; api.getConversations().then(data => { if (active) { setRooms(data.filter(c => c.is_group)); setRoomError(''); } }).catch(() => { if (active) setRoomError('Team rooms could not load.'); }).finally(() => { if (active) setRoomsLoading(false); }); return () => { active = false; }; }, []);
-  async function openLounge() { beginNavigation(); const room = await api.defaultTeam(); await refreshBots(); setRooms(list => list.some(item => item.id === room.id) ? list : [...list, room]); setSelectedBot(null); setSelectedRoom(room); return room; }
+  async function openLounge() {
+    const generation = beginNavigation();
+    const room = await api.defaultTeam();
+    if (generation !== navigationGeneration.current) throw new Error('Navigation changed before the team opened.');
+    setRooms(list => list.some(item => item.id === room.id) ? list : [...list, room]);
+    setSelectedBot(null); setSelectedRoom(room);
+    void refreshBots().catch(() => {});
+    return room;
+  }
   function stopVoice() { setVoiceMode(false); setVoiceStream(current => { current?.getTracks().forEach(track => track.stop()); return null; }); }
   async function startVoiceFromHome(stream: MediaStream) { try { await openLounge(); setVoiceStream(stream); setVoiceMode(true); } catch (error) { stream.getTracks().forEach(track => track.stop()); throw error; } }
   function enableVoiceInConversation(stream: MediaStream) { setVoiceStream(stream); setVoiceMode(true); }
