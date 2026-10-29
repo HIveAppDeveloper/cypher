@@ -21,6 +21,7 @@ export default function SourcingOutreachReview({ accountId: ownerAccountId = 'an
   const [busy, setBusy] = useState('');
   const [error, setError] = useState('');
   const [signIn, setSignIn] = useState(false);
+  const [sourceLoadFailed, setSourceLoadFailed] = useState(false);
   const [needsStatusCheck, setNeedsStatusCheck] = useState(false);
   const [clock, setClock] = useState(Date.now());
   const [clockOffset, setClockOffset] = useState(0);
@@ -79,11 +80,12 @@ export default function SourcingOutreachReview({ accountId: ownerAccountId = 'an
       draftRequest.current = null;
       setAccounts([]); setAccountId(''); setRecipient(''); setSubject(''); setBody('');
       setProposal(null); setReviewToken(null); setConfirmed(false); setNeedsStatusCheck(false);
-      setBusy(''); setError(''); setSignIn(false); setClockOffset(0); setClock(Date.now());
+      setBusy(''); setError(''); setSignIn(false); setSourceLoadFailed(false); setClockOffset(0); setClock(Date.now());
     }
     const controller = new AbortController();
     setLoading(true);
     setError('');
+    setSourceLoadFailed(false);
     const load = async () => {
       try {
         if (initialProposalId && !proposalIdIsValid(initialProposalId)) throw new Error('This proposal link is invalid. Open its original review link.');
@@ -115,7 +117,10 @@ export default function SourcingOutreachReview({ accountId: ownerAccountId = 'an
           setRecipient('');
         } else if (sourceResult.status === 'rejected') {
           if (sourceResult.reason instanceof ApiError && sourceResult.reason.status === 401) explain(sourceResult.reason);
-          else setError('Cypher couldn’t reopen this researched match. Return to VC Intelligence and prepare the draft again.');
+          else {
+            setError('Cypher couldn’t reopen this researched match. Return to VC Intelligence and prepare the draft again.');
+            setSourceLoadFailed(true);
+          }
         }
       } catch (cause) {
         if (isCurrent() && !controller.signal.aborted) explain(cause);
@@ -210,8 +215,8 @@ export default function SourcingOutreachReview({ accountId: ownerAccountId = 'an
   const reviewCurrent = !!proposal && !!reviewToken && proposal.creation_eligible && proposal.recipient_policy?.held === false && proposal.recipient_policy?.suppressed === false && proposal.status === 'awaiting_approval' && outreachTime(proposal.review_expires_at) > now;
 
   return <main className="outreach-review" aria-labelledby="outreach-title">
-    <header ref={heading} className="outreach-heading"><a href="/prospecting/investors">Back to VC intelligence</a><h1 id="outreach-title">{proposal || initialProposalId ? 'Review outreach' : 'Prepare outreach'}</h1><p>{proposal || initialProposalId ? 'Check the recipient, Gmail account, and email before confirming it.' : 'Choose a Gmail account and prepare one email for review.'}</p></header>
-    {error ? <div className="outreach-error" role="alert"><p>{error}</p>{signIn ? <a href={'/login?returnTo=' + encodeURIComponent('/sourcing/outreach' + (proposal || initialProposalId ? '?proposal=' + encodeURIComponent(proposal?.id || initialProposalId) : initialSourceRunId && initialSourceResultId ? '?run=' + encodeURIComponent(initialSourceRunId) + '&result=' + encodeURIComponent(initialSourceResultId) : ''))}>Sign in to continue</a> : proposal ? <button type="button" onClick={() => void refreshStatus()} disabled={!!busy}>Refresh saved status</button> : <button type="button" onClick={() => setReload(value => value + 1)} disabled={!!busy}>Reload workspace</button>}</div> : null}
+    <header ref={heading} className="outreach-heading"><a href="/prospecting/investors">Back to VC intelligence</a><h1 id="outreach-title">{proposal || initialProposalId ? 'Review outreach' : 'Prepare outreach'}</h1><p>{proposal || initialProposalId ? 'Check the recipient, Gmail account, and email before confirming it.' : initialSourceRunId && initialSourceResultId ? 'Add a verified business email, then review the prepared draft.' : 'Choose a Gmail account and prepare one email for review.'}</p></header>
+    {error ? <div className="outreach-error" role="alert"><p>{error}</p>{signIn ? <a href={'/login?returnTo=' + encodeURIComponent('/sourcing/outreach' + (proposal || initialProposalId ? '?proposal=' + encodeURIComponent(proposal?.id || initialProposalId) : initialSourceRunId && initialSourceResultId ? '?run=' + encodeURIComponent(initialSourceRunId) + '&result=' + encodeURIComponent(initialSourceResultId) : ''))}>Sign in to continue</a> : sourceLoadFailed ? <a href="/prospecting/investors">Back to VC intelligence</a> : proposal ? <button type="button" onClick={() => void refreshStatus()} disabled={!!busy}>Refresh saved status</button> : <button type="button" onClick={() => setReload(value => value + 1)} disabled={!!busy}>Reload workspace</button>}</div> : null}
     {loading ? <p className="outreach-loading" role="status">Loading your outreach workspace…</p> : proposal ? <>
       <section className="outreach-status" aria-labelledby="outreach-status-title"><div><h2 id="outreach-status-title">{status?.label}</h2><p role="status">{status?.message}</p></div><button type="button" onClick={() => void refreshStatus()} disabled={!!busy}>{busy === 'refresh' ? 'Checking…' : 'Refresh status'}</button></section>
       <section className="outreach-message" aria-label="Email for review"><dl><div><dt>From</dt><dd>{proposal.sender}<small>Gmail account chosen for this email</small></dd></div><div><dt>To</dt><dd>{proposal.recipient}</dd></div><div><dt>Subject</dt><dd>{proposal.subject}</dd></div></dl><div className="outreach-body">{proposal.body}</div></section>
