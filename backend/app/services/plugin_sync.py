@@ -11,7 +11,7 @@ from datetime import datetime
 from sqlalchemy import select
 from app.db.session import AsyncSessionLocal
 from app.db.tenancy import current_tenant_id
-from app.models.plugin import Plugin
+from app.models.plugin import Plugin, PluginAuthorization
 from app.models.plugin_sync import PluginSync
 from app.services.plugins import discover, seal, credential_headers, authentication_failure
 
@@ -87,7 +87,9 @@ async def connect_entry(item, sessions=None):
 async def recheck_saved(db,plugin,item):
     """Refresh through saved auth without performing provider write operations."""
     from app.services.plugins import connection_auth
-    original_credential=plugin.credential
+    original_connection=(plugin.url,plugin.credential)
+    authorizations=select(PluginAuthorization.id).where(PluginAuthorization.plugin_id==plugin.id,PluginAuthorization.status=='connected')
+    original_authorizations=frozenset((await db.execute(authorizations)).scalars())
     base={'plugin_id':plugin.id,'tool_count':len(plugin.tools)}
     try:
         token,auth=await connection_auth(db,plugin)
@@ -101,7 +103,9 @@ async def recheck_saved(db,plugin,item):
     saved=(await db.execute(select(Plugin).where(Plugin.id==plugin.id).with_for_update().execution_options(populate_existing=True))).scalar_one_or_none()
     if not saved:return {**base,'status':'unavailable','message':'The connection was removed while it was checked.'}
     if not saved.enabled:return {**base,'status':'paused','message':'Existing connection remains paused.'}
-    if saved.credential!=original_credential:
+    # OAuth account replacement can keep credential=None. Authorization IDs
+    # distinguish that change from a normal token refresh within one grant.
+    if (saved.url,saved.credential)!=original_connection or frozenset((await db.execute(authorizations)).scalars())!=original_authorizations:
         return {**base,'status':'unavailable','message':'The connection changed while it was checked. Run the check again.'}
     enabled={tool['name']:tool.get('enabled',True) for tool in saved.tools}
     saved.tools=[{**tool,'enabled':enabled.get(tool['name'],True)} for tool in tools]
