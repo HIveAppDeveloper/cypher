@@ -8,6 +8,7 @@
 .quickstart .home-welcome .quickstart-mark { flex: 0 0 185px; width: 185px; height: 76px; margin: 0; }
 .quickstart .task-composer { width: 100%; min-height: 156px; grid-template-columns: 44px minmax(0, 1fr); grid-template-rows: minmax(72px, auto) 44px; align-items: start; gap: 0 8px; padding: 13px 15px 12px; border: 1px solid var(--cx-sep); border-radius: 16px; background: var(--cx-card); box-shadow: 0 8px 28px rgba(34, 28, 17, .05); }
 .quickstart .task-composer:hover { transform: none; }
+.quickstart .task-composer:has(.quickstart-options[open]) { position: relative; z-index: 2; }
 .quickstart .task-composer textarea { grid-column: 1 / -1; grid-row: 1; height: 72px; min-height: 72px; padding: 6px 5px; font-size: 16px; line-height: 1.5; }
 .quickstart .task-attach-button { grid-column: 1; grid-row: 2; width: 44px; height: 44px; }
 .quickstart .task-composer-footer { grid-column: 2; grid-row: 2; width: 100%; min-height: 44px; justify-content: flex-end; }
