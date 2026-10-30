@@ -350,7 +350,7 @@ export default function VcProspectingWorkspace({ accountId }: { accountId?: stri
 
     <section className="vc-data-settings">
       <details>
-        <summary><span className="vc-source-dot" />SEC public data and coverage <small>{loading ? 'Checking data…' : initialDataFailure ? 'Coverage unavailable' : `${secCount(data?.database.records)} people and company records`}</small><span className="vc-summary-chevron"><VcIcon kind="chevron"/></span></summary>
+        <summary><span className={`vc-source-dot${initialDataFailure ? ' is-unavailable' : ''}`} aria-hidden="true" />SEC public data and coverage <small>{loading ? 'Checking data…' : initialDataFailure ? 'Coverage unavailable' : `${secCount(data?.database.records)} people and company records`}</small><span className="vc-summary-chevron"><VcIcon kind="chevron"/></span></summary>
         <div className="vc-data-settings-body">
           <p>Cypher uses public SEC Form D filings. A person is labeled a founder only when the filing explicitly says founder or co-founder.</p>
           <div className="vc-data-facts"><span><b aria-label={secMetricLabel}>{secCount(data?.database.explicit_founder_signals)}</b> filed founder signals</span><span><b aria-label={secMetricLabel}>{secCount(data?.database.quarter_count)}</b> SEC quarters indexed</span><span>Last updated <b>{loading ? 'Checking…' : initialDataFailure ? 'Unavailable' : dateLabel(data?.database.snapshot_built_at)}</b></span></div>

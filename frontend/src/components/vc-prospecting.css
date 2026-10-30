@@ -41,6 +41,7 @@
 .vc-data-settings details > summary::-webkit-details-marker { display: none; }
 .vc-data-settings details > summary::before { content: none; }
 .vc-source-dot { flex: none; width: 7px; height: 7px; border-radius: 50%; background: var(--cx-green, #3b7557); }
+.vc-source-dot.is-unavailable { background: var(--cx-label-2, #65645f); }
 .vc-data-settings details > summary small { overflow: hidden; margin-left: auto; color: var(--cx-label-2, #65645f); font-size: 10px; font-weight: 400; text-overflow: ellipsis; white-space: nowrap; }
 .vc-summary-chevron { color: var(--cx-label-2, #65645f); transition: transform .15s ease; }
 .vc-data-settings details[open] .vc-summary-chevron { transform: rotate(180deg); }
