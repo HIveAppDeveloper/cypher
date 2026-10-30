@@ -18,6 +18,12 @@ const matchRun = (id = 'match-run', status = 'running') => ({
   id, direction: 'companies_for_thesis', thesis: { one_liner: 'Synthetic thesis' },
   status, phase: 'matching', results: [], events: [], source_snapshot: null, error: null, limitations: [],
 });
+const sampleFounder = (id = 'person', company_name = 'Synthetic Company') => ({
+  id, person_name: 'Synthetic Person', company_name, title: 'Director', roles: ['Director'],
+  founder_status: 'related_person', founder_evidence: null, industry: 'Energy',
+  location: { city: null, state: null }, filing_date: '2026-10-25', filing_count_in_snapshot: 1,
+  source_quarters: ['2026q4'], source_url: 'https://www.sec.gov/Archives/synthetic',
+});
 
 function mountCompany(env, request) {
   const view = renderer(env);
@@ -52,7 +58,7 @@ function historicalPage(status = 'running') {
   };
 }
 
-function mountVc(env, request) {
+function mountVc(env, request, props = {}) {
   const view = renderer(env);
   const { default: Workspace } = load('../src/components/VcProspectingWorkspace.tsx', {
     react: view.react,
@@ -60,7 +66,7 @@ function mountVc(env, request) {
     './WorkflowShell': { __esModule: true, default: 'workflow-shell' },
     './vc-prospecting.css': {},
   }, { ...env.globals, React: view.react.default, URLSearchParams });
-  view.mount(() => Workspace({}));
+  view.mount(() => Workspace(props));
   return view;
 }
 
@@ -527,6 +533,129 @@ test('a late completion refresh cannot replace a newer filtered founder search o
   const stats = find(view.tree, node => node.props?.className === 'vc-stats');
   assert.equal(textOf(find(stats, node => node.type === 'strong')), '8', 'late old data cannot replace the newer page');
   assert.equal(find(view.tree, node => node.type === 'button' && textOf(node) === 'Previous').props.disabled, false, 'late old data cannot reset the page offset');
+  view.unmount();
+});
+
+test('an aborted unfiltered completion refresh cannot replace a submitted founder search', async () => {
+  const env = environment();
+  const old = deferred();
+  const initialPage = historicalPage('idle');
+  initialPage.items = [sampleFounder('initial-company', 'Initial Company')];
+  const currentPage = historicalPage('idle');
+  currentPage.database.records = 7;
+  currentPage.database.matched_records = 7;
+  currentPage.items = [sampleFounder('current-result', 'Current Search Company')];
+  currentPage.page.returned = 1;
+  const stalePage = historicalPage('idle');
+  stalePage.database.records = 99;
+  stalePage.database.matched_records = 99;
+  stalePage.items = [sampleFounder('old-result', 'Stale Unfiltered Company')];
+  let unfiltered = 0;
+  let oldRefreshSignal;
+  const request = async (path, options = {}) => {
+    if (path.startsWith('/prospecting/investors/founders?')) {
+      if (new URLSearchParams(path.split('?')[1]).get('q') === 'new search') return currentPage;
+      if (++unfiltered === 1) return initialPage;
+      oldRefreshSignal = options.signal;
+      return new Promise((resolve, reject) => {
+        const stop = () => reject(new Error('Synthetic request aborted'));
+        if (options.signal?.aborted) { stop(); return; }
+        options.signal?.addEventListener('abort', stop, { once: true });
+        old.promise.then(value => {
+          options.signal?.removeEventListener('abort', stop);
+          resolve(value);
+        }, reject);
+      });
+    }
+    if (path === '/prospecting/investors/runs') return [matchRun('old-run')];
+    if (path === '/prospecting/investors/runs/old-run') return matchRun('old-run', 'completed');
+    throw new Error(`Unexpected request: ${path}`);
+  };
+  const view = mountVc(env, request);
+  await view.flush();
+  assert.ok(oldRefreshSignal, 'the completion refresh remains in flight');
+
+  const input = find(view.tree, node => node.type === 'input' && node.props?.placeholder === 'Search people, companies, or roles…');
+  input.props.onChange({ target: { value: 'new search' } });
+  await view.flush();
+  find(view.tree, node => node.type === 'form' && node.props?.className === 'vc-search').props.onSubmit({ preventDefault() {} });
+  await view.flush();
+  assert.equal(oldRefreshSignal.aborted, true);
+  assert.match(textOf(view.tree), /Current Search Company/);
+
+  old.resolve(stalePage);
+  await view.flush();
+  assert.match(textOf(view.tree), /Current Search Company/);
+  assert.doesNotMatch(textOf(view.tree), /Stale Unfiltered Company/);
+  const stats = find(view.tree, node => node.props?.className === 'vc-stats');
+  assert.equal(textOf(find(stats, node => node.type === 'strong')), '7');
+  view.unmount();
+});
+
+test('a rejected shortlist write stays available in the tab and never claims it was saved', async () => {
+  const env = environment();
+  const personPage = historicalPage('idle');
+  personPage.items = [sampleFounder('saved-person', 'Saved Person Company')];
+  personPage.page.returned = 1;
+  const reads = [];
+  const writes = [];
+  env.window.localStorage = {
+    getItem(key) { reads.push(key); return null; },
+    setItem(key) { writes.push(key); throw new Error('Synthetic storage quota exceeded'); },
+  };
+  const request = async path => {
+    if (path.startsWith('/prospecting/investors/founders?')) return personPage;
+    if (path === '/prospecting/investors/runs') return [];
+    throw new Error(`Unexpected request: ${path}`);
+  };
+  const view = mountVc(env, request, { accountId: 'audit-owner' });
+  await view.flush();
+  const writesBeforeAdd = writes.length;
+  button(view.tree, 'Add to shortlist').props.onClick();
+  await view.flush();
+
+  const persistenceLabel = textOf(find(view.tree, node => node.props?.className === 'vc-detail-actions'));
+  assert.match(persistenceLabel, /tab only|could not save|not saved/i);
+  assert.doesNotMatch(persistenceLabel, /Saved on this device/);
+  assert.deepEqual(reads, ['cypher-vc-shortlist:audit-owner'], 'read only the current account key');
+  assert.ok(writes.length > writesBeforeAdd, 'adding a person attempts to save the current shortlist');
+  assert.ok(writes.every(key => key === 'cypher-vc-shortlist:audit-owner'), 'never write another account’s shortlist');
+
+  const shortlistStep = find(view.tree, node => node.type === 'button' && textOf(node).includes('Shortlist'));
+  shortlistStep.props.onClick();
+  await view.flush();
+  assert.match(textOf(view.tree), /Saved Person Company/);
+  assert.match(textOf(find(view.tree, node => node.props?.className === 'vc-candidates-heading')), /Available in this tab only/);
+  view.unmount();
+});
+
+test('a shortlist read failure keeps the current-tab fallback without overwriting unread data', async () => {
+  const env = environment();
+  const personPage = historicalPage('idle');
+  personPage.items = [sampleFounder('private-person', 'Private Stored Company')];
+  const writes = [];
+  env.window.localStorage = {
+    getItem() { throw new Error('Synthetic storage access denied'); },
+    setItem(key) { writes.push(key); },
+  };
+  const request = async path => {
+    if (path.startsWith('/prospecting/investors/founders?')) return personPage;
+    if (path === '/prospecting/investors/runs') return [];
+    throw new Error(`Unexpected request: ${path}`);
+  };
+  const view = mountVc(env, request, { accountId: 'audit-owner' });
+  await view.flush();
+  button(view.tree, 'Add to shortlist').props.onClick();
+  await view.flush();
+
+  assert.deepEqual(writes, [], 'do not overwrite stored data when this account’s list could not be read');
+  const persistenceLabel = textOf(find(view.tree, node => node.props?.className === 'vc-detail-actions'));
+  assert.match(persistenceLabel, /tab only|could not save|not saved/i);
+  assert.doesNotMatch(persistenceLabel, /Saved on this device/);
+  const shortlistStep = find(view.tree, node => node.type === 'button' && textOf(node).includes('Shortlist'));
+  shortlistStep.props.onClick();
+  await view.flush();
+  assert.match(textOf(view.tree), /Private Stored Company/);
   view.unmount();
 });
 

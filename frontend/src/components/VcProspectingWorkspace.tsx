@@ -78,6 +78,9 @@ export default function VcProspectingWorkspace({ accountId }: { accountId?: stri
   const [shortlistItems, setShortlistItems] = useState<Founder[]>([]);
   const shortlistKey = accountId ? `cypher-vc-shortlist:${accountId}` : null;
   const [shortlistLoadedFor, setShortlistLoadedFor] = useState<string | null>(null);
+  const [shortlistStorageStatus, setShortlistStorageStatus] = useState<'checking' | 'available' | 'unavailable'>('checking');
+  const shortlistPersistenceReady = Boolean(shortlistKey) && shortlistLoadedFor === shortlistKey && shortlistStorageStatus === 'available';
+  const shortlistPersistenceChecking = Boolean(shortlistKey) && (shortlistStorageStatus === 'checking' || shortlistStorageStatus === 'available' && shortlistLoadedFor !== shortlistKey);
   const finalRefreshController = useRef<AbortController | null>(null);
   const founderRequestGeneration = useRef(0);
 
@@ -85,17 +88,23 @@ export default function VcProspectingWorkspace({ accountId }: { accountId?: stri
 
   useEffect(() => {
     setShortlistItems([]);
-    if (!shortlistKey) { setShortlistLoadedFor(null); return; }
+    setShortlistLoadedFor(null);
+    if (!shortlistKey) { setShortlistStorageStatus('unavailable'); return; }
+    setShortlistStorageStatus('checking');
     try {
       const stored: unknown = JSON.parse(window.localStorage.getItem(shortlistKey) || '[]');
       if (Array.isArray(stored)) setShortlistItems(stored.filter((value): value is Founder => value && typeof value === 'object' && typeof value.id === 'string' && typeof value.person_name === 'string' && typeof value.company_name === 'string' && Array.isArray(value.roles) && value.location && typeof value.location === 'object' && typeof value.source_url === 'string'));
-    } catch { /* Keep this account's shortlist empty when local storage is unavailable. */ }
-    setShortlistLoadedFor(shortlistKey);
+      setShortlistLoadedFor(shortlistKey);
+      setShortlistStorageStatus('available');
+    } catch { setShortlistStorageStatus('unavailable'); /* Keep this tab usable without overwriting unread data. */ }
   }, [shortlistKey]);
 
   useEffect(() => {
     if (shortlistKey && shortlistLoadedFor === shortlistKey) {
-      try { window.localStorage.setItem(shortlistKey, JSON.stringify(shortlistItems)); } catch { /* The current tab still keeps the shortlist usable. */ }
+      try {
+        window.localStorage.setItem(shortlistKey, JSON.stringify(shortlistItems));
+        setShortlistStorageStatus('available');
+      } catch { setShortlistStorageStatus('unavailable'); /* The current tab still keeps the shortlist usable. */ }
     }
   }, [shortlistItems, shortlistLoadedFor, shortlistKey]);
 
@@ -387,7 +396,7 @@ export default function VcProspectingWorkspace({ accountId }: { accountId?: stri
     {workspaceStep === 'research' || workspaceStep === 'shortlist' ? <div className="vc-dashboard-grid">
       <section className="vc-candidates-panel" aria-labelledby="vc-candidates-title">
         <header className="vc-candidates-heading">
-          <div><h2 id="vc-candidates-title">{workspaceStep === 'shortlist' ? 'Your shortlist' : 'Founder and company research'}</h2><p>{workspaceStep === 'shortlist' ? (shortlistKey ? 'Saved on this device for your account.' : 'Kept in this tab. Sign in to save a shortlist on this device.') : 'Search people named in company filings. Every result links to its public source.'}</p></div>
+          <div><h2 id="vc-candidates-title">{workspaceStep === 'shortlist' ? 'Your shortlist' : 'Founder and company research'}</h2><p>{workspaceStep === 'shortlist' ? (shortlistKey ? shortlistPersistenceReady ? 'Saved on this device for your account.' : shortlistPersistenceChecking ? 'Checking device storage…' : 'Available in this tab only. Cypher could not save this shortlist on this device.' : 'Kept in this tab. Sign in to save a shortlist on this device.') : 'Search people named in company filings. Every result links to its public source.'}</p></div>
           <button className="vc-reload" type="button" onClick={() => void loadFounders(0).catch(failure => setError(errorMessage(failure)))} disabled={loading || searching}>Refresh</button>
         </header>
 
@@ -452,7 +461,7 @@ export default function VcProspectingWorkspace({ accountId }: { accountId?: stri
           {detailTab === 'notes' ? <div className="vc-detail-content"><h3>Research notes</h3><p>Use the filing and its linked source to verify the person’s current role before reaching out.</p><p className="vc-muted">This record comes from public SEC data and does not include a verified email address.</p></div> : null}
           <footer className="vc-detail-actions">
             <button className="vc-primary" type="button" onClick={() => toggleShortlist(selectedFounder)}>{isShortlisted(selectedFounder.id) ? 'Remove from shortlist' : 'Add to shortlist'}</button>
-            <span>{isShortlisted(selectedFounder.id) ? (shortlistKey ? 'Saved on this device' : 'This tab only') : (shortlistKey ? 'Saves on this device' : 'Current tab only')}</span>
+            <span>{isShortlisted(selectedFounder.id) ? (shortlistPersistenceReady ? 'Saved on this device' : shortlistPersistenceChecking ? 'Checking device storage…' : 'This tab only · device save unavailable') : (shortlistPersistenceReady ? 'Saves on this device' : shortlistPersistenceChecking ? 'Checking device storage…' : shortlistKey ? 'Device save unavailable' : 'Current tab only')}</span>
           </footer>
         </> : <div className="vc-empty-detail"><h2>Choose a person to review</h2><p>Select a row to see the company and SEC evidence.</p></div>}
       </aside>
