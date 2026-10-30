@@ -1,6 +1,6 @@
 'use client';
 
-import { use, useEffect, useState } from 'react';
+import { use, useEffect, useRef, useState } from 'react';
 import { ApiError, request } from '../../../lib/api';
 import { safeInternalReturnTo } from '../../../lib/canonical-app';
 import CypherMark from '../../../components/cipher/CypherMark';
@@ -42,19 +42,28 @@ function importFailure(error: unknown) {
 
 export default function TemplatePage(props: Props) {
   const { id } = use(props.params);
+  const activeTemplateId = useRef(id);
+  const importGeneration = useRef(0);
+  activeTemplateId.current = id;
   const [template, setTemplate] = useState<SharedTemplate | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadMessage, setLoadMessage] = useState('');
   const [importMessage, setImportMessage] = useState('');
   const [imported, setImported] = useState(false);
+  const [importedBot, setImportedBot] = useState<{ id: string; name: string } | null>(null);
   const [busy, setBusy] = useState(false);
   const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
     const controller = new AbortController();
+    importGeneration.current++;
     let active = true;
     setLoading(true);
+    setBusy(false);
     setLoadMessage('');
+    setImportMessage('');
+    setImported(false);
+    setImportedBot(null);
     setTemplate(null);
 
     request('/workspace/templates/shared/' + encodeURIComponent(id), { signal: controller.signal })
@@ -72,24 +81,33 @@ export default function TemplatePage(props: Props) {
 
     return () => {
       active = false;
+      importGeneration.current++;
       controller.abort();
     };
   }, [id, attempt]);
 
   async function install() {
     if (!template || busy) return;
+    const requestedId = id;
+    const generation = importGeneration.current;
     setBusy(true);
     setImportMessage('');
     try {
-      await request('/workspace/templates/import', {
+      const result = await request('/workspace/templates/import', {
         method: 'POST',
         body: JSON.stringify(template),
-      });
+      }) as { id: string; name: string };
+      if (generation !== importGeneration.current || activeTemplateId.current !== requestedId) return;
+      setImportedBot(result);
       setImported(true);
     } catch (error) {
-      setImportMessage(importFailure(error));
+      if (generation === importGeneration.current && activeTemplateId.current === requestedId) {
+        setImportMessage(importFailure(error));
+      }
     } finally {
-      setBusy(false);
+      if (generation === importGeneration.current && activeTemplateId.current === requestedId) {
+        setBusy(false);
+      }
     }
   }
 
@@ -171,8 +189,8 @@ export default function TemplatePage(props: Props) {
                   {imported ? (
                     <div className={styles.successState} role="status" aria-live="polite">
                       <h2 id="import-title">Added to your workspace</h2>
-                      <p>{template.bot.name} is ready. Connect any required accounts before its first task.</p>
-                      <a className={styles.primaryButton} href="/">Open workspace</a>
+                      <p>{importedBot?.name || template.bot.name} is ready. Connect any required accounts before its first task.</p>
+                      <a className={styles.primaryButton} href={importedBot?.id ? `/?bot=${encodeURIComponent(importedBot.id)}` : '/'}>Open workspace</a>
                     </div>
                   ) : (
                     <>
