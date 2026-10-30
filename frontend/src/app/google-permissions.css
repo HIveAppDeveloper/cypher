@@ -68,3 +68,45 @@
 @media(max-width:760px){.google-privacy-layout{grid-template-columns:minmax(0,1fr);gap:30px;margin-top:48px}.google-privacy-overview{position:static}.google-privacy-overview h1{max-width:14ch;font-size:clamp(32px,9vw,42px)}.google-privacy-nav{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:20px;margin-top:24px}.google-privacy-nav a{padding:10px 0}.google-privacy-layout .google-permissions-content{max-width:none}}
 @media(max-width:480px){.google-privacy-page{padding-inline:18px}.google-privacy-topbar{align-items:flex-start}.google-privacy-top-link{font-size:12px}.google-privacy-layout{margin-top:38px}.google-privacy-nav{grid-template-columns:minmax(0,1fr)}.google-privacy-layout .google-permissions-content{padding:23px 20px}.google-privacy section+section{margin-top:27px;padding-top:24px}}
 @media(prefers-reduced-motion:reduce){.google-privacy-nav a,.google-privacy-manage{transition:none}}
+
+/* The public landing page has a shorter, more visual introduction than the policy and documentation pages. */
+.google-home-page {display:flex;min-height:100svh;height:auto;flex-direction:column;overflow:visible;padding:26px clamp(22px,4.5vw,72px) 30px}
+.google-home-page .google-privacy-topbar {width:min(100%,1440px);min-height:52px}
+.google-home-page .google-permissions-brand {gap:14px;font-size:16px;font-weight:600;letter-spacing:-.02em}
+.google-home-page .google-permissions-brand .cypher-mark {width:58px;height:24px}
+.google-home-page .google-privacy-top-link {padding:0 15px;border:1px solid var(--cx-sep);border-radius:10px;color:var(--cx-label);font-size:13px;transition:background .16s ease,border-color .16s ease}
+.google-home-page .google-privacy-top-link:hover {background:var(--cx-card);border-color:var(--cx-label-3);text-decoration:none}
+.google-home-hero {width:min(100%,1370px);margin:clamp(72px,12vh,136px) auto clamp(70px,10vh,116px);display:grid;grid-template-columns:minmax(0,1.08fr) minmax(390px,.92fr);align-items:center;gap:clamp(46px,8vw,112px)}
+.google-home-intro {min-width:0}
+.google-home-intro h1 {max-width:14ch;margin:0;font-size:clamp(58px,7.2vw,94px);font-weight:560;line-height:.99;letter-spacing:-.052em;text-wrap:balance}
+.google-home-intro>p:first-of-type {max-width:43ch;margin:24px 0 0;color:var(--cx-label-2);font-size:clamp(16px,1.35vw,19px);line-height:1.65}
+.google-home-cta {display:inline-flex;align-items:center;justify-content:space-between;gap:34px;min-height:52px;margin-top:30px;padding:0 18px;border:1px solid var(--cx-label);border-radius:11px;background:var(--cx-label);color:var(--cx-inverse);font-size:14px;font-weight:550;text-decoration:none;transition:transform .16s ease,opacity .16s ease}
+.google-home-cta:hover {opacity:.88;transform:translateY(-1px)}
+.google-home-cta svg {width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.google-home-intro .google-home-access {max-width:43ch;margin:18px 0 0;color:var(--cx-label-2);font-size:12px;line-height:1.65}
+.google-home-preview {min-width:0;overflow:hidden;border:1px solid var(--cx-sep);border-radius:17px;background:var(--cx-card,#fff)}
+.google-home-preview-top,.google-home-preview-foot {display:flex;align-items:center;justify-content:space-between;gap:18px;min-height:58px;padding:0 24px}
+.google-home-preview-top {border-bottom:1px solid var(--cx-sep)}
+.google-home-preview-brand {display:flex;align-items:center;gap:10px;color:var(--cx-label);font-size:13px;font-weight:560}
+.google-home-preview-brand .cypher-mark {width:36px;height:15px}
+.google-home-preview-dot {width:8px;height:8px;border-radius:50%;background:var(--cx-label-3,#aaa)}
+.google-home-preview-body {padding:clamp(25px,3.2vw,40px) clamp(23px,3.1vw,38px) 30px}
+.google-home-preview-title {max-width:20ch;margin:0;font-size:clamp(19px,2.1vw,25px);font-weight:560;line-height:1.25;letter-spacing:-.025em}
+.google-home-thread {display:grid;grid-template-columns:38px minmax(0,1fr);gap:15px;align-items:start;margin-top:28px;padding:22px 0;border-top:1px solid var(--cx-sep);border-bottom:1px solid var(--cx-sep)}
+.google-home-thread-mark {display:grid;place-items:center;width:38px;height:38px;border-radius:12px;background:var(--cx-bg)}
+.google-home-thread-mark .cypher-mark {width:28px;height:12px}
+.google-home-thread strong {display:block;margin:1px 0 6px;font-size:14px;font-weight:570}
+.google-home-thread p {max-width:39ch;margin:0;color:var(--cx-label-2);font-size:13px;line-height:1.65}
+.google-home-preview-links {display:flex;flex-wrap:wrap;gap:0;margin-top:20px;color:var(--cx-label-2);font-size:12px;line-height:1.6}
+.google-home-preview-links span+span::before {content:"·";padding:0 10px;color:var(--cx-label-3)}
+.google-home-preview-foot {min-height:48px;background:color-mix(in srgb,var(--cx-bg) 54%,var(--cx-card));color:var(--cx-label-2);font-size:11px}
+.google-home-preview-foot span:last-child {color:var(--cx-label);font-weight:550}
+.google-home-footer {width:min(100%,1370px);margin:auto auto 0;padding-top:18px;border-top:1px solid var(--cx-sep)}
+.google-home-nav {display:flex;flex-wrap:wrap;gap:clamp(18px,3vw,38px)}
+.google-home-nav a {min-height:36px;display:inline-flex;align-items:center;color:var(--cx-label-2);font-size:12px;text-decoration:none;text-underline-offset:4px;transition:color .16s ease}
+.google-home-nav a:hover {color:var(--cx-label);text-decoration:underline}
+.google-home-page :is(a,button):focus-visible {outline:2px solid var(--cx-label);outline-offset:4px}
+@media(max-width:900px){.google-home-hero{grid-template-columns:minmax(0,1fr) minmax(330px,.9fr);gap:38px}.google-home-intro h1{font-size:clamp(54px,7.4vw,72px)}}
+@media(max-width:700px){.google-home-page{padding:18px 22px 24px}.google-home-page .google-permissions-brand{gap:10px}.google-home-page .google-permissions-brand .cypher-mark{width:46px}.google-home-hero{grid-template-columns:minmax(0,1fr);gap:42px;margin:clamp(58px,10vh,92px) auto 64px}.google-home-intro h1{max-width:10ch;font-size:clamp(56px,12vw,78px)}.google-home-intro>p:first-of-type{max-width:39ch;margin-top:19px}.google-home-cta{margin-top:24px}.google-home-preview{max-width:560px}.google-home-footer{padding-top:12px}}
+@media(max-width:460px){.google-home-page{padding-inline:18px}.google-home-page .google-privacy-topbar{gap:10px}.google-home-page .google-privacy-top-link{padding-inline:11px;font-size:12px}.google-home-hero{margin-top:54px;gap:34px}.google-home-intro h1{max-width:14ch;font-size:clamp(50px,13vw,62px)}.google-home-preview-top,.google-home-preview-foot{padding-inline:18px}.google-home-preview-body{padding:24px 19px}.google-home-thread{grid-template-columns:32px minmax(0,1fr);gap:12px;margin-top:22px;padding:18px 0}.google-home-thread-mark{width:32px;height:32px;border-radius:10px}.google-home-thread-mark .cypher-mark{width:24px}.google-home-nav{column-gap:22px;row-gap:0}}
+@media(prefers-reduced-motion:reduce){.google-home-cta,.google-home-nav a,.google-home-page .google-privacy-top-link{transition:none}}
