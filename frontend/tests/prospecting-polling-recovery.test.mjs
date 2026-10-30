@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { environment, renderer, load, find, textOf } from './support/component-harness.mjs';
+import { environment, renderer, load, find, textOf, deferred } from './support/component-harness.mjs';
 
 class ApiError extends Error {
   constructor(message, status, retryAfter = 0) {
@@ -359,4 +359,59 @@ test('VC matching cancels its scheduled retry after unmount', async () => {
   await view.flush();
   assert.equal(statusCalls, 1);
   assert.equal(view.updatesAfterUnmount, 0);
+});
+
+test('VC match completion keeps its final founder refresh alive after the run becomes terminal', async () => {
+  const env = environment();
+  const finalFounders = deferred();
+  let founderCalls = 0;
+  let finalRefreshSignal;
+  const request = async (path, options = {}) => {
+    if (path.startsWith('/prospecting/investors/founders?')) {
+      founderCalls++;
+      if (founderCalls === 1) return historicalPage('idle');
+      finalRefreshSignal = options.signal;
+      return finalFounders.promise;
+    }
+    if (path === '/prospecting/investors/runs') return [matchRun()];
+    if (path === '/prospecting/investors/runs/match-run') return matchRun('match-run', 'completed');
+    throw new Error(`Unexpected request: ${path}`);
+  };
+  const view = mountVc(env, request);
+  await view.flush();
+  assert.ok(finalRefreshSignal, 'completion starts a signal-bound final data refresh');
+  assert.equal(finalRefreshSignal.aborted, false, 'the terminal status does not cancel its own final refresh');
+
+  finalFounders.resolve(historicalPage('idle'));
+  await view.flush();
+  assert.match(textOf(view.tree), /SEC snapshot and match results are ready/);
+  view.unmount();
+});
+
+test('SEC archive completion aborts its final founder refresh when the page unmounts', async () => {
+  const env = environment();
+  const finalFounders = deferred();
+  let founderCalls = 0;
+  let finalRefreshSignal;
+  const request = async (path, options = {}) => {
+    if (path.startsWith('/prospecting/investors/founders?')) {
+      founderCalls++;
+      if (founderCalls === 1) return historicalPage('running');
+      finalRefreshSignal = options.signal;
+      return finalFounders.promise;
+    }
+    if (path === '/prospecting/investors/runs') return [];
+    if (path === '/prospecting/investors/founders/backfill') {
+      return { status: 'completed', total_quarters: 10, processed_quarters: 10, current_quarter: null, error: null };
+    }
+    throw new Error(`Unexpected request: ${path}`);
+  };
+  const view = mountVc(env, request);
+  await view.flush();
+  assert.ok(finalRefreshSignal, 'archive completion starts a signal-bound final data refresh');
+  view.unmount();
+  assert.equal(finalRefreshSignal.aborted, true, 'unmount cancels the final refresh');
+  finalFounders.resolve(historicalPage('completed'));
+  await view.flush();
+  assert.equal(view.updatesAfterUnmount, 0, 'late final data cannot update the closed page');
 });
