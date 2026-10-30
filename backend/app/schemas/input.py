@@ -1,7 +1,8 @@
 """Bounded inputs for persisted multimodal jobs."""
 import base64
 from typing import Literal
-from pydantic import BaseModel, Field, field_validator
+from uuid import UUID
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 MAX_TOTAL_BYTES = 3 * 1024 * 1024
 class Attachment(BaseModel):
@@ -22,6 +23,7 @@ class RunOptions(BaseModel):
     voice_mode: bool = False
     routing: Literal['auto', 'manual'] = 'auto'
     allow_tools: bool = True
+    plugin_scope_id: str | None = Field(default=None, max_length=36)
     steering: str = Field(default='', max_length=6000)
     output: Literal['text', 'image'] = 'text'
     aspect_ratio: Literal['1:1', '16:9', '9:16'] = '16:9'
@@ -42,6 +44,22 @@ class RunOptions(BaseModel):
             if not value:
                 raise ValueError('Choose a non-empty model ID')
         return value
+
+    @field_validator('plugin_scope_id')
+    @classmethod
+    def valid_plugin_scope_id(cls, value):
+        if value is None:
+            return None
+        try:
+            return str(UUID(value))
+        except (TypeError, ValueError):
+            raise ValueError('Choose a valid connected service.')
+
+    @model_validator(mode='after')
+    def scoped_preview_text_only(self):
+        if self.plugin_scope_id is not None and self.output != 'text':
+            raise ValueError('Connected-account previews can only return text.')
+        return self
 
 def content_parts(text, attachments):
     if not attachments: return text

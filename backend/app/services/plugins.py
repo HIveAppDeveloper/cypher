@@ -15,7 +15,9 @@ from mcp.client.streamable_http import streamablehttp_client
 from app.config import settings
 
 def is_read_only(url, tool):
-    if tool.get('read_only'): return True
+    # Only a real boolean opt-in counts. Strings such as "false" and other
+    # truthy provider values must stay unknown and therefore not previewable.
+    if tool.get('read_only') is True: return True
     # Reviewed public documentation operations also predate annotation support.
     known = {
         'mcp.deepwiki.com': {'read_wiki_structure', 'read_wiki_contents', 'ask_question'},
@@ -182,10 +184,65 @@ async def _discover_once(url, token=None, auth=None):
                 seen.add(cursor)
 
 
-async def invoke(plugin_id, tool_name, arguments):
+async def _scoped_preview_snapshot(db, plugin_id, scope_id):
+    """Return the current eligible preview tools for one linked tenant account."""
+    from sqlalchemy import select
+    from app.db.tenancy import current_tenant_id
+    from app.models.plugin import Plugin, PluginAuthorization
+
+    tenant_id = current_tenant_id.get()
+    if not tenant_id or not scope_id or str(plugin_id) != str(scope_id):
+        return None
+    plugin = (await db.execute(select(Plugin).where(
+        Plugin.id == str(scope_id), Plugin.tenant_id == tenant_id, Plugin.enabled.is_(True)
+    ))).scalar_one_or_none()
+    if plugin is None:
+        return None
+    try:
+        account_linked = bool(reveal(plugin.credential))
+    except (InvalidToken, ValueError):
+        account_linked = False
+    if not account_linked:
+        account_linked = bool(await db.scalar(select(PluginAuthorization.id).where(
+            PluginAuthorization.plugin_id == str(scope_id),
+            PluginAuthorization.tenant_id == tenant_id,
+            PluginAuthorization.status == 'connected',
+            PluginAuthorization.payload.is_not(None),
+        ).limit(1)))
+    if not account_linked:
+        return None
+
+    provider = 'google' if is_google_workspace(plugin) else None
+    tools = [{
+        **tool,
+        'plugin_id': plugin.id,
+        'service': plugin.name,
+        'authenticated': True,
+        'provider': provider,
+        'read_only': True,
+    } for tool in (plugin.tools or [])
+        if isinstance(tool, dict) and tool.get('enabled', True) is True and is_read_only(plugin.url, tool)]
+    return {'plugin_id': plugin.id, 'service': plugin.name, 'tools': tools}
+
+
+async def scoped_preview_snapshot(plugin_id, scope_id):
+    """Recheck a preview account immediately before discovery or approval."""
+    from app.db.tenancy import current_tenant_id
+    if not current_tenant_id.get():
+        return None
+    from app.db.session import AsyncSessionLocal
+    async with AsyncSessionLocal() as db:
+        return await _scoped_preview_snapshot(db, plugin_id, scope_id)
+
+
+async def invoke(plugin_id, tool_name, arguments, *, preview_scope_id=None):
     from app.db.session import AsyncSessionLocal
     from app.models.plugin import Plugin
     async with AsyncSessionLocal() as db:
+        if preview_scope_id is not None:
+            snapshot = await _scoped_preview_snapshot(db, plugin_id, preview_scope_id)
+            if not snapshot or not any(tool['name'] == tool_name and tool.get('read_only') is True for tool in snapshot['tools']):
+                return {'success':False, 'error':'This preview only allows read-only tools from the selected connection. No provider call was made.', 'code':'preview_scope_denied'}
         plugin = await db.get(Plugin, plugin_id)
         if not plugin or not plugin.enabled or tool_name not in {t['name'] for t in plugin.tools if t.get('enabled',True)}:
             return {'success':False, 'error': 'Plugin or tool is disabled.', 'code':'disabled'}
