@@ -100,6 +100,7 @@ export default function WorkspaceApp({ accountEmail, accountId }: { accountEmail
     void refreshBots().catch(()=>{});
   }
   async function exploreConnection(_name:string,pluginId:string){
+    setRoomError('');
     const prompt='Show me a short, plain-language preview of useful information in my account. Use plugin_search to find an available read-only tool from the selected connection, then use only that connection. Do not create, change, delete, send, or share anything. If no eligible read-only tool is available or a call fails, explain that and stop.';
     try{await quickStart(prompt,{allow_tools:true,plugin_scope_id:pluginId,output:'text',max_iterations:8,max_tokens:2048});setCreator(null);}
     catch(error){setRoomError(error instanceof Error?error.message:'Could not open this service.');}
