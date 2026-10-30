@@ -345,6 +345,8 @@ export default function VcProspectingWorkspace({ accountId }: { accountId?: stri
   const dataStatus = loading ? 'Checking public data…' : initialDataFailure ? 'Could not load SEC data' : data?.database.snapshot_ready ? 'Public data connected' : 'Ready to find public data';
   const secCount = (value: number | undefined) => loading || initialDataFailure ? '—' : (value ?? 0).toLocaleString();
   const secMetricLabel = loading ? 'Loading' : initialDataFailure ? 'Unavailable' : undefined;
+  const emptyStateTitle = workspaceStep === 'shortlist' ? 'Your shortlist is empty' : initialDataFailure ? 'Public filing records could not be loaded' : data?.database.snapshot_ready ? 'No matching people found' : 'The SEC index is ready to build';
+  const emptyStateDescription = workspaceStep === 'shortlist' ? 'Save a person from research and they’ll show up here.' : initialDataFailure ? 'Retry the workspace load above, or sign in again if your session expired.' : data?.database.snapshot_ready ? 'Try another name or remove a filter.' : 'Open “SEC public data and coverage” above to load the latest filings.';
   const resultDirection = workspaceStep === 'thesis' ? direction : run?.direction ?? direction;
   const resultLabel = resultDirection === 'investors_for_thesis' ? 'investor' : 'company';
   const resultPluralLabel = resultDirection === 'investors_for_thesis' ? 'investors' : 'companies';
@@ -419,11 +421,11 @@ export default function VcProspectingWorkspace({ accountId }: { accountId?: stri
         </> : null}
 
         <div className="vc-table-head"><h3>{savedListView ? 'Saved candidates' : `People in SEC filings (${secCount(data?.database.matched_records)})`}</h3><span>Source-backed records</span></div>
-        <div className="vc-table-wrap">
+        {loading && workspaceStep === 'research' ? <div className="vc-table-empty" role="status">Loading public filing records…</div> : visibleFounders.length ? <div className="vc-table-wrap">
           <table className="vc-candidate-table">
             <thead><tr><th scope="col">Company</th><th scope="col">Founder or related person</th><th scope="col">Filed role</th><th scope="col">Evidence</th></tr></thead>
             <tbody>
-              {loading && workspaceStep === 'research' ? <tr><td colSpan={4} className="vc-table-message">Loading public filing records…</td></tr> : visibleFounders.length ? visibleFounders.map(item => {
+              {visibleFounders.map(item => {
                 const founderSignal = item.founder_status === 'founder_named_in_filing';
                 return <tr key={item.id} className={selectedFounder?.id === item.id ? 'is-selected' : ''} aria-selected={selectedFounder?.id === item.id}>
                   <td><button className="vc-row-select" type="button" onClick={() => { setSelectedFounderId(item.id); setDetailTab('overview'); }}><strong>{item.company_name}</strong><small>{item.industry || 'Industry not listed'}</small></button></td>
@@ -431,10 +433,10 @@ export default function VcProspectingWorkspace({ accountId }: { accountId?: stri
                   <td>{item.title || item.roles.join(', ') || 'Not listed'}</td>
                   <td><span className={founderSignal ? 'vc-evidence-badge is-founder' : 'vc-evidence-badge'}>{founderSignal ? 'Founder named' : 'Related person'}</span></td>
                 </tr>;
-              }) : <tr><td colSpan={4} className="vc-table-message"><strong>{workspaceStep === 'shortlist' ? 'Your shortlist is empty' : initialDataFailure ? 'Public filing records could not be loaded' : data?.database.snapshot_ready ? 'No matching people found' : 'The SEC index is ready to build'}</strong><span>{workspaceStep === 'shortlist' ? 'Save a person from research and they’ll show up here.' : initialDataFailure ? 'Retry the workspace load above, or sign in again if your session expired.' : data?.database.snapshot_ready ? 'Try another name or remove a filter.' : 'Open “SEC public data and coverage” above to load the latest filings.'}</span></td></tr>}
+              })}
             </tbody>
           </table>
-        </div>
+        </div> : <div className="vc-table-empty" role="status"><strong>{emptyStateTitle}</strong><span>{emptyStateDescription}</span></div>}
         {workspaceStep === 'research' ? <footer className="vc-pagination"><span>{loading ? 'Checking filing records…' : initialDataFailure ? 'Filing record counts unavailable' : `${(data?.database.matched_records ?? 0).toLocaleString()} people found · showing ${data?.page.returned ?? 0}`}</span><div><button type="button" onClick={() => void loadFounders(Math.max(0, offset - 25)).catch(failure => setError(errorMessage(failure)))} disabled={offset === 0 || searching}>Previous</button><button type="button" onClick={() => void loadFounders(offset + 25).catch(failure => setError(errorMessage(failure)))} disabled={!data || offset + data.page.returned >= data.database.matched_records || searching}>Next</button></div></footer> : null}
         <p className="vc-disclosure">A filing may name executives or other related people. Cypher only uses the founder label when the SEC filing explicitly says founder or co-founder.</p>
       </section>

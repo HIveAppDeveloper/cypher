@@ -98,10 +98,9 @@
 .vc-row-select small { overflow: hidden; color: var(--cx-label-2, #65645f); font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
 .vc-evidence-badge { display: inline-flex; padding: 3px 6px; border-radius: 10px; background: var(--cx-fill, #efeee9); color: var(--cx-label-2, #65645f); font-size: 8px; white-space: nowrap; }
 .vc-evidence-badge.is-founder { background: color-mix(in srgb,var(--cx-green,#3b7557) 14%,var(--cx-card,#fff)); color: var(--cx-green,#3b7557); }
-.vc-table-message { height: 108px; text-align: center; }
-.vc-table-message strong, .vc-table-message span { display: block; }
-.vc-table-message strong { color: var(--cx-label, #171715); font-size: 11px; font-weight: 550; }
-.vc-table-message span { margin-top: 4px; font-size: 10px; }
+.vc-table-empty { display: grid; align-content: center; justify-items: center; gap: 4px; min-height: 108px; box-sizing: border-box; margin: 0 18px; padding: 16px; border: 1px solid var(--cx-sep, #e7e5df); border-radius: 8px; background: var(--cx-bg, #faf9f6); color: var(--cx-label-2, #65645f); font-size: 10px; line-height: 1.45; text-align: center; }
+.vc-table-empty strong { color: var(--cx-label, #171715); font-size: 11px; font-weight: 550; }
+.vc-table-empty span { max-width: 42ch; }
 .vc-pagination { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 18px 0; color: var(--cx-label-2, #65645f); font-size: 9px; }
 .vc-pagination > div { display: flex; gap: 6px; }
 .vc-pagination button { min-height: 27px; }
@@ -203,6 +202,7 @@
   .vc-search { margin-inline: 14px; }
   .vc-table-head { padding-inline: 14px; }
   .vc-table-wrap { margin-inline: 14px; }
+  .vc-table-empty { margin-inline: 14px; }
   .vc-disclosure { margin-inline: 14px; }
   .vc-candidate-table { min-width: 570px; }
   .vc-outreach-grid, .vc-meeting-card { grid-template-columns: minmax(0,1fr); }
