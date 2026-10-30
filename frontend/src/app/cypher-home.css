@@ -1,0 +1,48 @@
+/* The workspace home keeps the task as the focus, with a quieter way into recent work. */
+.quickstart { padding: clamp(34px, 7vh, 76px) clamp(24px, 5vw, 64px) 48px; }
+.quickstart .quickstart-panel { width: min(100%, 780px); align-items: stretch; }
+.home-welcome { display: flex; align-items: center; justify-content: space-between; gap: 24px; margin-bottom: 28px; }
+.home-welcome-copy { min-width: 0; }
+.quickstart .home-welcome h1 { max-width: 18ch; margin: 0 0 10px; font-size: clamp(30px, 3.3vw, 42px); font-weight: 570; letter-spacing: -.035em; line-height: 1.12; text-align: left; }
+.quickstart .home-welcome .quickstart-intro { margin: 0; font-size: 14px; line-height: 1.55; text-align: left; }
+.quickstart .home-welcome .quickstart-mark { flex: 0 0 185px; width: 185px; height: 76px; margin: 0; }
+.quickstart .task-composer { width: 100%; min-height: 156px; grid-template-columns: 44px minmax(0, 1fr); grid-template-rows: minmax(72px, auto) 44px; align-items: start; gap: 0 8px; padding: 13px 15px 12px; border: 1px solid var(--cx-sep); border-radius: 16px; background: var(--cx-card); box-shadow: 0 8px 28px rgba(34, 28, 17, .05); }
+.quickstart .task-composer:hover { transform: none; }
+.quickstart .task-composer textarea { grid-column: 1 / -1; grid-row: 1; height: 72px; min-height: 72px; padding: 6px 5px; font-size: 16px; line-height: 1.5; }
+.quickstart .task-attach-button { grid-column: 1; grid-row: 2; width: 44px; height: 44px; }
+.quickstart .task-composer-footer { grid-column: 2; grid-row: 2; width: 100%; min-height: 44px; justify-content: flex-end; }
+.quickstart .task-composer-footer .quickstart-submit { min-height: 44px; height: 44px; padding-inline: 16px; border-radius: 10px; }
+.quickstart .quickstart-options > summary, .quickstart .quickstart-voice { width: 44px; height: 44px; min-height: 44px; }
+.quickstart .quickstart-options .task-composer-options { top: calc(100% + 8px); right: auto; bottom: auto; left: 0; }
+.quickstart .home-starters { width: 100%; margin-top: 34px; }
+.home-starters h2 { margin: 0 0 10px; color: var(--cx-label); font-size: 15px; font-weight: 600; letter-spacing: -.01em; }
+.quickstart .starter-prompts { width: 100%; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 24px; margin: 0; }
+.quickstart .starter-prompts .starter-card { display: grid; min-height: 78px; grid-template-columns: 36px minmax(0, 1fr) 18px; grid-template-rows: auto auto; align-content: center; align-items: center; gap: 3px 12px; padding: 13px 4px; border: 0; border-bottom: 1px solid var(--cx-sep); border-radius: 0; background: transparent; box-shadow: none; }
+.quickstart .starter-prompts .starter-card:hover:not(:disabled) { border-color: var(--cx-sep); background: var(--cx-fill-2); box-shadow: none; transform: none; }
+.starter-icon { display: grid; grid-column: 1; grid-row: 1 / 3; width: 36px; height: 36px; place-items: center; border-radius: 10px; background: var(--cx-fill); color: var(--cx-label); }
+.quickstart .starter-card strong { grid-column: 2; grid-row: 1; font-size: 13px; font-weight: 600; }
+.quickstart .starter-card .starter-description { grid-column: 2; grid-row: 2; font-size: 12px; line-height: 1.4; }
+.quickstart .starter-card .starter-arrow { grid-column: 3; grid-row: 1 / 3; width: 17px; height: 17px; color: var(--cx-label-2); }
+.quickstart .starter-card:focus-visible { outline: 2px solid var(--cx-label); outline-offset: 2px; }
+.quickstart .home-attachments, .quickstart .quickstart-error { width: 100%; max-width: none; }
+:root[data-theme="dark"] .quickstart .task-composer { background: #2c2d29; border-color: #494b44; }
+:root[data-theme="dark"] .quickstart .starter-prompts .starter-card { background: transparent; }
+:root[data-theme="dark"] .quickstart .starter-prompts .starter-card:hover:not(:disabled) { background: var(--cx-fill-2); }
+@media (max-width: 760px) {
+  .quickstart { padding: 68px 20px 32px; }
+  .home-welcome { gap: 12px; margin-bottom: 23px; }
+  .quickstart .home-welcome h1 { max-width: 15ch; font-size: clamp(27px, 7vw, 34px); }
+  .quickstart .home-welcome .quickstart-intro { max-width: 30ch; font-size: 13px; }
+  .quickstart .home-welcome .quickstart-mark { flex-basis: 100px; width: 100px; height: 54px; }
+  .quickstart .task-composer { min-height: 152px; padding: 12px; }
+  .quickstart .task-composer-footer { grid-column: 2; grid-row: 2; }
+  .quickstart .quickstart-options { margin-right: 0; }
+  .quickstart .home-starters { margin-top: 28px; }
+  .quickstart .starter-prompts { grid-template-columns: 1fr; }
+  .quickstart .starter-prompts .starter-card { min-height: 68px; }
+}
+@media (max-width: 370px) {
+  .quickstart { padding-inline: 16px; }
+  .quickstart .home-welcome .quickstart-mark { flex-basis: 74px; width: 74px; }
+  .quickstart .task-composer-footer .quickstart-submit { padding-inline: 10px; }
+}
