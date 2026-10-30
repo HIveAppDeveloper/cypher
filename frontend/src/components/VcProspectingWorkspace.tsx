@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState, type FormEvent } from 'react';
+import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react';
 import { ApiError, request } from '../lib/api';
 import { calendarDateLabel, dateFromApi } from '../lib/dates';
 import WorkflowShell from './WorkflowShell';
@@ -78,6 +78,9 @@ export default function VcProspectingWorkspace({ accountId }: { accountId?: stri
   const [shortlistItems, setShortlistItems] = useState<Founder[]>([]);
   const shortlistKey = accountId ? `cypher-vc-shortlist:${accountId}` : null;
   const [shortlistLoadedFor, setShortlistLoadedFor] = useState<string | null>(null);
+  const finalRefreshController = useRef<AbortController | null>(null);
+
+  useEffect(() => () => finalRefreshController.current?.abort(), []);
 
   useEffect(() => {
     setShortlistItems([]);
@@ -111,10 +114,26 @@ export default function VcProspectingWorkspace({ accountId }: { accountId?: stri
     params.set('limit', '25');
     params.set('offset', String(nextOffset));
     const next: FounderPage = await request(`/prospecting/investors/founders?${params.toString()}`, { signal });
+    if (signal?.aborted) return next;
     setData(next);
     setOffset(nextOffset);
     return next;
   }, [founderOnly, industry, query, state]);
+
+  const refreshFoundersAfterCompletion = useCallback(async () => {
+    finalRefreshController.current?.abort();
+    const controller = new AbortController();
+    finalRefreshController.current = controller;
+    try {
+      await loadFounders(0, controller.signal);
+      return !controller.signal.aborted;
+    } catch (failure) {
+      if (controller.signal.aborted) return false;
+      throw failure;
+    } finally {
+      if (finalRefreshController.current === controller) finalRefreshController.current = null;
+    }
+  }, [loadFounders]);
 
   const loadRuns = useCallback(async (signal?: AbortSignal) => {
     const rows: MatchRun[] = await request('/prospecting/investors/runs', { signal });
@@ -167,8 +186,9 @@ export default function VcProspectingWorkspace({ accountId }: { accountId?: stri
         setRuns(rows => [next, ...rows.filter(item => item.id !== next.id)]);
         if (ACTIVE.has(next.status)) timer = setTimeout(poll, 3000);
         else {
-          await loadFounders(0, controller.signal);
-          setNotice(next.status === 'completed' || next.status === 'partial' ? 'SEC snapshot and match results are ready.' : 'The run stopped before producing results.');
+          if (await refreshFoundersAfterCompletion()) {
+            setNotice(next.status === 'completed' || next.status === 'partial' ? 'SEC snapshot and match results are ready.' : 'The run stopped before producing results.');
+          }
         }
       } catch (failure) {
         if (!controller.signal.aborted) {
@@ -188,7 +208,7 @@ export default function VcProspectingWorkspace({ accountId }: { accountId?: stri
     };
     void poll();
     return () => { controller.abort(); clearTimeout(timer); };
-  }, [loadFounders, run?.id, run?.status, runPollRetry]);
+  }, [loadFounders, refreshFoundersAfterCompletion, run?.id, run?.status, runPollRetry]);
 
   useEffect(() => {
     const status = data?.database.historical.status;
@@ -210,8 +230,7 @@ export default function VcProspectingWorkspace({ accountId }: { accountId?: stri
         setData(current => current ? { ...current, database: { ...current.database, historical: next } } : current);
         if (['pending', 'running'].includes(next.status)) timer = setTimeout(poll, 5000);
         else if (next.status === 'completed') {
-          await loadFounders(0);
-          setNotice('Historical SEC Form D archive is indexed and searchable.');
+          if (await refreshFoundersAfterCompletion()) setNotice('Historical SEC Form D archive is indexed and searchable.');
         } else if (next.error) setError('Cypher couldn’t finish importing the SEC archive. Try again in a moment.');
       } catch (failure) {
         if (!controller.signal.aborted) {
@@ -230,7 +249,7 @@ export default function VcProspectingWorkspace({ accountId }: { accountId?: stri
     };
     void poll();
     return () => { controller.abort(); clearTimeout(timer); };
-  }, [data?.database.historical.status, loadFounders]);
+  }, [data?.database.historical.status, loadFounders, refreshFoundersAfterCompletion]);
 
   async function search(event: FormEvent) {
     event.preventDefault();
