@@ -21,6 +21,8 @@ import { playVoiceResponse, speakWithBrowser } from '../lib/voice-playback';
 import { VoiceSilenceTimer } from '../lib/voice-activity';
 const POLL_MS = 1500;
 const VOICE_REPLY_SYNC_GRACE_MS = 15000;
+const VOICE_PROGRESS_DELAY_MS = 3000;
+const VOICE_PROGRESS_NOTICE = 'I’m still working on your request. I’ll let you know when it’s ready.';
 const MAX_BYTES = 3 * 1024 * 1024;
 export function messageTime(value: string) {
   return dateFromApi(value) ?? new Date(Number.NaN);
@@ -38,8 +40,9 @@ function messageDateLabel(value: string) {
   const day = date.toDateString() === new Date().toDateString() ? 'Today' : date.toLocaleDateString([], { month: 'short', day: 'numeric' });
   return `${day} · ${date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}`;
 }
-type VoiceStatus = 'off' | 'listening' | 'recording' | 'thinking' | 'speaking' | 'error';
-const VOICE_STATUS_LABEL: Record<VoiceStatus, string> = { off: 'Voice off', listening: 'Listening', recording: 'I’m listening', thinking: 'Cypher is thinking', speaking: 'Cypher is speaking', error: 'Voice needs attention' };
+type VoiceStatus = 'off' | 'listening' | 'recording' | 'thinking' | 'notifying' | 'speaking' | 'error';
+type PendingVoiceTurn = { messageId: string; taskId: string | null; replyDeadline?: number; progressAt: number; progressAnnounced?: boolean };
+const VOICE_STATUS_LABEL: Record<VoiceStatus, string> = { off: 'Voice off', listening: 'Listening', recording: 'I’m listening', thinking: 'Cypher is thinking', notifying: 'Progress update', speaking: 'Cypher is speaking', error: 'Voice needs attention' };
 function speechText(content: string) {
   const plain = content.replace(/```[\s\S]*?```/g, ' Code block omitted. ').replace(/!?\[([^\]]*)\]\([^)]*\)/g, '$1').replace(/`([^`]*)`/g, '$1').replace(/^\s{0,3}#{1,6}\s*/gm, '').replace(/^\s*>\s?/gm, '').replace(/[*_~]{1,3}/g, '').replace(/https?:\/\/\S+/g, '').replace(/\s+/g, ' ').trim();
   if (plain.length <= 1800) return plain;
@@ -112,7 +115,8 @@ export function ChatPanel({ bot, room, bots, onCreateBot, onCreateRoom, onQuickS
   const [voiceError, setVoiceError] = useState('');
   const voiceStatusRef = useRef<VoiceStatus>('off');
   const voiceModeRef = useRef(voiceMode);
-  const voicePending = useRef<{ messageId: string; taskId: string | null; replyDeadline?: number } | null>(null);
+  const voicePending = useRef<PendingVoiceTurn | null>(null);
+  const voiceInput = useRef<((listening: boolean) => void) | null>(null);
   const voicePanel = useRef<HTMLDivElement>(null);
   const voiceButton = useRef<HTMLButtonElement>(null);
   const voiceAudio = useRef<HTMLAudioElement>(null);
@@ -124,7 +128,11 @@ export function ChatPanel({ bot, room, bots, onCreateBot, onCreateRoom, onQuickS
   const voiceOutputAnalyser = useRef<AnalyserNode | null>(null);
   const voiceOutputSource = useRef<MediaElementAudioSourceNode | null>(null);
   const voiceTurnHandler = useRef<(file: Attachment) => Promise<void>>(async () => {});
-  function updateVoiceStatus(status: VoiceStatus) { voiceStatusRef.current = status; setVoiceStatus(status); }
+  function updateVoiceStatus(status: VoiceStatus) {
+    voiceStatusRef.current = status;
+    voiceInput.current?.(status === 'listening' || status === 'recording');
+    setVoiceStatus(status);
+  }
   const [options, setOptions] = useState<RunOptions>(() => ({ ...DEFAULT_OPTIONS, provider: 'openai', model: 'gpt-6.1-sol', ...bot?.defaultOptions }));
   const [optionsRestored, setOptionsRestored] = useState(false);
   useEffect(() => {
@@ -236,7 +244,7 @@ export function ChatPanel({ bot, room, bots, onCreateBot, onCreateRoom, onQuickS
       const accepted = await api.sendMessage(conversationId, text, files, isVoiceTurn ? { ...options, output: 'text', voice_mode: true } : options, messageId,replyTo?.id);
       setReplyTo(null);
       unconfirmedDraft.current=null;
-      if (isVoiceTurn && voiceModeRef.current && session === voiceSession.current) { voicePending.current={messageId,taskId:accepted.task_id}; setVoiceError(''); }
+      if (isVoiceTurn && voiceModeRef.current && session === voiceSession.current) { voicePending.current={messageId,taskId:accepted.task_id,progressAt:Date.now()+VOICE_PROGRESS_DELAY_MS}; setVoiceError(''); }
       window.dispatchEvent(new Event('grokbot:refresh'));
       setMessages(previous=>previous.map(message=>message.id===messageId?{...message,delivery:'sent'}:message));
       setJobs(previous=>previous.some(job=>job.id===accepted.task_id)?previous:[{id:accepted.task_id,title:text.slice(0,100),status:'pending',created_at:new Date().toISOString()},...previous]);
@@ -268,12 +276,19 @@ export function ChatPanel({ bot, room, bots, onCreateBot, onCreateRoom, onQuickS
     } catch (failure) { if (session === voiceSession.current) setVoiceError(failure instanceof Error ? failure.message : 'Microphone access was not available.'); }
     finally { voiceStarting.current = false; }
   }
-  async function speakReply(content: string) {
+  async function speakReply(content: string, progressFor?: PendingVoiceTurn) {
+    if (progressFor && voicePending.current !== progressFor) return;
     const text = speechText(content);
-    if (!text) { updateVoiceStatus('listening'); return; }
+    if (!text) { if (!progressFor) updateVoiceStatus('listening'); return; }
     const controller = new AbortController();
     voiceRequest.current?.abort();
     voiceRequest.current = controller;
+    const resume = () => {
+      if (progressFor) { if (voicePending.current === progressFor) updateVoiceStatus('thinking'); }
+      else updateVoiceStatus('listening');
+    };
+    const speakingStatus = progressFor ? 'notifying' : 'speaking';
+    setVoiceError('');
     try {
       const response = await fetch('/api/voice', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text }), signal: controller.signal });
       if (!response.ok) {
@@ -284,25 +299,25 @@ export function ChatPanel({ bot, room, bots, onCreateBot, onCreateRoom, onQuickS
       const audio = voiceAudio.current;
       if (!audio) throw new Error('Audio playback is unavailable.');
       await playVoiceResponse(response, audio, controller.signal, () => {
-        if (!controller.signal.aborted) updateVoiceStatus('speaking');
+        if (!controller.signal.aborted) updateVoiceStatus(speakingStatus);
       });
-      if (!controller.signal.aborted && voiceModeRef.current) updateVoiceStatus('listening');
+      if (!controller.signal.aborted && voiceModeRef.current) resume();
     } catch (failure) {
       if (controller.signal.aborted || !voiceModeRef.current) return;
       if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
         try {
-          updateVoiceStatus('speaking');
+          updateVoiceStatus(speakingStatus);
           await speakWithBrowser(text, controller.signal);
-          if (!controller.signal.aborted && voiceModeRef.current) updateVoiceStatus('listening');
+          if (!controller.signal.aborted && voiceModeRef.current) resume();
         } catch (fallbackFailure) {
           if (!controller.signal.aborted && voiceModeRef.current) {
-            setVoiceError(fallbackFailure instanceof Error ? fallbackFailure.message : 'Cypher’s voice could not be played.');
-            updateVoiceStatus('listening');
+            setVoiceError(progressFor ? 'Still working. The spoken progress update could not be played.' : fallbackFailure instanceof Error ? fallbackFailure.message : 'Cypher’s voice could not be played.');
+            resume();
           }
         }
       } else {
-        setVoiceError(failure instanceof Error ? failure.message : 'Cypher’s voice could not be played.');
-        updateVoiceStatus('listening');
+        setVoiceError(progressFor ? 'Still working. The spoken progress update could not be played.' : failure instanceof Error ? failure.message : 'Cypher’s voice could not be played.');
+        resume();
       }
     } finally {
       if (voiceRequest.current === controller) voiceRequest.current = null;
@@ -313,12 +328,26 @@ export function ChatPanel({ bot, room, bots, onCreateBot, onCreateRoom, onQuickS
     const pending = voicePending.current;
     if (!voiceMode || !pending?.taskId) return;
     const job = jobs.find(item => item.id === pending.taskId);
-    if (!job || ['pending','running','cancel_requested'].includes(job.status)) return;
+    if (!job || ['pending','running','cancel_requested'].includes(job.status)) {
+      if (job?.status === 'cancel_requested') {
+        voiceRequest.current?.abort();
+        if (voiceStatusRef.current === 'notifying') updateVoiceStatus('thinking');
+        return;
+      }
+      if (!job || !['pending','running'].includes(job.status) || pending.progressAnnounced) return;
+      const timer = setTimeout(() => {
+        if (voicePending.current !== pending || !voiceModeRef.current || voiceStatusRef.current !== 'thinking') return;
+        pending.progressAnnounced = true;
+        void speakReply(VOICE_PROGRESS_NOTICE, pending);
+      }, Math.max(0, pending.progressAt - Date.now()));
+      return () => clearTimeout(timer);
+    }
     const replies = messages.filter(message => message.taskId === pending.taskId && message.senderType !== 'user' && message.messageType === MessageType.TEXT && !message.internal && message.content.trim());
     const reply = replies[replies.length - 1];
     const missingReply = () => {
       if (voicePending.current !== pending || !voiceModeRef.current) return;
       voicePending.current = null;
+      voiceRequest.current?.abort();
       setVoiceError('Cypher could not return a spoken answer. Check the task details, then try again or type a message.');
       updateVoiceStatus('listening');
     };
@@ -338,6 +367,21 @@ export function ChatPanel({ bot, room, bots, onCreateBot, onCreateRoom, onQuickS
     }
     voiceSession.current++;
     const activeStream = voiceStream;
+    // Busy turns do not listen for interruptions. Pause samples until the final
+    // answer ends; restore only tracks that this session itself disabled.
+    const pausedTracks = new Set<MediaStreamTrack>();
+    const setListening = (listening: boolean) => {
+      if (listening) {
+        const resuming = pausedTracks.size > 0;
+        pausedTracks.forEach(track => { if (track.readyState === 'live') track.enabled = true; });
+        pausedTracks.clear();
+        if (resuming) { silenceTimer = null; chunks = []; voiceLevel.current = 0; }
+      } else activeStream.getAudioTracks().forEach(track => {
+        if (track.readyState === 'live' && track.enabled) { pausedTracks.add(track); track.enabled = false; }
+      });
+    };
+    voiceInput.current = setListening;
+    const releaseInput = () => { if (voiceInput.current === setListening) voiceInput.current = null; setListening(true); };
     let stopped = false;
     let frame = 0;
     let recorder: MediaRecorder | null = null;
@@ -363,10 +407,10 @@ export function ChatPanel({ bot, room, bots, onCreateBot, onCreateRoom, onQuickS
     } catch {
       setVoiceError('This browser could not start audio monitoring. Check microphone access and try again.');
       updateVoiceStatus('error');
-      return () => { stopped = true; };
+      return () => { stopped = true; releaseInput(); };
     }
     const supported = ['audio/webm;codecs=opus','audio/mp4','audio/ogg;codecs=opus'].find(type => MediaRecorder.isTypeSupported(type));
-    function finishRecording() { if (recorder && recorder.state !== 'inactive') { updateVoiceStatus('thinking'); recorder.stop(); } }
+    function finishRecording() { if (recorder && recorder.state !== 'inactive') { recorder.stop(); updateVoiceStatus('thinking'); } }
     function beginRecording() {
       try {
         recorder = supported ? new MediaRecorder(activeStream, { mimeType: supported }) : new MediaRecorder(activeStream);
@@ -389,8 +433,9 @@ export function ChatPanel({ bot, room, bots, onCreateBot, onCreateRoom, onQuickS
     function measure() {
       if (stopped) return;
       const currentStatus = voiceStatusRef.current;
-      const analyser = currentStatus === 'speaking' && voiceOutputAnalyser.current ? voiceOutputAnalyser.current : micAnalyser;
-      const data = currentStatus === 'speaking' && outputData ? outputData : micData;
+      const playing = currentStatus === 'speaking' || currentStatus === 'notifying';
+      const analyser = playing && voiceOutputAnalyser.current ? voiceOutputAnalyser.current : micAnalyser;
+      const data = playing && outputData ? outputData : micData;
       if (analyser && data) {
         analyser.getByteTimeDomainData(data);
         let sum = 0;
@@ -422,6 +467,7 @@ export function ChatPanel({ bot, room, bots, onCreateBot, onCreateRoom, onQuickS
       voiceLevel.current = 0; voiceRequest.current?.abort();
       const audio = voiceAudio.current; if (audio) { audio.pause(); audio.onended = null; audio.onerror = null; audio.removeAttribute('src'); audio.load(); }
       window.speechSynthesis?.cancel(); voicePending.current = null;
+      releaseInput();
       if (!voiceModeRef.current) updateVoiceStatus('off');
     };
   }, [voiceMode, voiceStream, conversationId]);
@@ -440,7 +486,7 @@ export function ChatPanel({ bot, room, bots, onCreateBot, onCreateRoom, onQuickS
     <details className="thread-options"><summary>Message options <span>{options.output === 'image' ? 'Image' : 'Automatic'} · {options.routing!=='manual'?'Auto specialists':options.model}</span></summary><div className="output-controls"><label>Manager<GlassSelect aria-label="Manager model" value={options.routing!=='manual'?'auto':options.model || bot?.llmModel || 'gpt-6.1-sol'} onChange={e => { setOptions({...options,routing:e.target.value==='auto'?'auto':'manual',provider:MODEL_CHOICES.find(m=>m.model===e.target.value)?.provider||'openai',model:e.target.value==='auto'?'gpt-6.1-sol':e.target.value}); try { localStorage.setItem('grokbot-manager',e.target.value); } catch {} }}><option value="auto">Auto · task specialists</option>{MODEL_CHOICES.map(m=><option key={m.id} value={m.model}>{m.label}</option>)}</GlassSelect></label><label className="thread-tools-control"><input type="checkbox" checked={options.allow_tools!==false} onChange={event=>setOptions(current=>({...current,allow_tools:event.target.checked}))}/>Allow connected tools</label><label>Output<GlassSelect aria-label="Output type" value={options.output || 'text'} onChange={e => setOptions({ ...options, output: e.target.value as 'text' | 'image', aspect_ratio: '16:9' })}><option value="text">Automatic</option><option value="image">Create an image</option></GlassSelect></label>{options.output && options.output !== 'text' ? <><label>Shape<GlassSelect aria-label="Media shape" value={options.aspect_ratio || '16:9'} onChange={e => setOptions({ ...options, aspect_ratio: e.target.value })}><option value="16:9">Landscape</option><option value="9:16">Portrait</option>{options.output === 'image' ? <option value="1:1">Square</option> : null}</GlassSelect></label><span className="media-cost-note">Uses generation credits</span></> : null}</div></details>
 </div></details></div></header>
     {searchOpen?<div className="conversation-search"><input autoFocus type="search" aria-label="Search loaded messages" placeholder="Search loaded messages…" value={messageQuery} onChange={event=>setMessageQuery(event.target.value)} onKeyDown={event=>{if(event.key==='Escape')closeSearch();}}/><span role="status">{visibleMessages.length} results</span><button onClick={closeSearch}>Close</button></div>:null}
-    {voiceMode?<section ref={voicePanel} className={`voice-console voice-${voiceStatus}`} aria-label="Cypher voice chat"><div className="voice-console-mark"><BinaryLens className="voice-binary-lens" active={voiceStatus!=='off'} levelSource={voiceLevel} label="Cypher voice activity"/></div><div className="voice-console-copy"><strong role="status" aria-live="polite">{VOICE_STATUS_LABEL[voiceStatus]}</strong><p>{voiceStatus==='listening'?'Say what you need. I’ll listen and take care of it.':voiceStatus==='recording'?'Listening to your request…':voiceStatus==='thinking'?'Working on your request now.':voiceStatus==='speaking'?'Here’s the answer.':voiceStatus==='error'?'Check the message below and try again.':'Voice chat is ready.'}</p>{voiceError?<span role="alert">{voiceError}</span>:null}</div><button type="button" className="voice-stop-button" onClick={onVoiceStop}>Stop talking</button></section>:null}
+    {voiceMode?<section ref={voicePanel} className={`voice-console voice-${voiceStatus}`} aria-label="Cypher voice chat"><div className="voice-console-mark"><BinaryLens className="voice-binary-lens" active={voiceStatus!=='off'} levelSource={voiceLevel} label="Cypher voice activity"/></div><div className="voice-console-copy"><strong role="status" aria-live="polite">{VOICE_STATUS_LABEL[voiceStatus]}</strong><p>{voiceStatus==='listening'?'Say what you need. I’ll listen and take care of it.':voiceStatus==='recording'?'Listening to your request…':voiceStatus==='thinking'?'Microphone paused while I work. I’ll let you know when it’s ready.':voiceStatus==='notifying'?'I’m still working. Your microphone is paused.':voiceStatus==='speaking'?'Here’s the answer.':voiceStatus==='error'?'Check the message below and try again.':'Voice chat is ready.'}</p>{voiceError?<span role="alert">{voiceError}</span>:null}</div><button type="button" className="voice-stop-button" onClick={onVoiceStop}>Stop talking</button></section>:null}
     {!voiceMode && voiceError ? <p className="voice-inline-error" role="alert">{voiceError}</p> : null}
     {conversationId?<WorkPanel open={workOpen} onClose={()=>setWorkOpen(false)} conversationId={conversationId} jobs={jobs} options={options} onChange={setOptions} onRefresh={async()=>setJobs(await api.getJobs(conversationId))}/>:null}
     {!bot && !room ? <QuickStart key={draftScope || 'local'} draftScope={draftScope} options={options} onOptions={setOptions} onStart={onQuickStart} onOpenRecent={onOpenRecent} onVoiceStart={onVoiceStart}/> : <>
@@ -464,7 +510,7 @@ export function ChatPanel({ bot, room, bots, onCreateBot, onCreateRoom, onQuickS
     {activeJobs.length ? <div className="active-work" role="status"><span>{activeJobs.some(job => job.status === 'running') ? 'Working on your request' : activeJobs.some(job => job.status === 'cancel_requested') ? 'Stopping…' : 'Request queued'}{activeJobs.length > 1 ? ` · ${activeJobs.length} tasks` : ''}</span><button disabled={stopping || activeJobs.every(job => job.status === 'cancel_requested')} onClick={async () => { setStopping(true); const cancellable=activeJobs.filter(job => job.status !== 'cancel_requested'); const results=await Promise.allSettled(cancellable.map(job => api.cancelJob(conversationId,job.id))); if(results.some(result => result.status === 'rejected')) setError('Some work could not be stopped. Try again.'); setJobs(await api.getJobs(conversationId).catch(() => jobs)); setStopping(false); }}>Stop</button></div> : null}
     {attachments.length ? <div className="attachment-tray">{attachments.map((a,i) => <span key={`${a.name}-${i}`}>{a.mime.startsWith('image/') ? <img src={`data:${a.mime};base64,${a.data}`} alt=""/> : null}{a.name}<button aria-label={`Remove ${a.name}`} onClick={() => setAttachments(prev => prev.filter((_,index) => index !== i))}>Remove</button></span>)}</div> : null}
     {replyTo?<div className="reply-preview"><span>Replying in an isolated thread: {replyTo.content.slice(0,110)}</span><button onClick={()=>setReplyTo(null)}>Cancel reply</button></div>:null}
-    <div className="composer"><input className="visually-hidden" ref={fileInput} type="file" multiple accept=".png,.jpg,.jpeg,.webp,.pdf,.txt,.md,.csv,.json,.mp3,.wav,.m4a,.ogg,.flac,.mp4,.webm,.mov" onChange={e => void addFiles(e.target.files)}/><button className="attach-button" aria-label="Attach files" disabled={readingFiles || !conversationId} onClick={() => fileInput.current?.click()}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v16M4 12h16"/></svg></button><label className="visually-hidden" htmlFor="message">Message {title}</label><textarea id="message" rows={1} maxLength={20000} value={input} placeholder={options.output==='image'?'Describe an image…':'Message'} onChange={e => { setInput(e.target.value); e.currentTarget.style.height="auto"; e.currentTarget.style.height=Math.min(e.currentTarget.scrollHeight,150)+"px"; }} onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); void send(); } }}/><button ref={voiceButton} type="button" className={`composer-voice-button${voiceMode?' is-active':''}`} aria-label={voiceMode?'Stop voice chat':'Start voice chat with Cypher'} aria-pressed={voiceMode} title={voiceMode?'Stop voice chat':'Talk to Cypher'} disabled={!conversationId&&!voiceMode} onClick={()=>void toggleVoice()}><CypherMark className="composer-voice-mark" decorative/><span className="composer-voice-label">{voiceMode?voiceStatus==='speaking'?'Speaking':voiceStatus==='thinking'?'Working':voiceStatus==='error'?'Voice issue':'Listening':'Voice'}</span></button><button className="send-button" aria-label="Send message" disabled={!conversationId || sending || readingFiles || (!input.trim() && !attachments.length)} onClick={()=>void send()}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5m-6 6 6-6 6 6"/></svg></button></div>
+    <div className="composer"><input className="visually-hidden" ref={fileInput} type="file" multiple accept=".png,.jpg,.jpeg,.webp,.pdf,.txt,.md,.csv,.json,.mp3,.wav,.m4a,.ogg,.flac,.mp4,.webm,.mov" onChange={e => void addFiles(e.target.files)}/><button className="attach-button" aria-label="Attach files" disabled={readingFiles || !conversationId} onClick={() => fileInput.current?.click()}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v16M4 12h16"/></svg></button><label className="visually-hidden" htmlFor="message">Message {title}</label><textarea id="message" rows={1} maxLength={20000} value={input} placeholder={options.output==='image'?'Describe an image…':'Message'} onChange={e => { setInput(e.target.value); e.currentTarget.style.height="auto"; e.currentTarget.style.height=Math.min(e.currentTarget.scrollHeight,150)+"px"; }} onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); void send(); } }}/><button ref={voiceButton} type="button" className={`composer-voice-button${voiceMode?' is-active':''}`} aria-label={voiceMode?'Stop voice chat':'Start voice chat with Cypher'} aria-pressed={voiceMode} title={voiceMode?'Stop voice chat':'Talk to Cypher'} disabled={!conversationId&&!voiceMode} onClick={()=>void toggleVoice()}><CypherMark className="composer-voice-mark" decorative/><span className="composer-voice-label">{voiceMode?voiceStatus==='speaking'||voiceStatus==='notifying'?'Speaking':voiceStatus==='thinking'?'Working':voiceStatus==='error'?'Voice issue':'Listening':'Voice'}</span></button><button className="send-button" aria-label="Send message" disabled={!conversationId || sending || readingFiles || (!input.trim() && !attachments.length)} onClick={()=>void send()}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5m-6 6 6-6 6 6"/></svg></button></div>
     {readingFiles?<p className="input-note" role="status">Reading files…</p>:null}
     <p className="input-note visually-hidden">{options.output && options.output !== 'text' ? 'Media mode uses your text prompt. Choose Text to discuss attached files.' : 'Enter to send · Shift + Enter for a new line · Text drafts saved in this tab'}</p>
     </>}

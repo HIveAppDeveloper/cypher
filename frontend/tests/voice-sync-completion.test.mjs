@@ -3,9 +3,11 @@ import assert from 'node:assert/strict';
 import {Blob,File} from 'node:buffer';
 import {environment,renderer,load,find,textOf} from './support/component-harness.mjs';
 
-function voiceChat() {
+const progressNotice='I’m still working on your request. I’ll let you know when it’s ready.';
+function voiceChat({initialStatus='completed',holdPlayback=false,failNotice=false,pausedInitially=false,holdNoticeHeaders=false,holdBrowserSpeech=false}={}) {
   const env=environment(),view=renderer(env),spoken=[];
-  let phase='idle',status='completed',voiceMode=true,frame,amplitude=128,syncs=0;
+  let phase='idle',status=initialStatus,voiceMode=true,frame,amplitude=128,syncs=0;
+  const playbacks=[],noticeHeaders=[],browserSpeech=[];if(failNotice)env.window.speechSynthesis={cancel(){}};let vadStarts=0;const track=Object.assign(new EventTarget(),{enabled:!pausedInitially,readyState:'live',stop(){this.readyState='ended';this.enabled=false;}});
   const element=env.element;
   env.element=props=>element({style:{setProperty(){}},pause(){},load(){},removeAttribute(){},...props});
   class AudioContext {
@@ -22,7 +24,7 @@ function voiceChat() {
   }
   env.window.MediaRecorder=MediaRecorder;
   let bot={id:'agent-a',name:'Researcher',llmProvider:'openai',llmModel:'fixture'};
-  const stream={getAudioTracks:()=>[]};
+  const stream={getAudioTracks:()=>[track]};
   const reply={id:'reply-a',taskId:'task-a',senderType:'bot',senderBotId:bot.id,messageType:'text',
     content:'A final answer after the sync caught up.',createdAt:'1970-01-01T00:00:01Z'};
   const api={
@@ -37,20 +39,23 @@ function voiceChat() {
     './QuickStart':{QuickStart:'quick-start'},'./RunControls':{RunControls:'run-controls',DEFAULT_OPTIONS:{}},'../lib/modelPolicy':{modelPolicy:value=>value},
     '../lib/attachments':{readAttachment:async file=>({name:file.name,mime:'audio/webm',data:'synthetic-audio-only'})},
     './cipher/BinaryLens':{__esModule:true,default:'binary-lens'},'./cipher/CypherMark':{__esModule:true,default:'cypher-mark'},
-    '../lib/voice-playback':{playVoiceResponse:async(response,audio,signal,onStarted)=>onStarted(),speakWithBrowser:async()=>assert.fail('No fallback expected')},
-    '../lib/voice-activity':{VoiceSilenceTimer:class {update(){return true;}}},
+    '../lib/voice-playback':{playVoiceResponse:async(response,audio,signal,onStarted)=>{
+      onStarted();if(!holdPlayback)return;
+      await new Promise((resolve,reject)=>{const abort=()=>reject(signal.reason);signal.addEventListener('abort',abort,{once:true});playbacks.push({signal,finish(){signal.removeEventListener('abort',abort);resolve();}});});
+    },speakWithBrowser:async(text,signal)=>{if(!failNotice)assert.fail('No fallback expected');if(!holdBrowserSpeech)throw Error('Progress speech unavailable');await new Promise((resolve,reject)=>{signal.addEventListener('abort',()=>reject(signal.reason),{once:true});browserSpeech.push({text,signal,finish:resolve});});}},
+    '../lib/voice-activity':{VoiceSilenceTimer:class {constructor(){vadStarts++;}update(){return true;}}},
   };
   const {ChatPanel}=load('../src/components/ChatPanel.tsx',imports,{...env.globals,AudioContext,MediaRecorder,Blob,File,
     crypto:{randomUUID:()=> 'incoming-a'},performance:{now:()=>env.time.now},
     requestAnimationFrame:callback=>{frame=callback;return 1;},cancelAnimationFrame:()=>{frame=undefined;},
-    fetch:async(url,options)=>{assert.equal(url,'/api/voice');spoken.push(JSON.parse(options.body).text);return {ok:true};},
+    fetch:async(url,options)=>{assert.equal(url,'/api/voice');const text=JSON.parse(options.body).text;spoken.push(text);if(holdNoticeHeaders&&text===progressNotice)return new Promise(resolve=>noticeHeaders.push({signal:options.signal,release:()=>resolve({ok:true})}));return failNotice&&text===progressNotice?{ok:false,json:async()=>({detail:'Progress speech unavailable'})}:{ok:true};},
   });
   view.mount(()=>ChatPanel({bot,room:null,bots:[bot],voiceMode,voiceStream:stream,onVoiceStop(){},onVoiceStream(){},onCreateBot(){},onCreateRoom(){},onOpenRecent(){},onQuickStart:async()=>{},onOpenLounge:async()=>{}}));
-  return {env,view,spoken,get syncs(){return syncs;},
+  return {env,view,spoken,track,playbacks,noticeHeaders,browserSpeech,get vadStarts(){return vadStarts;},startAnotherCapture(){amplitude=160;frame();amplitude=128;},get syncs(){return syncs;},
     async send(){await view.flush();amplitude=160;frame();await view.flush();amplitude=128;frame();await view.flush();await view.flush();},
     async refresh(nextPhase,nextStatus=status){phase=nextPhase;status=nextStatus;env.window.dispatchEvent(new Event('grokbot:refresh'));await view.flush();},
     setPhase(nextPhase){phase=nextPhase;},
-    async stop(){voiceMode=false;view.rerender();await view.flush();},
+    async stop(){voiceMode=false;track.stop();view.rerender();await view.flush();},
     async switchConversation(){phase='idle';bot={...bot,id:'agent-b',name:'Writer'};view.rerender();await view.flush();},
   };
 }
@@ -138,4 +143,93 @@ for(const status of ['failed','cancelled','interrupted'])test(`${status} without
   assert.match(textOf(app.view.tree),/could not return a spoken answer/);
   await app.refresh('reply');assert.equal(app.spoken.length,0);
   app.view.unmount();
+});
+
+
+test('long voice work announces once, keeps input paused, then speaks the final answer and resumes',async()=>{
+ const app=voiceChat({initialStatus:'running',holdPlayback:true});await app.send();
+ assert.equal(app.track.enabled,false);assert.match(textOf(app.view.tree),/Microphone paused/);
+ app.env.time.advance(2999);await app.view.flush();assert.deepEqual(app.spoken,[]);
+ app.env.time.advance(1);await app.view.flush();assert.deepEqual(app.spoken,[progressNotice]);
+ assert.match(textOf(app.view.tree),/Progress update/);assert.equal(app.track.enabled,false);
+ app.playbacks[0].finish();await app.view.flush();assert.match(textOf(app.view.tree),/Cypher is thinking/);assert.equal(app.track.enabled,false);
+ app.env.time.advance(9000);await app.view.flush();assert.deepEqual(app.spoken,[progressNotice]);
+ await app.refresh('reply','completed');assert.equal(app.playbacks.length,2);assert.equal(app.track.enabled,false);
+ app.playbacks[1].finish();await app.view.flush();assert.equal(app.track.enabled,true);assert.match(textOf(app.view.tree),/Listening/);
+ assert.deepEqual(app.spoken,[progressNotice,'A final answer after the sync caught up.']);app.view.unmount();
+});
+test('the final reply interrupts an in-flight progress notice without returning to listening early',async()=>{
+ const app=voiceChat({initialStatus:'running',holdPlayback:true});await app.send();app.env.time.advance(3000);await app.view.flush();
+ const notice=app.playbacks[0];assert.ok(notice);await app.refresh('reply','completed');
+ assert.equal(notice.signal.aborted,true);assert.equal(app.playbacks.length,2);assert.equal(app.track.enabled,false);
+ app.playbacks[1].finish();await app.view.flush();assert.equal(app.track.enabled,true);
+ app.env.time.advance(10000);await app.view.flush();assert.equal(app.spoken.length,2);app.view.unmount();
+});
+test('short work never announces a long-work notice',async()=>{
+ const app=voiceChat();await app.send();await app.refresh('reply');app.env.time.advance(6000);await app.view.flush();
+ assert.deepEqual(app.spoken,['A final answer after the sync caught up.']);assert.equal(app.track.enabled,true);app.view.unmount();
+});
+test('stopping before the notice deadline prevents the notice and leaves ended input stopped',async()=>{
+ const app=voiceChat({initialStatus:'running'});await app.send();await app.stop();app.env.time.advance(6000);await app.view.flush();
+ assert.deepEqual(app.spoken,[]);assert.equal(app.track.readyState,'ended');assert.equal(app.track.enabled,false);app.view.unmount();assert.equal(app.env.time.pending,0);
+});
+test('changing conversation during a notice cancels it and cannot speak a stale final reply',async()=>{
+ const app=voiceChat({initialStatus:'running',holdPlayback:true});await app.send();app.env.time.advance(3000);await app.view.flush();
+ const notice=app.playbacks[0];assert.ok(notice);await app.switchConversation();assert.equal(notice.signal.aborted,true);
+ assert.equal(app.track.enabled,true);await app.refresh('reply','completed');assert.deepEqual(app.spoken,[progressNotice]);app.view.unmount();
+});
+test('unmounting a notice aborts audio and its timer without late state updates',async()=>{
+ const app=voiceChat({initialStatus:'running',holdPlayback:true});await app.send();app.env.time.advance(3000);await app.view.flush();
+ const notice=app.playbacks[0];assert.ok(notice);app.view.unmount();app.env.time.advance(6000);await app.view.flush();
+ assert.equal(notice.signal.aborted,true);assert.equal(app.env.time.pending,0);assert.equal(app.view.updatesAfterUnmount,0);
+});
+test('a failed progress notice keeps work pending and does not prevent the final voice answer',async()=>{
+ const app=voiceChat({initialStatus:'running',failNotice:true});await app.send();app.env.time.advance(3000);await app.view.flush();
+ assert.match(textOf(app.view.tree),/Cypher is thinking/);assert.equal(app.track.enabled,false);
+ await app.refresh('reply','completed');assert.deepEqual(app.spoken,[progressNotice,'A final answer after the sync caught up.']);assert.equal(app.track.enabled,true);
+ assert.doesNotMatch(textOf(app.view.tree),/Progress speech unavailable/);app.view.unmount();
+});
+test('voice monitoring never enables a track that was already disabled by its owner',async()=>{
+ const app=voiceChat({pausedInitially:true});await app.view.flush();assert.equal(app.track.enabled,false);app.view.unmount();assert.equal(app.track.enabled,false);
+});
+
+test('a final reply supersedes delayed notice headers and late headers cannot start or clear final audio',async()=>{
+ const app=voiceChat({initialStatus:'running',holdPlayback:true,holdNoticeHeaders:true});await app.send();app.env.time.advance(3000);await app.view.flush();
+ assert.equal(app.noticeHeaders.length,1);assert.equal(app.playbacks.length,0);
+ await app.refresh('reply','completed');assert.equal(app.noticeHeaders[0].signal.aborted,true);assert.equal(app.playbacks.length,1);
+ app.noticeHeaders[0].release();await app.view.flush();assert.equal(app.playbacks.length,1);assert.match(textOf(app.view.tree),/Cypher is speaking/);assert.equal(app.track.enabled,false);
+ app.playbacks[0].finish();await app.view.flush();assert.equal(app.track.enabled,true);app.view.unmount();
+});
+test('Stop while notice headers are pending prevents late playback and input resume',async()=>{
+ const app=voiceChat({initialStatus:'running',holdNoticeHeaders:true});await app.send();app.env.time.advance(3000);await app.view.flush();
+ await app.stop();assert.equal(app.noticeHeaders[0].signal.aborted,true);app.noticeHeaders[0].release();await app.view.flush();
+ assert.equal(app.playbacks.length,0);assert.equal(app.track.enabled,false);assert.equal(app.track.readyState,'ended');app.view.unmount();assert.equal(app.view.updatesAfterUnmount,0);
+});
+test('Stop during a playing notice aborts it and prevents a later final voice reply',async()=>{
+ const app=voiceChat({initialStatus:'running',holdPlayback:true});await app.send();app.env.time.advance(3000);await app.view.flush();
+ await app.stop();assert.equal(app.playbacks[0].signal.aborted,true);await app.refresh('reply','completed');
+ assert.deepEqual(app.spoken,[progressNotice]);assert.equal(app.track.enabled,false);app.view.unmount();assert.equal(app.env.time.pending,0);
+});
+test('terminal task failure aborts a playing notice and returns to listening with the task error',async()=>{
+ const app=voiceChat({initialStatus:'running',holdPlayback:true});await app.send();app.env.time.advance(3000);await app.view.flush();
+ const notice=app.playbacks[0];await app.refresh('completed-without-message','failed');
+ assert.equal(notice.signal.aborted,true);assert.match(textOf(app.view.tree),/could not return a spoken answer/);assert.equal(app.track.enabled,true);app.view.unmount();
+});
+test('input resumes with a fresh VAD for the next capture after quiet work and final playback',async()=>{
+ const app=voiceChat({initialStatus:'running',holdPlayback:true});await app.send();assert.equal(app.vadStarts,1);
+ await app.refresh('reply','completed');app.playbacks[0].finish();await app.view.flush();assert.equal(app.track.enabled,true);
+ app.startAnotherCapture();assert.equal(app.vadStarts,2);app.view.unmount();
+});
+test('a cancellation request stops a progress notice while input stays paused until cancellation settles',async()=>{
+ const app=voiceChat({initialStatus:'running',holdPlayback:true});await app.send();app.env.time.advance(3000);await app.view.flush();
+ const notice=app.playbacks[0];await app.refresh('completed-without-message','cancel_requested');
+ assert.equal(notice.signal.aborted,true);assert.match(textOf(app.view.tree),/Cypher is thinking/);assert.equal(app.track.enabled,false);
+ await app.refresh('completed-without-message','cancelled');assert.equal(app.track.enabled,true);assert.match(textOf(app.view.tree),/could not return a spoken answer/);app.view.unmount();
+});
+
+test('the final answer supersedes a browser-fallback notice without a late input resume',async()=>{
+ const app=voiceChat({initialStatus:'running',failNotice:true,holdBrowserSpeech:true,holdPlayback:true});await app.send();app.env.time.advance(3000);await app.view.flush();
+ assert.equal(app.browserSpeech.length,1);assert.match(textOf(app.view.tree),/Progress update/);assert.equal(app.track.enabled,false);
+ await app.refresh('reply','completed');assert.equal(app.browserSpeech[0].signal.aborted,true);assert.equal(app.playbacks.length,1);assert.equal(app.track.enabled,false);
+ app.playbacks[0].finish();await app.view.flush();assert.equal(app.track.enabled,true);assert.doesNotMatch(textOf(app.view.tree),/spoken progress update could not be played/);app.view.unmount();
 });
