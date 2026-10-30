@@ -111,7 +111,7 @@ export default function WorkspaceApp({ accountEmail, accountId }: { accountEmail
     if (id) void openGoalWorkspace(id, false);
     else if (params.get('view') === 'work') { setHubTab('Activity'); setCreatorState('hub'); }
     else if (params.get('view') === 'saved') { setHubTab('Memory'); setCreatorState('hub'); }
-    else if (params.get('view') === 'settings') setCreatorState('setup');
+    else if (params.get('view') === 'settings') setCreatorState('preferences');
   }, []);
   useEffect(() => {
     if (navigated.current || botsLoading || restoredBotFromReturn.current) return;
