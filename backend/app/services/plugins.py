@@ -63,6 +63,11 @@ def is_read_only(url, tool):
 
 def is_preview_read_only(url, tool):
     """Trust read-only annotations only from explicitly reviewed endpoints."""
+    if tool.get('destructive_hint') is True:
+        return False
+    annotations = tool.get('annotations')
+    if isinstance(annotations, dict) and annotations.get('destructiveHint') is True:
+        return False
     if tool.get('read_only') is not True:
         return False
     if trusts_read_only_annotations(url):
@@ -223,7 +228,17 @@ async def _discover_once(url, token=None, auth=None):
             seen = set()
             while True:
                 result = await client.list_tools(cursor=cursor)
-                tools.extend({'name': t.name, 'description': (t.description or '')[:2000], 'schema': t.inputSchema, 'read_only': is_read_only(url, {'name':t.name, 'read_only':bool(getattr(t, 'annotations', None) and t.annotations.readOnlyHint)})} for t in result.tools)
+                for tool in result.tools:
+                    annotations = getattr(tool, 'annotations', None)
+                    read_only_hint = getattr(annotations, 'readOnlyHint', None) is True
+                    destructive_hint = getattr(annotations, 'destructiveHint', None) is True
+                    tools.append({
+                        'name': tool.name,
+                        'description': (tool.description or '')[:2000],
+                        'schema': tool.inputSchema,
+                        'read_only': is_read_only(url, {'name':tool.name, 'read_only':read_only_hint}),
+                        'destructive_hint': destructive_hint,
+                    })
                 cursor = result.nextCursor
                 if not cursor:
                     return tools
@@ -251,12 +266,23 @@ async def _scoped_preview_snapshot(db, plugin_id, scope_id):
     except (InvalidToken, ValueError):
         account_linked = False
     if not account_linked:
-        account_linked = bool(await db.scalar(select(PluginAuthorization.id).where(
+        authorizations = (await db.execute(select(PluginAuthorization).where(
             PluginAuthorization.plugin_id == str(scope_id),
             PluginAuthorization.tenant_id == tenant_id,
+            PluginAuthorization.url == plugin.url,
             PluginAuthorization.status == 'connected',
-            PluginAuthorization.payload.is_not(None),
-        ).limit(1)))
+        ))).scalars().all()
+        for authorization in authorizations:
+            try:
+                from app.services.plugin_auth import DatabaseTokenStorage
+                payload = DatabaseTokenStorage(db, authorization).read()
+            except (InvalidToken, TypeError, ValueError):
+                continue
+            tokens = payload.get('tokens') if isinstance(payload, dict) else None
+            access_token = tokens.get('access_token') if isinstance(tokens, dict) else None
+            if isinstance(access_token, str) and access_token.strip():
+                account_linked = True
+                break
     if not account_linked:
         return None
 
@@ -318,6 +344,8 @@ async def invoke(plugin_id, tool_name, arguments, *, preview_scope_id=None):
             for attempt in range(3 if is_read_only(plugin.url, tool) else 1):
                 try:
                     token,auth=await connection_auth(db,plugin)
+                    if preview_scope_id is not None and not token and auth is None:
+                        return {'success':False, 'error':'This connection needs sign-in again. Reconnect it before previewing account data. No provider call was made.', 'code':'preview_scope_denied'}
                     async with session(plugin.url, token, auth) as client:
                         result = await client.call_tool(tool_name, arguments)
                         output = tool_result(result, plugin.name)

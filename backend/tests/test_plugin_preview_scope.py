@@ -9,7 +9,7 @@ from sqlalchemy import select
 from app.db.tenancy import current_tenant_id
 from app.models.conversation import ConversationParticipant
 from app.models.execution import TaskExecution
-from app.models.plugin import Plugin
+from app.models.plugin import Plugin, PluginAuthorization
 from app.models.task import Task
 from app.services import plugins, worker
 from .test_workspace_workflows import room, workspace
@@ -86,6 +86,121 @@ async def test_untrusted_mcp_cannot_self_attest_read_only_for_account_preview(wo
         assert discovery_calls == [url]
         assert approvals == []
         assert provider_calls == [], 'the server-supplied readOnlyHint must never authorize a tool call'
+    finally:
+        current_tenant_id.reset(owner)
+
+
+@pytest.mark.asyncio
+async def test_trusted_mcp_destructive_hint_overrides_read_only_claim(workspace, monkeypatch):
+    from app.db import session as database
+    from app.services.tools.registry import ToolRegistry
+    _, sessions = workspace
+    owner = current_tenant_id.set('preview-conflicting-annotations-owner')
+    provider_calls, approvals = [], []
+    url = 'https://mcp.linear.app/mcp'
+    monkeypatch.setattr(database, 'AsyncSessionLocal', sessions)
+    monkeypatch.setattr(plugins, 'reveal', lambda credential: 'synthetic-token' if credential else None)
+
+    @asynccontextmanager
+    async def synthetic_server(endpoint, token=None, auth=None):
+        class Client:
+            async def list_tools(self, cursor=None):
+                destructive = SimpleNamespace(
+                    name='delete_all_records', description='Delete every account record', inputSchema=SCHEMA,
+                    annotations=SimpleNamespace(readOnlyHint=True, destructiveHint=True),
+                )
+                return SimpleNamespace(tools=[destructive], nextCursor=None)
+            async def call_tool(self, tool_name, arguments):
+                provider_calls.append((endpoint, tool_name, arguments))
+                return SimpleNamespace(content=[], isError=False, structuredContent=None)
+        yield Client()
+
+    async def approve(*args, **kwargs):
+        approvals.append(args)
+        return True
+
+    monkeypatch.setattr(plugins, 'session', synthetic_server)
+    monkeypatch.setattr('app.services.computer.approve_tool', approve)
+    try:
+        discovered = await plugins.discover(url)
+        assert discovered == [{
+            'name':'delete_all_records', 'description':'Delete every account record', 'schema':SCHEMA,
+            'read_only':True, 'destructive_hint':True,
+        }]
+        assert not plugins.is_preview_read_only(url, discovered[0])
+        async with sessions() as db:
+            connection = service('Conflicting annotation account', discovered, url=url)
+            db.add(connection)
+            await db.commit()
+            connection_id = connection.id
+            registry = ToolRegistry()
+            await registry.load_plugins(db, SimpleNamespace(tools_enabled=['plugins']), plugin_scope_id=connection_id)
+
+        search = await registry.execute_tool('plugin_search', {'query':''}, 'synthetic-agent')
+        denied = await registry.execute_tool(
+            'plugin_call', {'plugin_id':connection_id,'tool_name':'delete_all_records','arguments':{}}, 'synthetic-agent')
+        direct = await plugins.invoke(connection_id, 'delete_all_records', {}, preview_scope_id=connection_id)
+        assert search['code'] == 'preview_scope_unavailable'
+        assert denied['code'] == direct['code'] == 'preview_scope_denied'
+        assert approvals == [] and provider_calls == []
+    finally:
+        current_tenant_id.reset(owner)
+
+
+@pytest.mark.asyncio
+async def test_empty_connected_oauth_record_does_not_unlock_preview(workspace, monkeypatch):
+    from app.db import session as database
+    from app.services.tools.registry import ToolRegistry
+    _, sessions = workspace
+    owner = current_tenant_id.set('preview-empty-oauth-owner')
+    approvals, provider_calls = [], []
+    monkeypatch.setattr(database, 'AsyncSessionLocal', sessions)
+
+    async def approve(*args, **kwargs):
+        approvals.append(args)
+        return True
+
+    async def connection_auth(*args):
+        return None, None
+
+    @asynccontextmanager
+    async def provider_session(*args, **kwargs):
+        provider_calls.append(('session', args, kwargs))
+        class Client:
+            async def call_tool(self, name, arguments):
+                provider_calls.append((name, arguments))
+                return SimpleNamespace(content=[], isError=False, structuredContent=None)
+        yield Client()
+
+    monkeypatch.setattr(plugins, 'connection_auth', connection_auth)
+    monkeypatch.setattr(plugins, 'session', provider_session)
+    monkeypatch.setattr('app.services.computer.approve_tool', approve)
+    try:
+        async with sessions() as db:
+            connection = Plugin(
+                name='Empty OAuth account', url='https://mcp.linear.app/mcp',
+                enabled=True, credential=None,
+                tools=[{'name':'search_issues','schema':SCHEMA,'read_only':True}],
+            )
+            db.add(connection)
+            await db.commit()
+            connection_id = connection.id
+            db.add(PluginAuthorization(
+                name=connection.name, url=connection.url, plugin_id=connection_id,
+                status='connected', payload=plugins.seal('{}'), created_at=1.0,
+            ))
+            await db.commit()
+            registry = ToolRegistry()
+            await registry.load_plugins(db, SimpleNamespace(tools_enabled=['plugins']), plugin_scope_id=connection_id)
+
+        assert await plugins.scoped_preview_snapshot(connection_id, connection_id) is None
+        search = await registry.execute_tool('plugin_search', {'query':''}, 'synthetic-agent')
+        call = await registry.execute_tool(
+            'plugin_call', {'plugin_id':connection_id,'tool_name':'search_issues','arguments':{}}, 'synthetic-agent')
+        direct = await plugins.invoke(connection_id, 'search_issues', {}, preview_scope_id=connection_id)
+        assert search['code'] == 'preview_scope_unavailable'
+        assert call['code'] == direct['code'] == 'preview_scope_denied'
+        assert approvals == [] and provider_calls == []
     finally:
         current_tenant_id.reset(owner)
 
@@ -253,7 +368,7 @@ async def test_preview_rechecks_auth_tool_and_enabled_state_before_and_after_app
     monkeypatch.setattr(plugins, 'reveal', lambda credential: 'synthetic-token' if credential else None)
     monkeypatch.setattr(database, 'AsyncSessionLocal', sessions)
     calls, approvals = [], []
-    mutate_after_approval = {'value': False}
+    mutate_after_approval = {'value': None}
 
     async def connection_auth(db, plugin):
         return 'synthetic-token', None
@@ -276,8 +391,10 @@ async def test_preview_rechecks_auth_tool_and_enabled_state_before_and_after_app
 
     async def approve(name, arguments, bot_id, replay_safe, force=False):
         approvals.append((name, replay_safe))
-        if name == 'plugin_call' and mutate_after_approval['value']:
+        if name == 'plugin_call' and mutate_after_approval['value'] == 'tool':
             await update_connection(connection_id, tools=[{'name':'read_profile','schema':SCHEMA,'read_only':False}])
+        elif name == 'plugin_call' and mutate_after_approval['value'] == 'auth':
+            await update_connection(connection_id, credential=None)
         return True
 
     monkeypatch.setattr(plugins, 'connection_auth', connection_auth)
@@ -314,7 +431,7 @@ async def test_preview_rechecks_auth_tool_and_enabled_state_before_and_after_app
         # A settings change while approval is pending is checked again by the
         # direct handler and invocation guard before any provider request.
         await update_connection(connection_id, enabled=True)
-        mutate_after_approval['value'] = True
+        mutate_after_approval['value'] = 'tool'
         denied_after_approval = await registry.execute_tool('plugin_call', {'plugin_id':connection_id,'tool_name':'read_profile','arguments':{}}, 'synthetic-agent')
         assert denied_after_approval['code'] == 'preview_scope_denied'
         assert approvals == [('plugin_call', True)] and calls == []
@@ -326,12 +443,69 @@ async def test_preview_rechecks_auth_tool_and_enabled_state_before_and_after_app
         assert direct['code'] == 'preview_scope_denied' and calls == []
 
         await update_connection(connection_id, tools=[{'name':'read_profile','schema':SCHEMA,'read_only':True}])
-        mutate_after_approval['value'] = False
+        mutate_after_approval['value'] = 'auth'
+        denied_revocation_after_approval = await registry.execute_tool(
+            'plugin_call', {'plugin_id':connection_id,'tool_name':'read_profile','arguments':{}}, 'synthetic-agent')
+        assert denied_revocation_after_approval['code'] == 'preview_scope_denied'
+        assert approvals == [('plugin_call', True), ('plugin_call', True)] and calls == []
+
+        await update_connection(connection_id, credential='synthetic-grant')
+        mutate_after_approval['value'] = None
         live = await plugins.scoped_preview_snapshot(connection_id, connection_id)
         assert live and [tool['name'] for tool in live['tools']] == ['read_profile'], live
         result = await registry.execute_tool('plugin_call', {'plugin_id':connection_id,'tool_name':'read_profile','arguments':{}}, 'synthetic-agent')
         assert result['success'] is True, result
         assert calls == [('https://mcp.linear.app/mcp','synthetic-token','read_profile',{})]
+    finally:
+        current_tenant_id.reset(owner)
+
+
+@pytest.mark.asyncio
+async def test_saved_plugin_handler_cannot_escape_its_preview_after_registry_reload(workspace, monkeypatch):
+    from app.db import session as database
+    from app.services.tools.registry import ToolRegistry
+    _, sessions = workspace
+    owner = current_tenant_id.set('preview-stale-handler-owner')
+    calls = []
+    monkeypatch.setattr(plugins, 'reveal', lambda credential: 'synthetic-token' if credential else None)
+    monkeypatch.setattr(database, 'AsyncSessionLocal', sessions)
+
+    async def connection_auth(db, plugin):
+        return 'synthetic-token', None
+
+    @asynccontextmanager
+    async def provider_session(url, token, auth):
+        class Client:
+            async def call_tool(self, tool_name, arguments):
+                calls.append((url, tool_name, arguments))
+                return SimpleNamespace(content=[SimpleNamespace(type='text', text='Synthetic response')],
+                                       isError=False, structuredContent=None)
+        yield Client()
+
+    monkeypatch.setattr(plugins, 'connection_auth', connection_auth)
+    monkeypatch.setattr(plugins, 'session', provider_session)
+    try:
+        async with sessions() as db:
+            connection = service('Generation-bound account', [
+                {'name':'delete_project','schema':SCHEMA,'read_only':True},
+            ])
+            db.add(connection)
+            await db.commit()
+            connection_id = connection.id
+            registry = ToolRegistry()
+            await registry.load_plugins(db, SimpleNamespace(tools_enabled=['plugins']), plugin_scope_id=connection_id)
+            old_handler = registry._tools['plugin_call']['handler']
+
+        async with sessions() as db:
+            current = await db.get(Plugin, connection_id)
+            current.tools = [{'name':'delete_project','schema':SCHEMA,'read_only':False}]
+            await db.commit()
+            await registry.load_plugins(db, SimpleNamespace(tools_enabled=['plugins']))
+
+        result = await old_handler(
+            {'plugin_id':connection_id,'tool_name':'delete_project','arguments':{}}, 'synthetic-agent')
+        assert result['code'] == 'preview_scope_denied'
+        assert calls == [], 'a captured preview handler must not fall back to a newer unscoped registry state'
     finally:
         current_tenant_id.reset(owner)
 
