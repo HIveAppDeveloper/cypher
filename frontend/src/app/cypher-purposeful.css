@@ -56,6 +56,15 @@
 .app-store-dialog .connected-service-header > div { min-width:0; }
 .app-store-dialog .connected-service-header h3 { font-size:15px; }
 .app-store-dialog .connected-service-header p { color:var(--cx-label-2); font-size:12px; line-height:1.6; }
+.apps-workspace .apps-account-card { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; min-height:84px; gap:12px; padding:12px; border:1px solid var(--cx-sep); border-radius:12px; background:var(--cx-card); }
+.apps-workspace .apps-account-card:hover { border-color:var(--cx-label-3); background:var(--cx-card); }
+.apps-workspace .apps-account-manage { display:flex; min-width:0; min-height:44px; align-items:center; gap:12px; padding:0; border:0; background:transparent; color:var(--cx-label); text-align:left; cursor:pointer; }
+.apps-workspace .apps-account-manage:hover .apps-account-copy strong { text-decoration:underline; text-underline-offset:3px; }
+.apps-workspace .apps-account-use { display:inline-flex; min-height:40px; align-items:center; justify-content:center; padding:0 12px; border:1px solid transparent; border-radius:9px; background:var(--brand-action); color:var(--brand-on-action); font-size:12px; font-weight:600; white-space:nowrap; cursor:pointer; }
+.apps-workspace .apps-account-use:hover:not(:disabled) { opacity:.84; }
+.apps-workspace .apps-account-use:disabled { opacity:.6; cursor:wait; }
+.apps-workspace .apps-account-use-secondary { border-color:var(--cx-sep); background:var(--cx-card); color:var(--cx-label); }
+.apps-workspace .apps-account-manage:focus-visible,.apps-workspace .apps-account-use:focus-visible { outline:2px solid var(--cx-label); outline-offset:3px; }
 .app-store-dialog :is(button, summary, input, a):focus-visible,
 .computer-panel :is(button, summary, input, textarea):focus-visible { outline:2px solid var(--cx-label); outline-offset:3px; }
 
@@ -115,6 +124,8 @@
 
 @media(max-width:700px) {
   .app-store-dialog .apps-connected-grid,.app-store-dialog .connector-catalog { grid-template-columns:minmax(0,1fr); }
+  .apps-workspace .apps-account-card { grid-template-columns:minmax(0,1fr); }
+  .apps-workspace .apps-account-use { width:100%; min-height:44px; }
   .app-store-dialog .apps-google-connect { grid-template-columns:32px minmax(0,1fr); gap:12px; }
   .app-store-dialog .apps-google-connect > .connector-connect { grid-column:2; justify-self:start; min-height:44px; }
   .app-store-dialog .connector-entry { gap:10px; padding-block:18px; }

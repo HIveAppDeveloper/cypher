@@ -59,7 +59,7 @@ function LovableMark({active=false}:{active?:boolean}){
     {active?<BinaryLens className="lovable-binary-lens" active label="Cypher connecting"/>:<CypherMark className="lovable-real-mark" decorative/>}
   </span>;
 }
-export function PluginPanel({onClose,onExploreConnection,onManageSkills,embedded=false}:{onClose:()=>void;onExploreConnection?:(name:string,pluginId:string)=>void;onManageSkills?:()=>void;embedded?:boolean}){
+export function PluginPanel({onClose,onExploreConnection,onManageSkills,embedded=false}:{onClose:()=>void;onExploreConnection?:(name:string,pluginId:string)=>void|Promise<void>;onManageSkills?:()=>void;embedded?:boolean}){
   const dialog=useRef<HTMLDialogElement>(null);
   const popup=useRef<Window|null>(null);
   const body=useRef<HTMLDivElement>(null);
@@ -113,6 +113,8 @@ export function PluginPanel({onClose,onExploreConnection,onManageSkills,embedded
   const testing=useRef(false);
   const mounted=useRef(false);
   const [testingId,setTestingId]=useState('');
+  const [exploringId,setExploringId]=useState('');
+  const exploring=useRef(false);
   useEffect(()=>{mounted.current=true;if(!queue.current||queue.current.isDisposed)queue.current=new ConnectionQueue(async job=>{try{return await queueRunner.current(job);}finally{try{releasePluginStart(sessionStorage,job.reservationId);}catch{}}},jobs=>{queueJobsRef.current=jobs;setQueueJobs(jobs);},MAX_PLUGIN_SIGN_INS,job=>{job.controller.abort();job.popup?.close();try{releasePluginStart(sessionStorage,job.reservationId);}catch{}});return()=>{mounted.current=false;queue.current?.dispose();};},[]);
   const [notice,setNotice]=useState('');const [error,setError]=useState('');
   const [refreshableError,setRefreshableError]=useState(false);
@@ -504,6 +506,12 @@ export function PluginPanel({onClose,onExploreConnection,onManageSkills,embedded
     }
   }
   async function testTools(plugin:PluginConnection){await verifyConnection(plugin.id,plugin.name);}
+  async function exploreAccount(plugin:PluginConnection){
+    if(!onExploreConnection||exploring.current||!plugin.enabled||!plugin.authenticated)return;
+    exploring.current=true;setExploringId(plugin.id);
+    try{await onExploreConnection(plugin.name,plugin.id);}
+    finally{exploring.current=false;if(mounted.current)setExploringId('');}
+  }
   async function enableDevice(){setBusy(true);setError('');setRefreshableError(false);try{await enrollDevice();setDevice(true);setNotice('Device approval enabled.');}catch(e){setError(e instanceof Error?e.message:String(e));}finally{setBusy(false);}}
   async function setupAccount(){setBusy(true);setError('');setRefreshableError(false);try{const approval_id=await approveConnection('setup_account:'+accountUrl.trim());await api.setupPluginAccount({name:'New service',signup_url:accountUrl.trim(),email:accountEmail.trim(),approval_id});setNotice('Account setup is queued in Your team. Creating an account does not automatically connect its tools.');}catch(e){setError(e instanceof Error?e.message:String(e));}finally{setBusy(false);}}
   const query=search.trim().toLocaleLowerCase();
@@ -578,9 +586,13 @@ export function PluginPanel({onClose,onExploreConnection,onManageSkills,embedded
           <div className="apps-section-heading"><h3 id="apps-connected-title">Your apps{connectionsLoaded&&accountPlugins.length?` · ${accountPlugins.length}`:''}</h3>{plugins.length?<button type="button" onClick={()=>{setSearch('');chooseView('connected');}}>Manage all<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg></button>:null}</div>
           {loading?<LoadingState label="Loading connected apps…" rows={2}/>:connectionsLoadFailed&&!connectionsLoaded?<div className="apps-empty-connections" role="alert">Could not load your saved connections. <button type="button" className="connector-retry" onClick={()=>void retryLoad()}>Retry connections</button></div>:<div className="apps-connected-grid">{accountPlugins.filter(plugin=>!query||[plugin.name,connectionIdentity(plugin).name].join(' ').toLocaleLowerCase().includes(query)).slice(0,query?accountPlugins.length:4).map(plugin=>{
             const identity=connectionIdentity(plugin),status=pluginStatus(plugin);
-            return <button type="button" key={plugin.id} className="apps-account-card" data-readiness={status.tone} title={status.detail} onClick={()=>{chooseView('connected');setSearch(plugin.name);}} aria-label={`Manage ${plugin.name}`}>
-              <Logo item={identity}/><span className="apps-account-copy"><strong>{identity.name}</strong><span>{identity.name!==plugin.name?plugin.name:status.label}</span></span><span className="app-connection-indicator" aria-label={status.label}><svg viewBox="0 0 24 24" aria-hidden="true"><path d={status.tone==='success'?'m5 12 4 4L19 6':status.tone==='warning'?'M12 7v6m0 4h.01':'m9 5 7 7-7 7'}/></svg></span>
-            </button>;
+            const accountActionName=identity.name===plugin.name?identity.name:`${identity.name}, ${plugin.name}`;
+            return <div key={plugin.id} className="apps-account-card" data-readiness={status.tone} title={status.detail}>
+              <button type="button" className="apps-account-manage" onClick={()=>{chooseView('connected');setSearch(plugin.name);}} aria-label={`Manage ${plugin.name}`}>
+                <Logo item={identity}/><span className="apps-account-copy"><strong>{identity.name}</strong>{identity.name!==plugin.name?<span>{plugin.name}</span>:null}<small>{plugin.authenticated?'Connected':'Needs sign-in'} · {plugin.tools.length} available {plugin.tools.length===1?'tool':'tools'} · {plugin.enabled?'Enabled':'Paused'} · {status.label}</small></span><span className="app-connection-indicator" aria-hidden="true"><svg viewBox="0 0 24 24"><path d={status.tone==='success'?'m5 12 4 4L19 6':status.tone==='warning'?'M12 7v6m0 4h.01':'m9 5 7 7-7 7'}/></svg></span>
+              </button>
+              {plugin.authenticated&&plugin.enabled&&onExploreConnection?<button type="button" className="apps-account-use" aria-label={`Ask Cypher to explore ${accountActionName}`} disabled={Boolean(exploringId)} onClick={()=>void exploreAccount(plugin)}>{exploringId===plugin.id?'Opening…':'Ask Cypher'}</button>:<button type="button" className="apps-account-use apps-account-use-secondary" onClick={()=>{chooseView('connected');setSearch(plugin.name);}}>{plugin.authenticated?plugin.enabled?'Manage access':'Enable to use':'Finish setup'}</button>}
+            </div>;
           })}</div>}
           {!loading&&query&&!accountPlugins.some(plugin=>[plugin.name,connectionIdentity(plugin).name].join(' ').toLocaleLowerCase().includes(query))?<p className="apps-empty-connections">No connected apps match your search.</p>:null}
         </section>:null}

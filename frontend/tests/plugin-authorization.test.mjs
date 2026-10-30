@@ -560,9 +560,9 @@ test('My apps search counts and shows only matching account connections',async()
 test('account preview sends the exact saved connection ID with its display name',async()=>{
   const connection=linkedPlugin();let opened;
   const p=panel({api:{getPlugins:async()=>[connection]},onExploreConnection:(name,pluginId)=>{opened={name,pluginId};}});
-  await p.view.flush();button(p.view.tree,'My apps · 1').props.onClick();await p.view.flush();
-  find(p.view.tree,n=>n.props?.['aria-label']==='Search my apps').props.onChange({target:{value:connection.name}});await p.view.flush();
-  button(p.view.tree,'See what’s in my account').props.onClick();
+  await p.view.flush();
+  await button(p.view.tree,'Ask Cypher').props.onClick();
+
   assert.deepEqual(opened,{name:connection.name,pluginId:connection.id});p.view.unmount();
 });
 
