@@ -7,10 +7,12 @@ def computer(bot_id):
     from vercel.sandbox.sync import SyncSandboxClient
     client = SyncSandboxClient.create()
     try:
-        box, created = client.get_or_create_sandbox(name='grokbot-' + str(UUID(bot_id)), persistent=True, execution_time_limit=600, env={})
-        if created:
-            box.run_process('mkdir', ['-p', '/workspace'], sudo=True, check=True, capture_output=True)
-            box.run_process('chmod', ['777', '/workspace'], sudo=True, check=True, capture_output=True)
+        box, _created = client.get_or_create_sandbox(name='grokbot-' + str(UUID(bot_id)), persistent=True, execution_time_limit=600, env={})
+        # Persistent sandboxes may survive an interrupted first setup, and a
+        # user command can remove /workspace. Re-establish it before every use
+        # so an existing sandbox is always ready for commands using cwd below.
+        box.run_process('mkdir', ['-p', '/workspace'], sudo=True, check=True, capture_output=True)
+        box.run_process('chmod', ['777', '/workspace'], sudo=True, check=True, capture_output=True)
         yield box
     finally:
         client.close()
