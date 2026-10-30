@@ -262,6 +262,8 @@ export default function VcProspectingWorkspace({ accountId }: { accountId?: stri
 
   async function createRun(payload: { direction: MatchRun['direction']; one_liner: string; thesis: string; industries?: string[]; limit: number; candidate_limit: number }) {
     if (starting) return;
+    finalRefreshController.current?.abort();
+    finalRefreshController.current = null;
     setStarting(true); setError(''); setNotice(''); setOutreach(null);
     try {
       const next: MatchRun = await request('/prospecting/investors/runs', { method: 'POST', body: JSON.stringify(payload) }, 45000);

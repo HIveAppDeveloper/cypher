@@ -415,3 +415,51 @@ test('SEC archive completion aborts its final founder refresh when the page unmo
   await view.flush();
   assert.equal(view.updatesAfterUnmount, 0, 'late final data cannot update the closed page');
 });
+
+test('starting a newer VC run aborts an older run’s pending final founder refresh', async () => {
+  const env = environment();
+  const oldFinalFounders = deferred();
+  const initialPage = historicalPage('idle');
+  initialPage.database.records = 1;
+  const stalePage = historicalPage('idle');
+  stalePage.database.records = 99;
+  let founderCalls = 0;
+  let oldRefreshSignal;
+  let createdRuns = 0;
+  const request = async (path, options = {}) => {
+    if (path.startsWith('/prospecting/investors/founders?')) {
+      founderCalls++;
+      if (founderCalls === 1) return initialPage;
+      oldRefreshSignal = options.signal;
+      return oldFinalFounders.promise;
+    }
+    if (path === '/prospecting/investors/runs' && options.method === 'POST') {
+      createdRuns++;
+      return matchRun('new-run');
+    }
+    if (path === '/prospecting/investors/runs') return [matchRun('old-run')];
+    if (path === '/prospecting/investors/runs/old-run') return matchRun('old-run', 'completed');
+    if (path === '/prospecting/investors/runs/new-run') return matchRun('new-run');
+    throw new Error(`Unexpected request: ${path}`);
+  };
+  const view = mountVc(env, request);
+  await view.flush();
+  assert.ok(oldRefreshSignal, 'the old run starts its final founder refresh');
+  assert.equal(oldRefreshSignal.aborted, false);
+
+  const refreshButton = find(view.tree, node => node.type === 'button' && textOf(node) === 'Refresh recent SEC data');
+  assert.ok(refreshButton, 'a completed run allows another research run');
+  refreshButton.props.onClick();
+  await view.flush();
+  assert.equal(createdRuns, 1);
+  assert.equal(oldRefreshSignal.aborted, true, 'starting a newer run cancels the older final refresh');
+
+  oldFinalFounders.resolve(stalePage);
+  await view.flush();
+  assert.match(textOf(view.tree), /SEC refresh queued/);
+  assert.doesNotMatch(textOf(view.tree), /SEC snapshot and match results are ready/);
+  const indexMetric = find(view.tree, node => node.type === 'div' && node.props?.children?.some?.(child => textOf(child).includes('People in SEC index')));
+  assert.ok(indexMetric);
+  assert.equal(textOf(find(indexMetric, node => node.type === 'strong')), '1', 'old run data cannot replace the current founder view');
+  view.unmount();
+});
