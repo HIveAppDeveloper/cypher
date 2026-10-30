@@ -11,3 +11,34 @@
   outline:2px solid var(--brand-action,#111);
   outline-offset:4px;
 }
+
+/* A short window must scroll instead of hiding the bottom of the sign-in card. */
+main.login-page {
+  height:100dvh;
+  min-height:0;
+  overflow-y:auto;
+}
+.login-page .login-layout {
+  flex:1 0 auto;
+}
+
+/* Let Google render the full button and its focus frame at the measured width. */
+.login-page .login-card .google-login {
+  display:block;
+  width:100%;
+  min-width:0;
+  overflow:visible;
+}
+.login-page .google-button-host {
+  display:flex;
+  justify-content:center;
+  width:100%;
+  min-width:0;
+  min-height:44px;
+}
+.login-page .login-card .google-login iframe {
+  max-width:none;
+}
+.login-page .google-login .login-error {
+  overflow-wrap:anywhere;
+}
