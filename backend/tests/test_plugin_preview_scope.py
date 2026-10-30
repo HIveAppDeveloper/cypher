@@ -97,6 +97,7 @@ async def test_trusted_mcp_destructive_hint_overrides_read_only_claim(workspace,
     _, sessions = workspace
     owner = current_tenant_id.set('preview-conflicting-annotations-owner')
     provider_calls, approvals = [], []
+    approval_allowed = {'value':True}
     url = 'https://mcp.linear.app/mcp'
     monkeypatch.setattr(database, 'AsyncSessionLocal', sessions)
     monkeypatch.setattr(plugins, 'reveal', lambda credential: 'synthetic-token' if credential else None)
@@ -116,8 +117,8 @@ async def test_trusted_mcp_destructive_hint_overrides_read_only_claim(workspace,
         yield Client()
 
     async def approve(*args, **kwargs):
-        approvals.append(args)
-        return True
+        approvals.append((args[0], args[3]))
+        return approval_allowed['value']
 
     monkeypatch.setattr(plugins, 'session', synthetic_server)
     monkeypatch.setattr('app.services.computer.approve_tool', approve)
@@ -128,6 +129,7 @@ async def test_trusted_mcp_destructive_hint_overrides_read_only_claim(workspace,
             'read_only':True, 'destructive_hint':True,
         }]
         assert not plugins.is_preview_read_only(url, discovered[0])
+        assert not plugins.is_read_only(url, discovered[0])
         async with sessions() as db:
             connection = service('Conflicting annotation account', discovered, url=url)
             db.add(connection)
@@ -143,6 +145,19 @@ async def test_trusted_mcp_destructive_hint_overrides_read_only_claim(workspace,
         assert search['code'] == 'preview_scope_unavailable'
         assert denied['code'] == direct['code'] == 'preview_scope_denied'
         assert approvals == [] and provider_calls == []
+
+        # In normal unscoped chat, the contradictory hint still makes this a
+        # write: it cannot skip the owner's approval or replay policy.
+        async with sessions() as db:
+            await registry.load_plugins(db, SimpleNamespace(tools_enabled=['plugins']))
+        call_args = {'plugin_id':connection_id,'tool_name':'delete_all_records','arguments':{}}
+        assert registry.replay_safe('plugin_call', call_args) is False
+        unscoped_tool = next(tool for tool in registry._plugin_manifest if tool['name'] == 'delete_all_records')
+        assert unscoped_tool['read_only'] is False
+        approval_allowed['value'] = False
+        unscoped = await registry.execute_tool('plugin_call', call_args, 'synthetic-agent')
+        assert 'error' in unscoped
+        assert approvals == [('plugin_call', False)] and provider_calls == []
     finally:
         current_tenant_id.reset(owner)
 
@@ -269,6 +284,7 @@ async def test_selected_preview_executes_only_selected_read_only_account(workspa
             # Normal unscoped chats still see account variants and ask approval for writes.
             await registry.load_plugins(db, SimpleNamespace(tools_enabled=['plugins']))
             assert {tool['plugin_id'] for tool in registry._plugin_manifest} == {chosen.id, sibling.id}
+            assert registry.replay_safe('plugin_call', {'plugin_id':chosen.id,'tool_name':'read_profile'}) is True
             write_approvals = []
             async def deny_write_approval(name, arguments, bot_id, replay_safe, force=False):
                 write_approvals.append((name, replay_safe))

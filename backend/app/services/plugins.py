@@ -49,9 +49,12 @@ def trusts_read_only_annotations(url):
         return False
 
 def is_read_only(url, tool):
-    # Preserve the existing generic-chat classification and retry behavior.
-    # Scoped previews use `is_preview_read_only` below, which applies a
-    # stricter trust boundary before it can skip the owner's approval policy.
+    # A destructive annotation wins over a conflicting read-only claim for
+    # both replay and approval policy, including regular unscoped tool calls.
+    # Scoped previews apply the additional endpoint trust check below.
+    annotations = tool.get('annotations')
+    if tool.get('destructive_hint') is True or (isinstance(annotations, dict) and annotations.get('destructiveHint') is True):
+        return False
     if tool.get('read_only') is True: return True
     try:
         parsed = urlsplit(url)
