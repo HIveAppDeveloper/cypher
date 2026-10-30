@@ -156,6 +156,69 @@ test('assistant search matches name, role and description and reports a helpful 
   view.unmount();
 });
 
+test('invalid assistant template import gives a clear recovery message and still accepts a valid file',async()=>{
+  const env=environment(),base=workspaceRequest(),imports=[];
+  const request=async(path,options={})=>{
+    if(path==='/workspace/templates/import'){imports.push(JSON.parse(options.body));return {id:'synthetic-import'};}
+    return base.request(path,options);
+  };
+  const view=mountWorkspaceHub(env,request,{initialTab:'Agents'});
+  await view.flush();
+  const input=find(view.tree,node=>node.type==='input'&&node.props?.accept==='.json,application/json');
+  assert.ok(input,'the assistant template file chooser is available');
+  input.props.ref.current.value='invalid-template.json';
+  input.props.onChange({target:{files:[{size:20,text:async()=>'{not valid JSON'}]}});
+  await view.flush();
+  const alert=find(view.tree,node=>node.props?.role==='alert');
+  assert.match(textOf(alert),/valid JSON.*Cypher agent template/i);
+  assert.doesNotMatch(textOf(alert),/Unexpected token/,'the parser detail is not shown');
+  assert.equal(base.calls.includes('/workspace/templates/import'),false,'invalid JSON is rejected before the API request');
+  assert.equal(input.props.ref.current.value,'','the chooser resets so the owner can select another file');
+
+  input.props.onChange({target:{files:[{size:35,text:async()=>JSON.stringify({name:'Synthetic agent',instructions:'Synthetic instructions'})}]}});
+  await view.flush();
+  assert.deepEqual(imports,[{name:'Synthetic agent',instructions:'Synthetic instructions'}]);
+  assert.match(textOf(view.tree),/Agent imported/,'a valid template still follows the import flow');
+  view.unmount();
+});
+
+test('assistant template import stays busy while reading and clears a prior success before reporting invalid JSON',async()=>{
+  const env=environment(),base=workspaceRequest();
+  let imports=0;
+  const request=async(path,options={})=>{
+    if(path==='/workspace/templates/import'){imports++;return {id:'synthetic-import'};}
+    return base.request(path,options);
+  };
+  const view=mountWorkspaceHub(env,request,{initialTab:'Agents'});
+  await view.flush();
+  const chooser=()=>find(view.tree,node=>node.type==='input'&&node.props?.accept==='.json,application/json');
+  let input=chooser();
+  input.props.ref.current.value='valid-template.json';
+  input.props.onChange({target:{files:[{size:35,text:async()=>JSON.stringify({name:'Synthetic agent'})}]}});
+  await view.flush();
+  assert.equal(imports,1);
+  assert.match(textOf(view.tree),/Agent imported/);
+
+  const reading=deferred();
+  input=chooser();
+  input.props.ref.current.value='invalid-template.json';
+  input.props.onChange({target:{files:[{size:20,text:()=>reading.promise}]}});
+  await view.flush();
+  assert.equal(chooser().props.disabled,true,'the file chooser is disabled during asynchronous file reading');
+  assert.equal(button(view.tree,'Import agent template').props.disabled,true,'the import action stays busy while file.text is pending');
+  assert.doesNotMatch(textOf(view.tree),/Agent imported/,'starting the new attempt clears the previous success notice');
+  assert.doesNotMatch(textOf(view.tree),/valid JSON/,'the parse error waits until file reading settles');
+  assert.equal(imports,1,'no second API request starts while the file is being read');
+
+  reading.resolve('{not valid JSON');
+  await view.flush();
+  assert.match(textOf(find(view.tree,node=>node.props?.role==='alert')),/valid JSON.*Cypher agent template/i);
+  assert.doesNotMatch(textOf(view.tree),/Agent imported/,'a failed replacement attempt cannot leave a contradictory success notice');
+  assert.equal(imports,1,'invalid JSON never reaches the API');
+  assert.equal(chooser().props.ref.current.value,'','the failed file selection is cleared');
+  view.unmount();
+});
+
 test('Saved instructions explains how to run a skill from chat',async()=>{
   const env=environment();
   const {request}=workspaceRequest();
