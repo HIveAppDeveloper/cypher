@@ -163,15 +163,15 @@ body:has(.app-layout) { display: flow-root; }
   stroke-linejoin: round;
 }
 .cypher-recent-tasks { display: grid; gap: 2px; margin: 0 0 9px; }
-.cypher-recent-tasks h2 { margin: 0 0 5px; color: var(--cx-label-2); font-size: 10px; font-weight: 500; }
-.cypher-recent-tasks > button { display: flex; min-width: 0; min-height: 30px; align-items: center; gap: 7px; padding: 4px 3px; border-radius: 6px; background: transparent; color: var(--cx-label); text-align: left; transition: background .16s ease, transform .16s ease; }
+.cypher-recent-tasks h2 { margin: 0 0 5px; color: var(--cx-label-2); font-size: 12px; font-weight: 550; }
+.cypher-recent-tasks > button { display: flex; min-width: 0; min-height: 34px; align-items: center; gap: 7px; padding: 4px 3px; border-radius: 6px; background: transparent; color: var(--cx-label); text-align: left; transition: background .16s ease, transform .16s ease; }
 .cypher-recent-tasks > button:hover { background: var(--system-hover); transform: translateX(2px); }
-.cypher-recent-tasks > button > span:last-child { overflow: hidden; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
-.cypher-recent-tasks > p { margin: 3px 0; color: var(--cx-label-2); font-size: 10px; }
+.cypher-recent-tasks > button > span:last-child { overflow: hidden; font-size: 12px; line-height: 1.35; text-overflow: ellipsis; white-space: nowrap; }
+.cypher-recent-tasks > p { margin: 3px 0; color: var(--cx-label-2); font-size: 12px; }
 .cypher-recent-tasks-error { display: flex; align-items: center; gap: 6px; }
 .cypher-recent-tasks-error button { border: 0; padding: 0; background: transparent; color: var(--cx-label); font: inherit; text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
 .cypher-recent-tasks-error button:focus-visible { outline: 2px solid var(--cx-label-2); outline-offset: 2px; border-radius: 2px; }
-.cypher-task-dot { width: 5px; height: 5px; flex: 0 0 5px; border-radius: 50%; background: var(--cx-label); }
+.cypher-task-dot { width: 6px; height: 6px; flex: 0 0 6px; border-radius: 50%; background: var(--cx-label); }
 .cypher-team-disclosure { padding-top: 12px; border-top: 1px solid var(--cx-sep); }
 .cypher-team-disclosure > summary {
   display: flex;

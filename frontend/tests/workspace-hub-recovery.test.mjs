@@ -7,6 +7,34 @@ const sectionInput=tree=>{
   return label&&find(label,node=>node.type==='input');
 };
 
+function mountWorkspaceHub(env,request,{bots=[],initialTab='Activity'}={}){
+  const view=renderer(env);
+  const {WorkspaceHub}=load('../src/components/WorkspaceHub.tsx',{
+    react:view.react,
+    './LoadingState':{LoadingState:'loading-state'},
+    './GlassSelect':{GlassSelect:'select'},
+    '../lib/api':{api:{updateBot:async()=>{},deleteBot:async()=>{}},request},
+    '../lib/dates':load('../src/lib/dates.ts'),
+  },{...env.globals,React:view.react.default,setInterval:()=>1,clearInterval(){}});
+  view.mount(()=>WorkspaceHub({bots,rooms:[],ensureRoom:async()=>({id:'room-a'}),onRefresh:async()=>{},onOpenWorkspace(){},onClose(){},initialTab}));
+  return view;
+}
+
+function workspaceRequest({runs=[],notices=[]}={}){
+  const calls=[];
+  const request=async path=>{
+    calls.push(path);
+    if(path==='/computer/approvals/pending')return [];
+    if(path==='/workspace/knowledge'||path==='/workspace/routines')return [];
+    if(path==='/workspace/runs')return runs;
+    if(path==='/workspace/notifications')return notices;
+    if(path==='/workspace/usage')return {tokens:0,estimated_cost:0,weekly_token_limit:null,resets_at:'2026-01-01T00:00:00Z',models:[]};
+    if(path==='/workspace/settings')return {tool_approval:'never',notifications:true,weekly_token_limit:null};
+    throw new Error('Unexpected request: '+path);
+  };
+  return {request,calls};
+}
+
 test('partial Activity load failures stay visible until retry succeeds',async()=>{
   const env=environment(),view=renderer(env);
   let loadPass=0;
@@ -51,6 +79,89 @@ test('partial Activity load failures stay visible until retry succeeds',async()=
   assert.doesNotMatch(textOf(view.tree),/Couldn’t load .*recent work.*notifications/,'successful refresh clears the stale load error');
   assert.match(textOf(view.tree),/No unread notifications/);
   assert.match(textOf(view.tree),/No recent work yet/);
+  view.unmount();
+});
+
+test('My work search filters notifications and recent tasks locally and Clear restores both lists',async()=>{
+  const env=environment();
+  const {request,calls}=workspaceRequest({
+    notices:[
+      {id:'notice-a',title:'SEC snapshot ready',detail:'Form D filings are indexed.',conversation_id:'room-a'},
+      {id:'notice-b',title:'Approval requested',detail:'Review the draft before it is sent.',conversation_id:'room-b'},
+    ],
+    runs:[
+      {id:'run-a',title:'Climate fund sourcing',status:'completed',conversation_id:'room-a',created_at:'2026-10-29T12:00:00Z'},
+      {id:'run-b',title:'Water market mapping',status:'failed_network',conversation_id:'room-b',created_at:'2026-10-29T13:00:00Z'},
+    ],
+  });
+  const view=mountWorkspaceHub(env,request);
+  await view.flush();
+  const search=find(view.tree,node=>node.type==='input'&&node.props?.placeholder==='Notification details or task title');
+  assert.ok(search);
+
+  search.props.onChange({target:{value:'failed network'}});
+  await view.flush();
+  assert.match(textOf(view.tree),/Water market mapping/,'a normalized task status is searchable');
+  assert.doesNotMatch(textOf(view.tree),/Climate fund sourcing|SEC snapshot ready|Approval requested/);
+  assert.equal(textOf(find(view.tree,node=>node.props?.className==='hub-activity-count')),'0 of 2 notifications · 1 of 2 recent tasks');
+
+  const currentSearch=find(view.tree,node=>node.type==='input'&&node.props?.placeholder==='Notification details or task title');
+  currentSearch.props.onChange({target:{value:'Form D'} });
+  await view.flush();
+  assert.match(textOf(view.tree),/SEC snapshot ready/,'notification details are searchable');
+  assert.match(textOf(view.tree),/No recent work matches/);
+  assert.doesNotMatch(textOf(view.tree),/Water market mapping/);
+
+  button(view.tree,'Clear search').props.onClick();
+  await view.flush();
+  assert.match(textOf(view.tree),/Climate fund sourcing/);
+  assert.match(textOf(view.tree),/Water market mapping/);
+  assert.match(textOf(view.tree),/SEC snapshot ready/);
+  assert.match(textOf(view.tree),/Approval requested/);
+  assert.equal(calls.filter(path=>path==='/workspace/notifications').length,1,'searching uses the loaded notices without another request');
+  assert.equal(calls.filter(path=>path==='/workspace/runs').length,1,'searching uses the loaded task list without another request');
+  view.unmount();
+});
+
+test('assistant search matches name, role and description and reports a helpful empty state',async()=>{
+  const env=environment();
+  const {request,calls}=workspaceRequest();
+  const bots=[
+    {id:'bot-a',name:'Climate scout',role:'Founder research',description:'Company evidence review',systemPrompt:'Synthetic instructions'},
+    {id:'bot-b',name:'Meeting prep',role:'Relationship manager',description:'Conversation planning',systemPrompt:'Synthetic instructions'},
+  ];
+  const view=mountWorkspaceHub(env,request,{bots,initialTab:'Agents'});
+  await view.flush();
+  const search=find(view.tree,node=>node.type==='input'&&node.props?.placeholder==='Name, role or description');
+  assert.ok(search);
+
+  search.props.onChange({target:{value:'COMPANY EVIDENCE'} });
+  await view.flush();
+  assert.match(textOf(view.tree),/Climate scout/,'description matches ignore case');
+  assert.doesNotMatch(textOf(view.tree),/Meeting prep/);
+  assert.equal(textOf(find(view.tree,node=>node.props?.className==='hub-agent-count')),'1 of 2 assistants');
+
+  const currentSearch=find(view.tree,node=>node.type==='input'&&node.props?.placeholder==='Name, role or description');
+  currentSearch.props.onChange({target:{value:'no such assistant'} });
+  await view.flush();
+  assert.match(textOf(view.tree),/No assistants match/);
+  assert.equal(textOf(find(view.tree,node=>node.props?.className==='hub-agent-count')),'0 of 2 assistants');
+
+  button(view.tree,'Clear search').props.onClick();
+  await view.flush();
+  assert.match(textOf(view.tree),/Climate scout/);
+  assert.match(textOf(view.tree),/Meeting prep/);
+  assert.equal(textOf(find(view.tree,node=>node.props?.className==='hub-agent-count')),'2 assistants');
+  assert.equal(calls.filter(path=>path==='/workspace/runs').length,1,'assistant search does not reload unrelated workspace data');
+  view.unmount();
+});
+
+test('Saved instructions explains how to run a skill from chat',async()=>{
+  const env=environment();
+  const {request}=workspaceRequest();
+  const view=mountWorkspaceHub(env,request,{initialTab:'Skills'});
+  await view.flush();
+  assert.match(textOf(view.tree),/run one with \/name, for example \/weekly-brief/);
   view.unmount();
 });
 
