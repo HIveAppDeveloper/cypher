@@ -21,6 +21,7 @@ import { playVoiceResponse, speakWithBrowser } from '../lib/voice-playback';
 import { VoiceSilenceTimer } from '../lib/voice-activity';
 const POLL_MS = 1500;
 const VOICE_REPLY_SYNC_GRACE_MS = 15000;
+const VOICE_REPLY_CATCHUP_READS = 2;
 const VOICE_PROGRESS_DELAY_MS = 3000;
 const VOICE_PROGRESS_NOTICE = 'I’m still working on your request. I’ll let you know when it’s ready.';
 const MAX_BYTES = 3 * 1024 * 1024;
@@ -41,7 +42,7 @@ function messageDateLabel(value: string) {
   return `${day} · ${date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}`;
 }
 type VoiceStatus = 'off' | 'listening' | 'recording' | 'thinking' | 'notifying' | 'speaking' | 'error';
-type PendingVoiceTurn = { messageId: string; taskId: string | null; replyDeadline?: number; progressAt: number; progressAnnounced?: boolean };
+type PendingVoiceTurn = { conversationId: string; catchupReads?: number; messageId: string; taskId: string | null; replyDeadline?: number; progressAt: number; progressAnnounced?: boolean };
 const VOICE_STATUS_LABEL: Record<VoiceStatus, string> = { off: 'Voice off', listening: 'Listening', recording: 'I’m listening', thinking: 'Cypher is thinking', notifying: 'Progress update', speaking: 'Cypher is speaking', error: 'Voice needs attention' };
 function speechText(content: string) {
   const plain = content.replace(/```[\s\S]*?```/g, ' Code block omitted. ').replace(/!?\[([^\]]*)\]\([^)]*\)/g, '$1').replace(/`([^`]*)`/g, '$1').replace(/^\s{0,3}#{1,6}\s*/gm, '').replace(/^\s*>\s?/gm, '').replace(/[*_~]{1,3}/g, '').replace(/https?:\/\/\S+/g, '').replace(/\s+/g, ' ').trim();
@@ -173,9 +174,33 @@ export function ChatPanel({ bot, room, bots, onCreateBot, onCreateRoom, onQuickS
     const poll = async () => {
       if(!active || pending || !currentId || Date.now()<retryNotBefore.current)return;
       pending=true; clearTimeout(timer); let delay=10000;
-      try { const {messages:data,tasks}=await api.syncConversation(currentId,latestMessageId,controller.signal); if(active){failures=0;if(data.length)latestMessageId=data[data.length-1].id;if(firstPage.current){setHasEarlier(data.length===50);firstPage.current=false;}setMessages(previous=>mergeMessages(previous,data));setJobs(tasks);setLoading(false);setSyncError('');setSessionExpired(false);delay=tasks.some(t=>['pending','running','cancel_requested'].includes(t.status))||voicePending.current?.taskId?POLL_MS:10000;} }
+      try {
+        while (active) {
+          const requestedAfter = latestMessageId;
+          const {messages:data,tasks}=await api.syncConversation(currentId,requestedAfter,controller.signal);
+          if (!active) break;
+          failures=0;
+          if(data.length)latestMessageId=data[data.length-1].id;
+          if(firstPage.current){setHasEarlier(data.length===50);firstPage.current=false;}
+          setMessages(previous=>mergeMessages(previous,data));setJobs(tasks);setLoading(false);setSyncError('');setSessionExpired(false);
+          delay=tasks.some(t=>['pending','running','cancel_requested'].includes(t.status))||voicePending.current?.taskId?POLL_MS:10000;
+          const voice = voicePending.current;
+          // A full incremental page can hide an already-committed final reply.
+          // Spend at most two extra sequential reads per exact voice turn; this
+          // does not accelerate idle/running-task polling or the initial tail.
+          const canCatchUp = voiceModeRef.current && voice && voice.conversationId === currentId && voice.taskId
+            && (voice.catchupReads || 0) < VOICE_REPLY_CATCHUP_READS
+            && requestedAfter && latestMessageId && latestMessageId !== requestedAfter && data.length === 50
+            && tasks.some(task=>task.id===voice.taskId && task.status==='completed')
+            && !data.some(message=>message.taskId===voice.taskId && message.senderType!=='user'
+              && message.messageType===MessageType.TEXT && !message.internal && message.content.trim())
+            && !document.hidden && !controller.signal.aborted && Date.now()>=retryNotBefore.current;
+          if (!canCatchUp) break;
+          voice.catchupReads = (voice.catchupReads || 0) + 1;
+        }
+      }
       catch(e){if(active){failures++;setLoading(false);setSessionExpired(e instanceof ApiError && e.status===401);const wait=e instanceof ApiError?Math.max(0,e.retryAfter*1000):0;retryNotBefore.current=wait?Date.now()+wait:0;setRetryAt(retryNotBefore.current);setSyncError(e instanceof ApiError && e.code==='database_quota'?e.message:e instanceof ApiError && e.status===401?'Your session expired. Sign in again to reconnect.':'Couldn’t refresh this conversation. Your messages are saved; reconnecting automatically…');delay=Math.max(e instanceof ApiError?e.retryAfter*1000:0,Math.min(60000,2000*2**Math.min(failures,5)));}}
-      finally{pending=false;if(active){retryOpening.current=false;setRefreshing(false);}if(active){const next=refreshRequested && !failures?0:document.hidden?Math.max(delay,60000):delay;refreshRequested=false;timer=setTimeout(poll,next);}}
+      finally{pending=false;if(active){retryOpening.current=false;setRefreshing(false);}if(active){const next=document.hidden?Math.max(delay,60000):refreshRequested && !failures?0:delay;refreshRequested=false;timer=setTimeout(poll,next);}}
     };
     const refresh=()=>{if(document.hidden || Date.now()<retryNotBefore.current)return;if(pending){refreshRequested=true;return;}if(retryOpening.current)return;if(currentId){setRefreshing(true);void poll();}else{retryOpening.current=true;setSyncAttempt(value=>value+1);}};
     document.addEventListener('visibilitychange',refresh);window.addEventListener('grokbot:refresh',refresh);window.addEventListener('online',refresh);
@@ -248,7 +273,7 @@ export function ChatPanel({ bot, room, bots, onCreateBot, onCreateRoom, onQuickS
       const accepted = await api.sendMessage(conversationId, text, files, isVoiceTurn ? { ...options, output: 'text', voice_mode: true } : options, messageId,replyTo?.id);
       setReplyTo(null);
       unconfirmedDraft.current=null;
-      if (isVoiceTurn && voiceModeRef.current && session === voiceSession.current) { voicePending.current={messageId,taskId:accepted.task_id,progressAt:Date.now()+VOICE_PROGRESS_DELAY_MS}; setVoiceError(''); }
+      if (isVoiceTurn && voiceModeRef.current && session === voiceSession.current) { voicePending.current={conversationId,messageId,taskId:accepted.task_id,progressAt:Date.now()+VOICE_PROGRESS_DELAY_MS}; setVoiceError(''); }
       window.dispatchEvent(new Event('grokbot:refresh'));
       setMessages(previous=>previous.map(message=>message.id===messageId?{...message,delivery:'sent'}:message));
       setJobs(previous=>previous.some(job=>job.id===accepted.task_id)?previous:[{id:accepted.task_id,title:text.slice(0,100),status:'pending',created_at:new Date().toISOString()},...previous]);

@@ -3,9 +3,10 @@ import assert from 'node:assert/strict';
 import {Blob,File} from 'node:buffer';
 import {environment,renderer,load,find,textOf} from './support/component-harness.mjs';
 
+class FixtureApiError extends Error {constructor(message,status,retryAfter=0){super(message);this.status=status;this.retryAfter=retryAfter;}}
 const progressNotice='I’m still working on your request. I’ll let you know when it’s ready.';
-function voiceChat({initialStatus='completed',holdPlayback=false,failNotice=false,pausedInitially=false,holdNoticeHeaders=false,holdBrowserSpeech=false,existingTrack}={}) {
-  const env=environment(),view=renderer(env),spoken=[];
+function voiceChat({initialStatus='completed',holdPlayback=false,failNotice=false,pausedInitially=false,holdNoticeHeaders=false,holdBrowserSpeech=false,existingTrack,syncHandler}={}) {
+  const env=environment(),view=renderer(env),spoken=[],speechRequests=[];
   let phase='idle',status=initialStatus,voiceMode=true,frame,amplitude=128,syncs=0;
   const playbacks=[],noticeHeaders=[],browserSpeech=[];if(failNotice)env.window.speechSynthesis={cancel(){}};let vadStarts=0;const makeTrack=enabled=>Object.assign(new EventTarget(),{enabled,readyState:'live',stop(){this.readyState='ended';}});let track=existingTrack||makeTrack(!pausedInitially);
   const element=env.element;
@@ -30,11 +31,11 @@ function voiceChat({initialStatus='completed',holdPlayback=false,failNotice=fals
   const api={
     conversationForBot:async selected=> selected.id==='agent-a'?'conversation-a':'conversation-b',
     sendMessage:async()=>{phase='completed-without-message';return {task_id:'task-a'};},
-    syncConversation:async()=>{syncs++;const foreign={...reply,id:'other-reply',taskId:'other-task',content:'Never speak another task.',createdAt:'1970-01-01T00:00:00.500Z'};return {messages:phase==='reply'?[reply]:phase==='legacy-reply'?[{...reply,taskId:undefined}]:phase==='wrong-task'?[foreign]:phase==='page'?[...Array.from({length:49},(_,index)=>({...reply,id:'internal-'+index,internal:true,content:'Synthetic activity',createdAt:new Date(100+index).toISOString()})),foreign]:[],tasks:phase==='idle'?[]:[{id:'task-a',status,title:'Voice task',created_at:'1970-01-01T00:00:00Z'}]};},
+    syncConversation:async(conversation,after,signal)=>{syncs++;if(syncHandler)return syncHandler({conversation,after,signal,phase,status,reply,env});const foreign={...reply,id:'other-reply',taskId:'other-task',content:'Never speak another task.',createdAt:'1970-01-01T00:00:00.500Z'};return {messages:phase==='reply'?[reply]:phase==='legacy-reply'?[{...reply,taskId:undefined}]:phase==='wrong-task'?[foreign]:phase==='page'?[...Array.from({length:49},(_,index)=>({...reply,id:'internal-'+index,internal:true,content:'Synthetic activity',createdAt:new Date(100+index).toISOString()})),foreign]:[],tasks:phase==='idle'?[]:[{id:'task-a',status,title:'Voice task',created_at:'1970-01-01T00:00:00Z'}]};},
   };
   const imports={react:view.react,'./LoadingState':{LoadingState:'loading-state'},'./PendingReplySkeleton':{PendingReplySkeleton:'pending-skeleton'},
     '../lib/presets':{MODEL_CHOICES:[]},'./ContextPanel':{ContextPanel:'context-panel'},'./WorkPanel':{WorkPanel:'work-panel'},'./GlassSelect':{GlassSelect:'select'},
-    '../lib/types':{MessageType:{TEXT:'text'}},'../lib/api':{api,ApiError:class extends Error{}},'./BotAvatar':{BotAvatar:'avatar'},'./MessageBubble':{MessageBubble:'message-bubble'},
+    '../lib/types':{MessageType:{TEXT:'text'}},'../lib/api':{api,ApiError:FixtureApiError},'./BotAvatar':{BotAvatar:'avatar'},'./MessageBubble':{MessageBubble:'message-bubble'},
     './AgentConversationActivity':{AgentConversationActivity:'agent-activity',conversationMessages:messages=>messages,isAgentActivityMessage:()=>false},
     './QuickStart':{QuickStart:'quick-start'},'./RunControls':{RunControls:'run-controls',DEFAULT_OPTIONS:{}},'../lib/modelPolicy':{modelPolicy:value=>value},
     '../lib/attachments':{readAttachment:async file=>({name:file.name,mime:'audio/webm',data:'synthetic-audio-only'})},
@@ -48,10 +49,10 @@ function voiceChat({initialStatus='completed',holdPlayback=false,failNotice=fals
   const {ChatPanel}=load('../src/components/ChatPanel.tsx',imports,{...env.globals,AudioContext,MediaRecorder,Blob,File,
     crypto:{randomUUID:()=> 'incoming-a'},performance:{now:()=>env.time.now},
     requestAnimationFrame:callback=>{frame=callback;return 1;},cancelAnimationFrame:()=>{frame=undefined;},
-    fetch:async(url,options)=>{assert.equal(url,'/api/voice');const text=JSON.parse(options.body).text;spoken.push(text);if(holdNoticeHeaders&&text===progressNotice)return new Promise(resolve=>noticeHeaders.push({signal:options.signal,release:()=>resolve({ok:true})}));return failNotice&&text===progressNotice?{ok:false,json:async()=>({detail:'Progress speech unavailable'})}:{ok:true};},
+    fetch:async(url,options)=>{assert.equal(url,'/api/voice');const text=JSON.parse(options.body).text;spoken.push(text);speechRequests.push({text,atMs:env.time.now});if(holdNoticeHeaders&&text===progressNotice)return new Promise(resolve=>noticeHeaders.push({signal:options.signal,release:()=>resolve({ok:true})}));return failNotice&&text===progressNotice?{ok:false,json:async()=>({detail:'Progress speech unavailable'})}:{ok:true};},
   });
   view.mount(()=>ChatPanel({bot,room:null,bots:[bot],voiceMode,voiceStream:stream,onVoiceStop(){},onVoiceStream(){},onCreateBot(){},onCreateRoom(){},onOpenRecent(){},onQuickStart:async()=>{},onOpenLounge:async()=>{}}));
-  return {env,view,spoken,get track(){return track;},playbacks,noticeHeaders,browserSpeech,get vadStarts(){return vadStarts;},startAnotherCapture(){amplitude=160;frame();amplitude=128;},get syncs(){return syncs;},
+  return {env,view,spoken,speechRequests,get track(){return track;},playbacks,noticeHeaders,browserSpeech,get vadStarts(){return vadStarts;},startAnotherCapture(){amplitude=160;frame();amplitude=128;},get syncs(){return syncs;},
     async send(){await view.flush();amplitude=160;frame();await view.flush();amplitude=128;frame();await view.flush();await view.flush();},
     async refresh(nextPhase,nextStatus=status){phase=nextPhase;status=nextStatus;env.window.dispatchEvent(new Event('grokbot:refresh'));await view.flush();},
     setPhase(nextPhase){phase=nextPhase;},
@@ -263,4 +264,87 @@ test('teardown preserves ended input and active-session final answer resume stil
 test('a track that ends while work is pending is never presented as listening after the final answer',async()=>{
  const app=voiceChat({initialStatus:'running',holdPlayback:true});await app.send();app.track.stop();await app.refresh('reply','completed');
  app.playbacks[0].finish();await app.view.flush();assert.equal(app.track.enabled,false);assert.equal(app.track.readyState,'ended');assert.match(textOf(app.view.tree),/Restart voice/);app.view.unmount();
+});
+
+
+function paginatedVoice({fullPages=2,status='completed',duplicateCursor=false,hiddenOnFirst=false,failAtPage=0,holdAtPage=0,noCursor=false,foreignTask=false,finalInFullPage=false}={}) {
+ const calls=[],held=[];let inFlight=0,maxInFlight=0,firstCompletedAt=null;
+ const fullPage=n=>Array.from({length:50},(_,i)=>({id:`page-${n}-${i}`,taskId:'task-a',senderType:'bot',messageType:'text',internal:true,content:'Controlled activity',createdAt:new Date(n*1000+i).toISOString()}));
+ const app=voiceChat({initialStatus:status,syncHandler:({after,signal,phase,reply,env})=>{
+  const page=after?.startsWith('page-')?Number(after.split('-')[1])+1:1;
+  calls.push({after:after??null,atMs:env.time.now,page:phase==='idle'?0:page,signal});inFlight++;maxInFlight=Math.max(maxInFlight,inFlight);
+  const response=()=>{
+   inFlight--;
+   if(phase==='idle')return {messages:noCursor?[]:[{id:'seed',senderType:'user',messageType:'text',content:'Earlier turn',createdAt:'1970-01-01T00:00:00Z'}],tasks:[]};
+   if(page===failAtPage)throw new FixtureApiError('Controlled limit',429,5);
+   if(firstCompletedAt===null&&status==='completed')firstCompletedAt=env.time.now;
+   if(page===1&&hiddenOnFirst)env.document.hidden=true;
+   const messages=page<=fullPages?fullPage(duplicateCursor?1:page):[reply];if(finalInFullPage&&page===1)messages[49]={...reply,createdAt:new Date(1050).toISOString()};
+   return {messages,tasks:[{id:foreignTask?'other-task':'task-a',status,title:'Controlled task',created_at:'1970-01-01T00:00:00Z'}]};
+  };
+  return new Promise((resolve,reject)=>{const deliver=()=>{try{resolve(response());}catch(e){reject(e);}};if(phase!=='idle'&&page===holdAtPage)held.push({deliver,signal});else env.time.setTimeout(deliver,20);});
+ }});
+ return {app,calls,held,get maxInFlight(){return maxInFlight;},get firstCompletedAt(){return firstCompletedAt;},async advance(ms){for(let i=0;i<ms;i+=10){app.env.time.advance(Math.min(10,ms-i));await app.view.flush();}},async untilSpoken(limit=6500){for(let i=0;i<limit&&!app.spoken.length;i+=10){app.env.time.advance(10);await app.view.flush();}}};
+}
+
+test('a completed voice reply behind two full pages is read without per-page polling waits',async()=>{
+ const f=paginatedVoice();await f.app.send();await f.untilSpoken();
+ const final=f.app.speechRequests.find(r=>r.text==='A final answer after the sync caught up.');
+ console.log('VOICE_PAGE_TIMING '+JSON.stringify({scenario:'completed stored reply behind two50-message pages',clock:'controlled10ms scheduler/20ms per API response; zero provider/audio time',firstCompletedSnapshotMs:f.firstCompletedAt,finalSpeechRequestMs:final?.atMs,readbackWaitMs:final?.atMs-f.firstCompletedAt,syncRequests:f.calls.map(({after,atMs,page})=>({after,atMs,page})),maxInFlight:f.maxInFlight}));
+ assert.ok(final);assert.equal(final.atMs-f.firstCompletedAt,40);assert.equal(f.maxInFlight,1);assert.equal(f.calls.length,4);assert.equal(f.app.track.enabled,true);f.app.view.unmount();
+});
+test('voice catch-up has a per-turn two-extra-page cap and then yields to normal cadence',async()=>{
+ const f=paginatedVoice({fullPages:4});await f.app.send();await f.advance(500);
+ assert.equal(f.calls.filter(c=>c.page>0).length,3);assert.equal(f.app.spoken.length,0);assert.equal(f.maxInFlight,1);
+ await f.advance(1000);assert.equal(f.calls.filter(c=>c.page>0).length,3);await f.advance(200);assert.equal(f.calls.filter(c=>c.page>0).length,4);assert.equal(f.app.spoken.length,0);f.app.view.unmount();
+});
+test('a full page for running work does not increase polling frequency',async()=>{
+ const f=paginatedVoice({status:'running'});await f.app.send();await f.advance(500);
+ assert.equal(f.calls.filter(c=>c.page>0).length,1);assert.equal(f.app.spoken.length,0);f.app.view.unmount();
+});
+test('catch-up stops when the incremental cursor does not advance',async()=>{
+ const f=paginatedVoice({fullPages:4,duplicateCursor:true});await f.app.send();await f.advance(500);
+ assert.equal(f.calls.filter(c=>c.page>0).length,2);assert.equal(f.maxInFlight,1);f.app.view.unmount();
+});
+test('hidden tabs do not issue extra catch-up reads',async()=>{
+ const f=paginatedVoice({hiddenOnFirst:true});await f.app.send();await f.advance(500);
+ assert.equal(f.calls.filter(c=>c.page>0).length,1);f.app.view.unmount();
+});
+test('Retry-After during catch-up prevents any reads until the existing cooldown expires',async()=>{
+ const f=paginatedVoice({failAtPage:2});await f.app.send();await f.advance(1000);
+ assert.equal(f.calls.filter(c=>c.page>0).length,2);await f.app.refresh('completed-without-message');await f.advance(4000);
+ assert.equal(f.calls.filter(c=>c.page>0).length,2);assert.match(textOf(f.app.view.tree),/reconnecting automatically/);await f.advance(100);assert.equal(f.calls.filter(c=>c.page>0).length,3);f.app.view.unmount();
+});
+test('unmount cancels an in-flight catch-up and ignored-abort late data cannot speak or resume input',async()=>{
+ const f=paginatedVoice({holdAtPage:2});await f.app.send();await f.advance(500);assert.equal(f.held.length,1);
+ const track=f.app.track;f.app.view.unmount();assert.equal(f.held[0].signal.aborted,true);f.held[0].deliver();await f.app.view.flush();
+ assert.equal(track.enabled,false);assert.deepEqual(f.app.spoken,[]);assert.equal(f.app.view.updatesAfterUnmount,0);assert.equal(f.app.env.time.pending,0);
+});
+
+test('the newest-tail snapshot without an after cursor is never fast-drained',async()=>{
+ const f=paginatedVoice({noCursor:true});await f.app.send();await f.advance(500);
+ assert.equal(f.calls.filter(c=>c.page>0).length,1);assert.equal(f.calls.at(-1).after,null);f.app.view.unmount();
+});
+test('another completed task cannot spend the pending voice turn catch-up budget',async()=>{
+ const f=paginatedVoice({foreignTask:true});await f.app.send();await f.advance(500);
+ assert.equal(f.calls.filter(c=>c.page>0).length,1);assert.deepEqual(f.app.spoken,[]);f.app.view.unmount();
+});
+test('a valid final reply in a full page speaks once without an unnecessary extra read',async()=>{
+ const f=paginatedVoice({finalInFullPage:true});await f.app.send();await f.advance(500);
+ assert.equal(f.calls.filter(c=>c.page>0).length,1);assert.deepEqual(f.app.spoken,['A final answer after the sync caught up.']);f.app.view.unmount();
+});
+test('Stop ends a held catch-up chain without late speech, input resume or another page read',async()=>{
+ const f=paginatedVoice({holdAtPage:2});await f.app.send();await f.advance(500);assert.equal(f.held.length,1);
+ await f.app.stop();const count=f.calls.length;f.held[0].deliver();await f.app.view.flush();
+ assert.equal(f.calls.length,count);assert.deepEqual(f.app.spoken,[]);assert.equal(f.app.track.enabled,false);assert.equal(f.app.track.readyState,'ended');f.app.view.unmount();
+});
+test('conversation navigation aborts old catch-up and cannot resume its paused track from late data',async()=>{
+ const f=paginatedVoice({holdAtPage:2});await f.app.send();await f.advance(500);const old=f.app.track;
+ await f.app.switchConversation();assert.equal(f.held[0].signal.aborted,true);f.held[0].deliver();await f.app.view.flush();
+ assert.deepEqual(f.app.spoken,[]);assert.equal(old.enabled,false);f.app.view.unmount();
+});
+test('a refresh queued before a tab hides cannot bypass hidden-tab throttling after a full page',async()=>{
+ const f=paginatedVoice({hiddenOnFirst:true});await f.app.send();await f.advance(30);assert.equal(f.calls.at(-1).page,1);
+ f.app.env.window.dispatchEvent(new Event('grokbot:refresh'));await f.advance(500);
+ assert.equal(f.calls.filter(c=>c.page>0).length,1);f.app.view.unmount();
 });
