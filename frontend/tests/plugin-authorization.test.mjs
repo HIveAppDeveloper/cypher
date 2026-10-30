@@ -7,7 +7,7 @@ const auth=load('../src/lib/pluginAuthorization.ts',{}, {URL,Date});
 const id='e52dad3f-b0db-4cf8-a0f0-f9b88c16f230';
 const item={id:'fixture',name:'Fixture Service',url:'https://provider.example/mcp',domains:['provider.example'],description:'Synthetic service',category:'Testing'};
 const pending={id,name:item.name,url:'https://provider.example/allow?state=synthetic',startedAt:0};
-function panel({saved={},popupBlocked=false,api:overrides={},embedded=false,runtimeConnected=false,onManageSkills,existingSession,existingEnvironment,approve=async()=>undefined,locationSearch='?workspace=1&conversation=fixture'}={}){
+function panel({saved={},popupBlocked=false,api:overrides={},embedded=false,runtimeConnected=false,onManageSkills,onExploreConnection,existingSession,existingEnvironment,approve=async()=>undefined,locationSearch='?workspace=1&conversation=fixture'}={}){
   const session=existingSession||storage(saved),env=existingEnvironment||environment(session),view=renderer(env);let opens=0,closed=0;
   const makePopup=()=>({closed:false,opener:{},sessionStorage:storage(),document:{title:'',createElement:()=>({style:{}}),body:{appendChild(){}}},location:{url:'',replace(value){this.url=value;}},focus(){},close(){this.closed=true;closed++;}});
   const popup=makePopup(),popups=[];
@@ -19,7 +19,7 @@ function panel({saved={},popupBlocked=false,api:overrides={},embedded=false,runt
   const api={getPluginCatalog:async()=>[item],getPlugins:async()=>[],deviceStatus:async()=>({enrolled:false}),getAvailableConnections:async()=>[],pluginSyncStatus:async()=>null,accountStatus:async()=>({}),authorizePlugin:async()=>({status:'awaiting_login',flow_id:id,authorization_url:pending.url,name:item.name}),pluginAuthStatus:async()=>({status:'awaiting_login',name:item.name}),cancelPluginAuth:async()=>({status:'cancelled'}),...overrides};
   const scopedAuth=load('../src/lib/pluginAuthorization.ts',{}, {URL,Date:env.globals.Date,TextEncoder});
   const {PluginPanel}=load('../src/components/PluginPanel.tsx',{react:view.react,'./LoadingState':{LoadingState:'loading-state'},'../lib/api':{api},'../lib/plugin-status':load('../src/lib/plugin-status.ts',{}, {Date}),'../lib/canonical-app':load('../src/lib/canonical-app.ts',{}, {URL}),'../lib/device':{approveConnection:approve,enrollDevice:async()=>{}},'../lib/pluginAuthorization':scopedAuth,'../lib/connectionQueue':load('../src/lib/connectionQueue.ts'),'./McpDirectory':{McpDirectory:'mcp-directory'},'./cipher/CypherMark':{__esModule:true,default:'cypher-mark'},'./cipher/BinaryLens':{__esModule:true,default:'binary-lens'}},{...env.globals,URL,URLSearchParams,React:view.react.default,fetch:async()=>({ok:true,json:async()=>({connected:runtimeConnected,variables:[]})})});
-  view.mount(()=>PluginPanel({onClose(){},onManageSkills,embedded}));
+  view.mount(()=>PluginPanel({onClose(){},onManageSkills,onExploreConnection,embedded}));
   return {env,view,api,session,popup,popups,get opens(){return opens;},get closed(){return closed;}};
 }
 async function connect(p){await p.view.flush();find(p.view.tree,n=>n.type==='button'&&n.props?.['aria-label']===`Connect ${item.name}`).props.onClick();await p.view.flush();await p.view.flush();}
@@ -555,6 +555,15 @@ test('My apps search counts and shows only matching account connections',async()
   assert.match(textOf(p.view.tree),/Your connections 1/);assert.match(textOf(p.view.tree),/GitHub/);assert.doesNotMatch(textOf(p.view.tree),/Public docs/);
   find(p.view.tree,n=>n.props?.['aria-label']==='Search my apps').props.onChange({target:{value:'nothing'}});await p.view.flush();
   assert.match(textOf(p.view.tree),/Your connections 0/);assert.match(textOf(p.view.tree),/No connected services match your search/);p.view.unmount();
+});
+
+test('account preview sends the exact saved connection ID with its display name',async()=>{
+  const connection=linkedPlugin();let opened;
+  const p=panel({api:{getPlugins:async()=>[connection]},onExploreConnection:(name,pluginId)=>{opened={name,pluginId};}});
+  await p.view.flush();button(p.view.tree,'My apps · 1').props.onClick();await p.view.flush();
+  find(p.view.tree,n=>n.props?.['aria-label']==='Search my apps').props.onChange({target:{value:connection.name}});await p.view.flush();
+  button(p.view.tree,'See what’s in my account').props.onClick();
+  assert.deepEqual(opened,{name:connection.name,pluginId:connection.id});p.view.unmount();
 });
 
 test('structured registration responses retain recovery fields and readable errors',async()=>{

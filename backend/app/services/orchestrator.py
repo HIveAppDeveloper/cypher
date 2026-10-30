@@ -443,18 +443,28 @@ class AgentOrchestrator:
             efficient_run, specialty = effective_run(self.options, specialty, routing_request, required_modalities(messages), history_size=len(history))
             # The closed-set greeting fast path needs no plugin discovery or
             # tool schemas. Every substantive or contextual request keeps tools.
-            fast_greeting = self.options.allow_tools and not efficient_run.allow_tools
+            fast_greeting = self.options.plugin_scope_id is None and self.options.allow_tools and not efficient_run.allow_tools
             if not fast_greeting and not self.options.voice_mode:
                 from app.services.agent_skills import prompt_for_bot
                 messages[0]['content'] += await prompt_for_bot(db, bot_id, compact=True)
                 if not self.options.allow_tools or getattr(self, 'planning', False):
                     messages[0]['content'] += '\nSkill-selection tools are disabled for this phase; use the existing recipes as advice without changing the selection.'
             # Get available tools for this bot
+            def turn_tools(allow_tools):
+                if not allow_tools:
+                    return []
+                if self.options.plugin_scope_id is not None:
+                    return self.registry.get_scoped_plugin_tools()
+                return self.registry.get_tools_for_bot(bot)
+
             with stage('plugin_load'):
                 if not fast_greeting:
-                    await self.registry.load_plugins(db, bot)
-            tools = [] if getattr(self, "planning", False) or not efficient_run.allow_tools else self.registry.get_tools_for_bot(bot)
-            available = self.registry.get_tools_for_bot(bot) if efficient_run.allow_tools else []
+                    if self.options.plugin_scope_id is None:
+                        await self.registry.load_plugins(db, bot)
+                    else:
+                        await self.registry.load_plugins(db, bot, plugin_scope_id=self.options.plugin_scope_id)
+            tools = turn_tools(efficient_run.allow_tools and not getattr(self, "planning", False))
+            available = turn_tools(efficient_run.allow_tools and not getattr(self, "planning", False))
             messages[0]["content"] += "\nExecution tools enabled for this agent: " + ", ".join(t["function"]["name"] for t in available)
             messages[0]["content"] += (
                 "\nFor live online research, use search_web first, then browse_url and browser_extract for relevant sources. "
@@ -489,8 +499,11 @@ class AgentOrchestrator:
                     # A live direction must escape a prior 256-token greeting
                     # budget. Restore the original tools and resolve its route.
                     if fast_greeting:
-                        await self.registry.load_plugins(db, bot)
-                        execution_tools = self.registry.get_tools_for_bot(bot) if self.options.allow_tools else []
+                        if self.options.plugin_scope_id is None:
+                            await self.registry.load_plugins(db, bot)
+                        else:
+                            await self.registry.load_plugins(db, bot, plugin_scope_id=self.options.plugin_scope_id)
+                        execution_tools = turn_tools(self.options.allow_tools)
                         fast_greeting = False
                     tools = execution_tools
                     specialty = ('planning' if getattr(self,'planning',False) else task_specialty(routing_request, bot.role, required_modalities(messages))) if self.options.routing == 'auto' else 'general'

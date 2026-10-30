@@ -14,15 +14,65 @@ from mcp import ClientSession
 from mcp.client.streamable_http import streamablehttp_client
 from app.config import settings
 
+# `readOnlyHint` is untrusted unless the server is an explicitly reviewed
+# first-party endpoint. Keep this list in source control; registry entries and
+# user-supplied URLs never add trust. Match the exact HTTPS host and path.
+TRUSTED_PREVIEW_ANNOTATION_ENDPOINTS = frozenset({
+    ('https', 'mcp.linear.app', '/mcp'),
+    ('https', 'mcp.notion.com', '/mcp'),
+    ('https', 'mcp.vercel.com', ''),
+    ('https', 'mcp.windsor.ai', ''),
+    ('https', 'mcp.figma.com', '/mcp'),
+    ('https', 'api.canva.com', '/connect/v1/mcp'),
+    ('https', 'api.githubcopilot.com', '/mcp/readonly'),
+    ('https', 'gmailmcp.googleapis.com', '/mcp/v1'),
+    ('https', 'drivemcp.googleapis.com', '/mcp/v1'),
+    ('https', 'docsmcp.googleapis.com', '/mcp/v1'),
+    ('https', 'sheetsmcp.googleapis.com', '/mcp/v1'),
+    ('https', 'slidesmcp.googleapis.com', '/mcp/v1'),
+    ('https', 'calendarmcp.googleapis.com', '/mcp/v1'),
+    ('https', 'chatmcp.googleapis.com', '/mcp/v1'),
+    ('https', 'peoplemcp.googleapis.com', '/mcp/v1'),
+    ('https', 'classroommcp.googleapis.com', '/mcp/v1'),
+})
+REVIEWED_READ_ONLY_DOCUMENT_TOOLS = {
+    'mcp.deepwiki.com': {'read_wiki_structure', 'read_wiki_contents', 'ask_question'},
+    'learn.microsoft.com': {'microsoft_docs_search', 'microsoft_docs_fetch', 'microsoft_code_sample_search'},
+    'docs.mcp.cloudflare.com': {'search_cloudflare_documentation', 'get_cloudflare_documentation'},
+}
+
+def trusts_read_only_annotations(url):
+    try:
+        parsed = urlsplit(url)
+        return (parsed.scheme.casefold(), (parsed.hostname or '').casefold(), parsed.path.rstrip('/')) in TRUSTED_PREVIEW_ANNOTATION_ENDPOINTS
+    except (TypeError, ValueError):
+        return False
+
 def is_read_only(url, tool):
-    if tool.get('read_only'): return True
-    # Reviewed public documentation operations also predate annotation support.
-    known = {
-        'mcp.deepwiki.com': {'read_wiki_structure', 'read_wiki_contents', 'ask_question'},
-        'learn.microsoft.com': {'microsoft_docs_search', 'microsoft_docs_fetch', 'microsoft_code_sample_search'},
-        'docs.mcp.cloudflare.com': {'search_cloudflare_documentation', 'get_cloudflare_documentation'},
-    }
-    return tool.get('name') in known.get(urlsplit(url).hostname, set())
+    # Preserve the existing generic-chat classification and retry behavior.
+    # Scoped previews use `is_preview_read_only` below, which applies a
+    # stricter trust boundary before it can skip the owner's approval policy.
+    if tool.get('read_only') is True: return True
+    try:
+        parsed = urlsplit(url)
+    except (TypeError, ValueError):
+        return False
+    if parsed.scheme.casefold() != 'https': return False
+    return tool.get('name') in REVIEWED_READ_ONLY_DOCUMENT_TOOLS.get((parsed.hostname or '').casefold(), set())
+
+
+def is_preview_read_only(url, tool):
+    """Trust read-only annotations only from explicitly reviewed endpoints."""
+    if tool.get('read_only') is not True:
+        return False
+    if trusts_read_only_annotations(url):
+        return True
+    try:
+        parsed = urlsplit(url)
+    except (TypeError, ValueError):
+        return False
+    host = (parsed.hostname or '').casefold()
+    return parsed.scheme.casefold() == 'https' and tool.get('name') in REVIEWED_READ_ONLY_DOCUMENT_TOOLS.get(host, set())
 
 
 def transient_failure(error):
@@ -182,10 +232,65 @@ async def _discover_once(url, token=None, auth=None):
                 seen.add(cursor)
 
 
-async def invoke(plugin_id, tool_name, arguments):
+async def _scoped_preview_snapshot(db, plugin_id, scope_id):
+    """Return the current eligible preview tools for one linked tenant account."""
+    from sqlalchemy import select
+    from app.db.tenancy import current_tenant_id
+    from app.models.plugin import Plugin, PluginAuthorization
+
+    tenant_id = current_tenant_id.get()
+    if not tenant_id or not scope_id or str(plugin_id) != str(scope_id):
+        return None
+    plugin = (await db.execute(select(Plugin).where(
+        Plugin.id == str(scope_id), Plugin.tenant_id == tenant_id, Plugin.enabled.is_(True)
+    ))).scalar_one_or_none()
+    if plugin is None:
+        return None
+    try:
+        account_linked = bool(reveal(plugin.credential))
+    except (InvalidToken, ValueError):
+        account_linked = False
+    if not account_linked:
+        account_linked = bool(await db.scalar(select(PluginAuthorization.id).where(
+            PluginAuthorization.plugin_id == str(scope_id),
+            PluginAuthorization.tenant_id == tenant_id,
+            PluginAuthorization.status == 'connected',
+            PluginAuthorization.payload.is_not(None),
+        ).limit(1)))
+    if not account_linked:
+        return None
+
+    provider = 'google' if is_google_workspace(plugin) else None
+    tools = [{
+        **tool,
+        'plugin_id': plugin.id,
+        'service': plugin.name,
+        'authenticated': True,
+        'provider': provider,
+        'read_only': True,
+    } for tool in (plugin.tools or [])
+        if isinstance(tool, dict) and tool.get('enabled', True) is True and is_preview_read_only(plugin.url, tool)]
+    return {'plugin_id': plugin.id, 'service': plugin.name, 'tools': tools}
+
+
+async def scoped_preview_snapshot(plugin_id, scope_id):
+    """Recheck a preview account immediately before discovery or approval."""
+    from app.db.tenancy import current_tenant_id
+    if not current_tenant_id.get():
+        return None
+    from app.db.session import AsyncSessionLocal
+    async with AsyncSessionLocal() as db:
+        return await _scoped_preview_snapshot(db, plugin_id, scope_id)
+
+
+async def invoke(plugin_id, tool_name, arguments, *, preview_scope_id=None):
     from app.db.session import AsyncSessionLocal
     from app.models.plugin import Plugin
     async with AsyncSessionLocal() as db:
+        if preview_scope_id is not None:
+            snapshot = await _scoped_preview_snapshot(db, plugin_id, preview_scope_id)
+            if not snapshot or not any(tool['name'] == tool_name and tool.get('read_only') is True for tool in snapshot['tools']):
+                return {'success':False, 'error':'This preview only allows read-only tools from the selected connection. No provider call was made.', 'code':'preview_scope_denied'}
         plugin = await db.get(Plugin, plugin_id)
         if not plugin or not plugin.enabled or tool_name not in {t['name'] for t in plugin.tools if t.get('enabled',True)}:
             return {'success':False, 'error': 'Plugin or tool is disabled.', 'code':'disabled'}

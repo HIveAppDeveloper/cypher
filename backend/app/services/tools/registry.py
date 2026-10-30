@@ -73,6 +73,9 @@ class ToolRegistry:
 
     def __init__(self):
         self._tools: dict[str, dict] = {}
+        self._plugin_manifest = []
+        self._plugin_scope_id: str | None = None
+        self._plugin_scope_error: str | None = None
 
     def register(
         self,
@@ -102,28 +105,61 @@ class ToolRegistry:
         }
         logger.info(f"Registered tool: {name}")
 
-    async def load_plugins(self, db, bot):
+    async def load_plugins(self, db, bot, plugin_scope_id=None):
         self._plugin_manifest = []
+        self._plugin_scope_id = str(plugin_scope_id) if plugin_scope_id is not None else None
+        self._plugin_scope_error = None
         self._tools = {name: tool for name, tool in self._tools.items() if not name.startswith("plugin_")}
         # An empty list means all tool categories, matching get_tools_for_bot.
         # Older bots commonly have [] from the original schema default.
         categories = {str(category).casefold() for category in (bot.tools_enabled or [])}
-        if categories and "plugins" not in categories:
+        plugins_enabled = not categories or "plugins" in categories
+        if not plugins_enabled and self._plugin_scope_id is None:
             return
         from sqlalchemy import select
         from app.models.plugin import Plugin, PluginAuthorization
         from app.services.plugins import invoke
+        from app.db.tenancy import current_tenant_id
         # Do not accumulate schemas or stale tools across turns. Two small routing
         # tools keep model context bounded even with hundreds of connections.
-        connections = list((await db.execute(select(Plugin).where(Plugin.enabled == True))).scalars())
-        oauth_connections=set((await db.execute(select(PluginAuthorization.plugin_id).where(PluginAuthorization.status=='connected',PluginAuthorization.payload.is_not(None)))).scalars())
-        from app.services.plugins import is_read_only, is_google_workspace, reveal, InvalidToken
+        tenant_id = current_tenant_id.get()
+        if not plugins_enabled:
+            # Keep scoped routing tools registered so the assistant can explain
+            # the restriction, but never load or invoke a connection when the
+            # bot's configured categories omit plugins.
+            self._plugin_scope_error = 'This agent does not have connected-service tools enabled. No provider call was made.'
+            connections = []
+            oauth_connections = set()
+        else:
+            connection_query = select(Plugin).where(Plugin.enabled == True)
+            if self._plugin_scope_id is not None:
+                if not tenant_id:
+                    self._plugin_scope_error = 'The selected connection is unavailable or has no eligible read-only tools. No provider call was made.'
+                    connections = []
+                else:
+                    connection_query = connection_query.where(Plugin.tenant_id == tenant_id)
+                    connections = list((await db.execute(connection_query)).scalars())
+                    connections = [plugin for plugin in connections if str(plugin.id) == self._plugin_scope_id]
+                if not connections:
+                    self._plugin_scope_error = 'The selected connection is unavailable or has no eligible read-only tools. No provider call was made.'
+            else:
+                connections = list((await db.execute(connection_query)).scalars())
+            if self._plugin_scope_id is not None and not tenant_id:
+                oauth_connections = set()
+            else:
+                authorizations = select(PluginAuthorization.plugin_id).where(PluginAuthorization.status=='connected',PluginAuthorization.payload.is_not(None))
+                if self._plugin_scope_id is not None:
+                    authorizations = authorizations.where(PluginAuthorization.plugin_id == self._plugin_scope_id, PluginAuthorization.tenant_id == tenant_id)
+                oauth_connections=set((await db.execute(authorizations)).scalars())
+        from app.services.plugins import is_read_only, is_preview_read_only, is_google_workspace, reveal, InvalidToken
         def linked(plugin):
             try:
                 return bool(reveal(plugin.credential)) or plugin.id in oauth_connections
             except (InvalidToken, ValueError):
                 return plugin.id in oauth_connections
         account_linked = {plugin.id: linked(plugin) for plugin in connections}
+        if self._plugin_scope_id is not None and connections and not account_linked.get(connections[0].id):
+            self._plugin_scope_error = 'The selected connection is unavailable or has no eligible read-only tools. No provider call was made.'
         google_ids={p.id for p in connections if is_google_workspace(p)}
         from urllib.parse import urlsplit
         def hostname(url):
@@ -150,18 +186,37 @@ class ToolRegistry:
                 message = 'This legacy website placeholder is not an executable MCP connection. Connect a supported provider or its published HTTPS MCP endpoint.'
             unsupported[plugin.id] = {'code':'unsupported_endpoint', 'message':message,
                                       'suggested_service':service, 'replacement_plugin_ids':replacements}
-        manifest = [{**tool, 'plugin_id':p.id, 'service':p.name, 'authenticated':account_linked[p.id], 'provider':'google' if p.id in google_ids else None, 'read_only':is_read_only(p.url, tool)} for p in connections if p.id not in unsupported for tool in p.tools if tool.get('enabled', True)]
+        manifest = [{**tool, 'plugin_id':p.id, 'service':p.name, 'authenticated':account_linked[p.id], 'provider':'google' if p.id in google_ids else None, 'read_only':is_read_only(p.url, tool), 'preview_read_only':is_preview_read_only(p.url, tool)} for p in connections if p.id not in unsupported for tool in p.tools if tool.get('enabled', True)]
+        if self._plugin_scope_id is not None:
+            if self._plugin_scope_id in unsupported:
+                self._plugin_scope_error = 'The selected connection is unavailable or has no eligible read-only tools. No provider call was made.'
+            manifest = [tool for tool in manifest if str(tool['plugin_id']) == self._plugin_scope_id and tool['preview_read_only']]
+            if not manifest and not self._plugin_scope_error:
+                self._plugin_scope_error = 'The selected connection is unavailable or has no eligible read-only tools. No provider call was made.'
         self._plugin_manifest = manifest
-        if not manifest and not unsupported:
+        if not manifest and not unsupported and self._plugin_scope_id is None:
             return
         async def search(arguments, bot_id):
             query=str(arguments.get('query','')).strip()
+            search_manifest = manifest
+            if self._plugin_scope_id is not None:
+                if self._plugin_scope_error:
+                    return {'tools':[], 'total_matches':0, 'error':self._plugin_scope_error, 'code':'preview_scope_unavailable'}
+                requested_id=arguments.get('plugin_id')
+                if requested_id is not None and str(requested_id) != self._plugin_scope_id:
+                    return {'tools':[], 'total_matches':0, 'error':'This preview is limited to the selected connection. No provider call was made.', 'code':'preview_scope_denied'}
+                arguments={**arguments,'plugin_id':self._plugin_scope_id}
+                from app.services.plugins import scoped_preview_snapshot
+                snapshot=await scoped_preview_snapshot(self._plugin_scope_id,self._plugin_scope_id)
+                if not snapshot or not snapshot['tools']:
+                    return {'tools':[], 'total_matches':0, 'error':'The selected connection is unavailable or has no eligible read-only tools. No provider call was made.', 'code':'preview_scope_unavailable'}
+                search_manifest=snapshot['tools']
             unavailable = unsupported.get(arguments.get('plugin_id'))
             if unavailable is None and arguments.get('service'):
                 unavailable = next((unsupported[p.id] for p in connections if p.id in unsupported and p.name.casefold() == str(arguments['service']).casefold()), None)
             if unavailable:
                 return {'tools':[], 'total_matches':0, 'error':unavailable['message'], 'code':'unsupported_endpoint', 'recovery_message':unavailable['message'], 'recovery':unavailable}
-            scoped=[t for t in manifest if not arguments.get('plugin_id') or t['plugin_id']==arguments['plugin_id']]
+            scoped=[t for t in search_manifest if not arguments.get('plugin_id') or t['plugin_id']==arguments['plugin_id']]
             google_aliases={'gmail':'gmail_','google gmail':'gmail_','calendar':'calendar_','google calendar':'calendar_','drive':'drive_','google drive':'drive_','docs':'docs_','google docs':'docs_','sheets':'sheets_','google sheets':'sheets_','slides':'slides_','google slides':'slides_','contacts':'people_','google contacts':'people_','tasks':'tasks_','google tasks':'tasks_'}
             requested_service=str(arguments.get('service','')).strip().casefold()
             google_prefix=google_aliases.get(requested_service)
@@ -176,6 +231,14 @@ class ToolRegistry:
             ranked=rank_plugin_tools(scoped,query,None if arguments.get('plugin_id') or google_scope else arguments.get('service'))
             return {'tools': [{'plugin_id':t['plugin_id'], 'service':t['service'], 'authenticated':t['authenticated'], 'name':t['name'], 'description':t.get('description',''), 'parameters':t['schema'],'read_only':t['read_only']} for t in ranked[:12]], 'total_matches':len(ranked), 'instruction':'Call plugin_call with the exact returned plugin_id, tool_name and parameters. Bare service names include existing account variants; select the correct account. Use service or plugin_id to keep follow-up discovery scoped. Prefer account-backed services for private account actions. Search is discovery, not evidence that an action ran. If an exact operation is unavailable, use a relevant supported operation or report the limit; do not invent a tool or hunt for tokens in the sandbox.'}
         async def call(arguments, bot_id):
+            if self._plugin_scope_id is not None:
+                selected=next((tool for tool in manifest if str(tool['plugin_id']) == self._plugin_scope_id and tool['name'] == arguments.get('tool_name')),None)
+                if self._plugin_scope_error or str(arguments.get('plugin_id')) != self._plugin_scope_id or not selected or not selected.get('read_only'):
+                    return {'success':False, 'error':'This preview only allows read-only tools from the selected connection. No provider call was made.', 'code':'preview_scope_denied'}
+                from app.services.plugins import scoped_preview_snapshot
+                snapshot=await scoped_preview_snapshot(arguments.get('plugin_id'),self._plugin_scope_id)
+                if not snapshot or not any(tool['name'] == arguments.get('tool_name') and tool.get('read_only') is True for tool in snapshot['tools']):
+                    return {'success':False, 'error':'This preview only allows read-only tools from the selected connection. No provider call was made.', 'code':'preview_scope_denied'}
             if arguments.get('plugin_id') in unsupported:
                 recovery = unsupported[arguments['plugin_id']]
                 return {'success':False, 'error':recovery['message'], 'code':'unsupported_endpoint', 'recovery_message':recovery['message'], 'recovery':recovery}
@@ -188,9 +251,15 @@ class ToolRegistry:
                 parsed=urlsplit(values['idOrUrl'])
                 if parsed.username or parsed.password:return {'error':'Use a deployment ID or hostname without embedded credentials.'}
                 values['idOrUrl']=parsed.hostname
+            if self._plugin_scope_id is not None:
+                return await invoke(arguments['plugin_id'], arguments['tool_name'], values, preview_scope_id=self._plugin_scope_id)
             return await invoke(arguments['plugin_id'], arguments['tool_name'], values)
         self.register('plugin_search', 'Find tools in existing connected services. Set service (for example Vercel or GitHub) or plugin_id to scope operation discovery. Bare brand names also find account-qualified connections. Exact tool names rank first. Use an empty query without scope to discover existing connections; account-backed grants appear first. Then call plugin_call with the exact returned schema.', {'type':'object','properties':{'query':{'type':'string'},'service':{'type':'string','description':'Connection or brand name, such as Vercel, GitHub, or GitHub · Hive.'},'plugin_id':{'type':'string','description':'Existing connection ID to scope discovery, instead of service.'}},'required':['query']}, search)
         self.register('plugin_call', 'Run a connected service tool returned by plugin_search. Match its exact parameters. Verify the returned result before claiming success.', {'type':'object','properties':{'plugin_id':{'type':'string'},'tool_name':{'type':'string'},'arguments':{'type':'object','additionalProperties':True}},'required':['plugin_id','tool_name','arguments']}, call)
+
+    def get_scoped_plugin_tools(self) -> list[dict]:
+        """Return only routing tools for a connection-scoped preview run."""
+        return [self._tools[name]['definition'] for name in ('plugin_search','plugin_call') if name in self._tools]
 
     def replay_safe(self, name, arguments):
         if name=='local_device':return arguments.get('action') in {'list','status'}
@@ -593,6 +662,28 @@ class ToolRegistry:
         if name not in self._tools:
             logger.warning(f"Tool not found: {name}")
             return {"error": f"Unknown tool: {name}"}
+
+        if self._plugin_scope_id is not None:
+            if name not in {'plugin_search','plugin_call'}:
+                return {'error':'Only selected-connection preview tools are available in this run.', 'code':'preview_scope_denied'}
+            if name == 'plugin_search':
+                requested_id=arguments.get('plugin_id')
+                if self._plugin_scope_error:
+                    return {'tools':[], 'total_matches':0, 'error':self._plugin_scope_error, 'code':'preview_scope_unavailable'}
+                if requested_id is not None and str(requested_id) != self._plugin_scope_id:
+                    return {'tools':[], 'total_matches':0, 'error':'This preview is limited to the selected connection. No provider call was made.', 'code':'preview_scope_denied'}
+                from app.services.plugins import scoped_preview_snapshot
+                snapshot=await scoped_preview_snapshot(self._plugin_scope_id,self._plugin_scope_id)
+                if not snapshot or not snapshot['tools']:
+                    return {'tools':[], 'total_matches':0, 'error':'The selected connection is unavailable or has no eligible read-only tools. No provider call was made.', 'code':'preview_scope_unavailable'}
+            if name == 'plugin_call':
+                selected=next((tool for tool in getattr(self,'_plugin_manifest',[]) if str(tool['plugin_id']) == self._plugin_scope_id and tool['name'] == arguments.get('tool_name')),None)
+                if self._plugin_scope_error or str(arguments.get('plugin_id')) != self._plugin_scope_id or not selected or not selected.get('read_only'):
+                    return {'success':False, 'error':'This preview only allows read-only tools from the selected connection. No provider call was made.', 'code':'preview_scope_denied'}
+                from app.services.plugins import scoped_preview_snapshot
+                snapshot=await scoped_preview_snapshot(arguments.get('plugin_id'),self._plugin_scope_id)
+                if not snapshot or not any(tool['name'] == arguments.get('tool_name') and tool.get('read_only') is True for tool in snapshot['tools']):
+                    return {'success':False, 'error':'This preview only allows read-only tools from the selected connection. No provider call was made.', 'code':'preview_scope_denied'}
 
         handler = self._tools[name]["handler"]
         try:

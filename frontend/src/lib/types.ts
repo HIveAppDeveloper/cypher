@@ -5,6 +5,6 @@ export interface Message { taskId?:string; threadRootId?:string; replyToId?:stri
 export interface WebSocketMessage { type: string; payload: { channel?: string; botId?: string; status?: BotStatus }; }
 
 export interface Attachment { name: string; mime: string; data: string; url?: string; }
-export interface RunOptions { voice_mode?: boolean; routing?: 'auto' | 'manual'; allow_tools?: boolean; steering?: string; output?: 'text' | 'image'; aspect_ratio?: string; duration?: number; temperature: number; max_tokens: number; max_iterations: number; team_rounds: number; model?: string; provider?: string; reasoning_effort?: string; }
+export interface RunOptions { voice_mode?: boolean; routing?: 'auto' | 'manual'; allow_tools?: boolean; plugin_scope_id?: string; steering?: string; output?: 'text' | 'image'; aspect_ratio?: string; duration?: number; temperature: number; max_tokens: number; max_iterations: number; team_rounds: number; model?: string; provider?: string; reasoning_effort?: string; }
 export interface Conversation { id: string; title: string; is_group: boolean; bot_ids: string[]; }
 export interface Job { id: string; title: string; status: string; created_at: string; }
