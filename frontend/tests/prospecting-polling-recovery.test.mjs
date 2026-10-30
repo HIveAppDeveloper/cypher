@@ -138,6 +138,50 @@ test('company research does not retry an authentication failure', async () => {
   view.unmount();
 });
 
+test('company research draft keeps intentionally cleared fields in the preview, clipboard, and Gmail compose link', async () => {
+  const env = environment();
+  let copied = '';
+  env.globals.navigator = { clipboard: { writeText: async value => { copied = value; } } };
+  const candidate = {
+    id: 'synthetic-candidate', name: 'Synthetic Company', source_url: 'https://example.com/company',
+    retrieved_at: '2026-10-30T00:00:00.000Z',
+    observed: { description: 'Synthetic public description', source: 'Synthetic source', organization_status: 'active' },
+    inferred: { fit_score: 0.8, matched_terms: ['synthetic'], reason: 'Synthetic evidence overlap' },
+    contact: { status: 'unverified', email: null },
+    draft: { subject: 'Synthetic subject', body: 'Synthetic outreach body', status: 'local_draft', recipient: null, review_required: true, source_urls: [] },
+  };
+  const run = { ...companyRun('draft-run', 'Synthetic market', 'completed'), results: [candidate] };
+  const request = async path => {
+    if (path === '/prospecting/settings') return { akta_available: false };
+    if (path === '/prospecting/runs') return [run];
+    throw new Error(`Unexpected request: ${path}`);
+  };
+  const view = mountCompany(env, request);
+  await view.flush();
+
+  const subjectLabel = find(view.tree, node => node.type === 'label' && textOf(node).includes('Subject'));
+  const messageLabel = find(view.tree, node => node.type === 'label' && textOf(node).includes('Message'));
+  const subject = find(subjectLabel, node => node.type === 'input');
+  const body = find(messageLabel, node => node.type === 'textarea');
+  assert.ok(subject, 'saved subject is editable');
+  assert.ok(body, 'saved message is editable');
+  assert.equal(subject.props.value, 'Synthetic subject');
+  assert.equal(body.props.value, 'Synthetic outreach body');
+  subject.props.onChange({ target: { value: '' } });
+  body.props.onChange({ target: { value: '' } });
+  view.render();
+
+  const clearedSubjectLabel = find(view.tree, node => node.type === 'label' && textOf(node).includes('Subject'));
+  const clearedMessageLabel = find(view.tree, node => node.type === 'label' && textOf(node).includes('Message'));
+  assert.equal(find(clearedSubjectLabel, node => node.type === 'input')?.props.value, '', 'an empty subject remains empty');
+  assert.equal(find(clearedMessageLabel, node => node.type === 'textarea')?.props.value, '', 'an empty message remains empty');
+  const compose = find(view.tree, node => node.type === 'a' && textOf(node).includes('Open Gmail compose'));
+  assert.match(compose.props.href, /&su=&body=$/, 'Gmail compose receives the empty edited fields');
+  await button(view.tree, 'Copy draft').props.onClick();
+  assert.equal(copied, 'Subject: \n\n', 'copy uses the empty edited fields');
+  view.unmount();
+});
+
 test('selecting a newer company research run aborts the older poll and ignores its late response', async () => {
   const env = environment();
   let resolveOld;
