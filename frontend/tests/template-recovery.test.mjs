@@ -26,6 +26,8 @@ const template = {
 function pageFixture(request) {
   const env = environment();
   const view = renderer(env);
+  let currentId = 'fixture-id';
+  view.setTemplateId = next => { currentId = next; view.rerender(); };
   view.react.use = value => value;
   const imports = {
     react: view.react,
@@ -40,7 +42,7 @@ function pageFixture(request) {
     ...env.globals,
     React: view.react.default,
   });
-  view.mount(() => TemplatePage({ params: { id: 'fixture-id' } }));
+  view.mount(() => TemplatePage({ params: { id: currentId } }));
   return view;
 }
 
@@ -89,6 +91,37 @@ test('a successful import confirms completion and opens the workspace', async ()
   assert.match(textOf(view.tree), /Added to your workspace/);
   assert.match(textOf(view.tree), /Research helper copy is ready/);
   assert.ok(find(view.tree, node => node.type === 'a' && node.props.href === '/?bot=imported-agent'));
+  view.unmount();
+});
+
+test('a late import completion cannot mark a different shared template as imported', async () => {
+  const importResult = deferred();
+  const secondTemplate = { ...template, bot: { ...template.bot, name: 'Second agent' } };
+  let importCalls = 0;
+  const view = pageFixture(path => {
+    if (path.endsWith('/shared/second-id')) return Promise.resolve(secondTemplate);
+    if (path.includes('/shared/')) return Promise.resolve(template);
+    importCalls++;
+    return importResult.promise;
+  });
+  await view.flush();
+
+  button(view.tree, 'Add to my workspace').props.onClick();
+  await view.flush();
+  assert.match(textOf(view.tree), /Adding agent/);
+  assert.equal(importCalls, 1);
+
+  view.setTemplateId('second-id');
+  await view.flush();
+  assert.match(textOf(view.tree), /Second agent/);
+  assert.doesNotMatch(textOf(view.tree), /Added to your workspace/);
+
+  importResult.resolve({ id: 'first-import', name: 'Research helper copy' });
+  await view.flush();
+  assert.match(textOf(view.tree), /Second agent/);
+  assert.doesNotMatch(textOf(view.tree), /Research helper copy is ready/);
+  assert.ok(button(view.tree, 'Add to my workspace'), 'the new template remains available to import');
+  assert.equal(importCalls, 1);
   view.unmount();
 });
 

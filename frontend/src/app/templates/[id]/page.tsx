@@ -1,6 +1,6 @@
 'use client';
 
-import { use, useEffect, useState } from 'react';
+import { use, useEffect, useRef, useState } from 'react';
 import { ApiError, request } from '../../../lib/api';
 import { safeInternalReturnTo } from '../../../lib/canonical-app';
 import CypherMark from '../../../components/cipher/CypherMark';
@@ -42,6 +42,9 @@ function importFailure(error: unknown) {
 
 export default function TemplatePage(props: Props) {
   const { id } = use(props.params);
+  const activeTemplateId = useRef(id);
+  const importGeneration = useRef(0);
+  activeTemplateId.current = id;
   const [template, setTemplate] = useState<SharedTemplate | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadMessage, setLoadMessage] = useState('');
@@ -53,8 +56,10 @@ export default function TemplatePage(props: Props) {
 
   useEffect(() => {
     const controller = new AbortController();
+    importGeneration.current++;
     let active = true;
     setLoading(true);
+    setBusy(false);
     setLoadMessage('');
     setImportMessage('');
     setImported(false);
@@ -76,12 +81,15 @@ export default function TemplatePage(props: Props) {
 
     return () => {
       active = false;
+      importGeneration.current++;
       controller.abort();
     };
   }, [id, attempt]);
 
   async function install() {
     if (!template || busy) return;
+    const requestedId = id;
+    const generation = importGeneration.current;
     setBusy(true);
     setImportMessage('');
     try {
@@ -89,12 +97,17 @@ export default function TemplatePage(props: Props) {
         method: 'POST',
         body: JSON.stringify(template),
       }) as { id: string; name: string };
+      if (generation !== importGeneration.current || activeTemplateId.current !== requestedId) return;
       setImportedBot(result);
       setImported(true);
     } catch (error) {
-      setImportMessage(importFailure(error));
+      if (generation === importGeneration.current && activeTemplateId.current === requestedId) {
+        setImportMessage(importFailure(error));
+      }
     } finally {
-      setBusy(false);
+      if (generation === importGeneration.current && activeTemplateId.current === requestedId) {
+        setBusy(false);
+      }
     }
   }
 
