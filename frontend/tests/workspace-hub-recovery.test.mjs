@@ -156,6 +156,15 @@ test('assistant search matches name, role and description and reports a helpful 
   view.unmount();
 });
 
+test('Saved instructions explains how to run a skill from chat',async()=>{
+  const env=environment();
+  const {request}=workspaceRequest();
+  const view=mountWorkspaceHub(env,request,{initialTab:'Skills'});
+  await view.flush();
+  assert.match(textOf(view.tree),/run one with \/name, for example \/weekly-brief/);
+  view.unmount();
+});
+
 test('settings recovery hydrates the current sidebar section and an untouched details save preserves it',async()=>{
   const env=environment(),view=renderer(env),calls=[];
   let settingsReads=0;

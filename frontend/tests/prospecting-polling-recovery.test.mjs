@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { environment, renderer, load, find, textOf, deferred } from './support/component-harness.mjs';
+import { environment, renderer, load, find, textOf, button, deferred } from './support/component-harness.mjs';
 
 class ApiError extends Error {
   constructor(message, status, retryAfter = 0) {
@@ -464,6 +464,72 @@ test('starting a newer VC run aborts an older run’s pending final founder refr
   view.unmount();
 });
 
+test('a late completion refresh cannot replace a newer filtered founder search or page', async () => {
+  const env = environment();
+  const oldFinalFounders = deferred();
+  const initialPage = historicalPage('idle');
+  initialPage.database.records = 1;
+  initialPage.database.matched_records = 60;
+  initialPage.page.returned = 25;
+  const searchedPage = historicalPage('idle');
+  searchedPage.database.records = 7;
+  searchedPage.database.matched_records = 60;
+  searchedPage.page.returned = 25;
+  const nextPage = historicalPage('idle');
+  nextPage.database.records = 8;
+  nextPage.database.matched_records = 60;
+  nextPage.page = { limit: 25, offset: 25, returned: 25 };
+  const stalePage = historicalPage('idle');
+  stalePage.database.records = 99;
+  stalePage.database.matched_records = 99;
+  let founderCalls = 0;
+  let oldRefreshSignal;
+  const founderPaths = [];
+  const request = async (path, options = {}) => {
+    if (path.startsWith('/prospecting/investors/founders?')) {
+      founderPaths.push(path);
+      const call = ++founderCalls;
+      if (call === 1) return initialPage;
+      if (call === 2) { oldRefreshSignal = options.signal; return oldFinalFounders.promise; }
+      if (call === 3) return searchedPage;
+      if (call === 4) return nextPage;
+      throw new Error(`Unexpected founder request: ${path}`);
+    }
+    if (path === '/prospecting/investors/runs') return [matchRun('old-run')];
+    if (path === '/prospecting/investors/runs/old-run') return matchRun('old-run', 'completed');
+    throw new Error(`Unexpected request: ${path}`);
+  };
+  const view = mountVc(env, request);
+  await view.flush();
+  assert.ok(oldRefreshSignal, 'run completion starts a deferred final data refresh');
+
+  const query = find(view.tree, node => node.type === 'input' && node.props?.placeholder === 'Search people, companies, or roles…');
+  const industry = find(view.tree, node => node.type === 'input' && node.props?.placeholder === 'Any industry');
+  assert.ok(query);
+  assert.ok(industry);
+  query.props.onChange({ target: { value: 'climate' } });
+  industry.props.onChange({ target: { value: 'energy' } });
+  await view.flush();
+  const searchForm = find(view.tree, node => node.type === 'form' && node.props?.className === 'vc-search');
+  searchForm.props.onSubmit({ preventDefault() {} });
+  await view.flush();
+  assert.ok(oldRefreshSignal.aborted, 'a newer filtered search cancels the pending completion refresh');
+  assert.match(founderPaths[2], /q=climate/);
+  assert.match(founderPaths[2], /industry=energy/);
+
+  button(view.tree, 'Next').props.onClick();
+  await view.flush();
+  assert.match(founderPaths[3], /offset=25/);
+  assert.equal(find(view.tree, node => node.type === 'button' && textOf(node) === 'Previous').props.disabled, false);
+
+  oldFinalFounders.resolve(stalePage);
+  await view.flush();
+  const stats = find(view.tree, node => node.props?.className === 'vc-stats');
+  assert.equal(textOf(find(stats, node => node.type === 'strong')), '8', 'late old data cannot replace the newer page');
+  assert.equal(find(view.tree, node => node.type === 'button' && textOf(node) === 'Previous').props.disabled, false, 'late old data cannot reset the page offset');
+  view.unmount();
+});
+
 test('VC thesis labels and prompt follow the selected investor or company direction', async () => {
   const env = environment();
   const request = async path => {
@@ -489,5 +555,8 @@ test('VC thesis labels and prompt follow the selected investor or company direct
   assert.match(textOf(view.tree), /Find investors using public company and fund evidence/);
   assert.ok(find(view.tree, node => node.type === 'input' && node.props?.placeholder === 'e.g. Early investors for a climate startup'));
   assert.ok(find(view.tree, node => node.type === 'button' && textOf(node) === 'Find matching investors'));
+  direction.props.onChange({target:{value:'companies_for_thesis'}});
+  await view.flush();
+  assert.ok(find(view.tree, node => node.type === 'button' && textOf(node) === 'Find matching companies'));
   view.unmount();
 });
