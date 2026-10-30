@@ -117,11 +117,15 @@ export function QuickStart({ onStart, onOpenRecent, onVoiceStart, options, onOpt
   return (
     <div className="quickstart">
       <div className="quickstart-panel" data-motion-entered={homeHasEntered}>
-      <div className="quickstart-mark" ref={logoRef} data-motion-active={logoMotionActive}>
-        <BinaryLens className="quickstart-real-lens" active={logoMotionActive} label="Cypher binary lens" />
+      <div className="home-welcome">
+        <div className="home-welcome-copy">
+          <h1>What would you like to get done?</h1>
+          <p className="quickstart-intro">Describe a task. The right tools come together automatically.</p>
+        </div>
+        <div className="quickstart-mark" ref={logoRef} data-motion-active={logoMotionActive}>
+          <BinaryLens className="quickstart-real-lens" active={logoMotionActive} label="Cypher binary lens" />
+        </div>
       </div>
-      <h1>What would you like to get done?</h1>
-      <p className="quickstart-intro">Describe a task. The right tools come together automatically.</p>
 
       <form onSubmit={start} className="task-composer" aria-busy={busy || readingFiles} data-motion-active={logoMotionActive}>
         <input ref={fileInput} className="visually-hidden" type="file" multiple aria-label="Choose task files" accept=".png,.jpg,.jpeg,.webp,.pdf,.txt,.md,.csv,.json,.mp3,.wav,.m4a,.ogg,.flac,.mp4,.webm,.mov" onChange={event => void addFiles(event.target.files)}/>
@@ -198,6 +202,8 @@ export function QuickStart({ onStart, onOpenRecent, onVoiceStart, options, onOpt
 
       {error ? <p className="quickstart-error" role="alert">{error}</p> : null}
 
+      <div className="home-starters">
+      <h2>Start with an idea</h2>
       <nav className="starter-prompts" aria-label="Start with an idea">
           {STARTER_PROMPTS.map(item => (
             <button
@@ -211,12 +217,14 @@ export function QuickStart({ onStart, onOpenRecent, onVoiceStart, options, onOpt
               }}
               className="starter-card"
             >
-              <StarterIcon name={item.icon}/>
+              <span className="starter-icon"><StarterIcon name={item.icon}/></span>
               <strong>{item.text}</strong>
-              <span>{item.description}</span>
+              <span className="starter-description">{item.description}</span>
+              <svg className="starter-arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6" /></svg>
             </button>
           ))}
       </nav>
+      </div>
 
       <RecentWork onOpen={onOpenRecent} />
 

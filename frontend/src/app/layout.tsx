@@ -17,6 +17,7 @@ import './cypher-reference.css';
 import './cypher-simple.css';
 import './agent-identity.css';
 import './cypher-purposeful.css';
+import './cypher-home.css';
 import type { Metadata } from 'next';
 import {CANONICAL_APP_ORIGIN} from '../lib/canonical-app';
 
