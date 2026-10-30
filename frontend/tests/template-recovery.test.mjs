@@ -81,14 +81,14 @@ test('an import sign-in error keeps the shared template as a safe return destina
 test('a successful import confirms completion and opens the workspace', async () => {
   const view = pageFixture(path => path.includes('/shared/')
     ? Promise.resolve(template)
-    : Promise.resolve({ id: 'imported-agent' }));
+    : Promise.resolve({ id: 'imported-agent', name: 'Research helper copy' }));
   await view.flush();
 
   button(view.tree, 'Add to my workspace').props.onClick();
   await view.flush();
   assert.match(textOf(view.tree), /Added to your workspace/);
-  assert.match(textOf(view.tree), /Research helper is ready/);
-  assert.ok(find(view.tree, node => node.type === 'a' && node.props.href === '/'));
+  assert.match(textOf(view.tree), /Research helper copy is ready/);
+  assert.ok(find(view.tree, node => node.type === 'a' && node.props.href === '/?bot=imported-agent'));
   view.unmount();
 });
 

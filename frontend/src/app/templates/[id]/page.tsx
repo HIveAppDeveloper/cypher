@@ -47,6 +47,7 @@ export default function TemplatePage(props: Props) {
   const [loadMessage, setLoadMessage] = useState('');
   const [importMessage, setImportMessage] = useState('');
   const [imported, setImported] = useState(false);
+  const [importedBot, setImportedBot] = useState<{ id: string; name: string } | null>(null);
   const [busy, setBusy] = useState(false);
   const [attempt, setAttempt] = useState(0);
 
@@ -55,6 +56,9 @@ export default function TemplatePage(props: Props) {
     let active = true;
     setLoading(true);
     setLoadMessage('');
+    setImportMessage('');
+    setImported(false);
+    setImportedBot(null);
     setTemplate(null);
 
     request('/workspace/templates/shared/' + encodeURIComponent(id), { signal: controller.signal })
@@ -81,10 +85,11 @@ export default function TemplatePage(props: Props) {
     setBusy(true);
     setImportMessage('');
     try {
-      await request('/workspace/templates/import', {
+      const result = await request('/workspace/templates/import', {
         method: 'POST',
         body: JSON.stringify(template),
-      });
+      }) as { id: string; name: string };
+      setImportedBot(result);
       setImported(true);
     } catch (error) {
       setImportMessage(importFailure(error));
@@ -171,8 +176,8 @@ export default function TemplatePage(props: Props) {
                   {imported ? (
                     <div className={styles.successState} role="status" aria-live="polite">
                       <h2 id="import-title">Added to your workspace</h2>
-                      <p>{template.bot.name} is ready. Connect any required accounts before its first task.</p>
-                      <a className={styles.primaryButton} href="/">Open workspace</a>
+                      <p>{importedBot?.name || template.bot.name} is ready. Connect any required accounts before its first task.</p>
+                      <a className={styles.primaryButton} href={importedBot?.id ? `/?bot=${encodeURIComponent(importedBot.id)}` : '/'}>Open workspace</a>
                     </div>
                   ) : (
                     <>
