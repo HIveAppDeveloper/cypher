@@ -79,6 +79,7 @@ export default function VcProspectingWorkspace({ accountId }: { accountId?: stri
   const shortlistKey = accountId ? `cypher-vc-shortlist:${accountId}` : null;
   const [shortlistLoadedFor, setShortlistLoadedFor] = useState<string | null>(null);
   const finalRefreshController = useRef<AbortController | null>(null);
+  const founderRequestGeneration = useRef(0);
 
   useEffect(() => () => finalRefreshController.current?.abort(), []);
 
@@ -106,6 +107,11 @@ export default function VcProspectingWorkspace({ accountId }: { accountId?: stri
   }, [data, shortlistItems, selectedFounderId]);
 
   const loadFounders = useCallback(async (nextOffset: number, signal?: AbortSignal) => {
+    if (!signal || signal !== finalRefreshController.current?.signal) {
+      finalRefreshController.current?.abort();
+      finalRefreshController.current = null;
+    }
+    const requestGeneration = ++founderRequestGeneration.current;
     const params = new URLSearchParams();
     if (query.trim()) params.set('q', query.trim());
     if (industry.trim()) params.set('industry', industry.trim());
@@ -114,7 +120,7 @@ export default function VcProspectingWorkspace({ accountId }: { accountId?: stri
     params.set('limit', '25');
     params.set('offset', String(nextOffset));
     const next: FounderPage = await request(`/prospecting/investors/founders?${params.toString()}`, { signal });
-    if (signal?.aborted) return next;
+    if (signal?.aborted || requestGeneration !== founderRequestGeneration.current) return next;
     setData(next);
     setOffset(nextOffset);
     return next;
@@ -124,9 +130,10 @@ export default function VcProspectingWorkspace({ accountId }: { accountId?: stri
     finalRefreshController.current?.abort();
     const controller = new AbortController();
     finalRefreshController.current = controller;
+    const requestGeneration = founderRequestGeneration.current + 1;
     try {
       await loadFounders(0, controller.signal);
-      return !controller.signal.aborted;
+      return !controller.signal.aborted && requestGeneration === founderRequestGeneration.current;
     } catch (failure) {
       if (controller.signal.aborted) return false;
       throw failure;
@@ -331,6 +338,7 @@ export default function VcProspectingWorkspace({ accountId }: { accountId?: stri
   const secMetricLabel = loading ? 'Loading' : initialDataFailure ? 'Unavailable' : undefined;
   const resultDirection = workspaceStep === 'thesis' ? direction : run?.direction ?? direction;
   const resultLabel = resultDirection === 'investors_for_thesis' ? 'investor' : 'company';
+  const resultPluralLabel = resultDirection === 'investors_for_thesis' ? 'investors' : 'companies';
 
   return <WorkflowShell section="investors"><main className="vc-page">
     <header className="vc-titlebar">
@@ -371,7 +379,7 @@ export default function VcProspectingWorkspace({ accountId }: { accountId?: stri
         <label>Describe what makes a good fit<textarea value={thesis} onChange={event => setThesis(event.target.value)} minLength={20} maxLength={4000} rows={5} required placeholder="Include the stage, location, and themes you care about." /></label>
         <label>Industries to focus on <span>Optional</span><input value={industries} onChange={event => setIndustries(event.target.value)} placeholder="Climate, energy, agriculture" /></label>
         <label>What should Cypher find?<select value={direction} onChange={event => setDirection(event.target.value as MatchRun['direction'])}><option value="companies_for_thesis">Companies that fit my fund</option><option value="investors_for_thesis">Investors for a company</option></select></label>
-        <button className="vc-primary" type="submit" disabled={starting || activeRun || oneLiner.trim().length < 4 || thesis.trim().length < 20}>{starting ? 'Starting research…' : activeRun ? 'Research is already running' : `Find matching ${resultLabel}s`}</button>
+        <button className="vc-primary" type="submit" disabled={starting || activeRun || oneLiner.trim().length < 4 || thesis.trim().length < 20}>{starting ? 'Starting research…' : activeRun ? 'Research is already running' : `Find matching ${resultPluralLabel}`}</button>
       </form>
       <p className="vc-footnote">Cypher reviews public sources. You can check every source before taking action.</p>
     </section> : null}
