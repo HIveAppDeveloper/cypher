@@ -174,3 +174,22 @@ test('SEC match prefill leaves the unverified recipient blank until the user sup
   ]);
   view.unmount();
 });
+
+test('a missing researched match offers a direct path back to VC intelligence',async()=>{
+  const calls=[];
+  const request=async(path,options={})=>{
+    calls.push({path,options});
+    if(path==='/sourcing/outreach/accounts')return {accounts:[account]};
+    if(path.startsWith('/prospecting/investors/runs/'))throw new Error('Research match unavailable');
+    throw new Error(`Unexpected request: ${path}`);
+  };
+  const {view}=mountReview({request,initialProposalId:'',initialSourceRunId:proposalId,initialSourceResultId:'sec-result-1'});
+  await view.flush();
+  assert.match(textOf(view.tree),/couldn’t reopen this researched match/i);
+  const back=find(view.tree,node=>node.type==='a'&&node.props?.href==='/prospecting/investors');
+  assert.ok(back);
+  assert.equal(textOf(back),'Back to VC intelligence');
+  assert.equal(button(view.tree,'Reload workspace'),undefined,'the stale match error does not offer an ineffective account reload');
+  assert.equal(calls.some(call=>call.path.endsWith('/create-draft')),false,'a missing source cannot create a Gmail draft');
+  view.unmount();
+});

@@ -463,3 +463,31 @@ test('starting a newer VC run aborts an older run’s pending final founder refr
   assert.equal(textOf(find(indexMetric, node => node.type === 'strong')), '1', 'old run data cannot replace the current founder view');
   view.unmount();
 });
+
+test('VC thesis labels and prompt follow the selected investor or company direction', async () => {
+  const env = environment();
+  const request = async path => {
+    if (path.startsWith('/prospecting/investors/founders?')) return historicalPage('idle');
+    if (path === '/prospecting/investors/runs') return [];
+    throw new Error(`Unexpected request: ${path}`);
+  };
+  const view = mountVc(env, request);
+  await view.flush();
+
+  const thesisStep = find(view.tree, node => node.type === 'button' && textOf(node).includes('Thesis'));
+  assert.ok(thesisStep);
+  thesisStep.props.onClick();
+  await view.flush();
+  assert.match(textOf(view.tree), /Find founders and companies for your fund/);
+  assert.ok(find(view.tree, node => node.type === 'input' && node.props?.placeholder === 'e.g. Climate founders at seed stage'));
+
+  const direction = find(view.tree, node => node.type === 'select');
+  assert.ok(direction);
+  direction.props.onChange({target:{value:'investors_for_thesis'}});
+  await view.flush();
+  assert.match(textOf(view.tree), /Find investors for your company/);
+  assert.match(textOf(view.tree), /Find investors using public company and fund evidence/);
+  assert.ok(find(view.tree, node => node.type === 'input' && node.props?.placeholder === 'e.g. Early investors for a climate startup'));
+  assert.ok(find(view.tree, node => node.type === 'button' && textOf(node) === 'Find matching investors'));
+  view.unmount();
+});
